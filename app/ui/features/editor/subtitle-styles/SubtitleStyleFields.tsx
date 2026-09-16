@@ -22,21 +22,58 @@ const numeric: { key: keyof SubtitleStyle; min: number; max: number; step: numbe
 
 export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
   const { t } = useTranslation();
-  return <div className="vision-fields">
-    <TextInput label={t('styleFontFamily')} value={value.font_family} isDisabled={disabled}
-      onChange={font_family => onChange({ ...value, font_family })} />
-    <Selector label={t('stylePosition')} value={String(value.position)} isDisabled={disabled}
-      options={[7, 8, 9, 4, 5, 6, 1, 2, 3].map(position => ({ value: String(position), label: t(`stylePosition_${position}`) }))}
-      onChange={position => onChange({ ...value, position: Number(position) })} />
-    {(['text_color', 'outline_color', 'box_color'] as const).map(key => <TextInput key={key}
-      label={t(`style_${key}`)} value={value[key]} isDisabled={disabled}
-      onChange={next => onChange({ ...value, [key]: next })} />)}
-    {numeric.map(({ key, min, max, step }) => <NumberInput key={key} label={t(`style_${key}`)}
-      value={Number(value[key])} min={min} max={max} step={step} isWheelEnabled={false} isDisabled={disabled}
-      onChange={next => onChange({ ...value, [key]: next })} />)}
-    <CheckboxInput label={t('styleBold')} value={value.bold} isDisabled={disabled}
-      onChange={bold => onChange({ ...value, bold })} />
-    <CheckboxInput label={t('styleItalic')} value={value.italic} isDisabled={disabled}
-      onChange={italic => onChange({ ...value, italic })} />
-  </div>;
+  return (
+    <div className="vision-fields">
+      <TextInput
+        label={t('styleFontFamily')}
+        value={value.font_family}
+        isDisabled={disabled}
+        onChange={(font_family) => onChange({ ...value, font_family })}
+      />
+      <Selector
+        label={t('stylePosition')}
+        value={String(value.position)}
+        isDisabled={disabled}
+        options={[7, 8, 9, 4, 5, 6, 1, 2, 3].map((position) => ({
+          value: String(position),
+          label: t(`stylePosition_${position}`),
+        }))}
+        onChange={(position) => onChange({ ...value, position: Number(position) })}
+      />
+      {(['text_color', 'outline_color', 'box_color'] as const).map((key) => (
+        <TextInput
+          key={key}
+          label={t(`style_${key}`)}
+          value={value[key]}
+          isDisabled={disabled}
+          onChange={(next) => onChange({ ...value, [key]: next })}
+        />
+      ))}
+      {numeric.map(({ key, min, max, step }) => (
+        <NumberInput
+          key={key}
+          label={t(`style_${key}`)}
+          value={Number(value[key])}
+          min={min}
+          max={max}
+          step={step}
+          isWheelEnabled={false}
+          isDisabled={disabled}
+          onChange={(next) => onChange({ ...value, [key]: next })}
+        />
+      ))}
+      <CheckboxInput
+        label={t('styleBold')}
+        value={value.bold}
+        isDisabled={disabled}
+        onChange={(bold) => onChange({ ...value, bold })}
+      />
+      <CheckboxInput
+        label={t('styleItalic')}
+        value={value.italic}
+        isDisabled={disabled}
+        onChange={(italic) => onChange({ ...value, italic })}
+      />
+    </div>
+  );
 }

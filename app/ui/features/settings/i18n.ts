@@ -1,5 +1,6 @@
 export const settingsEn = {
-  settingsIntro: 'Local preferences and processing components. Changes do not alter existing sources or queued jobs.',
+  settingsIntro:
+    'Local preferences and processing components. Changes do not alter existing sources or queued jobs.',
   settingsGeneral: 'General',
   settingsProcessing: 'AI & processing',
   settingsAccount: 'Account',
@@ -8,29 +9,38 @@ export const settingsEn = {
   settingsNoOutput: 'Ask for a destination when saving',
   settingsChooseOutput: 'Choose default folder',
   settingsClearOutput: 'Clear default',
-  settingsOutputHelp: 'Used as the starting location for future save and batch-folder dialogs. Every export still asks for confirmation. Existing files and queued destinations stay unchanged.',
+  settingsOutputHelp:
+    'Used as the starting location for future save and batch-folder dialogs. Every export still asks for confirmation. Existing files and queued destinations stay unchanged.',
   settingsLoading: 'Loading local settings…',
   settingsError: 'Settings could not be updated. Existing values were kept.',
-  settingsCorrupt: 'The saved settings file is invalid or from a newer version. It has not been overwritten. Direct editing and saving remain available.',
+  settingsCorrupt:
+    'The saved settings file is invalid or from a newer version. It has not been overwritten. Direct editing and saving remain available.',
   settingsAccountUnavailable: 'Account and plan services are not connected',
-  settingsAccountHelp: 'This build does not display invented plan names, balances or upgrade prices. Local file editing and model configuration do not require sign-in.',
+  settingsAccountHelp:
+    'This build does not display invented plan names, balances or upgrade prices. Local file editing and model configuration do not require sign-in.',
   settingsNode: 'Node runtime',
   settingsElectron: 'Electron runtime',
   settingsPlatform: 'Operating system',
   settingsAppVersion: 'Application version',
-  settingsModelsIntro: 'Select a local JSON manifest to validate model paths and SHA-256 checksums. Models are not downloaded and no inference starts during configuration.',
+  settingsModelsIntro:
+    'Select a local JSON manifest to validate model paths and SHA-256 checksums. Models are not downloaded and no inference starts during configuration.',
   settingsChooseModels: 'Choose local model manifest',
   settingsModelsChecking: 'Checking local model files…',
-  settingsModelsSaved: 'Model configuration saved. Run a deliberate sample to verify inference and output quality.',
-  settingsModelsGuide: 'Manifest format, installation and licensing: docs/development/local-models.md.',
-  settingsModelsOverride: 'REUPMATIC_MODEL_MANIFEST overrides saved model settings. Change or remove that environment variable and restart before selecting another manifest here.',
+  settingsModelsSaved:
+    'Model configuration saved. Run a deliberate sample to verify inference and output quality.',
+  settingsModelsGuide:
+    'Manifest format, installation and licensing: docs/development/local-models.md.',
+  settingsModelsOverride:
+    'REUPMATIC_MODEL_MANIFEST overrides saved model settings. Change or remove that environment variable and restart before selecting another manifest here.',
   settingsModelsFailure: 'Model setup failed. The previous configuration remains in place.',
   settingsModelsUnavailable: 'Local model status could not be read.',
-  settingsModelsUnverified: 'Configured paths are not proof of a successful model run. Runtime requirements and checksums are checked again when processing starts.',
+  settingsModelsUnverified:
+    'Configured paths are not proof of a successful model run. Runtime requirements and checksums are checked again when processing starts.',
 };
 
 export const settingsVi: Record<keyof typeof settingsEn, string> = {
-  settingsIntro: 'Thiết lập cục bộ và thành phần xử lý. Thay đổi không tác động file gốc hoặc tác vụ đã xếp hàng.',
+  settingsIntro:
+    'Thiết lập cục bộ và thành phần xử lý. Thay đổi không tác động file gốc hoặc tác vụ đã xếp hàng.',
   settingsGeneral: 'Chung',
   settingsProcessing: 'AI & xử lý',
   settingsAccount: 'Tài khoản',
@@ -39,23 +49,31 @@ export const settingsVi: Record<keyof typeof settingsEn, string> = {
   settingsNoOutput: 'Hỏi vị trí khi lưu',
   settingsChooseOutput: 'Chọn thư mục mặc định',
   settingsClearOutput: 'Bỏ mặc định',
-  settingsOutputHelp: 'Dùng làm vị trí bắt đầu cho các hộp thoại lưu và chọn thư mục lô về sau. Mỗi lần xuất vẫn cần xác nhận. Không di chuyển file hoặc đổi đích của tác vụ đã xếp hàng.',
+  settingsOutputHelp:
+    'Dùng làm vị trí bắt đầu cho các hộp thoại lưu và chọn thư mục lô về sau. Mỗi lần xuất vẫn cần xác nhận. Không di chuyển file hoặc đổi đích của tác vụ đã xếp hàng.',
   settingsLoading: 'Đang tải thiết lập cục bộ…',
   settingsError: 'Không cập nhật được thiết lập. Giữ nguyên giá trị trước đó.',
-  settingsCorrupt: 'File thiết lập đã lưu không hợp lệ hoặc thuộc phiên bản mới hơn. Không ghi đè file này. Vẫn có thể chỉnh sửa và lưu trực tiếp.',
+  settingsCorrupt:
+    'File thiết lập đã lưu không hợp lệ hoặc thuộc phiên bản mới hơn. Không ghi đè file này. Vẫn có thể chỉnh sửa và lưu trực tiếp.',
   settingsAccountUnavailable: 'Chưa kết nối dịch vụ tài khoản và gói',
-  settingsAccountHelp: 'Bản này không hiển thị tên gói, số dư hoặc giá nâng cấp giả định. Chỉnh sửa file và cấu hình model cục bộ không cần đăng nhập.',
+  settingsAccountHelp:
+    'Bản này không hiển thị tên gói, số dư hoặc giá nâng cấp giả định. Chỉnh sửa file và cấu hình model cục bộ không cần đăng nhập.',
   settingsNode: 'Môi trường Node',
   settingsElectron: 'Môi trường Electron',
   settingsPlatform: 'Hệ điều hành',
   settingsAppVersion: 'Phiên bản ứng dụng',
-  settingsModelsIntro: 'Chọn manifest JSON trên máy để kiểm tra vị trí model và SHA-256. Không tải model hoặc tự chạy suy luận khi cấu hình.',
+  settingsModelsIntro:
+    'Chọn manifest JSON trên máy để kiểm tra vị trí model và SHA-256. Không tải model hoặc tự chạy suy luận khi cấu hình.',
   settingsChooseModels: 'Chọn manifest model cục bộ',
   settingsModelsChecking: 'Đang kiểm tra file model cục bộ…',
-  settingsModelsSaved: 'Đã lưu cấu hình model. Hãy chủ động chạy đoạn mẫu để kiểm tra suy luận và chất lượng đầu ra.',
-  settingsModelsGuide: 'Định dạng manifest, cài đặt và giấy phép: docs/development/local-models.md.',
-  settingsModelsOverride: 'REUPMATIC_MODEL_MANIFEST đang ghi đè cấu hình model đã lưu. Đổi hoặc bỏ biến môi trường và khởi động lại trước khi chọn manifest khác tại đây.',
+  settingsModelsSaved:
+    'Đã lưu cấu hình model. Hãy chủ động chạy đoạn mẫu để kiểm tra suy luận và chất lượng đầu ra.',
+  settingsModelsGuide:
+    'Định dạng manifest, cài đặt và giấy phép: docs/development/local-models.md.',
+  settingsModelsOverride:
+    'REUPMATIC_MODEL_MANIFEST đang ghi đè cấu hình model đã lưu. Đổi hoặc bỏ biến môi trường và khởi động lại trước khi chọn manifest khác tại đây.',
   settingsModelsFailure: 'Cấu hình model thất bại. Giữ nguyên cấu hình trước đó.',
   settingsModelsUnavailable: 'Không đọc được trạng thái model cục bộ.',
-  settingsModelsUnverified: 'Có đường dẫn model không đồng nghĩa đã chạy thành công. Kiểm tra lại thành phần và checksum khi bắt đầu xử lý.',
+  settingsModelsUnverified:
+    'Có đường dẫn model không đồng nghĩa đã chạy thành công. Kiểm tra lại thành phần và checksum khi bắt đầu xử lý.',
 };

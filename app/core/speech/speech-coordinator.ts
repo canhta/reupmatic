@@ -1,7 +1,12 @@
 import { EventEmitter } from 'node:events';
 import { RemoteError } from '../worker/remote-error.js';
-import { type Envelope, type Ticket, type WorkerClient } from '../worker/worker-client.js';
-import { parseSpeechInput, validateSpeechResult, type SpeechInput, type SpeechResult } from './recognition.js';
+import type { Envelope, Ticket, WorkerClient } from '../worker/worker-client.js';
+import {
+  parseSpeechInput,
+  type SpeechInput,
+  type SpeechResult,
+  validateSpeechResult,
+} from './recognition.js';
 
 interface Operation {
   input: SpeechInput;
@@ -23,12 +28,20 @@ export class SpeechCoordinator extends EventEmitter {
     worker.on('message', this.onMessage);
   }
 
-  get activeCount(): number { return this.operations.size; }
+  get activeCount(): number {
+    return this.operations.size;
+  }
 
   private readonly onMessage = (message: Envelope): void => {
-    const id = this.workerIds.get(message.id), operation = id ? this.operations.get(id) : undefined;
-    if (operation && !operation.cancelled && message.event === 'progress'
-      && message.revision === operation.input.revision) this.emit('job', { ...message, id });
+    const id = this.workerIds.get(message.id),
+      operation = id ? this.operations.get(id) : undefined;
+    if (
+      operation &&
+      !operation.cancelled &&
+      message.event === 'progress' &&
+      message.revision === operation.input.revision
+    )
+      this.emit('job', { ...message, id });
   };
 
   start(value: unknown, sourceHash: string): Ticket<SpeechResult> {
@@ -56,27 +69,48 @@ export class SpeechCoordinator extends EventEmitter {
 
   async close(): Promise<void> {
     this.closing = true;
-    await Promise.all([...this.operations.keys()].map(id => this.cancel(id)));
+    await Promise.all([...this.operations.keys()].map((id) => this.cancel(id)));
     this.worker.off('message', this.onMessage);
   }
 
   private async execute(operation: Operation): Promise<SpeechResult> {
     const { input, sourceHash } = operation;
     try {
-      const ticket = this.worker.request('speech.transcribe', {
-        ...input.params, source_sha256: sourceHash,
-      }, input.revision);
+      const ticket = this.worker.request(
+        'speech.transcribe',
+        {
+          ...input.params,
+          source_sha256: sourceHash,
+        },
+        input.revision,
+      );
       operation.ticket = ticket;
       this.workerIds.set(ticket.id, input.request_id);
       const data = await ticket.result;
       if (operation.cancelled || this.closing) throw new RemoteError('CANCELLED');
       const result = validateSpeechResult(data, input, sourceHash);
-      this.emit('job', { v: 1, id: input.request_id, revision: input.revision, event: 'result', data: result });
+      this.emit('job', {
+        v: 1,
+        id: input.request_id,
+        revision: input.revision,
+        event: 'result',
+        data: result,
+      });
       return result;
     } catch (error) {
-      const code = operation.cancelled || this.closing ? 'CANCELLED'
-        : error instanceof RemoteError ? error.code : 'WORKER_FAILURE';
-      this.emit('job', { v: 1, id: input.request_id, revision: input.revision, event: 'error', data: { code } });
+      const code =
+        operation.cancelled || this.closing
+          ? 'CANCELLED'
+          : error instanceof RemoteError
+            ? error.code
+            : 'WORKER_FAILURE';
+      this.emit('job', {
+        v: 1,
+        id: input.request_id,
+        revision: input.revision,
+        event: 'error',
+        data: { code },
+      });
       throw new RemoteError(code);
     } finally {
       if (operation.ticket) this.workerIds.delete(operation.ticket.id);

@@ -1,18 +1,41 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { parseSpeechInput, type SpeechLanguage, type SpeechResult, type SpeechStatus } from '../../../core/speech/recognition';
+import {
+  parseSpeechInput,
+  type SpeechLanguage,
+  type SpeechResult,
+  type SpeechStatus,
+} from '../../../core/speech/recognition';
 import { unwrap } from '../../bridge/client';
 
 export interface SpeechContext {
-  documentId: string; assetId: string; revision: number; duration: number;
-  start: string; end: string; hasAudio: boolean; composed: boolean;
+  documentId: string;
+  assetId: string;
+  revision: number;
+  duration: number;
+  start: string;
+  end: string;
+  hasAudio: boolean;
+  composed: boolean;
 }
-interface Active { id: string; revision: number; phase: string; fraction: number | null }
-export interface SpeechDraft { data: SpeechResult; revision: number; requestId: string; documentId: string }
+interface Active {
+  id: string;
+  revision: number;
+  phase: string;
+  fraction: number | null;
+}
+export interface SpeechDraft {
+  data: SpeechResult;
+  revision: number;
+  requestId: string;
+  documentId: string;
+}
 
 export function useSpeechJob(context: SpeechContext) {
   const current = useRef(context);
   current.current = context;
-  const alive = useRef(true), operation = useRef<Active | null>(null), configuring = useRef(false);
+  const alive = useRef(true),
+    operation = useRef<Active | null>(null),
+    configuring = useRef(false);
   const [models, setModels] = useState<SpeechStatus | null>(null);
   const [checking, setChecking] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
@@ -29,14 +52,17 @@ export function useSpeechJob(context: SpeechContext) {
     try {
       const value = await unwrap(window.reupmatic.speechStatus());
       if (alive.current && sequence === checkSequence.current) setModels(value);
-    } catch (reason) { report(reason); }
-    finally { if (alive.current && sequence === checkSequence.current) setChecking(false); }
+    } catch (reason) {
+      report(reason);
+    } finally {
+      if (alive.current && sequence === checkSequence.current) setChecking(false);
+    }
   }, [report]);
 
   useEffect(() => {
     alive.current = true;
     const documentId = current.current.documentId;
-    const off = window.reupmatic.onSpeechJob(message => {
+    const off = window.reupmatic.onSpeechJob((message) => {
       const request = operation.current;
       if (!request || message.id !== request.id || message.revision !== request.revision) return;
       if (message.event === 'progress') {
@@ -47,15 +73,30 @@ export function useSpeechJob(context: SpeechContext) {
       }
       operation.current = null;
       setActive(null);
-      if (message.event === 'error') { setError(message.data.code); return; }
-      if (message.data.asset_id !== current.current.assetId || documentId !== current.current.documentId) return;
-      setDraft({ data: message.data, revision: request.revision, requestId: request.id, documentId });
+      if (message.event === 'error') {
+        setError(message.data.code);
+        return;
+      }
+      if (
+        message.data.asset_id !== current.current.assetId ||
+        documentId !== current.current.documentId
+      )
+        return;
+      setDraft({
+        data: message.data,
+        revision: request.revision,
+        requestId: request.id,
+        documentId,
+      });
     });
-    const offModels = window.reupmatic.onSpeechModelsChanged(() => { void refresh(); });
+    const offModels = window.reupmatic.onSpeechModelsChanged(() => {
+      void refresh();
+    });
     void refresh();
     return () => {
       alive.current = false;
-      off(); offModels();
+      off();
+      offModels();
       const request = operation.current;
       operation.current = null;
       if (request) void window.reupmatic.speechCancel(request.id).catch(() => undefined);
@@ -66,12 +107,18 @@ export function useSpeechJob(context: SpeechContext) {
   async function configure() {
     if (configuring.current || operation.current) return;
     configuring.current = true;
-    setSettingUp(true); setError('');
-    try { await unwrap(window.reupmatic.speechConfigure()); }
-    catch (reason) { report(reason); }
-    finally {
+    setSettingUp(true);
+    setError('');
+    try {
+      await unwrap(window.reupmatic.speechConfigure());
+    } catch (reason) {
+      report(reason);
+    } finally {
       configuring.current = false;
-      if (alive.current) { setSettingUp(false); void refresh(); }
+      if (alive.current) {
+        setSettingUp(false);
+        void refresh();
+      }
     }
   }
 
@@ -85,16 +132,30 @@ export function useSpeechJob(context: SpeechContext) {
       if (!c.hasAudio) throw new Error('NO_AUDIO');
       if (!models?.available || !models.model_id) throw new Error(models?.code || 'MODEL_MISSING');
       if (!models.languages.includes(language)) throw new Error('MODEL_LANGUAGE_UNAVAILABLE');
-      if (scope === 'sample' && (!c.start.trim() || !c.end.trim())) throw new Error('INVALID_REQUEST');
-      const input = parseSpeechInput({ request_id: requestId, revision: c.revision, params: {
-        asset_id: c.assetId, model_id: models.model_id, language,
-        start_ms: scope === 'full' ? 0 : Math.round(Number(c.start) * 1000),
-        end_ms: scope === 'full' ? c.duration : Math.round(Number(c.end) * 1000),
-      } });
+      if (scope === 'sample' && (!c.start.trim() || !c.end.trim()))
+        throw new Error('INVALID_REQUEST');
+      const input = parseSpeechInput({
+        request_id: requestId,
+        revision: c.revision,
+        params: {
+          asset_id: c.assetId,
+          model_id: models.model_id,
+          language,
+          start_ms: scope === 'full' ? 0 : Math.round(Number(c.start) * 1000),
+          end_ms: scope === 'full' ? c.duration : Math.round(Number(c.end) * 1000),
+        },
+      });
       if (input.params.end_ms > c.duration) throw new Error('INVALID_REQUEST');
-      const request: Active = { id: requestId, revision: c.revision, phase: 'queued', fraction: null };
-      operation.current = request; admitted = true;
-      setActive(request); setError('');
+      const request: Active = {
+        id: requestId,
+        revision: c.revision,
+        phase: 'queued',
+        fraction: null,
+      };
+      operation.current = request;
+      admitted = true;
+      setActive(request);
+      setError('');
       // Keep any previous draft until a new successful result arrives.
       await unwrap(window.reupmatic.speechStart(input));
     } catch (reason) {
@@ -112,24 +173,48 @@ export function useSpeechJob(context: SpeechContext) {
       await unwrap(window.reupmatic.speechCancel(request.id));
       if (operation.current?.id === request.id && alive.current) {
         const next = { ...request, phase: 'cancelling', fraction: null };
-        operation.current = next; setActive(next);
+        operation.current = next;
+        setActive(next);
       }
-    } catch (reason) { if (operation.current?.id === request.id) report(reason); }
+    } catch (reason) {
+      if (operation.current?.id === request.id) report(reason);
+    }
   }
 
   function review(captured: SpeechDraft) {
     const c = current.current;
-    if (c.composed || captured.documentId !== c.documentId || captured.data.asset_id !== c.assetId) {
-      report(new Error('STALE_OPERATION')); return;
+    if (
+      c.composed ||
+      captured.documentId !== c.documentId ||
+      captured.data.asset_id !== c.assetId
+    ) {
+      report(new Error('STALE_OPERATION'));
+      return;
     }
     // Explicitly requested comparison against the current transcript; applying is a separate action.
-    setDraft(value => value === captured ? { ...captured, revision: c.revision } : value);
+    setDraft((value) => (value === captured ? { ...captured, revision: c.revision } : value));
   }
 
-  return { models, checking, settingUp, active, draft, error, report, refresh, configure, start, cancel, review,
-    consume: (captured: SpeechDraft) => setDraft(value => value === captured ? null : value),
+  return {
+    models,
+    checking,
+    settingUp,
+    active,
+    draft,
+    error,
+    report,
+    refresh,
+    configure,
+    start,
+    cancel,
+    review,
+    consume: (captured: SpeechDraft) => setDraft((value) => (value === captured ? null : value)),
     cancelSetup: async () => {
-      try { await unwrap(window.reupmatic.speechCancelSetup()); } catch (reason) { report(reason); }
+      try {
+        await unwrap(window.reupmatic.speechCancelSetup());
+      } catch (reason) {
+        report(reason);
+      }
     },
   };
 }

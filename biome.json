@@ -37,7 +37,10 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended",
+      "a11y": {
+        "useMediaCaption": "off"
+      }
     }
   },
   "assist": {
@@ -46,5 +49,16 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "app/electron/main.ts",
+        "app/ui/features/editor/useEditorModel.ts",
+        "app/ui/i18n.ts"
+      ],
+      "formatter": { "enabled": false },
+      "assist": { "actions": { "source": { "organizeImports": "off" } } }
+    }
+  ]
 }

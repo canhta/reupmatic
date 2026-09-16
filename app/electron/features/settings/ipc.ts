@@ -1,6 +1,6 @@
-import { app, dialog, type BrowserWindow } from 'electron';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
+import { app, type BrowserWindow, dialog } from 'electron';
 import type { PreferencesStore } from '../../../core/settings/preferences-store.js';
 import type { SettingsSnapshot } from '../../../core/settings/settings-types.js';
 import type { ModelStatus } from '../../../core/vision/vision.js';
@@ -23,13 +23,23 @@ export function installSettings(host: Host) {
   async function snapshot(): Promise<SettingsSnapshot> {
     let models: ModelStatus | null = null;
     let modelError: string | null = null;
-    try { models = await host.worker.request<ModelStatus>('models.status', {}).result; }
-    catch (error) { modelError = errorCode(error); }
+    try {
+      models = await host.worker.request<ModelStatus>('models.status', {}).result;
+    } catch (error) {
+      modelError = errorCode(error);
+    }
     return {
-      preferences: host.preferences?.snapshot() ?? null, preferences_error: host.preferencesError,
-      models, model_error: modelError, model_override: Boolean(process.env.REUPMATIC_MODEL_MANIFEST),
-      runtime: { node: process.versions.node, electron: process.versions.electron ?? '',
-        platform: process.platform, app: app.getVersion() },
+      preferences: host.preferences?.snapshot() ?? null,
+      preferences_error: host.preferencesError,
+      models,
+      model_error: modelError,
+      model_override: Boolean(process.env.REUPMATIC_MODEL_MANIFEST),
+      runtime: {
+        node: process.versions.node,
+        electron: process.versions.electron ?? '',
+        platform: process.platform,
+        app: app.getVersion(),
+      },
     };
   }
 
@@ -55,7 +65,8 @@ export function installSettings(host: Host) {
     selecting = true;
     try {
       const chosen = await dialog.showOpenDialog(host.getWindow(), {
-        properties: ['openFile'], filters: [{ name: 'Local model manifest', extensions: ['json'] }],
+        properties: ['openFile'],
+        filters: [{ name: 'Local model manifest', extensions: ['json'] }],
       });
       if (chosen.canceled) return null;
       const filename = await realpath(chosen.filePaths[0]);
@@ -75,7 +86,9 @@ export function installSettings(host: Host) {
   });
 
   return {
-    get active() { return selecting || Boolean(configuration); },
+    get active() {
+      return selecting || Boolean(configuration);
+    },
     defaultDirectory: () => host.preferences?.snapshot().default_output_dir ?? undefined,
     savePath: (name: string) => {
       const directory = host.preferences?.snapshot().default_output_dir;

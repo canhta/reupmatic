@@ -22,6 +22,8 @@ export class RenderTracker {
   }
 
   isCurrentResult(id: string, revision: number, currentRevision: number): boolean {
-    return this.current?.id === id && this.current.revision === revision && revision === currentRevision;
+    return (
+      this.current?.id === id && this.current.revision === revision && revision === currentRevision
+    );
   }
 }

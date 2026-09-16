@@ -3,7 +3,10 @@ import type { VideoSource } from '../media/media-types.js';
 export type LibraryStorage = 'reference' | 'copy';
 export type LibraryAvailability = 'unchecked' | 'available' | 'missing' | 'changed';
 export type LibraryLinkKind = 'project' | 'subtitle' | 'export' | 'audio';
-export interface LibraryFileIdentity { sha256: string; size_bytes: number }
+export interface LibraryFileIdentity {
+  sha256: string;
+  size_bytes: number;
+}
 export interface LibraryLink extends LibraryFileIdentity {
   id: string;
   kind: LibraryLinkKind;
@@ -65,8 +68,13 @@ export interface LibraryAssetQuery extends LibraryQuery {
   kind: LibraryLinkKind | 'all';
   item_id?: string;
 }
-export interface LibraryAsset extends LibraryLink { item_id: string; content_name: string }
-export interface LibraryAssetPage extends Omit<LibraryPage, 'items'> { items: LibraryAsset[] }
+export interface LibraryAsset extends LibraryLink {
+  item_id: string;
+  content_name: string;
+}
+export interface LibraryAssetPage extends Omit<LibraryPage, 'items'> {
+  items: LibraryAsset[];
+}
 export type LibraryAssetPreview =
   | { kind: 'export' | 'audio'; name: string; url: string; duration_ms: number }
   | { kind: 'subtitle'; name: string; cues: import('../subtitles/cues.js').Cue[] };

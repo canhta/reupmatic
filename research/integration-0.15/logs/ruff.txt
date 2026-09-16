@@ -1,8 +1,0 @@
-$ npm run check:python
-
-> reupmatic@0.15.0 check:python
-> node scripts/python.mjs -m ruff check worker tests scripts && node scripts/python.mjs -m ruff format --check worker tests scripts
-
-/opt/pyvenv/bin/python3: No module named ruff
-
-EXIT_CODE=1

@@ -1,6 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { CatalogSnapshot } from '../../../core/catalog/catalog-snapshot';
-import { unwrap, type Reply } from '../../bridge/client';
+import { type Reply, unwrap } from '../../bridge/client';
 
 interface CatalogContextValue {
   snapshot: CatalogSnapshot | null;
@@ -12,7 +22,13 @@ interface CatalogContextValue {
 }
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
-export function CatalogProvider({ children, onDirty }: { children: ReactNode; onDirty(value: boolean): void }) {
+export function CatalogProvider({
+  children,
+  onDirty,
+}: {
+  children: ReactNode;
+  onDirty(value: boolean): void;
+}) {
   const [snapshot, setSnapshot] = useState<CatalogSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -26,44 +42,61 @@ export function CatalogProvider({ children, onDirty }: { children: ReactNode; on
       const value = await unwrap(window.reupmatic.catalogSnapshot());
       if (alive.current && token === sequence.current) {
         if (clearError) setError('');
-        setSnapshot(current => current && current.revision > value.revision ? current : value);
+        setSnapshot((current) => (current && current.revision > value.revision ? current : value));
       }
     } catch (reason) {
-      if (alive.current && token === sequence.current) setError(reason instanceof Error ? reason.message : 'CATALOG_UNAVAILABLE');
+      if (alive.current && token === sequence.current)
+        setError(reason instanceof Error ? reason.message : 'CATALOG_UNAVAILABLE');
     }
   }, []);
 
   useEffect(() => {
     alive.current = true;
-    const unsubscribe = window.reupmatic.onCatalogChanged(() => { void reload(); });
+    const unsubscribe = window.reupmatic.onCatalogChanged(() => {
+      void reload();
+    });
     void reload();
-    return () => { alive.current = false; sequence.current++; unsubscribe(); };
+    return () => {
+      alive.current = false;
+      sequence.current++;
+      unsubscribe();
+    };
   }, [reload]);
 
-  const mutate = useCallback(async <T,>(operation: () => Promise<Reply<T>>): Promise<T | undefined> => {
-    if (locked.current || !alive.current) return undefined;
-    locked.current = true;
-    setBusy(true);
-    setError('');
-    try {
-      const value = await unwrap(operation());
-      await reload();
-      return value;
-    } catch (reason) {
-      if (alive.current) setError(reason instanceof Error ? reason.message : 'CATALOG_UNAVAILABLE');
-      return undefined;
-    } finally {
-      locked.current = false;
-      if (alive.current) setBusy(false);
-    }
-  }, [reload]);
+  const mutate = useCallback(
+    async <T,>(operation: () => Promise<Reply<T>>): Promise<T | undefined> => {
+      if (locked.current || !alive.current) return undefined;
+      locked.current = true;
+      setBusy(true);
+      setError('');
+      try {
+        const value = await unwrap(operation());
+        await reload();
+        return value;
+      } catch (reason) {
+        if (alive.current)
+          setError(reason instanceof Error ? reason.message : 'CATALOG_UNAVAILABLE');
+        return undefined;
+      } finally {
+        locked.current = false;
+        if (alive.current) setBusy(false);
+      }
+    },
+    [reload],
+  );
 
-  const setDraft = useCallback((key: string, dirty: boolean) => {
-    if (dirty) drafts.current.add(key); else drafts.current.delete(key);
-    onDirty(drafts.current.size > 0);
-  }, [onDirty]);
-  const value = useMemo(() => ({ snapshot, busy, error, reload, mutate, setDraft }),
-    [snapshot, busy, error, reload, mutate, setDraft]);
+  const setDraft = useCallback(
+    (key: string, dirty: boolean) => {
+      if (dirty) drafts.current.add(key);
+      else drafts.current.delete(key);
+      onDirty(drafts.current.size > 0);
+    },
+    [onDirty],
+  );
+  const value = useMemo(
+    () => ({ snapshot, busy, error, reload, mutate, setDraft }),
+    [snapshot, busy, error, reload, mutate, setDraft],
+  );
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 
@@ -76,5 +109,8 @@ export function useCatalog(): CatalogContextValue {
 export function useUnsavedCatalogDraft(dirty: boolean): void {
   const { setDraft } = useCatalog();
   const key = useId();
-  useEffect(() => { setDraft(key, dirty); return () => setDraft(key, false); }, [key, dirty, setDraft]);
+  useEffect(() => {
+    setDraft(key, dirty);
+    return () => setDraft(key, false);
+  }, [key, dirty, setDraft]);
 }

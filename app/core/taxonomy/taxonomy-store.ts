@@ -5,7 +5,9 @@ import type { ContentLabels, Label, LabelData } from './taxonomy-types.js';
 export class TaxonomyStore {
   constructor(private readonly db: CatalogDatabase) {}
 
-  list(): Label[] { return this.db.list<LabelData>('label'); }
+  list(): Label[] {
+    return this.db.list<LabelData>('label');
+  }
 
   save(input: unknown): Label {
     const value = object(input, ['id', 'expected_revision', 'name', 'kind', 'archived']);
@@ -14,10 +16,22 @@ export class TaxonomyStore {
     if (previous && previous.kind !== value.kind) throw new Error('LABEL_KIND_LOCKED');
     const name = text(value.name, 80).trim().normalize('NFC');
     const kind = value.kind;
-    if (kind !== 'tag' && kind !== 'category' && kind !== 'group') throw new Error('INVALID_REQUEST');
-    if (this.list().some(label => label.id !== id && label.kind === kind
-      && label.name.normalize('NFC').toLowerCase() === name.toLowerCase())) throw new Error('LABEL_EXISTS');
-    return this.db.save('label', id, revision(value.expected_revision), { name, kind, archived: boolean(value.archived) });
+    if (kind !== 'tag' && kind !== 'category' && kind !== 'group')
+      throw new Error('INVALID_REQUEST');
+    if (
+      this.list().some(
+        (label) =>
+          label.id !== id &&
+          label.kind === kind &&
+          label.name.normalize('NFC').toLowerCase() === name.toLowerCase(),
+      )
+    )
+      throw new Error('LABEL_EXISTS');
+    return this.db.save('label', id, revision(value.expected_revision), {
+      name,
+      kind,
+      archived: boolean(value.archived),
+    });
   }
 
   validate(value: unknown, existing: string[] = []): string[] {
@@ -29,7 +43,9 @@ export class TaxonomyStore {
     return ids;
   }
 
-  content(): ContentLabels[] { return this.db.list<{ label_ids: string[] }>('content_labels'); }
+  content(): ContentLabels[] {
+    return this.db.list<{ label_ids: string[] }>('content_labels');
+  }
 
   assignContent(input: unknown): ContentLabels {
     const value = object(input, ['id', 'expected_revision', 'label_ids']);

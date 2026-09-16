@@ -3,9 +3,10 @@ import uuid
 from media.editing.filters import geometry_filters
 from media.editing.recipe import parse_editing
 from media.probe import probe_file
-from runtime.protocol import MAX_LINE, exact
 from runtime.errors import WorkerError
-from subtitles.document import canvas_size, cue_document, subtitle_library, srt_text
+from runtime.protocol import MAX_LINE, exact
+
+from subtitles.document import canvas_size, cue_document, srt_text, subtitle_library
 from subtitles.validation import validate_cues
 
 
@@ -18,8 +19,11 @@ def load_subtitles(host, req):
     if kind not in ("srt", "ass"):
         raise WorkerError("FORMAT_UNAVAILABLE")
     subs = subtitle_library().load(str(asset["path"]), encoding="utf-8-sig", format_=kind)
-    cues = [{"id": str(uuid.uuid4()), "start_ms": cue.start, "end_ms": cue.end, "text": cue.plaintext}
-            for cue in subs if not cue.is_comment]
+    cues = [
+        {"id": str(uuid.uuid4()), "start_ms": cue.start, "end_ms": cue.end, "text": cue.plaintext}
+        for cue in subs
+        if not cue.is_comment
+    ]
     validate_cues(cues)
     host.assets.verify(p["asset_id"], "subtitle", lambda: host.cancelled(req))
     return {"cues": cues}
@@ -43,8 +47,11 @@ def save_subtitles(host, req):
     else:
         subs.save(str(target), encoding="utf-8", format_=kind)
     registered = host.assets.register({**req, "params": {"path": str(target), "kind": "subtitle"}})
-    return {**registered, "path": str(target),
-            "ass_text": cue_document(p["cues"], p.get("style"), p.get("canvas")).to_string("ass")}
+    return {
+        **registered,
+        "path": str(target),
+        "ass_text": cue_document(p["cues"], p.get("style"), p.get("canvas")).to_string("ass"),
+    }
 
 
 def prepare_subtitles(host, req):
@@ -55,8 +62,17 @@ def prepare_subtitles(host, req):
         info["width"], info["height"] = canvas_size(p["canvas"])
     edit = parse_editing(p["editing"]) if "editing" in p else {}
     _, (width, height) = geometry_filters(edit, info)
-    result = save_subtitles(host, {**req, "params": {"cues": p["cues"], "format": "ass",
-                              "canvas": {"width": width, "height": height},
-                              **({"style": p["style"]} if "style" in p else {})}})
+    result = save_subtitles(
+        host,
+        {
+            **req,
+            "params": {
+                "cues": p["cues"],
+                "format": "ass",
+                "canvas": {"width": width, "height": height},
+                **({"style": p["style"]} if "style" in p else {}),
+            },
+        },
+    )
     host.assets.verify(p["asset_id"], "video", lambda: host.cancelled(req))
     return result

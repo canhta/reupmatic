@@ -18,12 +18,7 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "path",
-        "name",
-        "sha256",
-        "duration_ms"
-      ],
+      "required": ["path", "name", "sha256", "duration_ms"],
       "properties": {
         "path": {
           "type": "string",
@@ -47,10 +42,7 @@
       }
     },
     "mode": {
-      "enum": [
-        "replace",
-        "mix"
-      ]
+      "enum": ["replace", "mix"]
     },
     "start_ms": {
       "type": "integer",

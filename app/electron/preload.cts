@@ -30,8 +30,10 @@ contextBridge.exposeInMainWorld('reupmatic', {
   recoverySave: (input: unknown) => invoke('recovery-save', input),
   recoveryOpen: (input: unknown) => invoke('recovery-open', input),
   recoveryDiscard: (input: unknown) => invoke('recovery-discard', input),
-  onRecoveryFlush: (callback: (input: { request_id: string }) => void) => subscribe('recovery-flush', callback),
-  recoveryFlushResult: (request_id: string, saved: boolean) => invoke('recovery-flush-result', { request_id, saved }),
+  onRecoveryFlush: (callback: (input: { request_id: string }) => void) =>
+    subscribe('recovery-flush', callback),
+  recoveryFlushResult: (request_id: string, saved: boolean) =>
+    invoke('recovery-flush-result', { request_id, saved }),
   hello: () => invoke('hello'),
   open: () => invoke('open'),
   compositionStart: (asset_id: string) => invoke('composition-start', { asset_id }),
@@ -55,18 +57,22 @@ contextBridge.exposeInMainWorld('reupmatic', {
   synthesisConfigure: () => invoke('synthesis-configure'),
   synthesisCancelSetup: () => invoke('synthesis-cancel-setup'),
   synthesisPreview: (artifact_id: string) => invoke('synthesis-preview', { artifact_id }),
-  synthesisChooseExport: (artifact_id: string, kind: string) => invoke('synthesis-choose-export', { artifact_id, kind }),
-  synthesisSave: (choice_id: string, artifact_id: string) => invoke('synthesis-save', { choice_id, artifact_id }),
+  synthesisChooseExport: (artifact_id: string, kind: string) =>
+    invoke('synthesis-choose-export', { artifact_id, kind }),
+  synthesisSave: (choice_id: string, artifact_id: string) =>
+    invoke('synthesis-save', { choice_id, artifact_id }),
   synthesisCancelExport: () => invoke('synthesis-cancel-export'),
   onSynthesisJob: (callback: (data: unknown) => void) => subscribe('synthesis-job', callback),
-  onSynthesisModelsChanged: (callback: () => void) => subscribe('synthesis-models-changed', callback),
+  onSynthesisModelsChanged: (callback: () => void) =>
+    subscribe('synthesis-models-changed', callback),
   translationStatus: () => invoke('translation-status'),
   translationStart: (input: unknown) => invoke('translation-start', input),
   translationCancel: (request_id: string) => invoke('translation-cancel', { request_id }),
   translationConfigure: () => invoke('translation-configure'),
   translationCancelSetup: () => invoke('translation-cancel-setup'),
   onTranslationJob: (callback: (data: unknown) => void) => subscribe('translation-job', callback),
-  onTranslationModelsChanged: (callback: () => void) => subscribe('translation-models-changed', callback),
+  onTranslationModelsChanged: (callback: () => void) =>
+    subscribe('translation-models-changed', callback),
   speechStatus: () => invoke('speech-status'),
   speechStart: (input: unknown) => invoke('speech-start', input),
   speechCancel: (request_id: string) => invoke('speech-cancel', { request_id }),
@@ -105,13 +111,16 @@ contextBridge.exposeInMainWorld('reupmatic', {
   libraryImport: (input: unknown) => invoke('library-import', input),
   libraryCancelImport: () => invoke('library-cancel-import'),
   libraryOpen: (item_id: string) => invoke('library-open', { item_id }),
-  libraryOpenProject: (item_id: string, link_id: string) => invoke('library-open-project', { item_id, link_id }),
+  libraryOpenProject: (item_id: string, link_id: string) =>
+    invoke('library-open-project', { item_id, link_id }),
   libraryRelink: (item_id: string) => invoke('library-relink', { item_id }),
   libraryDependencies: (item_id: string) => invoke('library-dependencies', { item_id }),
   libraryForget: (item_id: string) => invoke('library-forget', { item_id }),
-  libraryReveal: (item_id: string, link_id?: string) => invoke('library-reveal', {
-    item_id, ...(link_id ? { link_id } : {}),
-  }),
+  libraryReveal: (item_id: string, link_id?: string) =>
+    invoke('library-reveal', {
+      item_id,
+      ...(link_id ? { link_id } : {}),
+    }),
   onLibraryChanged: (callback: () => void) => subscribe('library-changed', callback),
   onLibraryImport: (callback: (data: unknown) => void) => subscribe('library-import', callback),
   settingsSnapshot: () => invoke('settings-snapshot'),

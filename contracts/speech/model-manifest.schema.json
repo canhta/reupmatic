@@ -22,11 +22,7 @@
       "maxItems": 3,
       "uniqueItems": true,
       "items": {
-        "enum": [
-          "en",
-          "vi",
-          "zh"
-        ]
+        "enum": ["en", "vi", "zh"]
       }
     },
     "files": {
@@ -57,32 +53,18 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       },
-      "required": [
-        "config.json",
-        "model.bin",
-        "tokenizer.json"
-      ],
+      "required": ["config.json", "model.bin", "tokenizer.json"],
       "additionalProperties": false,
       "anyOf": [
         {
-          "required": [
-            "vocabulary.json"
-          ]
+          "required": ["vocabulary.json"]
         },
         {
-          "required": [
-            "vocabulary.txt"
-          ]
+          "required": ["vocabulary.txt"]
         }
       ]
     }
   },
-  "required": [
-    "version",
-    "engine",
-    "directory",
-    "languages",
-    "files"
-  ],
+  "required": ["version", "engine", "directory", "languages", "files"],
   "additionalProperties": false
 }

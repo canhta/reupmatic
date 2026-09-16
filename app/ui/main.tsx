@@ -6,4 +6,8 @@ import './style.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing application root');
-createRoot(root).render(<DesignSystemProvider><App /></DesignSystemProvider>);
+createRoot(root).render(
+  <DesignSystemProvider>
+    <App />
+  </DesignSystemProvider>,
+);

@@ -1,8 +1,0 @@
-test_normalized_rectangle_uses_half_open_pixel_edges (test_vision.MaskGeometryTests.test_normalized_rectangle_uses_half_open_pixel_edges) ... ok
-test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue (test_vision.TimedEvidenceTests.test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue) ... ok
-test_missing_models_are_actionable_and_do_not_break_render_capabilities (test_vision.VisionProtocolTests.test_missing_models_are_actionable_and_do_not_break_render_capabilities) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 0.764s
-
-OK

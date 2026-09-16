@@ -5,10 +5,17 @@ import path from 'node:path';
 import test from 'node:test';
 import { BatchStore } from '../dist-core/batch/batch-store.js';
 import { FolderStore } from '../dist-core/folders/folder-store.js';
-import { createProject, loadProject, parseProject, saveProject } from '../dist-core/projects/project.js';
+import {
+  createProject,
+  loadProject,
+  parseProject,
+  saveProject,
+} from '../dist-core/projects/project.js';
 
-const recipe = () => ({ version: 1, inpaint: { target: 'manual', padding_px: 4,
-  region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 } } });
+const recipe = () => ({
+  version: 1,
+  inpaint: { target: 'manual', padding_px: 4, region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 } },
+});
 const pins = () => ({ inpainting: 'b'.repeat(64) });
 async function workspace(t) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'processing-persistence-'));
@@ -16,7 +23,7 @@ async function workspace(t) {
   return directory;
 }
 
-test('one current project schema round-trips both plain and processing snapshots', async t => {
+test('one current project schema round-trips both plain and processing snapshots', async (t) => {
   const directory = await workspace(t);
   const source = { path: path.join(directory, 'video.mp4'), sha256: 'a'.repeat(64) };
   const snapshot = { cues: [], sample: { start_ms: 0, end_ms: 1000 } };
@@ -39,17 +46,27 @@ test('one current project schema round-trips both plain and processing snapshots
     assert.throws(() => parseProject({ ...project, version }), /PROJECT_VERSION/);
   }
   assert.throws(() => parseProject({ ...plain, processing: undefined }), /INVALID_PROJECT/);
-  assert.throws(() => createProject(source, { ...snapshot,
-    cues: [{ id: 'one', start_ms: 0, end_ms: 1000, text: 'User edit' }],
-    processing: { version: 1, ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } },
-  }), /INVALID_PROJECT/);
+  assert.throws(
+    () =>
+      createProject(source, {
+        ...snapshot,
+        cues: [{ id: 'one', start_ms: 0, end_ms: 1000, text: 'User edit' }],
+        processing: { version: 1, ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } },
+      }),
+    /INVALID_PROJECT/,
+  );
 });
 
-test('batch recipe and model pins survive restart, interruption and explicit retry', async t => {
+test('batch recipe and model pins survive restart, interruption and explicit retry', async (t) => {
   const directory = await workspace(t);
   const filename = path.join(directory, 'queue.sqlite');
-  const input = { video: { path: path.join(directory, 'video.mp4'), name: 'video.mp4', sha256: 'a'.repeat(64) },
-    output_dir: directory, encoding: 'review', processing: recipe(), processing_models: pins() };
+  const input = {
+    video: { path: path.join(directory, 'video.mp4'), name: 'video.mp4', sha256: 'a'.repeat(64) },
+    output_dir: directory,
+    encoding: 'review',
+    processing: recipe(),
+    processing_models: pins(),
+  };
   const store = new BatchStore(filename);
   const [job] = store.enqueue('processing-job-01', [input]);
   const original = structuredClone(input);
@@ -70,26 +87,46 @@ test('batch recipe and model pins survive restart, interruption and explicit ret
   assert.deepEqual(retry.input, original);
 });
 
-test('batch rejects unpinned processing and subtitle conflicts atomically', async t => {
+test('batch rejects unpinned processing and subtitle conflicts atomically', async (t) => {
   const directory = await workspace(t);
   const store = new BatchStore(path.join(directory, 'queue.sqlite'));
   t.after(() => store.close());
-  const file = { path: path.join(directory, 'video.mp4'), name: 'video.mp4', sha256: 'a'.repeat(64) };
+  const file = {
+    path: path.join(directory, 'video.mp4'),
+    name: 'video.mp4',
+    sha256: 'a'.repeat(64),
+  };
   const input = { video: file, output_dir: directory, encoding: 'review' };
-  assert.throws(() => store.enqueue('processing-job-02', [input, { ...input, processing: recipe() }]),
-    /INVALID_PROCESSING_MODELS/);
-  assert.throws(() => store.enqueue('processing-job-03', [{ ...input, subtitle: file,
-    processing: { version: 1, ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } },
-    processing_models: { ocr_en: 'b'.repeat(64) },
-  }]), /PROCESSING_SUBTITLE_CONFLICT/);
+  assert.throws(
+    () => store.enqueue('processing-job-02', [input, { ...input, processing: recipe() }]),
+    /INVALID_PROCESSING_MODELS/,
+  );
+  assert.throws(
+    () =>
+      store.enqueue('processing-job-03', [
+        {
+          ...input,
+          subtitle: file,
+          processing: { version: 1, ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } },
+          processing_models: { ocr_en: 'b'.repeat(64) },
+        },
+      ]),
+    /PROCESSING_SUBTITLE_CONFLICT/,
+  );
   assert.equal(store.list().length, 0);
 });
 
-test('folder rule persists its immutable recipe and refuses a model-free recipe', async t => {
+test('folder rule persists its immutable recipe and refuses a model-free recipe', async (t) => {
   const directory = await workspace(t);
   const filename = path.join(directory, 'folders.sqlite');
-  const config = { source_dir: directory, output_dir: path.join(directory, 'output'),
-    recursive: true, include_existing: false, processing: recipe(), processing_models: pins() };
+  const config = {
+    source_dir: directory,
+    output_dir: path.join(directory, 'output'),
+    recursive: true,
+    include_existing: false,
+    processing: recipe(),
+    processing_models: pins(),
+  };
   const store = new FolderStore(filename);
   const saved = store.add(config);
   config.processing.inpaint.region.y = 0.2;
@@ -98,5 +135,8 @@ test('folder rule persists its immutable recipe and refuses a model-free recipe'
   const reopened = new FolderStore(filename);
   t.after(() => reopened.close());
   assert.deepEqual(reopened.get(saved.id), saved);
-  assert.throws(() => reopened.add({ ...config, processing_models: undefined }), /INVALID_PROCESSING_MODELS/);
+  assert.throws(
+    () => reopened.add({ ...config, processing_models: undefined }),
+    /INVALID_PROCESSING_MODELS/,
+  );
 });

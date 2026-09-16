@@ -3,6 +3,7 @@
 Only developer-provided local artifacts are used. No server, installer, user
 plugin command or mock fallback exists in this production entry point.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,8 +13,9 @@ from pathlib import Path
 
 from runtime.errors import WorkerError
 from runtime.offline import deny_network_and_children
-from vision.models import file_hash
+
 from vision.algorithms import LamaAdapter, RapidAdapter, make_mask, timed_cues
+from vision.models import file_hash
 
 
 def atomic_json(path: Path, value: object) -> None:
@@ -34,14 +36,17 @@ def make_ocr(bundle: dict) -> RapidAdapter:
     from rapidocr.utils.typings import EngineType, LangRec, ModelType, OCRVersion
 
     params = {
-        "Global.use_cls": False, "Global.log_level": "error",
-        "Global.text_score": .5,
+        "Global.use_cls": False,
+        "Global.log_level": "error",
+        "Global.text_score": 0.5,
         "Det.engine_type": EngineType("onnxruntime"),
         "Rec.engine_type": EngineType("onnxruntime"),
-        "Det.model_type": ModelType("mobile"), "Rec.model_type": ModelType("mobile"),
+        "Det.model_type": ModelType("mobile"),
+        "Rec.model_type": ModelType("mobile"),
         "Det.ocr_version": OCRVersion(bundle["det_version"]),
         "Rec.ocr_version": OCRVersion(bundle["rec_version"]),
-        "Det.model_path": bundle["det"]["path"], "Rec.model_path": bundle["rec"]["path"],
+        "Det.model_path": bundle["det"]["path"],
+        "Rec.model_path": bundle["rec"]["path"],
         "Rec.rec_keys_path": bundle["keys"]["path"],
         "Rec.rec_img_shape": [3, bundle["rec_height"], 320],
         "Rec.lang_type": LangRec({"zh": "ch", "en": "en", "vi": "latin"}[bundle["language"]]),
@@ -58,8 +63,11 @@ def make_lama(bundle: dict) -> LamaAdapter:
     options = ort.SessionOptions()
     options.intra_op_num_threads = 2
     options.inter_op_num_threads = 1
-    return LamaAdapter(ort.InferenceSession(bundle["model"]["path"], sess_options=options,
-                                            providers=["CPUExecutionProvider"]))
+    return LamaAdapter(
+        ort.InferenceSession(
+            bundle["model"]["path"], sess_options=options, providers=["CPUExecutionProvider"]
+        )
+    )
 
 
 def run(job: dict, progress: Path) -> dict:
@@ -82,20 +90,37 @@ def run(job: dict, progress: Path) -> dict:
                 if len(raw) != frame_size:
                     raise WorkerError("VISION_FRAME_INVALID")
                 rgb = np.frombuffer(raw, dtype=np.uint8).reshape(height, width, 3)
-                detections = ocr.detect(rgb, confidence=job.get("min_confidence", .5),
-                                         rectangle=job.get("region") if not lama else None) if ocr else []
+                detections = (
+                    ocr.detect(
+                        rgb,
+                        confidence=job.get("min_confidence", 0.5),
+                        rectangle=job.get("region") if not lama else None,
+                    )
+                    if ocr
+                    else []
+                )
                 if not lama:
                     start = job["start_ms"] + index * job["sample_ms"]
-                    item = {"start_ms": start, "end_ms": min(start + job["sample_ms"], job["end_ms"]),
-                            "detections": detections}
+                    item = {
+                        "start_ms": start,
+                        "end_ms": min(start + job["sample_ms"], job["end_ms"]),
+                        "detections": detections,
+                    }
                     if item["start_ms"] < item["end_ms"]:
-                        observations_bytes += len(json.dumps(item, ensure_ascii=False).encode("utf-8"))
+                        observations_bytes += len(
+                            json.dumps(item, ensure_ascii=False).encode("utf-8")
+                        )
                         if observations_bytes > 700000:
                             raise WorkerError("VISION_RESULT_TOO_LARGE")
                         observations.append(item)
                 else:
-                    mask = make_mask(width, height, job.get("region") if job["target"] == "manual" else None,
-                                     detections, job["padding_px"])
+                    mask = make_mask(
+                        width,
+                        height,
+                        job.get("region") if job["target"] == "manual" else None,
+                        detections,
+                        job["padding_px"],
+                    )
                     changed_frames += int(bool(np.any(mask)))
                     output.write(lama.erase(rgb, mask).tobytes())
                 atomic_json(progress, {"completed": index + 1, "total": job["frame_count"]})
@@ -108,8 +133,11 @@ def run(job: dict, progress: Path) -> dict:
         verify_bundle(bundle)
     if lama:
         return {"processed_frames": job["frame_count"], "masked_frames": changed_frames}
-    return {"observations": observations, "cues": timed_cues(observations),
-            "sampled_frames": job["frame_count"]}
+    return {
+        "observations": observations,
+        "cues": timed_cues(observations),
+        "sampled_frames": job["frame_count"],
+    }
 
 
 def main() -> None:

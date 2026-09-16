@@ -3,6 +3,7 @@ import uuid
 
 from runtime.errors import WorkerError
 from runtime.protocol import bounded_int, exact
+
 from subtitles.style import DEFAULT_STYLE, ass_style
 from subtitles.validation import validate_cues
 
@@ -10,6 +11,7 @@ from subtitles.validation import validate_cues
 def subtitle_library():
     try:
         import pysubs2
+
         return pysubs2
     except ImportError:
         raise WorkerError("COMPONENT_MISSING") from None
@@ -24,8 +26,14 @@ def canvas_size(value=None):
 
 def literal_ass(text):
     # Break user-authored escape sequences; only our newlines become ASS tags.
-    return (text.replace("\\", "\\\u2060").replace("{", r"\{").replace("}", r"\}")
-            .replace("\r\n", "\n").replace("\r", "\n").replace("\n", r"\N"))
+    return (
+        text.replace("\\", "\\\u2060")
+        .replace("{", r"\{")
+        .replace("}", r"\}")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .replace("\n", r"\N")
+    )
 
 
 def cue_document(cues, style=None, canvas=None, styled=True):
@@ -33,9 +41,17 @@ def cue_document(cues, style=None, canvas=None, styled=True):
     lib = subtitle_library()
     subs = lib.SSAFile()
     width, height = canvas_size(canvas)
-    subs.info.update({"PlayResX": str(width), "PlayResY": str(height),
-                      "ScaledBorderAndShadow": "yes", "WrapStyle": "0"})
-    subs.styles["Default"] = ass_style(lib, DEFAULT_STYLE if style is None else style, width, height)
+    subs.info.update(
+        {
+            "PlayResX": str(width),
+            "PlayResY": str(height),
+            "ScaledBorderAndShadow": "yes",
+            "WrapStyle": "0",
+        }
+    )
+    subs.styles["Default"] = ass_style(
+        lib, DEFAULT_STYLE if style is None else style, width, height
+    )
     for index, cue in enumerate(cues):
         name = "Default"
         if styled and "style" in cue:
@@ -53,8 +69,11 @@ def cue_document(cues, style=None, canvas=None, styled=True):
 def style_srt(source, output, style, dimensions):
     lib = subtitle_library()
     loaded = lib.load(str(source), encoding="utf-8-sig", format_="srt")
-    cues = [{"id": str(index), "start_ms": cue.start, "end_ms": cue.end, "text": cue.plaintext}
-            for index, cue in enumerate(loaded) if not cue.is_comment]
+    cues = [
+        {"id": str(index), "start_ms": cue.start, "end_ms": cue.end, "text": cue.plaintext}
+        for index, cue in enumerate(loaded)
+        if not cue.is_comment
+    ]
     document = cue_document(cues, style, {"width": dimensions[0], "height": dimensions[1]})
     document.save(str(output), encoding="utf-8", format_="ass")
 

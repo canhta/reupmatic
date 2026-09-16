@@ -10,8 +10,10 @@ import { FolderStore } from '../dist-core/folders/folder-store.js';
 import { LibraryStore } from '../dist-core/library/library-store.js';
 
 const stores = [
-  [BatchStore, 'QUEUE_VERSION', 1], [CatalogDatabase, 'CATALOG_VERSION', 1],
-  [FolderStore, 'WATCH_VERSION', 1], [LibraryStore, 'LIBRARY_VERSION', 2],
+  [BatchStore, 'QUEUE_VERSION', 1],
+  [CatalogDatabase, 'CATALOG_VERSION', 1],
+  [FolderStore, 'WATCH_VERSION', 1],
+  [LibraryStore, 'LIBRARY_VERSION', 2],
 ];
 
 async function location(t) {
@@ -21,7 +23,7 @@ async function location(t) {
 }
 
 for (const [Store, code, version] of stores) {
-  test(`${Store.name}: initialize a fresh store and reopen only its current schema`, async t => {
+  test(`${Store.name}: initialize a fresh store and reopen only its current schema`, async (t) => {
     const file = await location(t);
     new Store(file).close();
     const inspect = new DatabaseSync(file);
@@ -30,11 +32,13 @@ for (const [Store, code, version] of stores) {
     assert.doesNotThrow(() => new Store(file).close());
   });
 
-  test(`${Store.name}: refuse unversioned, unknown and incomplete stores without rewriting them`, async t => {
+  test(`${Store.name}: refuse unversioned, unknown and incomplete stores without rewriting them`, async (t) => {
     for (const version of [0, 1, 2, -1]) {
       const file = await location(t);
       const seed = new DatabaseSync(file);
-      seed.exec(`CREATE TABLE owner_data (value TEXT); INSERT INTO owner_data VALUES ('keep'); PRAGMA user_version=${version}`);
+      seed.exec(
+        `CREATE TABLE owner_data (value TEXT); INSERT INTO owner_data VALUES ('keep'); PRAGMA user_version=${version}`,
+      );
       seed.close();
       const before = await readFile(file);
       assert.throws(() => new Store(file).close(), new RegExp(code));

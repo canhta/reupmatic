@@ -1,5 +1,9 @@
-.vision-panel { margin-top: var(--space-6); }
-.vision-panel p { max-width: 100ch; }
+.vision-panel {
+  margin-top: var(--space-6);
+}
+.vision-panel p {
+  max-width: 100ch;
+}
 .vision-fields {
   display: flex;
   flex-wrap: wrap;
@@ -13,10 +17,22 @@
   gap: var(--space-3);
   margin-block: var(--space-3);
 }
-.vision-status span { flex: 1 1 22rem; }
-.vision-evidence { max-height: 16rem; overflow: auto; overflow-wrap: anywhere; }
-.vision-evidence time { font-variant-numeric: tabular-nums; }
-.vision-draft, .vision-output, .ocr-controls { margin-top: var(--space-4); }
+.vision-status span {
+  flex: 1 1 22rem;
+}
+.vision-evidence {
+  max-height: 16rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.vision-evidence time {
+  font-variant-numeric: tabular-nums;
+}
+.vision-draft,
+.vision-output,
+.ocr-controls {
+  margin-top: var(--space-4);
+}
 .vision-output video {
   display: block;
   max-width: min(100%, 40rem);

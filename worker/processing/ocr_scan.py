@@ -1,9 +1,11 @@
 """Bounded OCR scanning shared by extraction and subtitle-burning workflows."""
+
 import json
 
 from runtime.errors import WorkerError
 from subtitles.validation import validate_cues
 from vision.service import MAX_RESULT, VisionService
+
 from processing.chunks import intervals, ocr_window, progress_for, verify_segment_models
 
 MAX_EVIDENCE_BYTES = 128 * 1024**2
@@ -16,9 +18,20 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
     geometry = None
     for first, last in intervals(start, end, ocr_window(options["sample_ms"])):
         host.cancelled(req)
-        result = service.run({**req, "method": "media.ocr", "params": {
-            **options, "asset_id": req["params"]["asset_id"], "start_ms": first, "end_ms": last}},
-            staging=staging, emit_progress=progress_for(host, req, "processingOcr", first, last, start, end))
+        result = service.run(
+            {
+                **req,
+                "method": "media.ocr",
+                "params": {
+                    **options,
+                    "asset_id": req["params"]["asset_id"],
+                    "start_ms": first,
+                    "end_ms": last,
+                },
+            },
+            staging=staging,
+            emit_progress=progress_for(host, req, "processingOcr", first, last, start, end),
+        )
         verify_segment_models(result, fingerprints, options, "media.ocr")
         current = (result["width"], result["height"])
         if geometry is not None and current != geometry:
@@ -31,10 +44,10 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
                 text_bytes += len(cue["text"].encode("utf-8"))
                 if len(cues) >= 10000 or text_bytes > MAX_RESULT:
                     raise WorkerError("PROCESSING_CUE_LIMIT")
-                cues.append({**cue, "id": f"ocr-{len(cues)+1:06d}"})
+                cues.append({**cue, "id": f"ocr-{len(cues) + 1:06d}"})
         observation_count += len(result["observations"])
-        observations.extend(result["observations"][:max(0, 20-len(observations))])
-        evidence = staging / f'{result["analysis_id"]}.json'
+        observations.extend(result["observations"][: max(0, 20 - len(observations))])
+        evidence = staging / f"{result['analysis_id']}.json"
         if keep_evidence:
             evidence_bytes += evidence.stat().st_size
             if evidence_bytes > MAX_EVIDENCE_BYTES:
@@ -42,12 +55,20 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
             chunks.append({"file": evidence.name, "start_ms": first, "end_ms": last})
         else:
             evidence.unlink()
-        host.emit(req, "progress", {"phase": "processingOcr", "fraction": (last-start)/(end-start)})
+        host.emit(
+            req, "progress", {"phase": "processingOcr", "fraction": (last - start) / (end - start)}
+        )
     validate_cues(cues)
     if len(json.dumps(cues, ensure_ascii=False).encode("utf-8")) > MAX_RESULT:
         raise WorkerError("VISION_RESULT_TOO_LARGE")
-    return {"cues": cues, "observations": observations, "observation_count": observation_count,
-            "chunks": chunks, "width": geometry[0], "height": geometry[1]}
+    return {
+        "cues": cues,
+        "observations": observations,
+        "observation_count": observation_count,
+        "chunks": chunks,
+        "width": geometry[0],
+        "height": geometry[1],
+    }
 
 
 def scan_subtitles(host, req, options, start, end, staging, fingerprints):

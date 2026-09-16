@@ -13,7 +13,7 @@
     "build": "tsc -p tsconfig.node.json && tsc -p tsconfig.ui.json && vite build",
     "start": "electron .",
     "test:core": "npm run build:core && node --test tests/core.test.mjs tests/render-tracker.test.mjs tests/media-response.test.mjs tests/render-coordinator.test.mjs tests/project.test.mjs tests/batch.test.mjs tests/folder.test.mjs tests/design-skill.test.mjs tests/vision.test.mjs tests/library.test.mjs tests/settings.test.mjs tests/export-file.test.mjs tests/processing.test.mjs tests/processing-persistence.test.mjs tests/render-artifact.test.mjs tests/catalog.test.mjs tests/distribution.test.mjs tests/profiles.test.mjs tests/workflows.test.mjs tests/post-schedule.test.mjs tests/current-schema.test.mjs tests/editing.test.mjs tests/recovery.test.mjs tests/text-rules.test.mjs tests/editor-history.test.mjs tests/ocr-extraction.test.mjs tests/library-assets.test.mjs tests/subtitle-style.test.mjs tests/soundtrack.test.mjs tests/composition.test.mjs tests/text-layers.test.mjs tests/speech.test.mjs tests/translation.test.mjs tests/synthesis.test.mjs tests/synthesis-artifacts.test.mjs",
-    "test:bridge": "npm run build:core && node --test tests/bridge.test.mjs tests/coordinator-native.test.mjs tests/batch-native.test.mjs tests/folder-native.test.mjs tests/library-native.test.mjs tests/models-native.test.mjs tests/workflow-native.test.mjs tests/batch-cli-native.test.mjs tests/synthesis-native.test.mjs",
+    "test:bridge": "npm run build:core && node --env-file-if-exists=.env.local --test tests/bridge.test.mjs tests/coordinator-native.test.mjs tests/batch-native.test.mjs tests/folder-native.test.mjs tests/library-native.test.mjs tests/models-native.test.mjs tests/workflow-native.test.mjs tests/batch-cli-native.test.mjs tests/synthesis-native.test.mjs",
     "batch": "node scripts/batch.mjs",
     "prepare": "node scripts/install-hooks.mjs",
     "hooks:install": "node scripts/install-hooks.mjs",
@@ -24,7 +24,7 @@
     "check": "biome ci .",
     "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.ui.json --noEmit",
     "test:tooling": "node --test tests/tooling.test.mjs",
-    "test:python": "node scripts/python.mjs -m unittest discover -s tests -p test_*.py -v",
+    "test:python": "node --env-file-if-exists=.env.local scripts/python.mjs -m unittest discover -s tests -p test_*.py -v",
     "test": "npm run structure:check && npm run scope:check && npm run contracts:check && npm run test:structure && npm run test:architecture && npm run test:ui-library && npm run test:tooling && npm run test:core && npm run test:bridge && npm run test:python",
     "check:python": "node scripts/python.mjs -m ruff check worker tests scripts && node scripts/python.mjs -m ruff format --check worker tests scripts",
     "format:python": "node scripts/python.mjs -m ruff check --fix worker tests scripts && node scripts/python.mjs -m ruff format worker tests scripts",
@@ -46,31 +46,31 @@
     "contracts:check": "node scripts/python.mjs scripts/sync-contracts.py --check"
   },
   "dependencies": {
+    "@astryxdesign/core": "0.6.1",
+    "@astryxdesign/theme-neutral": "0.6.1",
+    "@stylexjs/stylex": "0.19.0",
     "@xzdarcy/react-timeline-editor": "1.0.0",
-    "wavesurfer.js": "7.12.12",
+    "chokidar": "5.0.0",
+    "i18next": "26.4.2",
     "jassub": "2.5.15",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "i18next": "26.4.2",
     "react-i18next": "17.0.14",
-    "chokidar": "5.0.0",
-    "@astryxdesign/core": "0.6.1",
-    "@astryxdesign/theme-neutral": "0.6.1",
-    "@stylexjs/stylex": "0.19.0"
+    "wavesurfer.js": "7.12.12"
   },
   "devDependencies": {
-    "typescript": "7.0.2",
+    "@astryxdesign/cli": "0.6.1",
+    "@biomejs/biome": "2.5.13",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.0.0",
-    "electron": "44.3.0",
-    "vite": "8.3.0",
     "@vitejs/plugin-react": "6.1.1",
-    "less": "4.9.1",
-    "@biomejs/biome": "2.5.13",
+    "electron": "44.3.0",
     "lefthook": "2.1.14",
+    "less": "4.9.1",
     "playwright": "1.63.0",
-    "@astryxdesign/cli": "0.6.1"
+    "typescript": "7.0.2",
+    "vite": "8.3.0"
   },
   "productName": "Reupmatic"
 }

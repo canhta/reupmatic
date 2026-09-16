@@ -4,7 +4,7 @@ import { getTextLayer, type TextLayerName, type TextLanguage, type LayerOrigin }
 import type { SpeechResult } from '../../../core/speech/recognition';
 import type { OcrResult } from '../../../core/vision/vision';
 import { compositionSnapshot, editCompositionSnapshot } from '../../../core/editing/composition/snapshot';
-import { type CompositionCommand } from '../../../core/editing/composition/commands';
+import type { CompositionCommand } from '../../../core/editing/composition/commands';
 import { compositionDuration, parseComposition, type Composition } from '../../../core/editing/composition/document';
 import { useSourcePreview } from './composition/useSourcePreview';
 import type { Soundtrack } from '../../../core/editing/soundtrack';

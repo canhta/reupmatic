@@ -1,9 +1,0 @@
-{
-  "relative_links_checked": 144,
-  "broken_links": [],
-  "json_files_parsed": 19,
-  "yaml_files_parsed": 3,
-  "toml_files_parsed": 1,
-  "missing_script_files": [],
-  "scope": "Syntax/structure only, not Biome/Lefthook/Actions schema execution."
-}

@@ -53,8 +53,11 @@ export function FolderAutomation({ onDirty }: { onDirty: (value: boolean) => voi
     setBusy(true);
     setError('');
     try {
-      accept(await unwrap(command === 'start'
-        ? window.reupmatic.folderStart(id) : window.reupmatic.folderPause(id)));
+      accept(
+        await unwrap(
+          command === 'start' ? window.reupmatic.folderStart(id) : window.reupmatic.folderPause(id),
+        ),
+      );
     } catch (reason) {
       report(reason);
     } finally {
@@ -64,17 +67,31 @@ export function FolderAutomation({ onDirty }: { onDirty: (value: boolean) => voi
   }
 
   return (
-    <Section variant="transparent" padding={0} className="automation-workspace"
-      aria-labelledby="folder-title">
+    <Section
+      variant="transparent"
+      padding={0}
+      className="automation-workspace"
+      aria-labelledby="folder-title"
+    >
       <div className="workspace-heading">
-        <div><h2 id="folder-title">{t('folderTitle')}</h2><p>{t('folderIntro')}</p></div>
+        <div>
+          <h2 id="folder-title">{t('folderTitle')}</h2>
+          <p>{t('folderIntro')}</p>
+        </div>
         <span>{t('folderLocal')}</span>
       </div>
       <p>{t('folderDeveloperNote')}</p>
-      {snapshot && !snapshot.available && <Banner status="warning" title={t('folderUnavailable')} />}
-      {error && <Banner status="error" title={t(folderErrorKey(error))}
-        description={<code>{error}</code>}
-        endContent={<Button label={t('retryLoad')} onClick={() => void reload()} />} />}
+      {snapshot && !snapshot.available && (
+        <Banner status="warning" title={t('folderUnavailable')} />
+      )}
+      {error && (
+        <Banner
+          status="error"
+          title={t(folderErrorKey(error))}
+          description={<code>{error}</code>}
+          endContent={<Button label={t('retryLoad')} onClick={() => void reload()} />}
+        />
+      )}
       {!snapshot && !error && <p role="status">{t('folderLoading')}</p>}
       <FolderRuleForm enabled={Boolean(snapshot?.available)} onDirty={onDirty} onSaved={accept} />
       {snapshot && <FolderRules snapshot={snapshot} busy={busy} onControl={control} />}

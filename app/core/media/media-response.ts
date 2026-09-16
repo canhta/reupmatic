@@ -23,7 +23,10 @@ export function singleByteRange(value: string | null, size: number): ByteRange {
 }
 
 /** The caller must resolve pathname from its trusted asset registry, never a URL path. */
-export async function registeredMediaResponse(request: Request, pathname: string): Promise<Response> {
+export async function registeredMediaResponse(
+  request: Request,
+  pathname: string,
+): Promise<Response> {
   const headers = new Headers({
     'Accept-Ranges': 'bytes',
     'Access-Control-Allow-Origin': 'app://ui',
@@ -44,15 +47,28 @@ export async function registeredMediaResponse(request: Request, pathname: string
       return new Response(null, { status: 404, headers });
     }
     const types: Record<string, string> = {
-      '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
-      '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.aac': 'audio/aac',
-      '.flac': 'audio/flac', '.ogg': 'audio/ogg', '.opus': 'audio/ogg',
-      '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo',
+      '.mp4': 'video/mp4',
+      '.mov': 'video/quicktime',
+      '.webm': 'video/webm',
+      '.wav': 'audio/wav',
+      '.mp3': 'audio/mpeg',
+      '.m4a': 'audio/mp4',
+      '.aac': 'audio/aac',
+      '.flac': 'audio/flac',
+      '.ogg': 'audio/ogg',
+      '.opus': 'audio/ogg',
+      '.mkv': 'video/x-matroska',
+      '.avi': 'video/x-msvideo',
     };
-    headers.set('Content-Type', types[path.extname(pathname).toLowerCase()] ?? 'application/octet-stream');
+    headers.set(
+      'Content-Type',
+      types[path.extname(pathname).toLowerCase()] ?? 'application/octet-stream',
+    );
     // No entity validator is emitted yet: If-Range must fall back to a full representation.
-    const range = request.method === 'GET' && !request.headers.has('if-range')
-      ? singleByteRange(request.headers.get('range'), info.size) : null;
+    const range =
+      request.method === 'GET' && !request.headers.has('if-range')
+        ? singleByteRange(request.headers.get('range'), info.size)
+        : null;
     if (range === 'unsatisfiable') {
       headers.set('Content-Range', `bytes */${info.size}`);
       await file.close();
@@ -68,7 +84,8 @@ export async function registeredMediaResponse(request: Request, pathname: string
     }
     const stream = file.createReadStream({ start, end, autoClose: true });
     return new Response(Readable.toWeb(stream) as ReadableStream<Uint8Array>, {
-      status: range ? 206 : 200, headers,
+      status: range ? 206 : 200,
+      headers,
     });
   } catch (error) {
     await file.close().catch(() => undefined);

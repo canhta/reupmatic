@@ -1,5 +1,13 @@
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface Confirmation {
@@ -25,9 +33,9 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const confirm = useCallback<Confirm>(description => {
+  const confirm = useCallback<Confirm>((description) => {
     if (!mounted.current || current.current) return Promise.resolve(false);
-    return new Promise<boolean>(finish => {
+    return new Promise<boolean>((finish) => {
       const request = { description, finish };
       current.current = request;
       setPending(request);
@@ -51,7 +59,9 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
         cancelLabel={t('cancel')}
         actionLabel={t('confirmActionAccept')}
         actionVariant="primary"
-        onOpenChange={open => { if (!open) finish(false); }}
+        onOpenChange={(open) => {
+          if (!open) finish(false);
+        }}
         onAction={() => finish(true)}
       />
     </ConfirmationContext.Provider>

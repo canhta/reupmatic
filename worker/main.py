@@ -7,6 +7,7 @@ from pathlib import Path
 from runtime.protocol import MAX_LINE
 from runtime.worker import Worker
 
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workspace", type=Path, required=True)
@@ -17,16 +18,22 @@ def main() -> None:
     try:
         while line := sys.stdin.buffer.readline(MAX_LINE + 1):
             if len(line) > MAX_LINE:
-                worker.emit({"id": "invalid", "revision": 0}, "error", {"code": "PAYLOAD_TOO_LARGE"})
+                worker.emit(
+                    {"id": "invalid", "revision": 0}, "error", {"code": "PAYLOAD_TOO_LARGE"}
+                )
                 break
             try:
-                req = json.loads(line.decode("utf-8"), parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+                req = json.loads(
+                    line.decode("utf-8"),
+                    parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
+                )
             except (ValueError, UnicodeDecodeError):
                 worker.emit({"id": "invalid", "revision": 0}, "error", {"code": "INVALID_REQUEST"})
                 continue
             worker.accept(req)
     finally:
         worker.close()
+
 
 if __name__ == "__main__":
     main()

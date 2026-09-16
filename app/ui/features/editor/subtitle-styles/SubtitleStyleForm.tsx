@@ -1,8 +1,12 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { defaultSubtitleStyle, parseSubtitleStyle, type SubtitleStyle } from '../../../../core/subtitles/style';
+import {
+  defaultSubtitleStyle,
+  parseSubtitleStyle,
+  type SubtitleStyle,
+} from '../../../../core/subtitles/style';
 import { SubtitleStyleFields } from './SubtitleStyleFields';
 
 interface Props {
@@ -23,33 +27,59 @@ export function SubtitleStyleForm({ value, inherited, disabled, onChange, onDirt
   const [error, setError] = useState(false);
   const dirty = JSON.stringify(draft) !== original;
   const stale = baseline !== current;
-  function reload() {
-    setDraft({ ...effective }); setBaseline(current); setOriginal(JSON.stringify(effective)); setError(false);
-  }
+  const reload = useCallback(() => {
+    setDraft({ ...effective });
+    setBaseline(current);
+    setOriginal(JSON.stringify(effective));
+    setError(false);
+  }, [effective, current]);
   useEffect(() => {
     if (!dirty && stale) reload();
-  }, [current, dirty]);
-  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  }, [dirty, stale, reload]);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   function apply() {
     try {
       if (stale) return;
       const next = parseSubtitleStyle(draft);
       onChange(next);
-      setDraft(next); setOriginal(JSON.stringify(next)); setError(false);
-    } catch { setError(true); }
+      setDraft(next);
+      setOriginal(JSON.stringify(next));
+      setError(false);
+    } catch {
+      setError(true);
+    }
   }
-  return <div className="business-form">
-    <p className="field-help">{t('styleUnitsHelp')}</p>
-    <SubtitleStyleFields value={draft} disabled={disabled} onChange={setDraft} />
-    {error && <Banner status="error" title={t('styleInvalid')} />}
-    {stale && dirty && <Banner status="warning" title={t('styleStale')} />}
-    <div className="action-row">
-      <Button label={t('styleApply')} variant="primary" isDisabled={disabled || stale} onClick={apply} />
-      <Button label={t('styleDiscard')} isDisabled={disabled || (!dirty && !stale)} onClick={reload} />
-      <Button label={t('styleInherit')} isDisabled={disabled || stale || !value}
-        onClick={() => { onChange(undefined); setOriginal(JSON.stringify(draft)); }} />
+  return (
+    <div className="business-form">
+      <p className="field-help">{t('styleUnitsHelp')}</p>
+      <SubtitleStyleFields value={draft} disabled={disabled} onChange={setDraft} />
+      {error && <Banner status="error" title={t('styleInvalid')} />}
+      {stale && dirty && <Banner status="warning" title={t('styleStale')} />}
+      <div className="action-row">
+        <Button
+          label={t('styleApply')}
+          variant="primary"
+          isDisabled={disabled || stale}
+          onClick={apply}
+        />
+        <Button
+          label={t('styleDiscard')}
+          isDisabled={disabled || (!dirty && !stale)}
+          onClick={reload}
+        />
+        <Button
+          label={t('styleInherit')}
+          isDisabled={disabled || stale || !value}
+          onClick={() => {
+            onChange(undefined);
+            setOriginal(JSON.stringify(draft));
+          }}
+        />
+      </div>
+      <p className="field-help">{t('styleSrtHelp')}</p>
     </div>
-    <p className="field-help">{t('styleSrtHelp')}</p>
-  </div>;
+  );
 }

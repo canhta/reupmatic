@@ -18,7 +18,9 @@ test('source ZIP and CI do not install Git hooks', () => {
     mkdirSync(path.join(dir, '.git'));
     assert.equal(shouldInstallHooks(dir, { CI: 'true' }), false);
     assert.equal(shouldInstallHooks(dir, { LEFTHOOK: '0' }), false);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('hook setup recognizes only its own Git root, not a parent', () => {
@@ -31,7 +33,9 @@ test('hook setup recognizes only its own Git root, not a parent', () => {
     mkdirSync(nested);
     assert.equal(shouldInstallHooks(nested, {}), false);
     assert.equal(existsSync(path.join(dir, '.git', 'hooks', 'pre-commit')), false);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('Python commands prefer explicit executable, then project virtualenv', () => {
@@ -45,8 +49,13 @@ test('Python commands prefer explicit executable, then project virtualenv', () =
     assert.equal(pythonExecutable(dir, {}, 'linux'), path.join(dir, '.venv', 'bin', 'python'));
     mkdirSync(path.join(dir, '.venv', 'Scripts'), { recursive: true });
     writeFileSync(path.join(dir, '.venv', 'Scripts', 'python.exe'), '');
-    assert.equal(pythonExecutable(dir, {}, 'win32'), path.join(dir, '.venv', 'Scripts', 'python.exe'));
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+    assert.equal(
+      pythonExecutable(dir, {}, 'win32'),
+      path.join(dir, '.venv', 'Scripts', 'python.exe'),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('Reupmatic uses one formatter and hook manager with separate typechecking', () => {
@@ -64,7 +73,10 @@ test('Reupmatic uses one formatter and hook manager with separate typechecking',
 
 test('pre-commit checks do not mutate staging or start media jobs', () => {
   const hooks = readFileSync(path.join(root, 'lefthook.yml'), 'utf8');
-  const commands = hooks.split('\n').filter((line) => /^\s*(run|stage_fixed):/.test(line)).join('\n');
+  const commands = hooks
+    .split('\n')
+    .filter((line) => /^\s*(run|stage_fixed):/.test(line))
+    .join('\n');
   assert.doesNotMatch(commands, /--write|stage_fixed|git add|ffmpeg|media\.render|pip install/);
   assert.match(commands, /biome check/);
   assert.match(commands, /ruff format --check/);
@@ -72,7 +84,7 @@ test('pre-commit checks do not mutate staging or start media jobs', () => {
 
 test('format configurations parse and retain recommended checks', () => {
   const config = JSON.parse(readFileSync(path.join(root, 'biome.json'), 'utf8'));
-  assert.equal(config.linter.rules.recommended, true);
+  assert.equal(config.linter.rules.preset, 'recommended');
   assert.equal(config.formatter.indentStyle, 'space');
   assert.equal(config.files.includes.includes('!!research'), true);
   assert.equal(config.assist.actions.source.organizeImports, 'on');

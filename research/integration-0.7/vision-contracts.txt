@@ -1,9 +1,0 @@
-test_manual_and_text_inpainting_have_distinct_requirements (test_vision_contracts.VisionContracts.test_manual_and_text_inpainting_have_distinct_requirements) ... ok
-test_model_configuration_and_status_are_explicit_verbs (test_vision_contracts.VisionContracts.test_model_configuration_and_status_are_explicit_verbs) ... ok
-test_ocr_bounds_and_unknown_fields_match_runtime (test_vision_contracts.VisionContracts.test_ocr_bounds_and_unknown_fields_match_runtime) ... ok
-test_relational_time_bounds_remain_runtime_validation (test_vision_contracts.VisionContracts.test_relational_time_bounds_remain_runtime_validation) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 1.185s
-
-OK

@@ -30,10 +30,24 @@ async function run() {
   const bytes = await readFile(manifest);
   if (bytes.length > 2 * 1024 * 1024) throw new Error('MANIFEST_TOO_LARGE');
   const items = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
-  if (!Array.isArray(items) || items.length < 1 || items.length > 100 || items.some(item =>
-    !item || typeof item !== 'object' || Array.isArray(item) || !item.video
-    || Object.keys(item).some(key => !['video', 'srt'].includes(key))
-    || ['video', 'srt'].some(key => key in item && (typeof item[key] !== 'string' || !item[key] || item[key].includes('\0'))))) {
+  if (
+    !Array.isArray(items) ||
+    items.length < 1 ||
+    items.length > 100 ||
+    items.some(
+      (item) =>
+        !item ||
+        typeof item !== 'object' ||
+        Array.isArray(item) ||
+        !item.video ||
+        Object.keys(item).some((key) => !['video', 'srt'].includes(key)) ||
+        ['video', 'srt'].some(
+          (key) =>
+            key in item &&
+            (typeof item[key] !== 'string' || !item[key] || item[key].includes('\0')),
+        ),
+    )
+  ) {
     throw new Error('INVALID_MANIFEST');
   }
   const workspace = path.resolve(directory);
@@ -53,15 +67,23 @@ async function run() {
   process.once('SIGTERM', interrupt);
   try {
     store = new BatchStore(path.join(workspace, 'batch.sqlite'));
-    worker = new WorkerClient(pythonExecutable(root), path.join(root, 'worker/main.py'), path.join(workspace, 'worker'));
+    worker = new WorkerClient(
+      pythonExecutable(root),
+      path.join(root, 'worker/main.py'),
+      path.join(workspace, 'worker'),
+    );
     renderer = new RenderCoordinator(worker);
     queue = new BatchQueue(store, worker, renderer);
     const inputs = [];
     for (const [index, item] of items.entries()) {
       if (interrupted) break;
       try {
-        inputs.push({ video: await fileIdentity(item.video), output_dir: output, encoding: 'review',
-          ...(item.srt ? { subtitle: await fileIdentity(item.srt) } : {}) });
+        inputs.push({
+          video: await fileIdentity(item.video),
+          output_dir: output,
+          encoding: 'review',
+          ...(item.srt ? { subtitle: await fileIdentity(item.srt) } : {}),
+        });
       } catch (error) {
         failed++;
         console.log(JSON.stringify({ index, status: 'failed', code: errorCode(error) }));
@@ -71,9 +93,15 @@ async function run() {
       queue.enqueue(randomUUID(), inputs);
       await new Promise((resolve, reject) => {
         function changed(snapshot) {
-          if (!interrupted && !snapshot.fault && snapshot.items.some(item => !terminal.has(item.state))) return;
+          if (
+            !interrupted &&
+            !snapshot.fault &&
+            snapshot.items.some((item) => !terminal.has(item.state))
+          )
+            return;
           queue.off('changed', changed);
-          if (snapshot.fault) reject(new Error(snapshot.fault)); else resolve();
+          if (snapshot.fault) reject(new Error(snapshot.fault));
+          else resolve();
         }
         queue.on('changed', changed);
         queue.resume();
@@ -81,8 +109,15 @@ async function run() {
     }
     for (const job of store.list()) {
       if (job.state !== 'complete') failed++;
-      console.log(JSON.stringify({ id: job.id, name: job.input.video.name, status: job.state,
-        code: job.error_code, output: job.output }));
+      console.log(
+        JSON.stringify({
+          id: job.id,
+          name: job.input.video.name,
+          status: job.state,
+          code: job.error_code,
+          output: job.output,
+        }),
+      );
     }
     return interrupted ? 130 : failed ? 1 : 0;
   } finally {
@@ -91,9 +126,14 @@ async function run() {
     queue?.beginClose();
     await renderer?.close();
     await worker?.stop();
-    if (queue) await queue.finishClose(); else store?.close();
+    if (queue) await queue.finishClose();
+    else store?.close();
   }
 }
 
-try { process.exitCode = await run(); }
-catch (error) { console.error(errorCode(error)); process.exitCode = 1; }
+try {
+  process.exitCode = await run();
+} catch (error) {
+  console.error(errorCode(error));
+  process.exitCode = 1;
+}

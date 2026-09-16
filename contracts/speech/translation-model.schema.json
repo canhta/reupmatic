@@ -18,18 +18,10 @@
       "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*://)(?!//)(?!\\\\\\\\)[^\\u0000]+$"
     },
     "source_language": {
-      "enum": [
-        "en",
-        "vi",
-        "zh"
-      ]
+      "enum": ["en", "vi", "zh"]
     },
     "target_language": {
-      "enum": [
-        "en",
-        "vi",
-        "zh"
-      ]
+      "enum": ["en", "vi", "zh"]
     },
     "files": {
       "type": "object",
@@ -67,54 +59,31 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       },
-      "required": [
-        "model.bin",
-        "config.json",
-        "source.spm",
-        "target.spm"
-      ],
+      "required": ["model.bin", "config.json", "source.spm", "target.spm"],
       "additionalProperties": false,
       "oneOf": [
         {
-          "required": [
-            "shared_vocabulary.json"
-          ],
+          "required": ["shared_vocabulary.json"],
           "not": {
             "anyOf": [
               {
-                "required": [
-                  "source_vocabulary.json"
-                ]
+                "required": ["source_vocabulary.json"]
               },
               {
-                "required": [
-                  "target_vocabulary.json"
-                ]
+                "required": ["target_vocabulary.json"]
               }
             ]
           }
         },
         {
-          "required": [
-            "source_vocabulary.json",
-            "target_vocabulary.json"
-          ],
+          "required": ["source_vocabulary.json", "target_vocabulary.json"],
           "not": {
-            "required": [
-              "shared_vocabulary.json"
-            ]
+            "required": ["shared_vocabulary.json"]
           }
         }
       ]
     }
   },
-  "required": [
-    "version",
-    "engine",
-    "directory",
-    "source_language",
-    "target_language",
-    "files"
-  ],
+  "required": ["version", "engine", "directory", "source_language", "target_language", "files"],
   "additionalProperties": false
 }

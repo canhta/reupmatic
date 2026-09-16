@@ -15,10 +15,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            "en",
-            "vi"
-          ]
+          "enum": ["en", "vi"]
         },
         "model_id": {
           "type": "string",
@@ -60,24 +57,12 @@
                 "maximum": 86400000
               }
             },
-            "required": [
-              "id",
-              "text",
-              "start_ms",
-              "end_ms"
-            ],
+            "required": ["id", "text", "start_ms", "end_ms"],
             "additionalProperties": false
           }
         }
       },
-      "required": [
-        "source_layer",
-        "source_token",
-        "language",
-        "model_id",
-        "voice_id",
-        "cues"
-      ],
+      "required": ["source_layer", "source_token", "language", "model_id", "voice_id", "cues"],
       "additionalProperties": false
     },
     "input": {
@@ -103,10 +88,7 @@
               "pattern": "^[a-zA-Z0-9_-]{8,128}$"
             },
             "language": {
-              "enum": [
-                "en",
-                "vi"
-              ]
+              "enum": ["en", "vi"]
             },
             "model_id": {
               "type": "string",
@@ -148,32 +130,16 @@
                     "maximum": 86400000
                   }
                 },
-                "required": [
-                  "id",
-                  "text",
-                  "start_ms",
-                  "end_ms"
-                ],
+                "required": ["id", "text", "start_ms", "end_ms"],
                 "additionalProperties": false
               }
             }
           },
-          "required": [
-            "source_layer",
-            "source_token",
-            "language",
-            "model_id",
-            "voice_id",
-            "cues"
-          ],
+          "required": ["source_layer", "source_token", "language", "model_id", "voice_id", "cues"],
           "additionalProperties": false
         }
       },
-      "required": [
-        "request_id",
-        "revision",
-        "params"
-      ],
+      "required": ["request_id", "revision", "params"],
       "additionalProperties": false
     },
     "result": {
@@ -187,10 +153,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            "en",
-            "vi"
-          ]
+          "enum": ["en", "vi"]
         },
         "model_id": {
           "type": "string",
@@ -232,12 +195,7 @@
                 "maximum": 86400000
               }
             },
-            "required": [
-              "id",
-              "text",
-              "start_ms",
-              "end_ms"
-            ],
+            "required": ["id", "text", "start_ms", "end_ms"],
             "additionalProperties": false
           }
         },
@@ -289,11 +247,7 @@
                 "maximum": 28800000
               }
             },
-            "required": [
-              "cue_id",
-              "start_frame",
-              "end_frame"
-            ],
+            "required": ["cue_id", "start_frame", "end_frame"],
             "additionalProperties": false
           }
         },
@@ -363,10 +317,7 @@
           "uniqueItems": true,
           "maxItems": 2,
           "items": {
-            "enum": [
-              "en",
-              "vi"
-            ]
+            "enum": ["en", "vi"]
           }
         },
         "voices": {
@@ -388,10 +339,7 @@
                 "pattern": "^[^\\u0000]+$"
               }
             },
-            "required": [
-              "id",
-              "label"
-            ],
+            "required": ["id", "label"],
             "additionalProperties": false
           }
         },
@@ -399,14 +347,7 @@
           "const": false
         }
       },
-      "required": [
-        "available",
-        "code",
-        "model_id",
-        "languages",
-        "voices",
-        "verified"
-      ],
+      "required": ["available", "code", "model_id", "languages", "voices", "verified"],
       "additionalProperties": false
     }
   }

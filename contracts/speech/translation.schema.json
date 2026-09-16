@@ -20,28 +20,17 @@
           "type": "object",
           "properties": {
             "source_layer": {
-              "enum": [
-                "transcript",
-                "displayed"
-              ]
+              "enum": ["transcript", "displayed"]
             },
             "source_token": {
               "type": "string",
               "pattern": "^[a-zA-Z0-9_-]{8,128}$"
             },
             "source_language": {
-              "enum": [
-                "en",
-                "vi",
-                "zh"
-              ]
+              "enum": ["en", "vi", "zh"]
             },
             "target_language": {
-              "enum": [
-                "en",
-                "vi",
-                "zh"
-              ]
+              "enum": ["en", "vi", "zh"]
             },
             "model_id": {
               "type": "string",
@@ -77,12 +66,7 @@
                     "pattern": "^[^\\u0000]+$"
                   }
                 },
-                "required": [
-                  "id",
-                  "start_ms",
-                  "end_ms",
-                  "text"
-                ],
+                "required": ["id", "start_ms", "end_ms", "text"],
                 "additionalProperties": false
               }
             },
@@ -104,10 +88,7 @@
                     "pattern": "^[^\\u0000]*$"
                   }
                 },
-                "required": [
-                  "find",
-                  "replace"
-                ],
+                "required": ["find", "replace"],
                 "additionalProperties": false
               }
             }
@@ -124,39 +105,24 @@
           "additionalProperties": false
         }
       },
-      "required": [
-        "request_id",
-        "revision",
-        "params"
-      ],
+      "required": ["request_id", "revision", "params"],
       "additionalProperties": false
     },
     "worker_params": {
       "type": "object",
       "properties": {
         "source_layer": {
-          "enum": [
-            "transcript",
-            "displayed"
-          ]
+          "enum": ["transcript", "displayed"]
         },
         "source_token": {
           "type": "string",
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "source_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "target_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "model_id": {
           "type": "string",
@@ -192,12 +158,7 @@
                 "pattern": "^[^\\u0000]+$"
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         },
@@ -219,10 +180,7 @@
                 "pattern": "^[^\\u0000]*$"
               }
             },
-            "required": [
-              "find",
-              "replace"
-            ],
+            "required": ["find", "replace"],
             "additionalProperties": false
           }
         }
@@ -242,28 +200,17 @@
       "type": "object",
       "properties": {
         "source_layer": {
-          "enum": [
-            "transcript",
-            "displayed"
-          ]
+          "enum": ["transcript", "displayed"]
         },
         "source_token": {
           "type": "string",
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "source_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "target_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "model_id": {
           "type": "string",
@@ -299,12 +246,7 @@
                 "pattern": "^[^\\u0000]+$"
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         },
@@ -326,10 +268,7 @@
                 "pattern": "^[^\\u0000]*$"
               }
             },
-            "required": [
-              "find",
-              "replace"
-            ],
+            "required": ["find", "replace"],
             "additionalProperties": false
           }
         },
@@ -385,20 +324,10 @@
           ]
         },
         "source_language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "target_language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "verified": {
           "const": false
@@ -432,18 +361,10 @@
                 "pattern": "^[a-f0-9]{64}$"
               },
               "source_language": {
-                "enum": [
-                  "en",
-                  "vi",
-                  "zh"
-                ]
+                "enum": ["en", "vi", "zh"]
               },
               "target_language": {
-                "enum": [
-                  "en",
-                  "vi",
-                  "zh"
-                ]
+                "enum": ["en", "vi", "zh"]
               }
             }
           }
@@ -457,10 +378,7 @@
           "const": "translation"
         },
         "layer": {
-          "enum": [
-            "transcript",
-            "displayed"
-          ]
+          "enum": ["transcript", "displayed"]
         },
         "token": {
           "type": "string",
@@ -471,18 +389,10 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "source_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "target_language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "model_id": {
           "type": "string",
@@ -512,18 +422,12 @@
                 "pattern": "^[^\\u0000]*$"
               }
             },
-            "required": [
-              "find",
-              "replace"
-            ],
+            "required": ["find", "replace"],
             "additionalProperties": false
           }
         },
         "policy": {
-          "enum": [
-            "keep-existing",
-            "replace-all"
-          ]
+          "enum": ["keep-existing", "replace-all"]
         }
       },
       "required": [
@@ -558,10 +462,7 @@
             "pattern": "^[^\\u0000]*$"
           }
         },
-        "required": [
-          "find",
-          "replace"
-        ],
+        "required": ["find", "replace"],
         "additionalProperties": false
       }
     }

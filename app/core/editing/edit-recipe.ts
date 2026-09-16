@@ -1,7 +1,15 @@
 import { assertCues, type Cue } from '../subtitles/cues.js';
 
-export interface TimeRange { start_ms: number; end_ms: number }
-export interface CropRegion { x: number; y: number; width: number; height: number }
+export interface TimeRange {
+  start_ms: number;
+  end_ms: number;
+}
+export interface CropRegion {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 export interface EditingRecipe {
   trim?: TimeRange;
   crop?: CropRegion;
@@ -9,20 +17,39 @@ export interface EditingRecipe {
   speed?: number;
   color?: { brightness: number; contrast: number; saturation: number };
   audio?: { muted: boolean; gain_db: number };
-  output?: { aspect: 'source' | '9:16' | '16:9' | '1:1' | '4:5'; fit: 'contain' | 'cover'; height: 0 | 480 | 720 | 1080 | 1920 };
+  output?: {
+    aspect: 'source' | '9:16' | '16:9' | '1:1' | '4:5';
+    fit: 'contain' | 'cover';
+    height: 0 | 480 | 720 | 1080 | 1920;
+  };
 }
-export interface EditWindow extends TimeRange { speed: number; duration_ms: number }
+export interface EditWindow extends TimeRange {
+  speed: number;
+  duration_ms: number;
+}
 const keys = ['trim', 'crop', 'flip', 'speed', 'color', 'audio', 'output'];
 
 function record(value: unknown, allowed: string[], all = true): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)
-    || !Object.keys(value).length || Object.keys(value).some(key => !allowed.includes(key))
-    || (all && allowed.some(key => !(key in value)))) throw new Error('INVALID_EDITING');
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    !Object.keys(value).length ||
+    Object.keys(value).some((key) => !allowed.includes(key)) ||
+    (all && allowed.some((key) => !(key in value)))
+  )
+    throw new Error('INVALID_EDITING');
   return value as Record<string, unknown>;
 }
 function number(value: unknown, min: number, max: number, integer = false): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max
-    || (integer && !Number.isInteger(value))) throw new Error('INVALID_EDITING');
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value < min ||
+    value > max ||
+    (integer && !Number.isInteger(value))
+  )
+    throw new Error('INVALID_EDITING');
   return value;
 }
 function choice<const T extends string | number>(value: unknown, options: readonly T[]): T {
@@ -42,17 +69,25 @@ export function parseEditing(value: unknown): EditingRecipe {
   if ('trim' in input) result.trim = timeRange(input.trim);
   if ('crop' in input) {
     const crop = record(input.crop, ['x', 'y', 'width', 'height']);
-    const region = { x: number(crop.x, 0, 1), y: number(crop.y, 0, 1),
-      width: number(crop.width, 0.01, 1), height: number(crop.height, 0.01, 1) };
-    if (region.x + region.width > 1 + 1e-9 || region.y + region.height > 1 + 1e-9) throw new Error('INVALID_EDITING');
+    const region = {
+      x: number(crop.x, 0, 1),
+      y: number(crop.y, 0, 1),
+      width: number(crop.width, 0.01, 1),
+      height: number(crop.height, 0.01, 1),
+    };
+    if (region.x + region.width > 1 + 1e-9 || region.y + region.height > 1 + 1e-9)
+      throw new Error('INVALID_EDITING');
     result.crop = region;
   }
   if ('flip' in input) result.flip = choice(input.flip, ['horizontal', 'vertical', 'both']);
   if ('speed' in input) result.speed = number(input.speed, 0.25, 4);
   if ('color' in input) {
     const color = record(input.color, ['brightness', 'contrast', 'saturation']);
-    result.color = { brightness: number(color.brightness, -1, 1), contrast: number(color.contrast, 0, 2),
-      saturation: number(color.saturation, 0, 3) };
+    result.color = {
+      brightness: number(color.brightness, -1, 1),
+      contrast: number(color.contrast, 0, 2),
+      saturation: number(color.saturation, 0, 3),
+    };
   }
   if ('audio' in input) {
     const audio = record(input.audio, ['muted', 'gain_db']);
@@ -61,32 +96,48 @@ export function parseEditing(value: unknown): EditingRecipe {
   }
   if ('output' in input) {
     const output = record(input.output, ['aspect', 'fit', 'height']);
-    result.output = { aspect: choice(output.aspect, ['source', '9:16', '16:9', '1:1', '4:5']),
-      fit: choice(output.fit, ['contain', 'cover']), height: choice(output.height, [0, 480, 720, 1080, 1920]) };
+    result.output = {
+      aspect: choice(output.aspect, ['source', '9:16', '16:9', '1:1', '4:5']),
+      fit: choice(output.fit, ['contain', 'cover']),
+      height: choice(output.height, [0, 480, 720, 1080, 1920]),
+    };
   }
   return result;
 }
 
-export function resolveEditWindow(editing: EditingRecipe | undefined, duration: number, sample?: TimeRange): EditWindow {
-  if (!Number.isInteger(duration) || duration < 1 || duration > 86400000) throw new Error('EDIT_SOURCE_RANGE');
+export function resolveEditWindow(
+  editing: EditingRecipe | undefined,
+  duration: number,
+  sample?: TimeRange,
+): EditWindow {
+  if (!Number.isInteger(duration) || duration < 1 || duration > 86400000)
+    throw new Error('EDIT_SOURCE_RANGE');
   const edit = editing ? parseEditing(editing) : {};
   const trim = edit.trim ?? { start_ms: 0, end_ms: duration };
   if (trim.end_ms > duration) throw new Error('EDIT_SOURCE_RANGE');
-  if (sample && (timeRange(sample).end_ms > duration)) throw new Error('EDIT_SOURCE_RANGE');
+  if (sample && timeRange(sample).end_ms > duration) throw new Error('EDIT_SOURCE_RANGE');
   const start_ms = Math.max(trim.start_ms, sample?.start_ms ?? 0);
   const end_ms = Math.min(trim.end_ms, sample?.end_ms ?? duration);
   if (end_ms <= start_ms) throw new Error('EDIT_EMPTY_RANGE');
   const speed = edit.speed ?? 1;
-  return { start_ms, end_ms, speed, duration_ms: Math.max(1, Math.round((end_ms - start_ms) / speed)) };
+  return {
+    start_ms,
+    end_ms,
+    speed,
+    duration_ms: Math.max(1, Math.round((end_ms - start_ms) / speed)),
+  };
 }
 
 export function retimeCues(cues: Cue[], window: EditWindow): Cue[] {
   assertCues(cues);
-  const result = cues.flatMap(cue => {
+  const result = cues.flatMap((cue) => {
     const first = Math.max(window.start_ms, cue.start_ms);
     const last = Math.min(window.end_ms, cue.end_ms);
     const start_ms = Math.round((first - window.start_ms) / window.speed);
-    const end_ms = Math.min(window.duration_ms, Math.round((last - window.start_ms) / window.speed));
+    const end_ms = Math.min(
+      window.duration_ms,
+      Math.round((last - window.start_ms) / window.speed),
+    );
     return last > first && end_ms > start_ms ? [{ ...cue, start_ms, end_ms }] : [];
   });
   assertCues(result);

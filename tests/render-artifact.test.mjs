@@ -15,12 +15,15 @@ test('host accepts the actual nested render cache and flat vision output contrac
   assert.equal(renderArtifactPath(workspace, uuid, sample), sample);
 });
 test('artifact mapping rejects traversal, wrong IDs, arbitrary files and sibling roots', () => {
-  for (const [id, filename] of [[digest, path.join(workspace, 'renders', 'other', 'output.mp4')],
+  for (const [id, filename] of [
+    [digest, path.join(workspace, 'renders', 'other', 'output.mp4')],
     [digest, path.join(workspace, 'renders-elsewhere', digest, 'output.mp4')],
     [digest, path.join(workspace, 'renders', digest, 'secret.txt')],
     ['../escape', path.join(workspace, 'renders', 'escape.mp4')],
     [uuid, path.join(workspace, 'renders', digest, 'output.mp4')],
-    [digest, 'output.mp4'], [digest, path.join(workspace, 'renders', digest, 'output.mp4') + '\0']]) {
+    [digest, 'output.mp4'],
+    [digest, `${path.join(workspace, 'renders', digest, 'output.mp4')}\0`],
+  ]) {
     assert.throws(() => renderArtifactPath(workspace, id, filename), /INVALID_WORKER_RESPONSE/);
   }
 });

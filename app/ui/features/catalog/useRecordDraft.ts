@@ -17,7 +17,7 @@ export function useRecordDraft<T>(initial: () => T) {
   }
 
   async function choose(next: T) {
-    if (dirty && !await confirm(t('catalogDiscard'))) return false;
+    if (dirty && !(await confirm(t('catalogDiscard')))) return false;
     replace(next);
     return true;
   }

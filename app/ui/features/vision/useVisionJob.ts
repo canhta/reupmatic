@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
-  InpaintResult, ModelStatus, OcrResult, VisionInput, VisionParams,
+  InpaintResult,
+  ModelStatus,
+  OcrResult,
+  VisionInput,
+  VisionParams,
 } from '../../../core/vision/vision';
 import { unwrap } from '../../bridge/client';
 
@@ -11,8 +15,16 @@ export interface VisionContext {
   end: string;
   duration: number;
 }
-export interface Captured<T> { data: T; revision: number }
-interface Active { id: string; revision: number; phase: string; fraction: number | null }
+export interface Captured<T> {
+  data: T;
+  revision: number;
+}
+interface Active {
+  id: string;
+  revision: number;
+  phase: string;
+  fraction: number | null;
+}
 
 export function useVisionJob(context: VisionContext) {
   const current = useRef(context);
@@ -51,7 +63,7 @@ export function useVisionJob(context: VisionContext) {
 
   useEffect(() => {
     alive.current = true;
-    const unsubscribe = window.reupmatic.onVisionJob(message => {
+    const unsubscribe = window.reupmatic.onVisionJob((message) => {
       const request = operation.current;
       if (!request || message.id !== request.id || message.revision !== request.revision) return;
       if (message.event === 'progress') {
@@ -70,7 +82,9 @@ export function useVisionJob(context: VisionContext) {
       if (message.data.kind === 'ocr') setDraft({ data: message.data, revision: request.revision });
       else setOutput({ data: message.data, revision: request.revision });
     });
-    const offModels = window.reupmatic.onModelsChanged(() => { void refresh(); });
+    const offModels = window.reupmatic.onModelsChanged(() => {
+      void refresh();
+    });
     void refresh();
     return () => {
       alive.current = false;
@@ -91,18 +105,30 @@ export function useVisionJob(context: VisionContext) {
       const full = method === 'media.ocr.extract';
       const start_ms = full ? 0 : Math.round(Number(start) * 1000);
       const end_ms = full ? duration : Math.round(Number(end) * 1000);
-      if ((!full && (!start.trim() || !end.trim())) || !Number.isFinite(start_ms) || !Number.isFinite(end_ms)
-        || start_ms < 0 || end_ms <= start_ms || end_ms > duration) throw new Error('INVALID_REQUEST');
-      if (!full && end_ms - start_ms > (method === 'media.ocr' ? 120000 : 10000)) throw new Error('VISION_LIMIT');
+      if (
+        (!full && (!start.trim() || !end.trim())) ||
+        !Number.isFinite(start_ms) ||
+        !Number.isFinite(end_ms) ||
+        start_ms < 0 ||
+        end_ms <= start_ms ||
+        end_ms > duration
+      )
+        throw new Error('INVALID_REQUEST');
+      if (!full && end_ms - start_ms > (method === 'media.ocr' ? 120000 : 10000))
+        throw new Error('VISION_LIMIT');
       const request = { id, revision, phase: 'queued', fraction: null };
       operation.current = request;
       admitted = true;
       setActive(request);
       setError('');
-      await unwrap(window.reupmatic.visionStart({
-        request_id: id, revision, method,
-        params: { ...settings, asset_id: assetId, start_ms, end_ms },
-      }));
+      await unwrap(
+        window.reupmatic.visionStart({
+          request_id: id,
+          revision,
+          method,
+          params: { ...settings, asset_id: assetId, start_ms, end_ms },
+        }),
+      );
       // The terminal event owns completion, even if it arrived before this reply.
     } catch (reason) {
       if (admitted && operation.current?.id !== id) return;
@@ -128,8 +154,20 @@ export function useVisionJob(context: VisionContext) {
   }
 
   function consumeDraft(captured: Captured<OcrResult>) {
-    setDraft(previous => previous === captured ? null : previous);
+    setDraft((previous) => (previous === captured ? null : previous));
   }
 
-  return { models, checking, active, draft, output, error, report, refresh, start, cancel, consumeDraft };
+  return {
+    models,
+    checking,
+    active,
+    draft,
+    output,
+    error,
+    report,
+    refresh,
+    start,
+    cancel,
+    consumeDraft,
+  };
 }

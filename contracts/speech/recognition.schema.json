@@ -40,28 +40,14 @@
               "maximum": 86400000
             },
             "language": {
-              "enum": [
-                "en",
-                "vi",
-                "zh"
-              ]
+              "enum": ["en", "vi", "zh"]
             }
           },
-          "required": [
-            "asset_id",
-            "model_id",
-            "start_ms",
-            "end_ms",
-            "language"
-          ],
+          "required": ["asset_id", "model_id", "start_ms", "end_ms", "language"],
           "additionalProperties": false
         }
       },
-      "required": [
-        "request_id",
-        "revision",
-        "params"
-      ],
+      "required": ["request_id", "revision", "params"],
       "additionalProperties": false
     },
     "worker_params": {
@@ -92,21 +78,10 @@
           "maximum": 86400000
         },
         "language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         }
       },
-      "required": [
-        "asset_id",
-        "source_sha256",
-        "model_id",
-        "start_ms",
-        "end_ms",
-        "language"
-      ],
+      "required": ["asset_id", "source_sha256", "model_id", "start_ms", "end_ms", "language"],
       "additionalProperties": false
     },
     "result": {
@@ -140,11 +115,7 @@
           "maximum": 86400000
         },
         "language": {
-          "enum": [
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": ["en", "vi", "zh"]
         },
         "runtime": {
           "type": "string",
@@ -184,12 +155,7 @@
                 "maxLength": 10000
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         }
@@ -242,24 +208,14 @@
           "uniqueItems": true,
           "maxItems": 3,
           "items": {
-            "enum": [
-              "en",
-              "vi",
-              "zh"
-            ]
+            "enum": ["en", "vi", "zh"]
           }
         },
         "verified": {
           "type": "boolean"
         }
       },
-      "required": [
-        "available",
-        "code",
-        "model_id",
-        "languages",
-        "verified"
-      ],
+      "required": ["available", "code", "model_id", "languages", "verified"],
       "additionalProperties": false,
       "allOf": [
         {

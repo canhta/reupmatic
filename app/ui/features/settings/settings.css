@@ -1,3 +1,13 @@
-.settings-workspace { display: grid; gap: var(--space-6); max-width: 1040px; }
-.settings-path { overflow-wrap: anywhere; }
-.local-model-setup { display: grid; gap: var(--space-3); margin-block: var(--space-3); }
+.settings-workspace {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 1040px;
+}
+.settings-path {
+  overflow-wrap: anywhere;
+}
+.local-model-setup {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-3);
+}

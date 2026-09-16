@@ -1,17 +1,30 @@
 import shutil
 from pathlib import Path
 
-from media.editing.filters import geometry_filters
-from media.audio.mixing import audio_arguments
 from subtitles.document import style_srt
+
+from media.audio.mixing import audio_arguments
+from media.editing.filters import geometry_filters
 from media.editing.recipe import parse_editing
 from media.probe import probe_file
 
 
-def encode_video(host, req, source: Path, output: Path, *, start_ms: int, end_ms: int,
-                 encoding: str, subtitle: Path | None = None, video_track: Path | None = None,
-                 editing: dict | None = None, soundtrack: dict | None = None, subtitle_style: dict | None = None,
-                 source_offset_ms: int = 0):
+def encode_video(
+    host,
+    req,
+    source: Path,
+    output: Path,
+    *,
+    start_ms: int,
+    end_ms: int,
+    encoding: str,
+    subtitle: Path | None = None,
+    video_track: Path | None = None,
+    editing: dict | None = None,
+    soundtrack: dict | None = None,
+    subtitle_style: dict | None = None,
+    source_offset_ms: int = 0,
+):
     edit = parse_editing(editing) if editing is not None else {}
     speed = edit.get("speed", 1)
     duration_ms = max(1, int((end_ms - start_ms) / speed + 0.5))
@@ -26,13 +39,24 @@ def encode_video(host, req, source: Path, output: Path, *, start_ms: int, end_ms
     if soundtrack:
         args += ["-i", str(soundtrack["path"])]
     args += ["-map", "0:v:0"]
-    args += audio_arguments(1 if video_track else 0, track_index, soundtrack,
-                            source_info["has_audio"], edit, start_ms, end_ms, duration_ms, source_offset_ms)
+    args += audio_arguments(
+        1 if video_track else 0,
+        track_index,
+        soundtrack,
+        source_info["has_audio"],
+        edit,
+        start_ms,
+        end_ms,
+        duration_ms,
+        source_offset_ms,
+    )
     filters = ["setpts=PTS-STARTPTS"]
     if video_track:
         filters += [f"setpts=PTS+{start_ms / 1000:.6f}/TB"]
     else:
-        filters += [f"trim=start={(start_ms - source_offset_ms) / 1000:.3f}:end={(end_ms - source_offset_ms) / 1000:.3f}"]
+        filters += [
+            f"trim=start={(start_ms - source_offset_ms) / 1000:.3f}:end={(end_ms - source_offset_ms) / 1000:.3f}"
+        ]
     if source_offset_ms:
         filters += [f"setpts=PTS+{source_offset_ms / 1000:.6f}/TB"]
     geometry, dimensions = geometry_filters(edit, video_info)
@@ -52,7 +76,19 @@ def encode_video(host, req, source: Path, output: Path, *, start_ms: int, end_ms
     if encoding == "lossless":
         args += ["-c:v", "ffv1", "-level", "3", "-c:a", "flac"]
     else:
-        args += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
-                 "-c:a", "aac", "-movflags", "+faststart"]
+        args += [
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "20",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-movflags",
+            "+faststart",
+        ]
     args += ["-r", video_info["frame_rate"], "-threads", "2", "-n", str(output)]
     host.process.run(req, args, cwd=working, duration_ms=duration_ms)

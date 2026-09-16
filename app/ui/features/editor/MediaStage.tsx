@@ -15,27 +15,40 @@ export function MediaStage() {
       <div className="video-tray">
         <div className="video-wrap">
           <video
-            key={editor.composition ? editor.sourceSelection?.id ?? 'loading' : media.asset_id}
+            key={editor.composition ? (editor.sourceSelection?.id ?? 'loading') : media.asset_id}
             ref={editor.video}
             src={editor.sourceUrl}
             onLoadedMetadata={editor.onSourceMetadata}
             controls
-            onTimeUpdate={event => editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))}
+            onTimeUpdate={(event) =>
+              editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
+            }
             onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
           />
         </div>
       </div>
-      <small>{editor.composition ? t('compositionPreviewHelp') : ass?.revision !== revision ? t('stale') : t('previewNotice')}</small>
+      <small>
+        {editor.composition
+          ? t('compositionPreviewHelp')
+          : ass?.revision !== revision
+            ? t('stale')
+            : t('previewNotice')}
+      </small>
       <h2>{t('processed')}</h2>
       {preview && preview.revision !== revision && <p className="stale-preview">{t('stale')}</p>}
       {preview ? (
         <>
           <video src={preview.url} controls loop />
           <div className="preview-actions">
-            <Button label={t('saveVideo')} onClick={() => void editor.saveVideo(preview.artifact_id)} />
+            <Button
+              label={t('saveVideo')}
+              onClick={() => void editor.saveVideo(preview.artifact_id)}
+            />
           </div>
         </>
-      ) : <EmptyState className="no-preview" title={t('noPreview')} />}
+      ) : (
+        <EmptyState className="no-preview" title={t('noPreview')} />
+      )}
     </div>
   );
 }

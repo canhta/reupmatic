@@ -1,8 +1,10 @@
-from subtitles.style import parse_style
 from typing import Any
 
 from runtime.errors import WorkerError
 from runtime.protocol import bounded_int, exact, string
+
+from subtitles.style import parse_style
+
 
 def validate_cues(cues: Any) -> list[dict]:
     if not isinstance(cues, list) or len(cues) > 10000:
@@ -18,6 +20,11 @@ def validate_cues(cues: Any) -> list[dict]:
         ids.add(cid)
         start = bounded_int(cue["start_ms"], 0, 24 * 3600 * 1000)
         end = bounded_int(cue["end_ms"], 1, 24 * 3600 * 1000)
-        if end <= start or not isinstance(cue["text"], str) or len(cue["text"]) > 10000 or "\x00" in cue["text"]:
+        if (
+            end <= start
+            or not isinstance(cue["text"], str)
+            or len(cue["text"]) > 10000
+            or "\x00" in cue["text"]
+        ):
             raise WorkerError("INVALID_CUES")
     return cues

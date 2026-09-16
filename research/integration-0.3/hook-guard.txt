@@ -1,5 +1,0 @@
-
-> reupmatic@0.3.0 hooks:install
-> node scripts/install-hooks.mjs
-
-Reupmatic: hook setup skipped (CI or not a repository root). Run npm run hooks:install after git init.

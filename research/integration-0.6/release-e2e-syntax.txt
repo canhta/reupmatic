@@ -1,2 +1,0 @@
-PASS: node --check tests/e2e/*.mjs (5 files, individually checked)
-Not Electron execution.

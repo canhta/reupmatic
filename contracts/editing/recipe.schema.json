@@ -19,10 +19,7 @@
           "maximum": 86400000
         }
       },
-      "required": [
-        "start_ms",
-        "end_ms"
-      ],
+      "required": ["start_ms", "end_ms"],
       "additionalProperties": false
     },
     "crop": {
@@ -49,20 +46,11 @@
           "maximum": 1
         }
       },
-      "required": [
-        "x",
-        "y",
-        "width",
-        "height"
-      ],
+      "required": ["x", "y", "width", "height"],
       "additionalProperties": false
     },
     "flip": {
-      "enum": [
-        "horizontal",
-        "vertical",
-        "both"
-      ]
+      "enum": ["horizontal", "vertical", "both"]
     },
     "speed": {
       "type": "number",
@@ -88,11 +76,7 @@
           "maximum": 3
         }
       },
-      "required": [
-        "brightness",
-        "contrast",
-        "saturation"
-      ],
+      "required": ["brightness", "contrast", "saturation"],
       "additionalProperties": false
     },
     "audio": {
@@ -107,45 +91,23 @@
           "maximum": 24
         }
       },
-      "required": [
-        "muted",
-        "gain_db"
-      ],
+      "required": ["muted", "gain_db"],
       "additionalProperties": false
     },
     "output": {
       "type": "object",
       "properties": {
         "aspect": {
-          "enum": [
-            "source",
-            "9:16",
-            "16:9",
-            "1:1",
-            "4:5"
-          ]
+          "enum": ["source", "9:16", "16:9", "1:1", "4:5"]
         },
         "fit": {
-          "enum": [
-            "contain",
-            "cover"
-          ]
+          "enum": ["contain", "cover"]
         },
         "height": {
-          "enum": [
-            0,
-            480,
-            720,
-            1080,
-            1920
-          ]
+          "enum": [0, 480, 720, 1080, 1920]
         }
       },
-      "required": [
-        "aspect",
-        "fit",
-        "height"
-      ],
+      "required": ["aspect", "fit", "height"],
       "additionalProperties": false
     }
   },

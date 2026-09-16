@@ -3,12 +3,7 @@
   "title": "Reupmatic folder rule native-picker request",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "source_id",
-    "output_id",
-    "include_existing",
-    "recursive"
-  ],
+  "required": ["source_id", "output_id", "include_existing", "recursive"],
   "properties": {
     "source_id": {
       "type": "string",
@@ -34,11 +29,7 @@
           "type": "object",
           "properties": {
             "language": {
-              "enum": [
-                "en",
-                "vi",
-                "zh"
-              ]
+              "enum": ["en", "vi", "zh"]
             },
             "sample_ms": {
               "type": "integer",
@@ -51,11 +42,7 @@
               "maximum": 1
             }
           },
-          "required": [
-            "language",
-            "sample_ms",
-            "min_confidence"
-          ],
+          "required": ["language", "sample_ms", "min_confidence"],
           "additionalProperties": false
         },
         "inpaint": {
@@ -95,20 +82,11 @@
                       "maximum": 1
                     }
                   },
-                  "required": [
-                    "x",
-                    "y",
-                    "width",
-                    "height"
-                  ],
+                  "required": ["x", "y", "width", "height"],
                   "additionalProperties": false
                 }
               },
-              "required": [
-                "target",
-                "padding_px",
-                "region"
-              ],
+              "required": ["target", "padding_px", "region"],
               "additionalProperties": false
             },
             {
@@ -123,18 +101,10 @@
                   "maximum": 32
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 }
               },
-              "required": [
-                "target",
-                "padding_px",
-                "language"
-              ],
+              "required": ["target", "padding_px", "language"],
               "additionalProperties": false
             }
           ]
@@ -156,10 +126,7 @@
                   "maximum": 86400000
                 }
               },
-              "required": [
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["start_ms", "end_ms"],
               "additionalProperties": false
             },
             "crop": {
@@ -186,20 +153,11 @@
                   "maximum": 1
                 }
               },
-              "required": [
-                "x",
-                "y",
-                "width",
-                "height"
-              ],
+              "required": ["x", "y", "width", "height"],
               "additionalProperties": false
             },
             "flip": {
-              "enum": [
-                "horizontal",
-                "vertical",
-                "both"
-              ]
+              "enum": ["horizontal", "vertical", "both"]
             },
             "speed": {
               "type": "number",
@@ -225,11 +183,7 @@
                   "maximum": 3
                 }
               },
-              "required": [
-                "brightness",
-                "contrast",
-                "saturation"
-              ],
+              "required": ["brightness", "contrast", "saturation"],
               "additionalProperties": false
             },
             "audio": {
@@ -244,45 +198,23 @@
                   "maximum": 24
                 }
               },
-              "required": [
-                "muted",
-                "gain_db"
-              ],
+              "required": ["muted", "gain_db"],
               "additionalProperties": false
             },
             "output": {
               "type": "object",
               "properties": {
                 "aspect": {
-                  "enum": [
-                    "source",
-                    "9:16",
-                    "16:9",
-                    "1:1",
-                    "4:5"
-                  ]
+                  "enum": ["source", "9:16", "16:9", "1:1", "4:5"]
                 },
                 "fit": {
-                  "enum": [
-                    "contain",
-                    "cover"
-                  ]
+                  "enum": ["contain", "cover"]
                 },
                 "height": {
-                  "enum": [
-                    0,
-                    480,
-                    720,
-                    1080,
-                    1920
-                  ]
+                  "enum": [0, 480, 720, 1080, 1920]
                 }
               },
-              "required": [
-                "aspect",
-                "fit",
-                "height"
-              ],
+              "required": ["aspect", "fit", "height"],
               "additionalProperties": false
             }
           },
@@ -376,30 +308,20 @@
           }
         }
       },
-      "required": [
-        "version"
-      ],
+      "required": ["version"],
       "additionalProperties": false,
       "anyOf": [
         {
-          "required": [
-            "ocr"
-          ]
+          "required": ["ocr"]
         },
         {
-          "required": [
-            "inpaint"
-          ]
+          "required": ["inpaint"]
         },
         {
-          "required": [
-            "editing"
-          ]
+          "required": ["editing"]
         },
         {
-          "required": [
-            "subtitle_style"
-          ]
+          "required": ["subtitle_style"]
         }
       ]
     }

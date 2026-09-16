@@ -1,9 +1,0 @@
-test_bundle_accepts_exactly_one_hashed_vocabulary_layout (test_translation_contracts.TranslationContracts.test_bundle_accepts_exactly_one_hashed_vocabulary_layout) ... ok
-test_current_project_and_text_layer_versions_keep_translation_provenance (test_translation_contracts.TranslationContracts.test_current_project_and_text_layer_versions_keep_translation_provenance) ... ok
-test_plain_result_and_lightweight_status_are_explicit (test_translation_contracts.TranslationContracts.test_plain_result_and_lightweight_status_are_explicit) ... ok
-test_public_and_worker_shapes_reject_paths_styles_auto_and_unknown_options (test_translation_contracts.TranslationContracts.test_public_and_worker_shapes_reject_paths_styles_auto_and_unknown_options) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 0.788s
-
-OK

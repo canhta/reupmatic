@@ -1,5 +1,5 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { RenderTracker } from '../dist-core/rendering/render-tracker.js';
 
 test('a cached result may finish before IPC acknowledgement without returning to queued', () => {

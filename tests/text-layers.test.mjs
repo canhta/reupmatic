@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getTextLayer, parseTextLayers } from '../dist-core/subtitles/layers/document.js';
-import { editTextLayer, previewLayerCopy, applyLayerCopy } from '../dist-core/subtitles/layers/commands.js';
-import { changeEditor, openEditorHistory, undoEditor, redoEditor } from '../dist-core/projects/editor-history.js';
+import {
+  changeEditor,
+  openEditorHistory,
+  redoEditor,
+  undoEditor,
+} from '../dist-core/projects/editor-history.js';
 import { createProject, parseProject } from '../dist-core/projects/project.js';
+import {
+  applyLayerCopy,
+  editTextLayer,
+  previewLayerCopy,
+} from '../dist-core/subtitles/layers/commands.js';
+import { getTextLayer, parseTextLayers } from '../dist-core/subtitles/layers/document.js';
 
 const cue = (text = 'Xin chào') => ({ id: 'cue-1', start_ms: 0, end_ms: 1000, text });
 const empty = () => ({ cues: [cue()], sample: { start_ms: 0, end_ms: 2000 } });
@@ -63,8 +72,14 @@ test('existing displayed edit commands update ownership and whole-document undo/
 });
 
 test('manual corrections retain STT provenance and language independent of UI locale', () => {
-  const origin = { kind: 'stt', request_id: 'request-123', source_sha256: 'a'.repeat(64),
-    start_ms: 0, end_ms: 2000, model_id: 'b'.repeat(64) };
+  const origin = {
+    kind: 'stt',
+    request_id: 'request-123',
+    source_sha256: 'a'.repeat(64),
+    start_ms: 0,
+    end_ms: 2000,
+    model_id: 'b'.repeat(64),
+  };
   let s = editTextLayer(empty(), 'transcript', [cue()], { language: 'vi', origin });
   s = editTextLayer(s, 'transcript', [cue('Đã sửa')]);
   assert.deepEqual(getTextLayer(s, 'transcript').origin, origin);
@@ -96,25 +111,54 @@ test('layer validation rejects duplicate metadata, styles in speech and forged c
 
 test('composition rebases every text clock without replacing independent words or falsely invalidating copies', async () => {
   const { editCompositionSnapshot } = await import('../dist-core/editing/composition/snapshot.js');
-  const composition = { version: 1, canvas: { width: 320, height: 180, fps: 30 }, clips: [{ id: 'clip-a',
-    source: { path: '/source.mp4', name: 'source.mp4', sha256: 'a'.repeat(64), duration_ms: 4000 },
-    start_ms: 0, end_ms: 4000, speed: 1 }] };
-  let s = { cues: [{ ...cue('Displayed'), start_ms: 1000, end_ms: 3000 }],
-    sample: { start_ms: 0, end_ms: 4000 }, composition };
+  const composition = {
+    version: 1,
+    canvas: { width: 320, height: 180, fps: 30 },
+    clips: [
+      {
+        id: 'clip-a',
+        source: {
+          path: '/source.mp4',
+          name: 'source.mp4',
+          sha256: 'a'.repeat(64),
+          duration_ms: 4000,
+        },
+        start_ms: 0,
+        end_ms: 4000,
+        speed: 1,
+      },
+    ],
+  };
+  let s = {
+    cues: [{ ...cue('Displayed'), start_ms: 1000, end_ms: 3000 }],
+    sample: { start_ms: 0, end_ms: 4000 },
+    composition,
+  };
   s = editTextLayer(s, 'transcript', [{ ...cue('Transcript'), start_ms: 1000, end_ms: 3000 }]);
   s = copy(s, 'transcript', 'translated');
-  s = editTextLayer(s, 'spoken', [{ ...cue('Spoken independently'), start_ms: 1000, end_ms: 3000 }]);
-  const next = editCompositionSnapshot(s, [{ kind: 'update', id: 'clip-a', start_ms: 1000, end_ms: 3000, speed: 2 }]);
-  assert.deepEqual(['transcript', 'translated', 'spoken', 'displayed'].map(name => {
-    const layer = getTextLayer(next, name);
-    return [layer.cues[0].start_ms, layer.cues[0].end_ms, layer.cues[0].text, layer.stale];
-  }), [[0, 1000, 'Transcript', false], [0, 1000, 'Transcript', false],
-    [0, 1000, 'Spoken independently', false], [0, 1000, 'Displayed', false]]);
+  s = editTextLayer(s, 'spoken', [
+    { ...cue('Spoken independently'), start_ms: 1000, end_ms: 3000 },
+  ]);
+  const next = editCompositionSnapshot(s, [
+    { kind: 'update', id: 'clip-a', start_ms: 1000, end_ms: 3000, speed: 2 },
+  ]);
+  assert.deepEqual(
+    ['transcript', 'translated', 'spoken', 'displayed'].map((name) => {
+      const layer = getTextLayer(next, name);
+      return [layer.cues[0].start_ms, layer.cues[0].end_ms, layer.cues[0].text, layer.stale];
+    }),
+    [
+      [0, 1000, 'Transcript', false],
+      [0, 1000, 'Transcript', false],
+      [0, 1000, 'Spoken independently', false],
+      [0, 1000, 'Displayed', false],
+    ],
+  );
   assert.equal(next.text_layers.translated.origin.token, next.text_layers.transcript.token);
   assert.deepEqual(undoEditor(changeEditor(openEditorHistory(s), next)).present, s);
 });
 
-test('project and SQLite recovery save/load retain all text provenance and independent layers', async t => {
+test('project and SQLite recovery save/load retain all text provenance and independent layers', async (t) => {
   const { mkdtemp, rm } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
   const path = await import('node:path');
@@ -138,7 +182,9 @@ test('project and SQLite recovery save/load retain all text provenance and indep
     store.close();
     store = new RecoveryStore(path.join(root, 'recovery.sqlite'));
     assert.deepEqual(store.load('document-001', 1), project);
-  } finally { store.close(); }
+  } finally {
+    store.close();
+  }
 });
 
 test('explicit source review clears a stale copy without losing manual words or silently refreshing descendants', async () => {
@@ -155,11 +201,16 @@ test('explicit source review clears a stale copy without losing manual words or 
   assert.equal(getTextLayer(reviewed, 'translated').edited, true);
   assert.equal(getTextLayer(reviewed, 'spoken').stale, true);
   assert.equal(getTextLayer(reviewed, 'spoken').cues[0].text, 'Manually translated');
-  assert.equal(getTextLayer(reviewed, 'translated').origin.token, getTextLayer(reviewed, 'transcript').token);
+  assert.equal(
+    getTextLayer(reviewed, 'translated').origin.token,
+    getTextLayer(reviewed, 'transcript').token,
+  );
   assert.throws(() => reviewLayerSource(reviewed, preview), /STALE_OPERATION/);
-  assert.throws(() => reviewLayerSource(editTextLayer(s, 'transcript', [cue('Changed again')]), preview), /STALE_OPERATION/);
+  assert.throws(
+    () => reviewLayerSource(editTextLayer(s, 'transcript', [cue('Changed again')]), preview),
+    /STALE_OPERATION/,
+  );
 });
-
 
 test('keeping reviewed manual text does not require capacity for an unwanted replacement', async () => {
   const { reviewLayerSource } = await import('../dist-core/subtitles/layers/commands.js');
@@ -167,7 +218,9 @@ test('keeping reviewed manual text does not require capacity for an unwanted rep
   s = copy(s, 'transcript', 'translated');
   s = editTextLayer(s, 'translated', [cue('Keep this short correction')]);
   const large = Array.from({ length: 65 }, (_, index) => ({
-    id: `large-${index}`, start_ms: index * 1000, end_ms: (index + 1) * 1000,
+    id: `large-${index}`,
+    start_ms: index * 1000,
+    end_ms: (index + 1) * 1000,
     text: 'x'.repeat(9000),
   }));
   s = editTextLayer(s, 'transcript', large);

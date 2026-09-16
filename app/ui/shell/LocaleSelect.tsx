@@ -15,7 +15,9 @@ export function LocaleSelect() {
       value={i18n.language}
       options={languages}
       width={160}
-      onChange={language => { void i18n.changeLanguage(language); }}
+      onChange={(language) => {
+        void i18n.changeLanguage(language);
+      }}
     />
   );
 }

@@ -3,20 +3,12 @@
   "version": 1,
   "source_version": "0.15.0",
   "scope_authority": "BUSINESS_SCOPE.md",
-  "areas": [
-    "sources",
-    "editor",
-    "channels",
-    "automation",
-    "settings"
-  ],
+  "areas": ["sources", "editor", "channels", "automation", "settings"],
   "modules": [
     {
       "id": "library",
       "title": "Local media library",
-      "scope": [
-        "SC-02"
-      ],
+      "scope": ["SC-02"],
       "area": "sources",
       "status": "partial",
       "implemented": [
@@ -35,10 +27,7 @@
     {
       "id": "downloads",
       "title": "Authorized video intake",
-      "scope": [
-        "SC-01",
-        "SC-02"
-      ],
+      "scope": ["SC-01", "SC-02"],
       "area": "sources",
       "status": "planned",
       "implemented": [],
@@ -56,9 +45,7 @@
     {
       "id": "editor",
       "title": "Video and audio editing",
-      "scope": [
-        "SC-03"
-      ],
+      "scope": ["SC-03"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -84,10 +71,7 @@
     {
       "id": "projects",
       "title": "Project persistence and recovery",
-      "scope": [
-        "SC-02",
-        "SC-03"
-      ],
+      "scope": ["SC-02", "SC-03"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -96,18 +80,13 @@
         "app/ui/features/projects",
         "app/electron/features/projects"
       ],
-      "reserved": [
-        "app/core/projects/recovery",
-        "tests/acceptance/recovery"
-      ],
+      "reserved": ["app/core/projects/recovery", "tests/acceptance/recovery"],
       "remaining": "Current schema-5 snapshots, atomic undo and recovery retain independent text layers and translation provenance, clip sources, music and styles. Old formats are explicitly rejected without migration. Source-independent browsing, durable unapplied speech drafts, automatic dependency repair and owner crash/desktop acceptance remain."
     },
     {
       "id": "subtitles",
       "title": "Subtitle authoring",
-      "scope": [
-        "SC-05"
-      ],
+      "scope": ["SC-05"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -127,10 +106,7 @@
     {
       "id": "speech",
       "title": "Recognition, translation and dubbing",
-      "scope": [
-        "SC-04",
-        "SC-05"
-      ],
+      "scope": ["SC-04", "SC-05"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -141,20 +117,13 @@
         "worker/speech/translation",
         "worker/speech/synthesis"
       ],
-      "reserved": [
-        "contracts/speech",
-        "tests/acceptance/speech",
-        "worker/speech/alignment"
-      ],
+      "reserved": ["contracts/speech", "tests/acceptance/speech", "worker/speech/alignment"],
       "remaining": "Local CPU STT, translation and preset-voice synthesis use native hashed setup, correlated session drafts, explicit review and cancellation on the existing queue. Natural speech WAV/receipt preview and native export are implemented; alignment/mixing, durable speech stages in batch/Automation, real-model/language/license acceptance, installed UI and resource budgets remain."
     },
     {
       "id": "vision",
       "title": "OCR and text removal",
-      "scope": [
-        "SC-06",
-        "SC-13"
-      ],
+      "scope": ["SC-06", "SC-13"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -173,30 +142,17 @@
     {
       "id": "processing",
       "title": "Shared processing recipes",
-      "scope": [
-        "SC-03",
-        "SC-04",
-        "SC-05",
-        "SC-06"
-      ],
+      "scope": ["SC-03", "SC-04", "SC-05", "SC-06"],
       "area": "shared",
       "status": "partial",
-      "implemented": [
-        "app/core/processing",
-        "app/ui/features/processing",
-        "worker/processing"
-      ],
-      "reserved": [
-        "contracts/processing-pipeline"
-      ],
+      "implemented": ["app/core/processing", "app/ui/features/processing", "worker/processing"],
+      "reserved": ["contracts/processing-pipeline"],
       "remaining": "Same coordinator/worker handles bounded Editor compositions with global edits, captions and soundtrack. Speech stages, composition AI, multi-clip batch/folder admission, richer stage artifacts and independent stage recovery remain; no second queue."
     },
     {
       "id": "profiles",
       "title": "Reusable processing profiles",
-      "scope": [
-        "SC-03"
-      ],
+      "scope": ["SC-03"],
       "area": "editor",
       "status": "partial",
       "implemented": [
@@ -204,36 +160,23 @@
         "app/electron/features/profiles",
         "app/ui/features/profiles"
       ],
-      "reserved": [
-        "tests/acceptance/profiles"
-      ],
+      "reserved": ["tests/acceptance/profiles"],
       "remaining": "Reusable global subtitle appearance, framing/color/speed/source-audio and OCR/removal settings exist. Clip-specific soundtrack, trim and per-cue overrides do not leak into profiles. Speech/rules/composition presets remain."
     },
     {
       "id": "batch",
       "title": "User-started queue",
-      "scope": [
-        "SC-07"
-      ],
+      "scope": ["SC-07"],
       "area": "shared",
       "status": "partial",
-      "implemented": [
-        "app/core/batch",
-        "app/electron/features/batch",
-        "app/ui/features/batch"
-      ],
-      "reserved": [
-        "tests/acceptance/batch",
-        "app/core/batch/stages"
-      ],
+      "implemented": ["app/core/batch", "app/electron/features/batch", "app/ui/features/batch"],
+      "reserved": ["tests/acceptance/batch", "app/core/batch/stages"],
       "remaining": "AI stage expansion and complete artifact linkage through the existing durable queue."
     },
     {
       "id": "folders",
       "title": "Folder intake",
-      "scope": [
-        "SC-08"
-      ],
+      "scope": ["SC-08"],
       "area": "automation",
       "status": "partial",
       "implemented": [
@@ -241,17 +184,13 @@
         "app/electron/features/folders",
         "app/ui/features/folders"
       ],
-      "reserved": [
-        "tests/acceptance/folders"
-      ],
+      "reserved": ["tests/acceptance/folders"],
       "remaining": "Product execution policy, permissions and scheduler integration; developer gating remains."
     },
     {
       "id": "automation",
       "title": "Saved workflows and runs",
-      "scope": [
-        "SC-08"
-      ],
+      "scope": ["SC-08"],
       "area": "automation",
       "status": "partial",
       "implemented": [
@@ -273,28 +212,17 @@
     {
       "id": "taxonomy",
       "title": "Shared manual labels",
-      "scope": [
-        "SC-09",
-        "SC-11"
-      ],
+      "scope": ["SC-09", "SC-11"],
       "area": "shared",
       "status": "partial",
-      "implemented": [
-        "app/core/taxonomy",
-        "app/ui/features/taxonomy"
-      ],
-      "reserved": [
-        "tests/acceptance/taxonomy"
-      ],
+      "implemented": ["app/core/taxonomy", "app/ui/features/taxonomy"],
+      "reserved": ["tests/acceptance/taxonomy"],
       "remaining": "Identity-preserving catalog management; taxonomy merge/delete policy requires explicit decisions."
     },
     {
       "id": "content-analysis",
       "title": "Content classification",
-      "scope": [
-        "SC-09",
-        "SC-13"
-      ],
+      "scope": ["SC-09", "SC-13"],
       "area": "sources",
       "status": "planned",
       "implemented": [],
@@ -311,10 +239,7 @@
     {
       "id": "distribution",
       "title": "Channels, affiliate and posts",
-      "scope": [
-        "SC-09",
-        "SC-10"
-      ],
+      "scope": ["SC-09", "SC-10"],
       "area": "channels",
       "status": "partial",
       "implemented": [
@@ -336,13 +261,7 @@
     {
       "id": "catalog",
       "title": "Workspace catalog persistence",
-      "scope": [
-        "SC-02",
-        "SC-03",
-        "SC-09",
-        "SC-10",
-        "SC-11"
-      ],
+      "scope": ["SC-02", "SC-03", "SC-09", "SC-10", "SC-11"],
       "area": "shared",
       "status": "partial",
       "implemented": [
@@ -356,9 +275,7 @@
     {
       "id": "settings",
       "title": "Preferences and component setup",
-      "scope": [
-        "SC-11"
-      ],
+      "scope": ["SC-11"],
       "area": "settings",
       "status": "partial",
       "implemented": [
@@ -379,9 +296,7 @@
     {
       "id": "accounts",
       "title": "Accounts, Plus and credits",
-      "scope": [
-        "SC-11"
-      ],
+      "scope": ["SC-11"],
       "area": "settings",
       "status": "planned",
       "implemented": [],
@@ -401,9 +316,7 @@
     {
       "id": "cloud",
       "title": "Future off-device execution",
-      "scope": [
-        "SC-12"
-      ],
+      "scope": ["SC-12"],
       "area": "shared",
       "status": "planned",
       "implemented": [],
@@ -421,28 +334,17 @@
     {
       "id": "localization",
       "title": "Bilingual application and accessibility",
-      "scope": [
-        "SC-14"
-      ],
+      "scope": ["SC-14"],
       "area": "shared",
       "status": "partial",
-      "implemented": [
-        "app/ui/design-system",
-        "app/ui/shell"
-      ],
-      "reserved": [
-        "tests/acceptance/accessibility",
-        "tests/acceptance/localization"
-      ],
+      "implemented": ["app/ui/design-system", "app/ui/shell"],
+      "reserved": ["tests/acceptance/accessibility", "tests/acceptance/localization"],
       "remaining": "EN/VI keyboard, IME, responsive and screen-reader checks on the actual installed application."
     },
     {
       "id": "runtime",
       "title": "Trusted host and worker lifecycle",
-      "scope": [
-        "SC-03",
-        "SC-11"
-      ],
+      "scope": ["SC-03", "SC-11"],
       "area": "shared",
       "status": "partial",
       "implemented": [
@@ -464,17 +366,11 @@
     {
       "id": "delivery",
       "title": "Desktop distribution",
-      "scope": [
-        "SC-11"
-      ],
+      "scope": ["SC-11"],
       "area": "shared",
       "status": "planned",
       "implemented": [],
-      "reserved": [
-        "packaging/windows",
-        "packaging/macos",
-        "tests/acceptance/installers"
-      ],
+      "reserved": ["packaging/windows", "packaging/macos", "tests/acceptance/installers"],
       "remaining": "Source packaging exists; Windows/macOS installers, native dependency bundling, signing, upgrades and licenses remain. Empty folders are not installers."
     }
   ]

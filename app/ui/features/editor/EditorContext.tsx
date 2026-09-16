@@ -1,9 +1,12 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useEffect } from 'react';
 import { useEditorModel } from './useEditorModel';
 
 const EditorContext = createContext<ReturnType<typeof useEditorModel> | null>(null);
 
-export function EditorProvider({ children, onDirty }: {
+export function EditorProvider({
+  children,
+  onDirty,
+}: {
   children: ReactNode;
   onDirty: (dirty: boolean) => void;
 }) {

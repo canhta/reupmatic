@@ -1,26 +1,34 @@
-import { TextLayerControls } from './text-layers/TextLayerControls';
-import { SubtitleExportPanel } from './subtitle-styles/SubtitleExportPanel';
-import { TextRulePanel } from './text-rules/TextRulePanel';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from '@astryxdesign/core/Table';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { mergeNext, splitCue, type Cue } from '../../../core/subtitles/cues';
+import { type Cue, mergeNext, splitCue } from '../../../core/subtitles/cues';
 import { useEditor } from './EditorContext';
+import { SubtitleExportPanel } from './subtitle-styles/SubtitleExportPanel';
 import { TimeInput } from './TimeInput';
+import { TextLayerControls } from './text-layers/TextLayerControls';
+import { TextRulePanel } from './text-rules/TextRulePanel';
 
 export function CuePanel() {
   const { t } = useTranslation();
   const editor = useEditor();
   const { selected, setSelected, history, media, cap, busy, activeLayer } = editor;
-  const cues = activeLayer.cues, change = editor.changeLayerCues;
+  const cues = activeLayer.cues,
+    change = editor.changeLayerCues;
   const caret = useRef(0);
 
   function update(id: string, patch: Partial<Cue>) {
-    change(cues.map(cue => cue.id === id ? { ...cue, ...patch } : cue));
+    change(cues.map((cue) => (cue.id === id ? { ...cue, ...patch } : cue)));
   }
 
   function add() {
@@ -61,26 +69,42 @@ export function CuePanel() {
         size="sm"
         startContent={
           <div className="action-row">
-            <Button label={t('import')} isDisabled={!cap?.pysubs2 || busy}
-              onClick={() => void editor.importSubtitles()} />
+            <Button
+              label={t('import')}
+              isDisabled={!cap?.pysubs2 || busy}
+              onClick={() => void editor.importSubtitles()}
+            />
             <Button label={t('add')} onClick={add} />
-            <Button label={t('remove')} isDisabled={!selected} onClick={() => {
-              change(cues.filter(cue => cue.id !== selected));
-              setSelected('');
-            }} />
+            <Button
+              label={t('remove')}
+              isDisabled={!selected}
+              onClick={() => {
+                change(cues.filter((cue) => cue.id !== selected));
+                setSelected('');
+              }}
+            />
             <Button label={t('undo')} isDisabled={!history.past.length} onClick={editor.undo} />
             <Button label={t('redo')} isDisabled={!history.future.length} onClick={editor.redo} />
             <Button label={t('split')} isDisabled={!selected} onClick={split} />
-            <Button label={t('merge')} isDisabled={!selected || cues.at(-1)?.id === selected}
-              onClick={merge} />
+            <Button
+              label={t('merge')}
+              isDisabled={!selected || cues.at(-1)?.id === selected}
+              onClick={merge}
+            />
           </div>
         }
       />
       <SubtitleExportPanel />
       <TextRulePanel />
       <div className="cue-list">
-        {!cues.length ? <EmptyState title={t('noCues')} /> : (
-          <Table density="compact" verticalAlign="top" aria-label={t(`textLayer_${editor.activeTextLayer}`)}>
+        {!cues.length ? (
+          <EmptyState title={t('noCues')} />
+        ) : (
+          <Table
+            density="compact"
+            verticalAlign="top"
+            aria-label={t(`textLayer_${editor.activeTextLayer}`)}
+          >
             <TableHeader>
               <TableRow isHeaderRow>
                 <TableHeaderCell scope="col">#</TableHeaderCell>
@@ -104,26 +128,37 @@ export function CuePanel() {
                     />
                   </TableCell>
                   <TableCell>
-                    <TimeInput label={`${t('start')} ${index + 1}`} value={cue.start_ms}
+                    <TimeInput
+                      label={`${t('start')} ${index + 1}`}
+                      value={cue.start_ms}
                       onFocus={() => setSelected(cue.id)}
-                      onCommit={value => update(cue.id, { start_ms: value })} />
+                      onCommit={(value) => update(cue.id, { start_ms: value })}
+                    />
                   </TableCell>
                   <TableCell>
-                    <TimeInput label={`${t('end')} ${index + 1}`} value={cue.end_ms}
+                    <TimeInput
+                      label={`${t('end')} ${index + 1}`}
+                      value={cue.end_ms}
                       onFocus={() => setSelected(cue.id)}
-                      onCommit={value => update(cue.id, { end_ms: value })} />
+                      onCommit={(value) => update(cue.id, { end_ms: value })}
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="cue-text">
-                      <TextArea label={`${t('text')} ${index + 1}`} isLabelHidden
-                        rows={2} width="100%" value={cue.text}
+                      <TextArea
+                        label={`${t('text')} ${index + 1}`}
+                        isLabelHidden
+                        rows={2}
+                        width="100%"
+                        value={cue.text}
                         onFocus={() => setSelected(cue.id)}
-                        onSelect={event => {
+                        onSelect={(event) => {
                           if (event.target instanceof HTMLTextAreaElement) {
                             caret.current = event.target.selectionStart;
                           }
                         }}
-                        onChange={text => update(cue.id, { text })} />
+                        onChange={(text) => update(cue.id, { text })}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

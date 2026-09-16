@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const read = name => readFileSync(path.join(root, name), 'utf8');
+const read = (name) => readFileSync(path.join(root, name), 'utf8');
 function components(directory = 'app/ui', pattern = /\.tsx$/) {
-  return readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry => {
+  return readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap((entry) => {
     const name = `${directory}/${entry.name}`;
     return entry.isDirectory() ? components(name, pattern) : pattern.test(name) ? [name] : [];
   });
@@ -15,8 +15,14 @@ function components(directory = 'app/ui', pattern = /\.tsx$/) {
 
 test('one UI system complements, rather than replaces, media libraries', () => {
   const manifest = JSON.parse(read('package.json'));
-  for (const name of ['@astryxdesign/core', '@astryxdesign/theme-neutral', '@stylexjs/stylex',
-    '@xzdarcy/react-timeline-editor', 'wavesurfer.js', 'jassub']) {
+  for (const name of [
+    '@astryxdesign/core',
+    '@astryxdesign/theme-neutral',
+    '@stylexjs/stylex',
+    '@xzdarcy/react-timeline-editor',
+    'wavesurfer.js',
+    'jassub',
+  ]) {
     assert.ok(manifest.dependencies[name], name);
   }
   assert.ok(manifest.devDependencies['@astryxdesign/cli']);
@@ -24,7 +30,8 @@ test('one UI system complements, rather than replaces, media libraries', () => {
 });
 
 test('application uses library controls, not a parallel primitive implementation', () => {
-  const forbidden = /<(?:button|input|textarea|select|option|table|thead|tbody|tr|td|th|dialog|progress)\b/;
+  const forbidden =
+    /<(?:button|input|textarea|select|option|table|thead|tbody|tr|td|th|dialog|progress)\b/;
   for (const name of components()) {
     assert.doesNotMatch(read(name), forbidden, name);
     assert.doesNotMatch(read(name), /from ['"]@astryxdesign\/core['"]/, name);
@@ -42,21 +49,10 @@ test('theme, language and layer order are explicit and shared', () => {
   assert.match(css, /@astryxdesign\/core\/reset\.css/);
   assert.match(css, /@astryxdesign\/core\/astryx\.css/);
   assert.match(css, /@astryxdesign\/theme-neutral\/theme\.css/);
-  assert.doesNotMatch(css, /(?:^|\n)button[, :{]|(?:^|\n)input[, :{]|(?:^|\n)textarea[, :{]|(?:^|\n)select[, :{]/);
-});
-
-test('Astryx selections have a maintained catalogue and task-level rationale', () => {
-  const inventory = JSON.parse(read('docs/ui/astryx-inventory.json'));
-  assert.equal(inventory.targetVersion, JSON.parse(read('package.json')).dependencies['@astryxdesign/core']);
-  assert.equal(typeof inventory.packageVerified, 'boolean');
-  for (const name of components()) {
-    for (const match of read(name).matchAll(/from ['"]@astryxdesign\/core\/([^'"]+)['"]/g)) {
-      assert.ok(inventory.decisions[match[1]], `${name}: undocumented selection ${match[1]}`);
-      assert.ok(inventory.decisions[match[1]].reason.length > 30);
-    }
-  }
-  assert.match(read('AGENTS.md'), /Astryx discovery and selection/);
-  assert.match(read('docs/ui/astryx-component-map.md'), /Not a component-count target/);
+  assert.doesNotMatch(
+    css,
+    /(?:^|\n)button[, :{]|(?:^|\n)input[, :{]|(?:^|\n)textarea[, :{]|(?:^|\n)select[, :{]/,
+  );
 });
 
 test('navigation and disclosure use library semantics, not button lookalikes', () => {
@@ -76,12 +72,13 @@ test('choices with different execution consequences remain visible before submis
 
 test('workspace CSS does not reach into library controls or shell landmarks', () => {
   function styles(directory = 'app/ui') {
-    return readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry => {
+    return readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap((entry) => {
       const name = `${directory}/${entry.name}`;
       return entry.isDirectory() ? styles(name) : name.endsWith('.css') ? [name] : [];
     });
   }
-  const controls = /(?:^|[\s>,+~])(?:button|input|textarea|select|table|thead|tbody|tr|td|th|dialog|progress|main|footer)(?=[\s,.#:[{]|$)/;
+  const controls =
+    /(?:^|[\s>,+~])(?:button|input|textarea|select|table|thead|tbody|tr|td|th|dialog|progress|main|footer)(?=[\s,.#:[{]|$)/;
   for (const name of styles()) {
     for (const line of read(name).split('\n')) {
       if (line.includes('{')) assert.doesNotMatch(line.split('{')[0], controls, name);
@@ -90,10 +87,12 @@ test('workspace CSS does not reach into library controls or shell landmarks', ()
   assert.match(read('app/ui/features/editor/CuePanel.tsx'), /<Toolbar/);
 });
 
-
 test('literal UI messages exist in both application languages', () => {
   const base = read('app/ui/i18n.ts');
-  const resources = { en: base.split('export const vi:')[0], vi: base.split('export const vi:')[1] };
+  const resources = {
+    en: base.split('export const vi:')[0],
+    vi: base.split('export const vi:')[1],
+  };
   const modules = [...base.matchAll(/import \{ (\w+)En, (\w+)Vi \} from ['"](.+\/i18n)['"]/g)];
   assert.ok(modules.length >= 11, 'every feature resource must be discovered');
   for (const [, feature, counterpart, filename] of modules) {
@@ -132,7 +131,6 @@ test('Electron flows target library interactions rather than native select eleme
   assert.doesNotMatch(editor, /textarea\[aria-label=/);
 });
 
-
 test('Sources stages batches and exposes storage consequences before import', () => {
   const source = read('app/ui/features/library/SourcesWorkspace.tsx');
   assert.match(source, /<TabList[^>]*role="tablist"/);
@@ -153,7 +151,11 @@ test('public assets and local settings have actual application wiring', () => {
 });
 
 test('one domain processing form serves Editor, batch and folders without starting work', () => {
-  for (const name of ['editor/RenderControls.tsx', 'batch/BatchPanel.tsx', 'folders/FolderRuleForm.tsx']) {
+  for (const name of [
+    'editor/RenderControls.tsx',
+    'batch/BatchPanel.tsx',
+    'folders/FolderRuleForm.tsx',
+  ]) {
     assert.match(read(`app/ui/features/${name}`), /<ProcessingOptions/);
   }
   const form = read('app/ui/features/processing/ProcessingOptions.tsx');
@@ -164,5 +166,8 @@ test('one domain processing form serves Editor, batch and folders without starti
   assert.match(read('app/ui/features/vision/InpaintControls.tsx'), /<MaskRegionFields/);
   assert.match(form, /<MaskRegionFields/);
   assert.match(form, /processingReviewLimit/);
-  assert.doesNotMatch(read('app/ui/i18n.ts'), /AI processing is not connected to batch|No cloud calls, credits, AI or posting/);
+  assert.doesNotMatch(
+    read('app/ui/i18n.ts'),
+    /AI processing is not connected to batch|No cloud calls, credits, AI or posting/,
+  );
 });

@@ -33,10 +33,14 @@ export function VisionResults(props: Props) {
 
   async function apply() {
     if (!draft || !draftCurrent || busy) return;
-    if (!await confirm(t('visionApplyConfirm'))) return;
+    if (!(await confirm(t('visionApplyConfirm')))) return;
     const latest = current.current;
-    if (latest.busy || latest.draft !== draft
-      || !canApplyOcr(draft.data, draft.revision, latest.assetId, latest.revision)) return;
+    if (
+      latest.busy ||
+      latest.draft !== draft ||
+      !canApplyOcr(draft.data, draft.revision, latest.assetId, latest.revision)
+    )
+      return;
     if (latest.onApply(draft.data, draft.revision)) latest.onConsumed(draft);
   }
 
@@ -44,11 +48,18 @@ export function VisionResults(props: Props) {
     if (!draft) return;
     try {
       const result = await unwrap<{ saved: boolean; library_linked?: boolean } | null>(
-        window.reupmatic.saveSubtitles({ asset_id: draft.data.asset_id, cues: draft.data.cues, timing: 'source' }),
+        window.reupmatic.saveSubtitles({
+          asset_id: draft.data.asset_id,
+          cues: draft.data.cues,
+          timing: 'source',
+        }),
       );
       if (result?.saved) setSavedDraft(draft.data.analysis_id);
-      if (result?.saved && result.library_linked === false) props.onError(new Error('LIBRARY_LINK_FAILED'));
-    } catch (reason) { props.onError(reason); }
+      if (result?.saved && result.library_linked === false)
+        props.onError(new Error('LIBRARY_LINK_FAILED'));
+    } catch (reason) {
+      props.onError(reason);
+    }
   }
 
   async function save() {
@@ -63,35 +74,52 @@ export function VisionResults(props: Props) {
     }
   }
 
-  return <>
-    {draft && <div className="vision-draft">
-      <div className="action-row">
-        <h3>{t('visionDraft', { count: draft.data.cues.length })}</h3>
-        <Button label={t('visionApply')} isDisabled={!draftCurrent || !draft.data.cues.length || busy}
-          onClick={() => void apply()} />
-        <Button label={t('visionExportSrt')} isDisabled={!draft.data.cues.length || busy}
-          onClick={() => void exportText()} />
-      </div>
-      {savedDraft === draft.data.analysis_id && <p role="status">{t('visionSrtSaved')}</p>}
-      {draft.data.scope === 'full-source' && <p>{t('visionExtractEvidence', { count: draft.data.evidence?.observation_count })}</p>}
-      {!draftCurrent && <Banner status="warning" title={t('visionDraftStale')} />}
-      {!draft.data.cues.length && <EmptyState isCompact title={t('visionNoText')} />}
-      <Collapsible trigger={t('visionEvidence')} defaultIsOpen={false}>
-        <p>{t('visionEvidenceLimit')}</p>
-        <div className="vision-evidence">
-          {draft.data.observations.slice(0, 20).map(item => <p key={item.start_ms}>
-            <span className="numeric">{(item.start_ms / 1000).toFixed(2)} s</span>
-            {' · '}{item.detections.map(detection => detection.text).join('\n') || '—'}
-          </p>)}
+  return (
+    <>
+      {draft && (
+        <div className="vision-draft">
+          <div className="action-row">
+            <h3>{t('visionDraft', { count: draft.data.cues.length })}</h3>
+            <Button
+              label={t('visionApply')}
+              isDisabled={!draftCurrent || !draft.data.cues.length || busy}
+              onClick={() => void apply()}
+            />
+            <Button
+              label={t('visionExportSrt')}
+              isDisabled={!draft.data.cues.length || busy}
+              onClick={() => void exportText()}
+            />
+          </div>
+          {savedDraft === draft.data.analysis_id && <p role="status">{t('visionSrtSaved')}</p>}
+          {draft.data.scope === 'full-source' && (
+            <p>{t('visionExtractEvidence', { count: draft.data.evidence?.observation_count })}</p>
+          )}
+          {!draftCurrent && <Banner status="warning" title={t('visionDraftStale')} />}
+          {!draft.data.cues.length && <EmptyState isCompact title={t('visionNoText')} />}
+          <Collapsible trigger={t('visionEvidence')} defaultIsOpen={false}>
+            <p>{t('visionEvidenceLimit')}</p>
+            <div className="vision-evidence">
+              {draft.data.observations.slice(0, 20).map((item) => (
+                <p key={item.start_ms}>
+                  <span className="numeric">{(item.start_ms / 1000).toFixed(2)} s</span>
+                  {' · '}
+                  {item.detections.map((detection) => detection.text).join('\n') || '—'}
+                </p>
+              ))}
+            </div>
+          </Collapsible>
         </div>
-      </Collapsible>
-    </div>}
-    {output && <div className="vision-output">
-      <h3>{t('visionOutput')}</h3>
-      {output.revision !== revision && <Banner status="warning" title={t('stale')} />}
-      <video src={output.data.url} controls aria-label={t('visionOutput')} />
-      <Button label={t('saveVideo')} onClick={() => void save()} />
-      {savedArtifact === output.data.artifact_id && <p role="status">{t('visionSaved')}</p>}
-    </div>}
-  </>;
+      )}
+      {output && (
+        <div className="vision-output">
+          <h3>{t('visionOutput')}</h3>
+          {output.revision !== revision && <Banner status="warning" title={t('stale')} />}
+          <video src={output.data.url} controls aria-label={t('visionOutput')} />
+          <Button label={t('saveVideo')} onClick={() => void save()} />
+          {savedArtifact === output.data.artifact_id && <p role="status">{t('visionSaved')}</p>}
+        </div>
+      )}
+    </>
+  );
 }

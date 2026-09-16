@@ -1,9 +1,47 @@
-.business-workspace { display: grid; gap: var(--space-4); min-width: 0; }
-.business-grid { display: grid; grid-template-columns: minmax(320px, 1.15fr) minmax(320px, 1fr); gap: var(--space-5); align-items: start; }
-.business-list, .business-form { display: grid; gap: var(--space-3); min-width: 0; }
-.business-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); }
-.business-path { overflow-wrap: anywhere; white-space: pre-wrap; }
-.business-table { overflow: auto; min-width: 0; }
-.business-details { display: grid; gap: var(--space-3); padding-block: var(--space-3); }
-.business-pagination { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-@media (max-width: 1200px) { .business-grid { grid-template-columns: minmax(0, 1fr); } }
+.business-workspace {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.business-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.15fr) minmax(320px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.business-list,
+.business-form {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.business-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+.business-path {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.business-table {
+  overflow: auto;
+  min-width: 0;
+}
+.business-details {
+  display: grid;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+.business-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+@media (max-width: 1200px) {
+  .business-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

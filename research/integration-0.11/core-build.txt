@@ -1,4 +1,0 @@
-
-> reupmatic@0.10.0 build:core
-> tsc -p tsconfig.core.json
-

@@ -1,5 +1,0 @@
-
-> reupmatic@0.2.0 hooks:install
-> lefthook install
-
-sh: 1: lefthook: not found

@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from assets.registry import AssetRegistry
-    from runtime.process import ProcessRunner
-    from vision.models import ModelRegistry
     from speech.recognition.models import SpeechRegistry
+    from vision.models import ModelRegistry
+
+    from runtime.process import ProcessRunner
 
 
 class WorkerContext(Protocol):

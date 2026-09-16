@@ -1,43 +1,77 @@
 @layer reset, app-base, astryx-base, astryx-theme, app;
 @import "./features/catalog/catalog.css" layer(app);
-@import './features/processing/processing.css';
-@import '@astryxdesign/core/reset.css';
-@import '@astryxdesign/core/astryx.css';
-@import '@astryxdesign/theme-neutral/theme.css';
+@import "./features/processing/processing.css";
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
 @import "./design-tokens.css" layer(app-base);
-@import './shell/workspace.css' layer(app);
-@import './features/editor/editor.css' layer(app);
-@import './features/batch/batch.css' layer(app);
-@import './features/folders/folders.css' layer(app);
-@import './features/vision/vision.css' layer(app);
-@import './features/library/library.css' layer(app);
-@import './features/settings/settings.css' layer(app);
+@import "./shell/workspace.css" layer(app);
+@import "./features/editor/editor.css" layer(app);
+@import "./features/batch/batch.css" layer(app);
+@import "./features/folders/folders.css" layer(app);
+@import "./features/vision/vision.css" layer(app);
+@import "./features/library/library.css" layer(app);
+@import "./features/settings/settings.css" layer(app);
 
 @layer app-base {
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
+  * {
+    box-sizing: border-box;
+  }
+  [hidden] {
+    display: none;
+  }
   body {
     margin: 0;
     background: var(--bg-app);
     color: var(--text-strong);
-    font: var(--text-sm)/1.5 var(--font-ui);
+    font: var(--text-sm) / 1.5 var(--font-ui);
   }
   :where(a, video, [tabindex]):focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
-  h1, h2, h3, p { overflow-wrap: anywhere; }
-  h1 { font-size: var(--text-heading); margin: 0 0 var(--space-2); }
-  h2, h3 { font-size: var(--text-base); margin: 0 0 var(--space-3); }
-  p { margin: 0 0 var(--space-3); }
-  small { display: block; font-size: var(--text-xs); margin-block: var(--space-2); }
-  code { font-size: var(--text-xs); overflow-wrap: anywhere; }
+  h1,
+  h2,
+  h3,
+  p {
+    overflow-wrap: anywhere;
+  }
+  h1 {
+    font-size: var(--text-heading);
+    margin: 0 0 var(--space-2);
+  }
+  h2,
+  h3 {
+    font-size: var(--text-base);
+    margin: 0 0 var(--space-3);
+  }
+  p {
+    margin: 0 0 var(--space-3);
+  }
+  small {
+    display: block;
+    font-size: var(--text-xs);
+    margin-block: var(--space-2);
+  }
+  code {
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
 }
 
 @layer app {
-  .numeric, .count-label { font-variant-numeric: tabular-nums; }
-  .field-help, .muted { color: var(--text-muted); }
-  .inline-error { color: var(--danger); margin-top: var(--space-2); }
+  .numeric,
+  .count-label {
+    font-variant-numeric: tabular-nums;
+  }
+  .field-help,
+  .muted {
+    color: var(--text-muted);
+  }
+  .inline-error {
+    color: var(--danger);
+    margin-top: var(--space-2);
+  }
   .action-row {
     display: flex;
     flex-wrap: wrap;
@@ -45,10 +79,12 @@
     gap: var(--space-2);
   }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-      scroll-behavior: auto !important;
+    *,
+    *::before,
+    *::after {
+      animation: none;
+      transition: none;
+      scroll-behavior: auto;
     }
   }
 }

@@ -1,16 +1,35 @@
 """Compose self-contained wire schemas from business-owned canonical shapes."""
+
 import argparse
 import copy
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACTS = ROOT / 'contracts'
-METADATA = {'$schema', '$id', '$comment', 'title', 'description'}
+CONTRACTS = ROOT / "contracts"
+METADATA = {"$schema", "$id", "$comment", "title", "description"}
+
+
+def biome_format(text, name):
+    """Canonicalize composed JSON through the project's own Biome formatter."""
+    biome = ROOT / "node_modules" / ".bin" / ("biome.cmd" if sys.platform == "win32" else "biome")
+    result = subprocess.run(
+        [str(biome), "format", f"--stdin-file-path={name}"],
+        input=text,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        cwd=ROOT,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"biome format failed for {name}: {result.stderr}")
+    return result.stdout
 
 
 def read(name):
-    return json.loads((CONTRACTS / name).read_text(encoding='utf-8'))
+    return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
 def shape(value):
@@ -18,111 +37,175 @@ def shape(value):
 
 
 def object_schema(properties, required):
-    return {'type': 'object', 'properties': properties, 'required': required, 'additionalProperties': False}
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": False,
+    }
 
 
 def compose():
-    style = shape(read('subtitles/style.schema.json'))
-    editing = shape(read('editing/recipe.schema.json'))
-    soundtrack = shape(read('editing/soundtrack.schema.json'))
-    composition = shape(read('editing/composition.schema.json'))
-    translation = read('speech/translation.schema.json')['$defs']
-    synthesis = read('speech/synthesis.schema.json')['$defs']
-    layer_document = read('subtitles/text-layers.schema.json')
-    layer_document['properties']['version'] = {'const': 2}
-    layer_document['$id'] = 'urn:reupmatic:text-layers:2'
-    for name in ['transcript', 'translated', 'spoken', 'displayed']:
-        origins = layer_document['properties'][name]['properties']['origin']['oneOf']
-        origins[:] = [origin for origin in origins if origin['properties']['kind'].get('const') != 'translation']
-        origins.append(copy.deepcopy(translation['origin']))
+    style = shape(read("subtitles/style.schema.json"))
+    editing = shape(read("editing/recipe.schema.json"))
+    soundtrack = shape(read("editing/soundtrack.schema.json"))
+    composition = shape(read("editing/composition.schema.json"))
+    translation = read("speech/translation.schema.json")["$defs"]
+    synthesis = read("speech/synthesis.schema.json")["$defs"]
+    layer_document = read("subtitles/text-layers.schema.json")
+    layer_document["properties"]["version"] = {"const": 2}
+    layer_document["$id"] = "urn:reupmatic:text-layers:2"
+    for name in ["transcript", "translated", "spoken", "displayed"]:
+        origins = layer_document["properties"][name]["properties"]["origin"]["oneOf"]
+        origins[:] = [
+            origin
+            for origin in origins
+            if origin["properties"]["kind"].get("const") != "translation"
+        ]
+        origins.append(copy.deepcopy(translation["origin"]))
     layers = shape(layer_document)
-    speech = read('speech/recognition.schema.json')['$defs']
-    cues = read('cues.schema.json')
-    cues['items']['properties']['style'] = style
-    processing = read('processing.schema.json')
-    processing['properties']['editing'] = editing
-    processing['properties']['subtitle_style'] = style
-    processing['anyOf'] = [{'required': [key]} for key in ['ocr', 'inpaint', 'editing', 'subtitle_style']]
+    speech = read("speech/recognition.schema.json")["$defs"]
+    cues = read("cues.schema.json")
+    cues["items"]["properties"]["style"] = style
+    processing = read("processing.schema.json")
+    processing["properties"]["editing"] = editing
+    processing["properties"]["subtitle_style"] = style
+    processing["anyOf"] = [
+        {"required": [key]} for key in ["ocr", "inpaint", "editing", "subtitle_style"]
+    ]
 
     def embedded(value):
         if isinstance(value, list):
             return [embedded(child) for child in value]
         if not isinstance(value, dict):
             return value
-        properties = value.get('properties', {})
-        if properties.get('version') == {'const': 1} and {'ocr', 'inpaint'} <= properties.keys():
+        properties = value.get("properties", {})
+        if properties.get("version") == {"const": 1} and {"ocr", "inpaint"} <= properties.keys():
             return shape(processing)
-        if value.get('type') == 'array' and {'id', 'start_ms', 'end_ms', 'text'} <= value.get('items', {}).get('properties', {}).keys():
+        if (
+            value.get("type") == "array"
+            and {"id", "start_ms", "end_ms", "text"}
+            <= value.get("items", {}).get("properties", {}).keys()
+        ):
             return shape(cues)
         return {key: embedded(child) for key, child in value.items()}
 
-    outputs = {'subtitles/text-layers.schema.json': layer_document, 'cues.schema.json': cues, 'processing.schema.json': processing}
-    for name in ['project.schema.json', 'batch-submit.schema.json', 'folder-create.schema.json', 'worker-request.schema.json']:
+    outputs = {
+        "subtitles/text-layers.schema.json": layer_document,
+        "cues.schema.json": cues,
+        "processing.schema.json": processing,
+    }
+    for name in [
+        "project.schema.json",
+        "batch-submit.schema.json",
+        "folder-create.schema.json",
+        "worker-request.schema.json",
+    ]:
         document = read(name)
         outputs[name] = {key: embedded(value) for key, value in document.items()}
-        outputs[name]['$comment'] = 'Embedded shapes generated by scripts/sync-contracts.py; edit the canonical business schemas, then regenerate.'
-    outputs['project.schema.json']['properties'].update({'soundtrack': soundtrack, 'composition': composition,
-                                                       'text_layers': layers, 'version': {'const': 5}})
-    outputs['project.schema.json']['$id'] = 'urn:reupmatic:project:5'
-    outputs['project.schema.json']['title'] = 'Reupmatic project v5'
-    worker = outputs['worker-request.schema.json']
-    branches = worker['allOf'][1]['oneOf']
-    by_method = {branch['properties']['method']['const']: branch['properties']['params'] for branch in branches}
-    asset_id = {'type': 'string', 'minLength': 1, 'maxLength': 128}
-    canvas = object_schema({key: {'type': 'integer', 'minimum': 2, 'maximum': 16384} for key in ['width', 'height']}, ['width', 'height'])
-    by_method['asset.register']['properties']['kind']['enum'] = ['video', 'subtitle', 'audio']
-    for method in ['subtitles.preview', 'subtitles.save']:
-        by_method[method]['properties'].update({'cues': shape(cues), 'style': style, 'canvas': canvas})
-    by_method['subtitles.save']['properties']['format'] = {'enum': ['srt', 'ass']}
+        outputs[name]["$comment"] = (
+            "Embedded shapes generated by scripts/sync-contracts.py; edit the canonical business schemas, then regenerate."
+        )
+    outputs["project.schema.json"]["properties"].update(
+        {
+            "soundtrack": soundtrack,
+            "composition": composition,
+            "text_layers": layers,
+            "version": {"const": 5},
+        }
+    )
+    outputs["project.schema.json"]["$id"] = "urn:reupmatic:project:5"
+    outputs["project.schema.json"]["title"] = "Reupmatic project v5"
+    worker = outputs["worker-request.schema.json"]
+    branches = worker["allOf"][1]["oneOf"]
+    by_method = {
+        branch["properties"]["method"]["const"]: branch["properties"]["params"]
+        for branch in branches
+    }
+    asset_id = {"type": "string", "minLength": 1, "maxLength": 128}
+    canvas = object_schema(
+        {key: {"type": "integer", "minimum": 2, "maximum": 16384} for key in ["width", "height"]},
+        ["width", "height"],
+    )
+    by_method["asset.register"]["properties"]["kind"]["enum"] = ["video", "subtitle", "audio"]
+    for method in ["subtitles.preview", "subtitles.save"]:
+        by_method[method]["properties"].update(
+            {"cues": shape(cues), "style": style, "canvas": canvas}
+        )
+    by_method["subtitles.save"]["properties"]["format"] = {"enum": ["srt", "ass"]}
     additions = {
-        'synthesis.status': object_schema({}, []),
-        'synthesis.configure': object_schema({'path': {'type': 'string', 'minLength': 1, 'maxLength': 4096}}, ['path']),
-        'speech.synthesize': copy.deepcopy(synthesis['worker_params']),
-        'translation.status': object_schema({}, []),
-        'translation.configure': object_schema({'path': {'type': 'string', 'minLength': 1, 'maxLength': 4096}}, ['path']),
-        'speech.translate': copy.deepcopy(translation['worker_params']),
-        'speech.status': object_schema({}, []),
-        'speech.configure': object_schema({'path': {'type': 'string', 'minLength': 1, 'maxLength': 4096}}, ['path']),
-        'speech.transcribe': copy.deepcopy(speech['worker_params']),
-        'audio.probe': object_schema({'asset_id': asset_id}, ['asset_id']),
-        'subtitles.prepare': object_schema({'asset_id': asset_id, 'cues': shape(cues), 'editing': editing, 'style': style, 'canvas': canvas}, ['asset_id', 'cues']),
+        "synthesis.status": object_schema({}, []),
+        "synthesis.configure": object_schema(
+            {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
+        ),
+        "speech.synthesize": copy.deepcopy(synthesis["worker_params"]),
+        "translation.status": object_schema({}, []),
+        "translation.configure": object_schema(
+            {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
+        ),
+        "speech.translate": copy.deepcopy(translation["worker_params"]),
+        "speech.status": object_schema({}, []),
+        "speech.configure": object_schema(
+            {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
+        ),
+        "speech.transcribe": copy.deepcopy(speech["worker_params"]),
+        "audio.probe": object_schema({"asset_id": asset_id}, ["asset_id"]),
+        "subtitles.prepare": object_schema(
+            {
+                "asset_id": asset_id,
+                "cues": shape(cues),
+                "editing": editing,
+                "style": style,
+                "canvas": canvas,
+            },
+            ["asset_id", "cues"],
+        ),
     }
     for method, params in additions.items():
-        previous = next((branch for branch in branches if branch['properties']['method']['const'] == method), None)
-        branch = {'properties': {'method': {'const': method}, 'params': params}}
+        previous = next(
+            (branch for branch in branches if branch["properties"]["method"]["const"] == method),
+            None,
+        )
+        branch = {"properties": {"method": {"const": method}, "params": params}}
         if previous:
             branches[branches.index(previous)] = branch
         else:
             branches.append(branch)
     audio = copy.deepcopy(soundtrack)
-    del audio['properties']['source']
-    audio['properties'].update({'asset_id': asset_id, 'sha256': {'type': 'string', 'pattern': '^[a-f0-9]{64}$'}})
-    audio['required'] = list(audio['properties'])
+    del audio["properties"]["source"]
+    audio["properties"].update(
+        {"asset_id": asset_id, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+    )
+    audio["required"] = list(audio["properties"])
     montage = copy.deepcopy(composition)
-    montage['properties']['clips']['items']['properties']['source'] = object_schema({
-        'asset_id': asset_id, 'sha256': {'type': 'string', 'pattern': '^[a-f0-9]{64}$'},
-        'duration_ms': {'type': 'integer', 'minimum': 1, 'maximum': 86400000},
-    }, ['asset_id', 'sha256', 'duration_ms'])
-    for method in ['media.render', 'media.process']:
-        for variant in by_method[method]['oneOf']:
-            variant['properties'].update({'soundtrack': audio, 'composition': montage})
+    montage["properties"]["clips"]["items"]["properties"]["source"] = object_schema(
+        {
+            "asset_id": asset_id,
+            "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "duration_ms": {"type": "integer", "minimum": 1, "maximum": 86400000},
+        },
+        ["asset_id", "sha256", "duration_ms"],
+    )
+    for method in ["media.render", "media.process"]:
+        for variant in by_method[method]["oneOf"]:
+            variant["properties"].update({"soundtrack": audio, "composition": montage})
     return outputs
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--check', action='store_true')
+    parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     for name, value in compose().items():
-        text = json.dumps(value, indent=2, ensure_ascii=False) + '\n'
+        text = biome_format(json.dumps(value, indent=2, ensure_ascii=False) + "\n", name)
         target = CONTRACTS / name
         if args.check:
-            if target.read_text(encoding='utf-8') != text:
-                raise SystemExit(f'Outdated composed contract: {name}')
+            if target.read_text(encoding="utf-8") != text:
+                raise SystemExit(f"Outdated composed contract: {name}")
         else:
-            target.write_text(text, encoding='utf-8')
-    print('Current cue, processing, project and worker contracts are synchronized.')
+            target.write_text(text, encoding="utf-8")
+    print("Current cue, processing, project and worker contracts are synchronized.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

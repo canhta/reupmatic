@@ -1,5 +1,6 @@
 import { processingErrorKey } from '../processing/i18n';
 import { visionErrorKey } from '../vision/i18n';
+
 const errorKeys: Record<string, string> = {
   SOURCE_CHANGED: 'sourceChanged',
   SOURCE_MISSING: 'sourceChanged',
@@ -17,7 +18,8 @@ const errorKeys: Record<string, string> = {
 export function batchErrorKey(code: string): string {
   if (code.startsWith('OUTPUT_DIRECTORY')) return 'batchFolderMissing';
   if (code.startsWith('WORKER_')) return 'workerError';
-  if (processingErrorKey(code)) return processingErrorKey(code)!;
+  const processing = processingErrorKey(code);
+  if (processing) return processing;
   if (code.startsWith('MODEL_') || code.startsWith('VISION_')) return visionErrorKey(code);
   return errorKeys[code] ?? 'failed';
 }

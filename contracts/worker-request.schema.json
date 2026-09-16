@@ -27,13 +27,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "v",
-        "id",
-        "revision",
-        "method",
-        "params"
-      ],
+      "required": ["v", "id", "revision", "method", "params"],
       "additionalProperties": false
     },
     "processing": {
@@ -46,11 +40,7 @@
           "type": "object",
           "properties": {
             "language": {
-              "enum": [
-                "en",
-                "vi",
-                "zh"
-              ]
+              "enum": ["en", "vi", "zh"]
             },
             "sample_ms": {
               "type": "integer",
@@ -63,11 +53,7 @@
               "maximum": 1
             }
           },
-          "required": [
-            "language",
-            "sample_ms",
-            "min_confidence"
-          ],
+          "required": ["language", "sample_ms", "min_confidence"],
           "additionalProperties": false
         },
         "inpaint": {
@@ -107,20 +93,11 @@
                       "maximum": 1
                     }
                   },
-                  "required": [
-                    "x",
-                    "y",
-                    "width",
-                    "height"
-                  ],
+                  "required": ["x", "y", "width", "height"],
                   "additionalProperties": false
                 }
               },
-              "required": [
-                "target",
-                "padding_px",
-                "region"
-              ],
+              "required": ["target", "padding_px", "region"],
               "additionalProperties": false
             },
             {
@@ -135,18 +112,10 @@
                   "maximum": 32
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 }
               },
-              "required": [
-                "target",
-                "padding_px",
-                "language"
-              ],
+              "required": ["target", "padding_px", "language"],
               "additionalProperties": false
             }
           ]
@@ -168,10 +137,7 @@
                   "maximum": 86400000
                 }
               },
-              "required": [
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["start_ms", "end_ms"],
               "additionalProperties": false
             },
             "crop": {
@@ -198,20 +164,11 @@
                   "maximum": 1
                 }
               },
-              "required": [
-                "x",
-                "y",
-                "width",
-                "height"
-              ],
+              "required": ["x", "y", "width", "height"],
               "additionalProperties": false
             },
             "flip": {
-              "enum": [
-                "horizontal",
-                "vertical",
-                "both"
-              ]
+              "enum": ["horizontal", "vertical", "both"]
             },
             "speed": {
               "type": "number",
@@ -237,11 +194,7 @@
                   "maximum": 3
                 }
               },
-              "required": [
-                "brightness",
-                "contrast",
-                "saturation"
-              ],
+              "required": ["brightness", "contrast", "saturation"],
               "additionalProperties": false
             },
             "audio": {
@@ -256,45 +209,23 @@
                   "maximum": 24
                 }
               },
-              "required": [
-                "muted",
-                "gain_db"
-              ],
+              "required": ["muted", "gain_db"],
               "additionalProperties": false
             },
             "output": {
               "type": "object",
               "properties": {
                 "aspect": {
-                  "enum": [
-                    "source",
-                    "9:16",
-                    "16:9",
-                    "1:1",
-                    "4:5"
-                  ]
+                  "enum": ["source", "9:16", "16:9", "1:1", "4:5"]
                 },
                 "fit": {
-                  "enum": [
-                    "contain",
-                    "cover"
-                  ]
+                  "enum": ["contain", "cover"]
                 },
                 "height": {
-                  "enum": [
-                    0,
-                    480,
-                    720,
-                    1080,
-                    1920
-                  ]
+                  "enum": [0, 480, 720, 1080, 1920]
                 }
               },
-              "required": [
-                "aspect",
-                "fit",
-                "height"
-              ],
+              "required": ["aspect", "fit", "height"],
               "additionalProperties": false
             }
           },
@@ -388,30 +319,20 @@
           }
         }
       },
-      "required": [
-        "version"
-      ],
+      "required": ["version"],
       "additionalProperties": false,
       "anyOf": [
         {
-          "required": [
-            "ocr"
-          ]
+          "required": ["ocr"]
         },
         {
-          "required": [
-            "inpaint"
-          ]
+          "required": ["inpaint"]
         },
         {
-          "required": [
-            "editing"
-          ]
+          "required": ["editing"]
         },
         {
-          "required": [
-            "subtitle_style"
-          ]
+          "required": ["subtitle_style"]
         }
       ]
     }
@@ -449,17 +370,10 @@
                   "maxLength": 4096
                 },
                 "kind": {
-                  "enum": [
-                    "video",
-                    "subtitle",
-                    "audio"
-                  ]
+                  "enum": ["video", "subtitle", "audio"]
                 }
               },
-              "required": [
-                "path",
-                "kind"
-              ],
+              "required": ["path", "kind"],
               "additionalProperties": false
             }
           }
@@ -478,9 +392,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "asset_id"
-              ],
+              "required": ["asset_id"],
               "additionalProperties": false
             }
           }
@@ -499,9 +411,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "asset_id"
-              ],
+              "required": ["asset_id"],
               "additionalProperties": false
             }
           }
@@ -520,9 +430,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "asset_id"
-              ],
+              "required": ["asset_id"],
               "additionalProperties": false
             }
           }
@@ -647,12 +555,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "id",
-                      "start_ms",
-                      "end_ms",
-                      "text"
-                    ],
+                    "required": ["id", "start_ms", "end_ms", "text"],
                     "additionalProperties": false
                   }
                 },
@@ -756,22 +659,14 @@
                       "maximum": 16384
                     }
                   },
-                  "required": [
-                    "width",
-                    "height"
-                  ],
+                  "required": ["width", "height"],
                   "additionalProperties": false
                 },
                 "format": {
-                  "enum": [
-                    "srt",
-                    "ass"
-                  ]
+                  "enum": ["srt", "ass"]
                 }
               },
-              "required": [
-                "cues"
-              ],
+              "required": ["cues"],
               "additionalProperties": false
             }
           }
@@ -896,12 +791,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "id",
-                      "start_ms",
-                      "end_ms",
-                      "text"
-                    ],
+                    "required": ["id", "start_ms", "end_ms", "text"],
                     "additionalProperties": false
                   }
                 },
@@ -1005,16 +895,11 @@
                       "maximum": 16384
                     }
                   },
-                  "required": [
-                    "width",
-                    "height"
-                  ],
+                  "required": ["width", "height"],
                   "additionalProperties": false
                 }
               },
-              "required": [
-                "cues"
-              ],
+              "required": ["cues"],
               "additionalProperties": false
             }
           }
@@ -1043,10 +928,7 @@
                       "const": "sample"
                     },
                     "encoding": {
-                      "enum": [
-                        "review",
-                        "lossless"
-                      ]
+                      "enum": ["review", "lossless"]
                     },
                     "start_ms": {
                       "type": "integer",
@@ -1074,10 +956,7 @@
                       ],
                       "properties": {
                         "mode": {
-                          "enum": [
-                            "replace",
-                            "mix"
-                          ]
+                          "enum": ["replace", "mix"]
                         },
                         "start_ms": {
                           "type": "integer",
@@ -1123,11 +1002,7 @@
                     "composition": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "version",
-                        "canvas",
-                        "clips"
-                      ],
+                      "required": ["version", "canvas", "clips"],
                       "properties": {
                         "version": {
                           "const": 1
@@ -1135,11 +1010,7 @@
                         "canvas": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "width",
-                            "height",
-                            "fps"
-                          ],
+                          "required": ["width", "height", "fps"],
                           "properties": {
                             "width": {
                               "type": "integer",
@@ -1165,13 +1036,7 @@
                           "items": {
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "id",
-                              "source",
-                              "start_ms",
-                              "end_ms",
-                              "speed"
-                            ],
+                            "required": ["id", "source", "start_ms", "end_ms", "speed"],
                             "properties": {
                               "id": {
                                 "type": "string",
@@ -1197,11 +1062,7 @@
                                     "maximum": 86400000
                                   }
                                 },
-                                "required": [
-                                  "asset_id",
-                                  "sha256",
-                                  "duration_ms"
-                                ],
+                                "required": ["asset_id", "sha256", "duration_ms"],
                                 "additionalProperties": false
                               },
                               "start_ms": {
@@ -1225,13 +1086,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "asset_id",
-                    "mode",
-                    "encoding",
-                    "start_ms",
-                    "end_ms"
-                  ],
+                  "required": ["asset_id", "mode", "encoding", "start_ms", "end_ms"],
                   "additionalProperties": false
                 },
                 {
@@ -1251,10 +1106,7 @@
                       "const": "full"
                     },
                     "encoding": {
-                      "enum": [
-                        "review",
-                        "lossless"
-                      ]
+                      "enum": ["review", "lossless"]
                     },
                     "soundtrack": {
                       "type": "object",
@@ -1272,10 +1124,7 @@
                       ],
                       "properties": {
                         "mode": {
-                          "enum": [
-                            "replace",
-                            "mix"
-                          ]
+                          "enum": ["replace", "mix"]
                         },
                         "start_ms": {
                           "type": "integer",
@@ -1321,11 +1170,7 @@
                     "composition": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "version",
-                        "canvas",
-                        "clips"
-                      ],
+                      "required": ["version", "canvas", "clips"],
                       "properties": {
                         "version": {
                           "const": 1
@@ -1333,11 +1178,7 @@
                         "canvas": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "width",
-                            "height",
-                            "fps"
-                          ],
+                          "required": ["width", "height", "fps"],
                           "properties": {
                             "width": {
                               "type": "integer",
@@ -1363,13 +1204,7 @@
                           "items": {
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "id",
-                              "source",
-                              "start_ms",
-                              "end_ms",
-                              "speed"
-                            ],
+                            "required": ["id", "source", "start_ms", "end_ms", "speed"],
                             "properties": {
                               "id": {
                                 "type": "string",
@@ -1395,11 +1230,7 @@
                                     "maximum": 86400000
                                   }
                                 },
-                                "required": [
-                                  "asset_id",
-                                  "sha256",
-                                  "duration_ms"
-                                ],
+                                "required": ["asset_id", "sha256", "duration_ms"],
                                 "additionalProperties": false
                               },
                               "start_ms": {
@@ -1423,11 +1254,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "asset_id",
-                    "mode",
-                    "encoding"
-                  ],
+                  "required": ["asset_id", "mode", "encoding"],
                   "additionalProperties": false
                 }
               ]
@@ -1448,9 +1275,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "request_id"
-              ],
+              "required": ["request_id"],
               "additionalProperties": false
             }
           }
@@ -1483,9 +1308,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "path"
-              ],
+              "required": ["path"],
               "additionalProperties": false
             }
           }
@@ -1514,11 +1337,7 @@
                   "maximum": 86400000
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "sample_ms": {
                   "type": "integer",
@@ -1554,12 +1373,7 @@
                       "maximum": 1
                     }
                   },
-                  "required": [
-                    "x",
-                    "y",
-                    "width",
-                    "height"
-                  ],
+                  "required": ["x", "y", "width", "height"],
                   "additionalProperties": false
                 }
               },
@@ -1632,23 +1446,11 @@
                           "maximum": 1
                         }
                       },
-                      "required": [
-                        "x",
-                        "y",
-                        "width",
-                        "height"
-                      ],
+                      "required": ["x", "y", "width", "height"],
                       "additionalProperties": false
                     }
                   },
-                  "required": [
-                    "asset_id",
-                    "start_ms",
-                    "end_ms",
-                    "target",
-                    "padding_px",
-                    "region"
-                  ],
+                  "required": ["asset_id", "start_ms", "end_ms", "target", "padding_px", "region"],
                   "additionalProperties": false
                 },
                 {
@@ -1678,11 +1480,7 @@
                       "maximum": 32
                     },
                     "language": {
-                      "enum": [
-                        "en",
-                        "vi",
-                        "zh"
-                      ]
+                      "enum": ["en", "vi", "zh"]
                     }
                   },
                   "required": [
@@ -1730,12 +1528,7 @@
                       "minProperties": 0,
                       "maxProperties": 4,
                       "propertyNames": {
-                        "enum": [
-                          "ocr_en",
-                          "ocr_vi",
-                          "ocr_zh",
-                          "inpainting"
-                        ]
+                        "enum": ["ocr_en", "ocr_vi", "ocr_zh", "inpainting"]
                       },
                       "additionalProperties": {
                         "type": "string",
@@ -1771,10 +1564,7 @@
                       ],
                       "properties": {
                         "mode": {
-                          "enum": [
-                            "replace",
-                            "mix"
-                          ]
+                          "enum": ["replace", "mix"]
                         },
                         "start_ms": {
                           "type": "integer",
@@ -1820,11 +1610,7 @@
                     "composition": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "version",
-                        "canvas",
-                        "clips"
-                      ],
+                      "required": ["version", "canvas", "clips"],
                       "properties": {
                         "version": {
                           "const": 1
@@ -1832,11 +1618,7 @@
                         "canvas": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "width",
-                            "height",
-                            "fps"
-                          ],
+                          "required": ["width", "height", "fps"],
                           "properties": {
                             "width": {
                               "type": "integer",
@@ -1862,13 +1644,7 @@
                           "items": {
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "id",
-                              "source",
-                              "start_ms",
-                              "end_ms",
-                              "speed"
-                            ],
+                            "required": ["id", "source", "start_ms", "end_ms", "speed"],
                             "properties": {
                               "id": {
                                 "type": "string",
@@ -1894,11 +1670,7 @@
                                     "maximum": 86400000
                                   }
                                 },
-                                "required": [
-                                  "asset_id",
-                                  "sha256",
-                                  "duration_ms"
-                                ],
+                                "required": ["asset_id", "sha256", "duration_ms"],
                                 "additionalProperties": false
                               },
                               "start_ms": {
@@ -1922,14 +1694,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "asset_id",
-                    "mode",
-                    "encoding",
-                    "processing",
-                    "start_ms",
-                    "end_ms"
-                  ],
+                  "required": ["asset_id", "mode", "encoding", "processing", "start_ms", "end_ms"],
                   "additionalProperties": false
                 },
                 {
@@ -1956,12 +1721,7 @@
                       "minProperties": 0,
                       "maxProperties": 4,
                       "propertyNames": {
-                        "enum": [
-                          "ocr_en",
-                          "ocr_vi",
-                          "ocr_zh",
-                          "inpainting"
-                        ]
+                        "enum": ["ocr_en", "ocr_vi", "ocr_zh", "inpainting"]
                       },
                       "additionalProperties": {
                         "type": "string",
@@ -1987,10 +1747,7 @@
                       ],
                       "properties": {
                         "mode": {
-                          "enum": [
-                            "replace",
-                            "mix"
-                          ]
+                          "enum": ["replace", "mix"]
                         },
                         "start_ms": {
                           "type": "integer",
@@ -2036,11 +1793,7 @@
                     "composition": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "version",
-                        "canvas",
-                        "clips"
-                      ],
+                      "required": ["version", "canvas", "clips"],
                       "properties": {
                         "version": {
                           "const": 1
@@ -2048,11 +1801,7 @@
                         "canvas": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "width",
-                            "height",
-                            "fps"
-                          ],
+                          "required": ["width", "height", "fps"],
                           "properties": {
                             "width": {
                               "type": "integer",
@@ -2078,13 +1827,7 @@
                           "items": {
                             "type": "object",
                             "additionalProperties": false,
-                            "required": [
-                              "id",
-                              "source",
-                              "start_ms",
-                              "end_ms",
-                              "speed"
-                            ],
+                            "required": ["id", "source", "start_ms", "end_ms", "speed"],
                             "properties": {
                               "id": {
                                 "type": "string",
@@ -2110,11 +1853,7 @@
                                     "maximum": 86400000
                                   }
                                 },
-                                "required": [
-                                  "asset_id",
-                                  "sha256",
-                                  "duration_ms"
-                                ],
+                                "required": ["asset_id", "sha256", "duration_ms"],
                                 "additionalProperties": false
                               },
                               "start_ms": {
@@ -2138,12 +1877,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "asset_id",
-                    "mode",
-                    "encoding",
-                    "processing"
-                  ],
+                  "required": ["asset_id", "mode", "encoding", "processing"],
                   "additionalProperties": false
                 }
               ]
@@ -2162,9 +1896,7 @@
                   "$ref": "#/$defs/processing"
                 }
               },
-              "required": [
-                "processing"
-              ],
+              "required": ["processing"],
               "additionalProperties": false
             }
           }
@@ -2191,11 +1923,7 @@
                   "maximum": 86400000
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "sample_ms": {
                   "type": "integer",
@@ -2231,12 +1959,7 @@
                       "maximum": 1
                     }
                   },
-                  "required": [
-                    "x",
-                    "y",
-                    "width",
-                    "height"
-                  ],
+                  "required": ["x", "y", "width", "height"],
                   "additionalProperties": false
                 }
               },
@@ -2266,9 +1989,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "asset_id"
-              ],
+              "required": ["asset_id"],
               "additionalProperties": false
             }
           }
@@ -2398,12 +2119,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "id",
-                      "start_ms",
-                      "end_ms",
-                      "text"
-                    ],
+                    "required": ["id", "start_ms", "end_ms", "text"],
                     "additionalProperties": false
                   }
                 },
@@ -2424,10 +2140,7 @@
                           "maximum": 86400000
                         }
                       },
-                      "required": [
-                        "start_ms",
-                        "end_ms"
-                      ],
+                      "required": ["start_ms", "end_ms"],
                       "additionalProperties": false
                     },
                     "crop": {
@@ -2454,20 +2167,11 @@
                           "maximum": 1
                         }
                       },
-                      "required": [
-                        "x",
-                        "y",
-                        "width",
-                        "height"
-                      ],
+                      "required": ["x", "y", "width", "height"],
                       "additionalProperties": false
                     },
                     "flip": {
-                      "enum": [
-                        "horizontal",
-                        "vertical",
-                        "both"
-                      ]
+                      "enum": ["horizontal", "vertical", "both"]
                     },
                     "speed": {
                       "type": "number",
@@ -2493,11 +2197,7 @@
                           "maximum": 3
                         }
                       },
-                      "required": [
-                        "brightness",
-                        "contrast",
-                        "saturation"
-                      ],
+                      "required": ["brightness", "contrast", "saturation"],
                       "additionalProperties": false
                     },
                     "audio": {
@@ -2512,45 +2212,23 @@
                           "maximum": 24
                         }
                       },
-                      "required": [
-                        "muted",
-                        "gain_db"
-                      ],
+                      "required": ["muted", "gain_db"],
                       "additionalProperties": false
                     },
                     "output": {
                       "type": "object",
                       "properties": {
                         "aspect": {
-                          "enum": [
-                            "source",
-                            "9:16",
-                            "16:9",
-                            "1:1",
-                            "4:5"
-                          ]
+                          "enum": ["source", "9:16", "16:9", "1:1", "4:5"]
                         },
                         "fit": {
-                          "enum": [
-                            "contain",
-                            "cover"
-                          ]
+                          "enum": ["contain", "cover"]
                         },
                         "height": {
-                          "enum": [
-                            0,
-                            480,
-                            720,
-                            1080,
-                            1920
-                          ]
+                          "enum": [0, 480, 720, 1080, 1920]
                         }
                       },
-                      "required": [
-                        "aspect",
-                        "fit",
-                        "height"
-                      ],
+                      "required": ["aspect", "fit", "height"],
                       "additionalProperties": false
                     }
                   },
@@ -2657,17 +2335,11 @@
                       "maximum": 16384
                     }
                   },
-                  "required": [
-                    "width",
-                    "height"
-                  ],
+                  "required": ["width", "height"],
                   "additionalProperties": false
                 }
               },
-              "required": [
-                "asset_id",
-                "cues"
-              ],
+              "required": ["asset_id", "cues"],
               "additionalProperties": false
             }
           }
@@ -2699,9 +2371,7 @@
                   "maxLength": 4096
                 }
               },
-              "required": [
-                "path"
-              ],
+              "required": ["path"],
               "additionalProperties": false
             }
           }
@@ -2739,11 +2409,7 @@
                   "maximum": 86400000
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 }
               },
               "required": [
@@ -2785,9 +2451,7 @@
                   "maxLength": 4096
                 }
               },
-              "required": [
-                "path"
-              ],
+              "required": ["path"],
               "additionalProperties": false
             }
           }
@@ -2801,28 +2465,17 @@
               "type": "object",
               "properties": {
                 "source_layer": {
-                  "enum": [
-                    "transcript",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "displayed"]
                 },
                 "source_token": {
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "source_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "target_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "model_id": {
                   "type": "string",
@@ -2858,12 +2511,7 @@
                         "pattern": "^[^\\u0000]+$"
                       }
                     },
-                    "required": [
-                      "id",
-                      "start_ms",
-                      "end_ms",
-                      "text"
-                    ],
+                    "required": ["id", "start_ms", "end_ms", "text"],
                     "additionalProperties": false
                   }
                 },
@@ -2885,10 +2533,7 @@
                         "pattern": "^[^\\u0000]*$"
                       }
                     },
-                    "required": [
-                      "find",
-                      "replace"
-                    ],
+                    "required": ["find", "replace"],
                     "additionalProperties": false
                   }
                 }
@@ -2933,9 +2578,7 @@
                   "maxLength": 4096
                 }
               },
-              "required": [
-                "path"
-              ],
+              "required": ["path"],
               "additionalProperties": false
             }
           }
@@ -2956,10 +2599,7 @@
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "language": {
-                  "enum": [
-                    "en",
-                    "vi"
-                  ]
+                  "enum": ["en", "vi"]
                 },
                 "model_id": {
                   "type": "string",
@@ -3001,12 +2641,7 @@
                         "maximum": 86400000
                       }
                     },
-                    "required": [
-                      "id",
-                      "text",
-                      "start_ms",
-                      "end_ms"
-                    ],
+                    "required": ["id", "text", "start_ms", "end_ms"],
                     "additionalProperties": false
                   }
                 }

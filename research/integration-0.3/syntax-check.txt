@@ -1,1 +1,0 @@
-Parsed 11 TypeScript source files; syntax errors=false. This is not a dependency-aware UI typecheck.

@@ -18,7 +18,7 @@ export function TimeInput({ value, label, onCommit, onFocus }: Props) {
       width={112}
       isWheelEnabled={false}
       onFocus={onFocus}
-      onChange={seconds => onCommit(Math.round(seconds * 1000))}
+      onChange={(seconds) => onCommit(Math.round(seconds * 1000))}
     />
   );
 }

@@ -1,5 +1,11 @@
 import { useRef, useState } from 'react';
-import { changeEditor, openEditorHistory, redoEditor, undoEditor, type EditorHistory } from '../../../core/projects/editor-history';
+import {
+  changeEditor,
+  type EditorHistory,
+  openEditorHistory,
+  redoEditor,
+  undoEditor,
+} from '../../../core/projects/editor-history';
 import type { EditorSnapshot } from '../../../core/projects/project';
 
 const initial: EditorSnapshot = { cues: [], sample: { start_ms: 0, end_ms: 10000 } };
@@ -15,7 +21,9 @@ export function useEditorDocument(onChange: () => void) {
     if (notify) onChange();
   }
   return {
-    history, snapshot: history.present, getSnapshot: () => current.current.present,
+    history,
+    snapshot: history.present,
+    getSnapshot: () => current.current.present,
     change: (patch: Partial<EditorSnapshot>) => publish(changeEditor(current.current, patch)),
     restore: (snapshot: EditorSnapshot) => publish(openEditorHistory(snapshot), false),
     undo: () => publish(undoEditor(current.current)),

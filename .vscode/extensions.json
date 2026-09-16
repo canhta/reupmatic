@@ -1,6 +1,3 @@
 {
-  "recommendations": [
-    "biomejs.biome",
-    "charliermarsh.ruff"
-  ]
+  "recommendations": ["biomejs.biome", "charliermarsh.ruff"]
 }

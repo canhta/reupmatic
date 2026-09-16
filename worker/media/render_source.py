@@ -1,12 +1,14 @@
 """Resolve a single video or a bounded montage into the same final encoding path."""
+
 from pathlib import Path
+
+from runtime.errors import WorkerError
+from runtime.protocol import bounded_int
 
 from media.composition.assembly import assemble, verify_sources
 from media.composition.document import parse_composition
 from media.editing.recipe import resolve_window
 from media.probe import probe_file
-from runtime.errors import WorkerError
-from runtime.protocol import bounded_int
 
 
 def resolve_render_source(host, req, params, editing=None):
@@ -16,8 +18,13 @@ def resolve_render_source(host, req, params, editing=None):
         document, spans, duration = parse_composition(params["composition"])
         if any(key in params.get("processing", {}) for key in ("ocr", "inpaint")):
             raise WorkerError("COMPOSITION_PROCESSING_UNAVAILABLE")
-        info = {"duration_ms": duration, "width": document["canvas"]["width"],
-                "height": document["canvas"]["height"], "frame_rate": "30", "has_audio": True}
+        info = {
+            "duration_ms": duration,
+            "width": document["canvas"]["width"],
+            "height": document["canvas"]["height"],
+            "frame_rate": "30",
+            "has_audio": True,
+        }
     else:
         info = probe_file(host, req, source["path"])
         duration = info["duration_ms"]

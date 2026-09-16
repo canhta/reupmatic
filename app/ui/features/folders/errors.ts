@@ -1,5 +1,6 @@
 import { processingErrorKey } from '../processing/i18n';
 import { visionErrorKey } from '../vision/i18n';
+
 const errorKeys: Record<string, string> = {
   AUTOMATION_UNAVAILABLE: 'folderUnavailable',
   WATCH_COMPONENT_MISSING: 'folderComponentMissing',
@@ -14,7 +15,8 @@ const errorKeys: Record<string, string> = {
 };
 
 export function folderErrorKey(code: string): string {
-  if (processingErrorKey(code)) return processingErrorKey(code)!;
+  const processing = processingErrorKey(code);
+  if (processing) return processing;
   if (code.startsWith('MODEL_') || code.startsWith('VISION_')) return visionErrorKey(code);
   return errorKeys[code] ?? 'folderError';
 }

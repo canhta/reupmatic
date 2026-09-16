@@ -1,7 +1,7 @@
+import type { Workflow, WorkflowRunView } from '../automation/workflow-types.js';
 import type { AffiliateLink, Channel } from '../distribution/distribution-types.js';
 import type { ProcessingProfile } from '../profiles/profile-types.js';
-import type { Label, ContentLabels } from '../taxonomy/taxonomy-types.js';
-import type { Workflow, WorkflowRunView } from '../automation/workflow-types.js';
+import type { ContentLabels, Label } from '../taxonomy/taxonomy-types.js';
 export interface CatalogSnapshot {
   revision: number;
   channels: Channel[];

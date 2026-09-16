@@ -1,22 +1,32 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { LibraryStore } from '../dist-core/library/library-store.js';
 import { LibraryService } from '../dist-core/library/library-service.js';
+import { LibraryStore } from '../dist-core/library/library-store.js';
 
 async function fixture(t) {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'reupmatic-library-'));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'reupmatic-library-')));
   await mkdir(path.join(root, 'managed'));
   const dbPath = path.join(root, 'library.sqlite');
   const store = new LibraryStore(dbPath);
-  t.after(async () => { store.close(); await rm(root, { recursive: true, force: true }); });
-  const inspect = async filename => {
+  t.after(async () => {
+    store.close();
+    await rm(root, { recursive: true, force: true });
+  });
+  const inspect = async (filename) => {
     const data = await readFile(filename);
-    return { path: filename, name: path.basename(filename), sha256: createHash('sha256').update(data).digest('hex'),
-      duration_ms: 5000, width: 320, height: 180, has_audio: true };
+    return {
+      path: filename,
+      name: path.basename(filename),
+      sha256: createHash('sha256').update(data).digest('hex'),
+      duration_ms: 5000,
+      width: 320,
+      height: 180,
+      has_audio: true,
+    };
   };
   const service = new LibraryService(store, path.join(root, 'managed'), inspect);
   const source = path.join(root, 'source.mp4');
@@ -24,7 +34,7 @@ async function fixture(t) {
   return { root, store, service, source, dbPath };
 }
 
-test('reference import survives reopening without copying original content', async t => {
+test('reference import survives reopening without copying original content', async (t) => {
   const { service, store, source, dbPath } = await fixture(t);
   const result = await service.importFile(source, { mode: 'reference', duplicates: 'reuse' });
   assert.equal(result.reused, false);
@@ -32,11 +42,14 @@ test('reference import survives reopening without copying original content', asy
   assert.equal(result.item.storage, 'reference');
   store.close();
   const reopened = new LibraryStore(dbPath);
-  try { assert.equal(reopened.get(result.item.id).sha256, result.item.sha256); }
-  finally { reopened.close(); }
+  try {
+    assert.equal(reopened.get(result.item.id).sha256, result.item.sha256);
+  } finally {
+    reopened.close();
+  }
 });
 
-test('same bytes are reused only under reuse policy; separate import is explicit', async t => {
+test('same bytes are reused only under reuse policy; separate import is explicit', async (t) => {
   const { service, source, root, store } = await fixture(t);
   const first = await service.importFile(source, { mode: 'reference', duplicates: 'reuse' });
   const other = path.join(root, 'different-name.mp4');
@@ -49,7 +62,7 @@ test('same bytes are reused only under reuse policy; separate import is explicit
   assert.equal(store.list({ search: '', offset: 0, limit: 50 }).total, 2);
 });
 
-test('copy import has an independent verified destination and leaves source untouched', async t => {
+test('copy import has an independent verified destination and leaves source untouched', async (t) => {
   const { service, source, root } = await fixture(t);
   const { item } = await service.importFile(source, { mode: 'copy', duplicates: 'separate' });
   assert.equal(item.storage, 'copy');
@@ -58,10 +71,13 @@ test('copy import has an independent verified destination and leaves source unto
   assert.deepEqual(await readFile(item.path), await readFile(source));
 });
 
-test('relink rejects different bytes without losing project associations', async t => {
+test('relink rejects different bytes without losing project associations', async (t) => {
   const { service, source, root, store } = await fixture(t);
   const { item } = await service.importFile(source, { mode: 'reference', duplicates: 'reuse' });
-  store.link(item.id, 'project', path.join(root, 'edit.reupmatic.json'), { sha256: 'a'.repeat(64), size_bytes: 10 });
+  store.link(item.id, 'project', path.join(root, 'edit.reupmatic.json'), {
+    sha256: 'a'.repeat(64),
+    size_bytes: 10,
+  });
   const wrong = path.join(root, 'wrong.mp4');
   await writeFile(wrong, 'other bytes');
   await assert.rejects(service.relink(item.id, wrong), /SOURCE_CHANGED/);
@@ -73,7 +89,7 @@ test('relink rejects different bytes without losing project associations', async
   assert.equal(store.get(item.id).links.length, 1);
 });
 
-test('open detects changed source bytes; missing source retains library history', async t => {
+test('open detects changed source bytes; missing source retains library history', async (t) => {
   const { service, source, store } = await fixture(t);
   const { item } = await service.importFile(source, { mode: 'reference', duplicates: 'reuse' });
   await writeFile(source, 'modified bytes');
@@ -84,12 +100,15 @@ test('open detects changed source bytes; missing source retains library history'
   assert.equal(store.get(item.id).availability, 'missing');
 });
 
-test('removing a listing never deletes originals, copies, projects or exports', async t => {
+test('removing a listing never deletes originals, copies, projects or exports', async (t) => {
   const { service, source, root, store } = await fixture(t);
   const { item } = await service.importFile(source, { mode: 'copy', duplicates: 'separate' });
   const output = path.join(root, 'output.mp4');
   await writeFile(output, 'render');
-  store.link(item.id, 'export', output, { sha256: createHash('sha256').update('render').digest('hex'), size_bytes: 6 });
+  store.link(item.id, 'export', output, {
+    sha256: createHash('sha256').update('render').digest('hex'),
+    size_bytes: 6,
+  });
   store.forget(item.id);
   assert.equal(store.list({ search: '', offset: 0, limit: 50 }).total, 0);
   assert.ok((await readFile(source)).length);
@@ -98,7 +117,7 @@ test('removing a listing never deletes originals, copies, projects or exports', 
   assert.ok(store.protectedPaths().includes(item.path));
 });
 
-test('search treats SQL wildcard characters as literal text and caps pages', async t => {
+test('search treats SQL wildcard characters as literal text and caps pages', async (t) => {
   const { service, root, store } = await fixture(t);
   const special = path.join(root, '100%_done.mp4');
   await writeFile(special, 'unique');
@@ -108,7 +127,7 @@ test('search treats SQL wildcard characters as literal text and caps pages', asy
   assert.throws(() => store.list({ search: '', offset: 0, limit: 1000 }), /INVALID_REQUEST/);
 });
 
-test('a failed copy is not recorded as an available library item', async t => {
+test('a failed copy is not recorded as an available library item', async (t) => {
   const { service, source, root, store } = await fixture(t);
   await rm(path.join(root, 'managed'), { recursive: true });
   await writeFile(path.join(root, 'managed'), 'not a folder');
@@ -116,19 +135,26 @@ test('a failed copy is not recorded as an available library item', async t => {
   assert.equal(store.list({ search: '', offset: 0, limit: 50 }).total, 0);
 });
 
-
-test('copy imports never mutate the inspector-owned media registration', async t => {
+test('copy imports never mutate the inspector-owned media registration', async (t) => {
   const { root, store, source } = await fixture(t);
-  const inspected = Object.freeze({ path: source, name: 'source.mp4',
-    sha256: createHash('sha256').update(await readFile(source)).digest('hex'),
-    duration_ms: 5000, width: 320, height: 180, has_audio: false });
+  const inspected = Object.freeze({
+    path: source,
+    name: 'source.mp4',
+    sha256: createHash('sha256')
+      .update(await readFile(source))
+      .digest('hex'),
+    duration_ms: 5000,
+    width: 320,
+    height: 180,
+    has_audio: false,
+  });
   const service = new LibraryService(store, path.join(root, 'managed'), async () => inspected);
   const result = await service.importFile(source, { mode: 'copy', duplicates: 'separate' });
   assert.equal(inspected.path, source);
   assert.notEqual(result.item.path, source);
 });
 
-test('related output indexing is idempotent and distinguishes intentionally separate items', async t => {
+test('related output indexing is idempotent and distinguishes intentionally separate items', async (t) => {
   const { root, store, service, source } = await fixture(t);
   const options = { mode: 'reference', duplicates: 'separate' };
   const first = (await service.importFile(source, options)).item;

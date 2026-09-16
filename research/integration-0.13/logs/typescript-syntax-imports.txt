@@ -1,3 +1,0 @@
-TypeScript 5.8.3: syntax/transpilation of 186 implementation files; 0 errors.
-Not dependency-resolved typechecking, installed UI validation, or execution.
-Renderer value-import AST traversal: 122 reachable local files; 0 Node/Electron violations.

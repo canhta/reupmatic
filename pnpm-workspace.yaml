@@ -1,0 +1,10 @@
+allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
+  lefthook: true
+  lfa-ponyfill: true
+onlyBuiltDependencies:
+  - "@astryxdesign/cli"
+  - "@astryxdesign/core"
+  - lefthook
+  - lfa-ponyfill

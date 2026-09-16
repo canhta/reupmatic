@@ -18,7 +18,9 @@ def geometry_filters(edit, info):
     if edit.get("flip") in ("vertical", "both"):
         filters.append("vflip")
     if color := edit.get("color"):
-        filters.append(f'eq=brightness={color["brightness"]}:contrast={color["contrast"]}:saturation={color["saturation"]}')
+        filters.append(
+            f"eq=brightness={color['brightness']}:contrast={color['contrast']}:saturation={color['saturation']}"
+        )
     if output := edit.get("output"):
         aspect = output["aspect"]
         ratio = width / height
@@ -30,11 +32,15 @@ def geometry_filters(edit, info):
         if max(target_width, target_height) > 8192:
             raise WorkerError("EDIT_OUTPUT_SIZE")
         if output["fit"] == "contain":
-            filters += [f"scale={target_width}:{target_height}:force_original_aspect_ratio=decrease:force_divisible_by=2",
-                        f"pad={target_width}:{target_height}:(ow-iw)/2:(oh-ih)/2"]
+            filters += [
+                f"scale={target_width}:{target_height}:force_original_aspect_ratio=decrease:force_divisible_by=2",
+                f"pad={target_width}:{target_height}:(ow-iw)/2:(oh-ih)/2",
+            ]
         else:
-            filters += [f"scale={target_width}:{target_height}:force_original_aspect_ratio=increase:force_divisible_by=2",
-                        f"crop={target_width}:{target_height}:(iw-ow)/2:(ih-oh)/2"]
+            filters += [
+                f"scale={target_width}:{target_height}:force_original_aspect_ratio=increase:force_divisible_by=2",
+                f"crop={target_width}:{target_height}:(iw-ow)/2:(ih-oh)/2",
+            ]
         width, height = target_width, target_height
     filters.append("setsar=1")
     return filters, (width, height)
@@ -45,8 +51,11 @@ def even(value):
 
 
 def audio_filters(start_ms, end_ms, speed, audio, duration_ms):
-    filters = ["aresample=async=1:first_pts=0", f"atrim=start={start_ms / 1000:.3f}:end={end_ms / 1000:.3f}",
-               "asetpts=PTS-STARTPTS"]
+    filters = [
+        "aresample=async=1:first_pts=0",
+        f"atrim=start={start_ms / 1000:.3f}:end={end_ms / 1000:.3f}",
+        "asetpts=PTS-STARTPTS",
+    ]
     remaining = speed
     while remaining < 0.5:
         filters.append("atempo=0.5")
@@ -57,6 +66,6 @@ def audio_filters(start_ms, end_ms, speed, audio, duration_ms):
     if remaining != 1:
         filters.append(f"atempo={remaining:.9f}")
     if audio.get("gain_db", 0):
-        filters.append(f'volume={audio["gain_db"]}dB')
+        filters.append(f"volume={audio['gain_db']}dB")
     filters += ["apad", f"atrim=duration={duration_ms / 1000:.3f}"]
     return filters

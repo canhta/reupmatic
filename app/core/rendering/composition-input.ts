@@ -1,4 +1,4 @@
-import { parseComposition, type Composition } from '../editing/composition/document.js';
+import { type Composition, parseComposition } from '../editing/composition/document.js';
 import { RemoteError } from '../worker/remote-error.js';
 
 export interface RegisteredComposition {
@@ -24,15 +24,27 @@ export async function registerComposition(
   for (const clip of document.clips) {
     const key = JSON.stringify([clip.source.path, clip.source.sha256]);
     let source = sources.get(key);
-    if (source && source.duration_ms !== clip.source.duration_ms) throw new RemoteError('SOURCE_CHANGED');
+    if (source && source.duration_ms !== clip.source.duration_ms)
+      throw new RemoteError('SOURCE_CHANGED');
     if (!source) {
       const asset = await register({ path: clip.source.path, kind: 'video' });
       if (asset.sha256 !== clip.source.sha256) throw new RemoteError('SOURCE_CHANGED');
-      if (typeof asset.asset_id !== 'string' || !asset.asset_id) throw new RemoteError('INVALID_WORKER_RESPONSE');
-      source = { asset_id: asset.asset_id, sha256: clip.source.sha256, duration_ms: clip.source.duration_ms };
+      if (typeof asset.asset_id !== 'string' || !asset.asset_id)
+        throw new RemoteError('INVALID_WORKER_RESPONSE');
+      source = {
+        asset_id: asset.asset_id,
+        sha256: clip.source.sha256,
+        duration_ms: clip.source.duration_ms,
+      };
       sources.set(key, source);
     }
-    clips.push({ id: clip.id, source, start_ms: clip.start_ms, end_ms: clip.end_ms, speed: clip.speed });
+    clips.push({
+      id: clip.id,
+      source,
+      start_ms: clip.start_ms,
+      end_ms: clip.end_ms,
+      speed: clip.speed,
+    });
   }
   return { version: 1, canvas: document.canvas, clips };
 }

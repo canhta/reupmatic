@@ -10,9 +10,12 @@ export class CatalogDatabase {
   private closed = false;
 
   constructor(filename: string) {
-    this.db = openCurrentDatabase(filename, {
-      version: 1, tables: ['catalog_records', 'catalog_state'],
-      sql: `
+    this.db = openCurrentDatabase(
+      filename,
+      {
+        version: 1,
+        tables: ['catalog_records', 'catalog_state'],
+        sql: `
         CREATE TABLE catalog_records (
           kind TEXT NOT NULL CHECK(kind IN ('label','content_labels','channel','affiliate','profile','post','workflow','run')),
           id TEXT NOT NULL, revision INTEGER NOT NULL CHECK(revision>0),
@@ -22,7 +25,9 @@ export class CatalogDatabase {
         CREATE TABLE catalog_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL) STRICT;
         INSERT INTO catalog_state VALUES (1,0);
       `,
-    }, new Error('CATALOG_VERSION'));
+      },
+      new Error('CATALOG_VERSION'),
+    );
   }
 
   get version(): number {
@@ -31,13 +36,21 @@ export class CatalogDatabase {
 
   private decode<T extends object>(row: Record<string, unknown>): T & RecordMeta {
     const body: unknown = JSON.parse(String(row.body));
-    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('CATALOG_INVALID');
-    return { ...body, id: String(row.id), revision: Number(row.revision),
-      created_at: Number(row.created_at), updated_at: Number(row.updated_at) } as T & RecordMeta;
+    if (!body || typeof body !== 'object' || Array.isArray(body))
+      throw new Error('CATALOG_INVALID');
+    return {
+      ...body,
+      id: String(row.id),
+      revision: Number(row.revision),
+      created_at: Number(row.created_at),
+      updated_at: Number(row.updated_at),
+    } as T & RecordMeta;
   }
 
   find<T extends object>(kind: CatalogKind, id: string): (T & RecordMeta) | null {
-    const row = this.db.prepare('SELECT * FROM catalog_records WHERE kind=? AND id=?').get(kind, identifier(id));
+    const row = this.db
+      .prepare('SELECT * FROM catalog_records WHERE kind=? AND id=?')
+      .get(kind, identifier(id));
     return row ? this.decode<T>(row) : null;
   }
 
@@ -48,14 +61,21 @@ export class CatalogDatabase {
   }
 
   list<T extends object>(kind: CatalogKind): (T & RecordMeta)[] {
-    return this.db.prepare('SELECT * FROM catalog_records WHERE kind=? ORDER BY updated_at DESC,id')
-      .all(kind).map(row => this.decode<T>(row));
+    return this.db
+      .prepare('SELECT * FROM catalog_records WHERE kind=? ORDER BY updated_at DESC,id')
+      .all(kind)
+      .map((row) => this.decode<T>(row));
   }
 
-  save<T extends object>(kind: CatalogKind, id: string, expected: number | null, body: T): T & RecordMeta {
+  save<T extends object>(
+    kind: CatalogKind,
+    id: string,
+    expected: number | null,
+    body: T,
+  ): T & RecordMeta {
     identifier(id);
     revision(expected);
-    if (['id', 'revision', 'created_at', 'updated_at'].some(key => Object.hasOwn(body, key))) {
+    if (['id', 'revision', 'created_at', 'updated_at'].some((key) => Object.hasOwn(body, key))) {
       throw new Error('INVALID_REQUEST');
     }
     const encoded = JSON.stringify(body);
@@ -64,10 +84,16 @@ export class CatalogDatabase {
     try {
       const previous = this.find<T>(kind, id);
       if ((previous?.revision ?? null) !== expected) throw new Error('REVISION_CONFLICT');
-      if (!previous && Number(this.db.prepare('SELECT COUNT(*) AS n FROM catalog_records WHERE kind=?').get(kind)?.n)
-        >= MAX_RECORDS_PER_KIND) throw new Error('CATALOG_LIMIT');
+      if (
+        !previous &&
+        Number(
+          this.db.prepare('SELECT COUNT(*) AS n FROM catalog_records WHERE kind=?').get(kind)?.n,
+        ) >= MAX_RECORDS_PER_KIND
+      )
+        throw new Error('CATALOG_LIMIT');
       const now = Date.now();
-      this.db.prepare(`INSERT INTO catalog_records VALUES (?,?,?,?,?,?)
+      this.db
+        .prepare(`INSERT INTO catalog_records VALUES (?,?,?,?,?,?)
         ON CONFLICT(kind,id) DO UPDATE SET revision=excluded.revision,body=excluded.body,updated_at=excluded.updated_at`)
         .run(kind, id, (expected ?? 0) + 1, encoded, previous?.created_at ?? now, now);
       this.db.exec('UPDATE catalog_state SET revision=revision+1 WHERE id=1');

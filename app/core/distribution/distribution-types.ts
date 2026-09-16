@@ -7,9 +7,15 @@ export interface ChannelData {
   label_ids: string[];
   archived: boolean;
 }
-export type Channel = ChannelData & RecordMeta & { connection: 'not_connected'; can_publish: false };
+export type Channel = ChannelData &
+  RecordMeta & { connection: 'not_connected'; can_publish: false };
 export type SaveChannel = ChannelData & MutationIdentity;
-export interface AffiliateData { name: string; url: string; label_ids: string[]; archived: boolean }
+export interface AffiliateData {
+  name: string;
+  url: string;
+  label_ids: string[];
+  archived: boolean;
+}
 export type AffiliateLink = AffiliateData & RecordMeta;
 export type SaveAffiliate = AffiliateData & MutationIdentity;
 export interface ExportReference {
@@ -19,7 +25,10 @@ export interface ExportReference {
   path: string;
   sha256: string;
 }
-export interface PostPlan { instant: number; timezone: string }
+export interface PostPlan {
+  instant: number;
+  timezone: string;
+}
 export interface PostData {
   title: string;
   body: string;
@@ -54,4 +63,9 @@ export interface PostQuery {
   offset: number;
   limit: number;
 }
-export interface ExportChoice { library_id: string; export_id: string; content_name: string; name: string }
+export interface ExportChoice {
+  library_id: string;
+  export_id: string;
+  content_name: string;
+  name: string;
+}

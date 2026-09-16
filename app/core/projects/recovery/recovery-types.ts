@@ -1,5 +1,5 @@
-import type { EditorSnapshot } from '../project.js';
 import type { PublicVideo } from '../../media/media-types.js';
+import type { EditorSnapshot } from '../project.js';
 
 export interface RecoverySummary {
   id: string;
@@ -15,5 +15,11 @@ export interface RecoverySave {
   asset_id: string;
   snapshot: EditorSnapshot;
 }
-export interface RecoveryIdentity { id: string; expected_revision: number }
-export interface RecoveryOpened { media: PublicVideo; snapshot: EditorSnapshot }
+export interface RecoveryIdentity {
+  id: string;
+  expected_revision: number;
+}
+export interface RecoveryOpened {
+  media: PublicVideo;
+  snapshot: EditorSnapshot;
+}

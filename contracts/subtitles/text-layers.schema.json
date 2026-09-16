@@ -16,12 +16,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "origin": {
           "oneOf": [
@@ -29,15 +24,10 @@
               "type": "object",
               "properties": {
                 "kind": {
-                  "enum": [
-                    "manual",
-                    "srt"
-                  ]
+                  "enum": ["manual", "srt"]
                 }
               },
-              "required": [
-                "kind"
-              ],
+              "required": ["kind"],
               "additionalProperties": false
             },
             {
@@ -47,23 +37,14 @@
                   "const": "copy"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "translated",
-                    "spoken",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
                 },
                 "token": {
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 }
               },
-              "required": [
-                "kind",
-                "layer",
-                "token"
-              ],
+              "required": ["kind", "layer", "token"],
               "additionalProperties": false
             },
             {
@@ -101,14 +82,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms",
-                "model_id"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
               "additionalProperties": false
             },
             {
@@ -146,13 +120,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
               "additionalProperties": false
             },
             {
@@ -162,10 +130,7 @@
                   "const": "translation"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "displayed"]
                 },
                 "token": {
                   "type": "string",
@@ -176,18 +141,10 @@
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "source_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "target_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "model_id": {
                   "type": "string",
@@ -217,18 +174,12 @@
                         "pattern": "^[^\\u0000]*$"
                       }
                     },
-                    "required": [
-                      "find",
-                      "replace"
-                    ],
+                    "required": ["find", "replace"],
                     "additionalProperties": false
                   }
                 },
                 "policy": {
-                  "enum": [
-                    "keep-existing",
-                    "replace-all"
-                  ]
+                  "enum": ["keep-existing", "replace-all"]
                 }
               },
               "required": [
@@ -279,24 +230,12 @@
                 "maxLength": 10000
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         }
       },
-      "required": [
-        "token",
-        "language",
-        "origin",
-        "edited",
-        "stale",
-        "cues"
-      ],
+      "required": ["token", "language", "origin", "edited", "stale", "cues"],
       "additionalProperties": false
     },
     "translated": {
@@ -307,12 +246,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "origin": {
           "oneOf": [
@@ -320,15 +254,10 @@
               "type": "object",
               "properties": {
                 "kind": {
-                  "enum": [
-                    "manual",
-                    "srt"
-                  ]
+                  "enum": ["manual", "srt"]
                 }
               },
-              "required": [
-                "kind"
-              ],
+              "required": ["kind"],
               "additionalProperties": false
             },
             {
@@ -338,23 +267,14 @@
                   "const": "copy"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "translated",
-                    "spoken",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
                 },
                 "token": {
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 }
               },
-              "required": [
-                "kind",
-                "layer",
-                "token"
-              ],
+              "required": ["kind", "layer", "token"],
               "additionalProperties": false
             },
             {
@@ -392,14 +312,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms",
-                "model_id"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
               "additionalProperties": false
             },
             {
@@ -437,13 +350,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
               "additionalProperties": false
             },
             {
@@ -453,10 +360,7 @@
                   "const": "translation"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "displayed"]
                 },
                 "token": {
                   "type": "string",
@@ -467,18 +371,10 @@
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "source_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "target_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "model_id": {
                   "type": "string",
@@ -508,18 +404,12 @@
                         "pattern": "^[^\\u0000]*$"
                       }
                     },
-                    "required": [
-                      "find",
-                      "replace"
-                    ],
+                    "required": ["find", "replace"],
                     "additionalProperties": false
                   }
                 },
                 "policy": {
-                  "enum": [
-                    "keep-existing",
-                    "replace-all"
-                  ]
+                  "enum": ["keep-existing", "replace-all"]
                 }
               },
               "required": [
@@ -570,24 +460,12 @@
                 "maxLength": 10000
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         }
       },
-      "required": [
-        "token",
-        "language",
-        "origin",
-        "edited",
-        "stale",
-        "cues"
-      ],
+      "required": ["token", "language", "origin", "edited", "stale", "cues"],
       "additionalProperties": false
     },
     "spoken": {
@@ -598,12 +476,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "origin": {
           "oneOf": [
@@ -611,15 +484,10 @@
               "type": "object",
               "properties": {
                 "kind": {
-                  "enum": [
-                    "manual",
-                    "srt"
-                  ]
+                  "enum": ["manual", "srt"]
                 }
               },
-              "required": [
-                "kind"
-              ],
+              "required": ["kind"],
               "additionalProperties": false
             },
             {
@@ -629,23 +497,14 @@
                   "const": "copy"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "translated",
-                    "spoken",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
                 },
                 "token": {
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 }
               },
-              "required": [
-                "kind",
-                "layer",
-                "token"
-              ],
+              "required": ["kind", "layer", "token"],
               "additionalProperties": false
             },
             {
@@ -683,14 +542,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms",
-                "model_id"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
               "additionalProperties": false
             },
             {
@@ -728,13 +580,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
               "additionalProperties": false
             },
             {
@@ -744,10 +590,7 @@
                   "const": "translation"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "displayed"]
                 },
                 "token": {
                   "type": "string",
@@ -758,18 +601,10 @@
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "source_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "target_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "model_id": {
                   "type": "string",
@@ -799,18 +634,12 @@
                         "pattern": "^[^\\u0000]*$"
                       }
                     },
-                    "required": [
-                      "find",
-                      "replace"
-                    ],
+                    "required": ["find", "replace"],
                     "additionalProperties": false
                   }
                 },
                 "policy": {
-                  "enum": [
-                    "keep-existing",
-                    "replace-all"
-                  ]
+                  "enum": ["keep-existing", "replace-all"]
                 }
               },
               "required": [
@@ -861,24 +690,12 @@
                 "maxLength": 10000
               }
             },
-            "required": [
-              "id",
-              "start_ms",
-              "end_ms",
-              "text"
-            ],
+            "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
         }
       },
-      "required": [
-        "token",
-        "language",
-        "origin",
-        "edited",
-        "stale",
-        "cues"
-      ],
+      "required": ["token", "language", "origin", "edited", "stale", "cues"],
       "additionalProperties": false
     },
     "displayed": {
@@ -889,12 +706,7 @@
           "pattern": "^[a-zA-Z0-9_-]{8,128}$"
         },
         "language": {
-          "enum": [
-            null,
-            "en",
-            "vi",
-            "zh"
-          ]
+          "enum": [null, "en", "vi", "zh"]
         },
         "origin": {
           "oneOf": [
@@ -902,15 +714,10 @@
               "type": "object",
               "properties": {
                 "kind": {
-                  "enum": [
-                    "manual",
-                    "srt"
-                  ]
+                  "enum": ["manual", "srt"]
                 }
               },
-              "required": [
-                "kind"
-              ],
+              "required": ["kind"],
               "additionalProperties": false
             },
             {
@@ -920,23 +727,14 @@
                   "const": "copy"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "translated",
-                    "spoken",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
                 },
                 "token": {
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 }
               },
-              "required": [
-                "kind",
-                "layer",
-                "token"
-              ],
+              "required": ["kind", "layer", "token"],
               "additionalProperties": false
             },
             {
@@ -974,14 +772,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms",
-                "model_id"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
               "additionalProperties": false
             },
             {
@@ -1019,13 +810,7 @@
                   "pattern": "^[^\\u0000]+$"
                 }
               },
-              "required": [
-                "kind",
-                "request_id",
-                "source_sha256",
-                "start_ms",
-                "end_ms"
-              ],
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
               "additionalProperties": false
             },
             {
@@ -1035,10 +820,7 @@
                   "const": "translation"
                 },
                 "layer": {
-                  "enum": [
-                    "transcript",
-                    "displayed"
-                  ]
+                  "enum": ["transcript", "displayed"]
                 },
                 "token": {
                   "type": "string",
@@ -1049,18 +831,10 @@
                   "pattern": "^[a-zA-Z0-9_-]{8,128}$"
                 },
                 "source_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "target_language": {
-                  "enum": [
-                    "en",
-                    "vi",
-                    "zh"
-                  ]
+                  "enum": ["en", "vi", "zh"]
                 },
                 "model_id": {
                   "type": "string",
@@ -1090,18 +864,12 @@
                         "pattern": "^[^\\u0000]*$"
                       }
                     },
-                    "required": [
-                      "find",
-                      "replace"
-                    ],
+                    "required": ["find", "replace"],
                     "additionalProperties": false
                   }
                 },
                 "policy": {
-                  "enum": [
-                    "keep-existing",
-                    "replace-all"
-                  ]
+                  "enum": ["keep-existing", "replace-all"]
                 }
               },
               "required": [
@@ -1127,22 +895,10 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "token",
-        "language",
-        "origin",
-        "edited",
-        "stale"
-      ],
+      "required": ["token", "language", "origin", "edited", "stale"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "version",
-    "transcript",
-    "translated",
-    "spoken",
-    "displayed"
-  ],
+  "required": ["version", "transcript", "translated", "spoken", "displayed"],
   "additionalProperties": false
 }

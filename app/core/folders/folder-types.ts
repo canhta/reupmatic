@@ -1,4 +1,4 @@
-import type { ProcessingRecipe, ModelFingerprints } from '../processing/recipe.js';
+import type { ModelFingerprints, ProcessingRecipe } from '../processing/recipe.js';
 /** Folder intake shares the existing batch queue. No arbitrary renderer paths. */
 export interface FolderConfig {
   processing?: ProcessingRecipe;
@@ -13,7 +13,10 @@ export interface FolderRule extends FolderConfig {
   initialized: boolean;
   created_at: number;
 }
-export interface FolderEntry { path: string; fingerprint: string; }
+export interface FolderEntry {
+  path: string;
+  fingerprint: string;
+}
 export interface FolderRuleView {
   processing?: ProcessingRecipe;
   id: string;

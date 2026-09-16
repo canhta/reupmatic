@@ -1,2 +1,0 @@
-9 TS/TSX/CTS source files parsed; 0 syntax errors; installed TypeScript 5.8.3.
-Syntax only, not dependency resolution, target TypeScript 7, type checking, build or UI execution.

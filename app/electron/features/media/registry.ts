@@ -1,8 +1,12 @@
-import { authorizedCompositionSources } from '../../../core/editing/composition/dependencies.js';
-import type { Composition } from '../../../core/editing/composition/document.js';
-import { parseSoundtrack, type AudioSource, type Soundtrack } from '../../../core/editing/soundtrack.js';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
+import { authorizedCompositionSources } from '../../../core/editing/composition/dependencies.js';
+import type { Composition } from '../../../core/editing/composition/document.js';
+import {
+  type AudioSource,
+  parseSoundtrack,
+  type Soundtrack,
+} from '../../../core/editing/soundtrack.js';
 import type { PublicVideo, RegisteredVideo } from '../../../core/media/media-types.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { requestId } from '../../runtime/ipc.js';
@@ -21,18 +25,32 @@ export class MediaRegistry {
 
   async registerVideo(filename: string, libraryId?: string): Promise<RegisteredVideo> {
     const canonical = await realpath(filename);
-    const source = await this.worker.request('asset.register', { path: canonical, kind: 'video' }).result;
+    const source = await this.worker.request('asset.register', { path: canonical, kind: 'video' })
+      .result;
     const assetId = requestId(source.asset_id);
     const info = await this.worker.request('media.probe', { asset_id: assetId }).result;
-    if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(source.sha256)
-      || !Number.isInteger(info.duration_ms) || Number(info.duration_ms) <= 0
-      || !Number.isInteger(info.width) || Number(info.width) <= 0
-      || !Number.isInteger(info.height) || Number(info.height) <= 0
-      || typeof info.has_audio !== 'boolean') throw new Error('INVALID_WORKER_RESPONSE');
+    if (
+      typeof source.sha256 !== 'string' ||
+      !/^[a-f0-9]{64}$/.test(source.sha256) ||
+      !Number.isInteger(info.duration_ms) ||
+      Number(info.duration_ms) <= 0 ||
+      !Number.isInteger(info.width) ||
+      Number(info.width) <= 0 ||
+      !Number.isInteger(info.height) ||
+      Number(info.height) <= 0 ||
+      typeof info.has_audio !== 'boolean'
+    )
+      throw new Error('INVALID_WORKER_RESPONSE');
     const record: RegisteredVideo = {
-      asset_id: assetId, name: path.basename(canonical), path: canonical, sha256: source.sha256,
-      duration_ms: Number(info.duration_ms), width: Number(info.width), height: Number(info.height),
-      has_audio: info.has_audio, ...(libraryId ? { library_id: libraryId } : {}),
+      asset_id: assetId,
+      name: path.basename(canonical),
+      path: canonical,
+      sha256: source.sha256,
+      duration_ms: Number(info.duration_ms),
+      width: Number(info.width),
+      height: Number(info.height),
+      has_audio: info.has_audio,
+      ...(libraryId ? { library_id: libraryId } : {}),
     };
     this.originalPaths.add(canonical);
     this.paths.set(assetId, canonical);
@@ -42,7 +60,10 @@ export class MediaRegistry {
 
   async registerSubtitle(filename: string): Promise<string> {
     const canonical = await realpath(filename);
-    const source = await this.worker.request('asset.register', { path: canonical, kind: 'subtitle' }).result;
+    const source = await this.worker.request('asset.register', {
+      path: canonical,
+      kind: 'subtitle',
+    }).result;
     const assetId = requestId(source.asset_id);
     this.originalPaths.add(canonical);
     return assetId;
@@ -50,12 +71,25 @@ export class MediaRegistry {
 
   async registerAudio(filename: string): Promise<{ source: AudioSource; url: string }> {
     const canonical = await realpath(filename);
-    const asset = await this.worker.request('asset.register', { path: canonical, kind: 'audio' }).result;
+    const asset = await this.worker.request('asset.register', { path: canonical, kind: 'audio' })
+      .result;
     const assetId = requestId(asset.asset_id);
     const info = await this.worker.request('audio.probe', { asset_id: assetId }).result;
-    const track = parseSoundtrack({ source: { path: canonical, name: path.basename(canonical),
-      sha256: asset.sha256, duration_ms: info.duration_ms }, mode: 'replace', start_ms: 0,
-      end_ms: info.duration_ms, offset_ms: 0, gain_db: 0, fade_in_ms: 0, fade_out_ms: 0 });
+    const track = parseSoundtrack({
+      source: {
+        path: canonical,
+        name: path.basename(canonical),
+        sha256: asset.sha256,
+        duration_ms: info.duration_ms,
+      },
+      mode: 'replace',
+      start_ms: 0,
+      end_ms: info.duration_ms,
+      offset_ms: 0,
+      gain_db: 0,
+      fade_in_ms: 0,
+      fade_out_ms: 0,
+    });
     const record = { source: track.source, url: `media://local/${assetId}` };
     this.originalPaths.add(canonical);
     this.paths.set(assetId, canonical);
@@ -66,14 +100,20 @@ export class MediaRegistry {
   authorizeSoundtrack(input: Soundtrack): { url: string } {
     const track = parseSoundtrack(input);
     const record = this.audios.get(track.source.path);
-    if (!record || record.source.sha256 !== track.source.sha256
-      || record.source.duration_ms !== track.source.duration_ms) throw new Error('SOUNDTRACK_UNAUTHORIZED');
+    if (
+      !record ||
+      record.source.sha256 !== track.source.sha256 ||
+      record.source.duration_ms !== track.source.duration_ms
+    )
+      throw new Error('SOUNDTRACK_UNAUTHORIZED');
     return { url: record.url };
   }
 
   authorizeComposition(input: Composition): { clips: { id: string; url: string }[] } {
     const grants = authorizedCompositionSources(input, this.videos.values());
-    return { clips: [...grants].map(([id, source]) => ({ id, url: this.publicVideo(source).url })) };
+    return {
+      clips: [...grants].map(([id, source]) => ({ id, url: this.publicVideo(source).url })),
+    };
   }
 
   getVideo(value: unknown): RegisteredVideo {
@@ -95,11 +135,24 @@ export class MediaRegistry {
 
   publicVideo(record: RegisteredVideo): PublicVideo {
     const { asset_id, name, duration_ms, width, height, has_audio, library_id } = record;
-    return { asset_id, name, duration_ms, width, height, has_audio,
-      url: `media://local/${asset_id}`, ...(library_id ? { library_id } : {}) };
+    return {
+      asset_id,
+      name,
+      duration_ms,
+      width,
+      height,
+      has_audio,
+      url: `media://local/${asset_id}`,
+      ...(library_id ? { library_id } : {}),
+    };
   }
 
-  registerArtifact(id: string, filename: string, assetId?: string, composition?: Composition): void {
+  registerArtifact(
+    id: string,
+    filename: string,
+    assetId?: string,
+    composition?: Composition,
+  ): void {
     this.paths.set(id, filename);
     if (composition) this.artifactCompositions.set(id, structuredClone(composition));
     if (assetId) this.artifactSources.set(id, assetId);

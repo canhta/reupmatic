@@ -17,7 +17,7 @@ export function WorkspaceNavigation({ selected, onNavigate }: Props) {
       header={<img className="brand-logo" src="/brand/logo-white.svg" alt="Reupmatic" />}
       footer={<p className="sidebar-footnote">{t('plannedAreas')}</p>}
     >
-      {areas.map(area => (
+      {areas.map((area) => (
         <SideNavItem
           key={area}
           label={t(area)}

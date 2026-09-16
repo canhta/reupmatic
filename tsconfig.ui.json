@@ -8,16 +8,8 @@
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "lib": [
-      "DOM",
-      "ES2022"
-    ],
-    "types": [
-      "vite/client"
-    ]
+    "lib": ["DOM", "ES2022"],
+    "types": ["vite/client", "node"]
   },
-  "include": [
-    "app/ui/**/*",
-    "app/core/subtitles/cues.ts"
-  ]
+  "include": ["app/ui/**/*", "app/core/subtitles/cues.ts"]
 }

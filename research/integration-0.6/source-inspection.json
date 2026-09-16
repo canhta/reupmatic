@@ -1,7 +1,0 @@
-{
-  "tool": "5.8.3",
-  "files": 56,
-  "syntax_errors": [],
-  "missing_relative_imports": [],
-  "note": "Syntax/local-path inspection only; TypeScript resolves JS import specifiers to TS sources. Not installed-library typecheck or application build."
-}

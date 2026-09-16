@@ -5,11 +5,7 @@
   "$comment": "Runtime additionally checks unique IDs, source ranges, 100 ms minimum clip output, 24 h total duration, source grants and matching bytes/duration.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "canvas",
-    "clips"
-  ],
+  "required": ["version", "canvas", "clips"],
   "properties": {
     "version": {
       "const": 1
@@ -17,11 +13,7 @@
     "canvas": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "width",
-        "height",
-        "fps"
-      ],
+      "required": ["width", "height", "fps"],
       "properties": {
         "width": {
           "type": "integer",
@@ -47,13 +39,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "id",
-          "source",
-          "start_ms",
-          "end_ms",
-          "speed"
-        ],
+        "required": ["id", "source", "start_ms", "end_ms", "speed"],
         "properties": {
           "id": {
             "type": "string",
@@ -64,12 +50,7 @@
           "source": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "path",
-              "name",
-              "sha256",
-              "duration_ms"
-            ],
+            "required": ["path", "name", "sha256", "duration_ms"],
             "properties": {
               "path": {
                 "type": "string",

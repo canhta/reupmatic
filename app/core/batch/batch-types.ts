@@ -1,7 +1,18 @@
-import type { ProcessingRecipe, ModelFingerprints } from '../processing/recipe.js';
+import type { ModelFingerprints, ProcessingRecipe } from '../processing/recipe.js';
 /** Shared serializable batch data. No renderer-supplied file paths or commands. */
-export type BatchState = 'queued' | 'running' | 'cancelling' | 'interrupted' | 'complete' | 'failed' | 'cancelled';
-export interface FileIdentity { path: string; sha256: string; name: string; }
+export type BatchState =
+  | 'queued'
+  | 'running'
+  | 'cancelling'
+  | 'interrupted'
+  | 'complete'
+  | 'failed'
+  | 'cancelled';
+export interface FileIdentity {
+  path: string;
+  sha256: string;
+  name: string;
+}
 export interface BatchJobInput {
   video: FileIdentity;
   library_id?: string;
@@ -11,7 +22,12 @@ export interface BatchJobInput {
   output_dir: string;
   encoding: 'review';
 }
-export interface BatchOutput { path: string; sha256: string; duration_ms: number; cache_hit: boolean; }
+export interface BatchOutput {
+  path: string;
+  sha256: string;
+  duration_ms: number;
+  cache_hit: boolean;
+}
 export interface BatchJob {
   id: string;
   batch_id: string;
@@ -44,8 +60,18 @@ export interface BatchSnapshot {
   fault: string | null;
   items: BatchItemView[];
 }
-export interface BatchDraft { draft_key: string; asset_id: string; name: string; duration_ms: number; subtitle_id?: string; subtitle_name?: string; }
-export interface BatchSelection { items: BatchDraft[]; rejected: { name: string; code: string }[]; }
+export interface BatchDraft {
+  draft_key: string;
+  asset_id: string;
+  name: string;
+  duration_ms: number;
+  subtitle_id?: string;
+  subtitle_name?: string;
+}
+export interface BatchSelection {
+  items: BatchDraft[];
+  rejected: { name: string; code: string }[];
+}
 export interface BatchSubmit {
   request_id: string;
   processing?: ProcessingRecipe;

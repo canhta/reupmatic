@@ -1,7 +1,0 @@
-
-> reupmatic@0.6.0 build
-> tsc -p tsconfig.node.json && tsc -p tsconfig.ui.json && vite build
-
-error TS2688: Cannot find type definition file for 'node'.
-  The file is in the program because:
-    Entry point of type library 'node' specified in compilerOptions

@@ -1,5 +1,19 @@
-.batch-workspace { margin-block: var(--space-4); }
-.batch-workspace p { max-width: 100ch; }
-.batch-scroll { overflow: auto; max-height: 360px; margin-block: var(--space-3); }
-.batch-item-name { min-width: 160px; max-width: 320px; overflow-wrap: anywhere; }
-.batch-draft-form { margin-block: var(--space-4); }
+.batch-workspace {
+  margin-block: var(--space-4);
+}
+.batch-workspace p {
+  max-width: 100ch;
+}
+.batch-scroll {
+  overflow: auto;
+  max-height: 360px;
+  margin-block: var(--space-3);
+}
+.batch-item-name {
+  min-width: 160px;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+.batch-draft-form {
+  margin-block: var(--space-4);
+}

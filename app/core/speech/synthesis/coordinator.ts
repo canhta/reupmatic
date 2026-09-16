@@ -1,9 +1,8 @@
 import { EventEmitter } from 'node:events';
 import { RemoteError } from '../../worker/remote-error.js';
-import { type Envelope, type Ticket, type WorkerClient } from '../../worker/worker-client.js';
+import type { Envelope, Ticket, WorkerClient } from '../../worker/worker-client.js';
+import type { SynthesisArtifacts } from './artifacts.js';
 import { parseSynthesisInput, type SynthesisInput, type SynthesisResult } from './contracts.js';
-
-import { SynthesisArtifacts } from './artifacts.js';
 
 interface Operation {
   input: SynthesisInput;
@@ -19,22 +18,49 @@ export class SynthesisCoordinator extends EventEmitter {
   private readonly seen = new Set<string>();
   private closing = false;
 
-  constructor(private readonly worker: WorkerPort, private readonly artifacts: SynthesisArtifacts) {
+  constructor(
+    private readonly worker: WorkerPort,
+    private readonly artifacts: SynthesisArtifacts,
+  ) {
     super();
     worker.on('message', this.onMessage);
   }
 
-  get activeCount(): number { return this.operations.size; }
+  get activeCount(): number {
+    return this.operations.size;
+  }
 
   private readonly onMessage = (message: Envelope): void => {
-    const id = this.workerIds.get(message.id), operation = id ? this.operations.get(id) : undefined;
-    if (!operation || operation.cancelled || message.event !== 'progress'
-      || message.revision !== operation.input.revision) return;
+    const id = this.workerIds.get(message.id),
+      operation = id ? this.operations.get(id) : undefined;
+    if (
+      !operation ||
+      operation.cancelled ||
+      message.event !== 'progress' ||
+      message.revision !== operation.input.revision
+    )
+      return;
     const { phase, fraction } = message.data;
-    if (Object.keys(message.data).length !== 2 || typeof phase !== 'string'
-      || !['queued', 'running', 'synthesisRunning'].includes(phase)
-      || !(fraction === null || typeof fraction === 'number' && Number.isFinite(fraction) && fraction >= 0 && fraction <= 1)) return;
-    this.emit('job', { v: 1, id, revision: operation.input.revision, event: 'progress', data: { phase, fraction } });
+    if (
+      Object.keys(message.data).length !== 2 ||
+      typeof phase !== 'string' ||
+      !['queued', 'running', 'synthesisRunning'].includes(phase) ||
+      !(
+        fraction === null ||
+        (typeof fraction === 'number' &&
+          Number.isFinite(fraction) &&
+          fraction >= 0 &&
+          fraction <= 1)
+      )
+    )
+      return;
+    this.emit('job', {
+      v: 1,
+      id,
+      revision: operation.input.revision,
+      event: 'progress',
+      data: { phase, fraction },
+    });
   };
 
   start(value: unknown): Ticket<SynthesisResult> {
@@ -61,7 +87,7 @@ export class SynthesisCoordinator extends EventEmitter {
 
   async close(): Promise<void> {
     this.closing = true;
-    await Promise.all([...this.operations.keys()].map(id => this.cancel(id)));
+    await Promise.all([...this.operations.keys()].map((id) => this.cancel(id)));
     this.worker.off('message', this.onMessage);
   }
 
@@ -77,12 +103,28 @@ export class SynthesisCoordinator extends EventEmitter {
         await this.artifacts.discard(result.artifact_id).catch(() => undefined);
         throw new RemoteError('CANCELLED');
       }
-      this.emit('job', { v: 1, id: input.request_id, revision: input.revision, event: 'result', data: result });
+      this.emit('job', {
+        v: 1,
+        id: input.request_id,
+        revision: input.revision,
+        event: 'result',
+        data: result,
+      });
       return result;
     } catch (error) {
-      const code = operation.cancelled || this.closing ? 'CANCELLED'
-        : error instanceof RemoteError ? error.code : 'WORKER_FAILURE';
-      this.emit('job', { v: 1, id: input.request_id, revision: input.revision, event: 'error', data: { code } });
+      const code =
+        operation.cancelled || this.closing
+          ? 'CANCELLED'
+          : error instanceof RemoteError
+            ? error.code
+            : 'WORKER_FAILURE';
+      this.emit('job', {
+        v: 1,
+        id: input.request_id,
+        revision: input.revision,
+        event: 'error',
+        data: { code },
+      });
       throw new RemoteError(code);
     } finally {
       if (operation.ticket) this.workerIds.delete(operation.ticket.id);

@@ -27,35 +27,19 @@
           "type": "object",
           "properties": {
             "phase": {
-              "enum": [
-                "queued",
-                "running",
-                "rendering"
-              ]
+              "enum": ["queued", "running", "rendering"]
             },
             "fraction": {
-              "type": [
-                "number",
-                "null"
-              ],
+              "type": ["number", "null"],
               "minimum": 0,
               "maximum": 1
             }
           },
-          "required": [
-            "phase",
-            "fraction"
-          ],
+          "required": ["phase", "fraction"],
           "additionalProperties": false
         }
       },
-      "required": [
-        "v",
-        "id",
-        "revision",
-        "event",
-        "data"
-      ],
+      "required": ["v", "id", "revision", "event", "data"],
       "additionalProperties": false
     },
     {
@@ -86,19 +70,11 @@
               "pattern": "^[A-Z_]+$"
             }
           },
-          "required": [
-            "code"
-          ],
+          "required": ["code"],
           "additionalProperties": false
         }
       },
-      "required": [
-        "v",
-        "id",
-        "revision",
-        "event",
-        "data"
-      ],
+      "required": ["v", "id", "revision", "event", "data"],
       "additionalProperties": false
     },
     {
@@ -125,13 +101,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "v",
-        "id",
-        "revision",
-        "event",
-        "data"
-      ],
+      "required": ["v", "id", "revision", "event", "data"],
       "additionalProperties": false
     }
   ]

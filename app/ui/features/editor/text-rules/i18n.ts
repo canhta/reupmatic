@@ -1,6 +1,7 @@
 export const textRulesEn = {
   rulesTitle: 'Preview text replacements',
-  rulesLayer: 'Changes affect displayed subtitles only. Review the result before applying; undo restores the entire edit. Rules are not saved as a profile or run automatically.',
+  rulesLayer:
+    'Changes affect displayed subtitles only. Review the result before applying; undo restores the entire edit. Rules are not saved as a profile or run automatically.',
   rulesMode: 'Match type',
   rulesMode_literal: 'Exact text',
   rulesMode_regex: 'Regular expression',
@@ -9,7 +10,8 @@ export const textRulesEn = {
   rulesScope_selected: 'Selected cue',
   rulesCase: 'Match case',
   rulesPreview: 'Preview changes',
-  rulesRegexHelp: 'JavaScript Unicode expressions; use $1 or $<name> for capture groups. Matching runs in an isolated worker with a two-second limit.',
+  rulesRegexHelp:
+    'JavaScript Unicode expressions; use $1 or $<name> for capture groups. Matching runs in an isolated worker with a two-second limit.',
   rulesTimeout: 'This expression took too long. Simplify it; no subtitles were changed.',
   rulesInvalid: 'Cannot preview this replacement. Check the expression, selection and output size.',
   rulesResult: '{{count}} changed cue(s), {{matches}} match(es)',
@@ -22,13 +24,15 @@ export const textRulesEn = {
   timingBulk: 'Shift cue timing',
   timingDelta: 'Shift by (milliseconds)',
   timingApply: 'Apply time shift',
-  timingHelp: 'Positive values move cues later; negative values move them earlier in the source. This is one undoable edit and does not change the video.',
+  timingHelp:
+    'Positive values move cues later; negative values move them earlier in the source. This is one undoable edit and does not change the video.',
   timingRange: 'The shift would move a cue outside the source. Nothing was changed.',
 };
 
 export const textRulesVi: Record<keyof typeof textRulesEn, string> = {
   rulesTitle: 'Xem trước thay thế văn bản',
-  rulesLayer: 'Chỉ thay đổi phụ đề hiển thị. Xem lại trước khi áp dụng; hoàn tác khôi phục cả lượt sửa. Quy tắc chưa được lưu vào profile hoặc chạy tự động.',
+  rulesLayer:
+    'Chỉ thay đổi phụ đề hiển thị. Xem lại trước khi áp dụng; hoàn tác khôi phục cả lượt sửa. Quy tắc chưa được lưu vào profile hoặc chạy tự động.',
   rulesMode: 'Kiểu tìm',
   rulesMode_literal: 'Văn bản nguyên dạng',
   rulesMode_regex: 'Biểu thức chính quy',
@@ -37,7 +41,8 @@ export const textRulesVi: Record<keyof typeof textRulesEn, string> = {
   rulesScope_selected: 'Câu đang chọn',
   rulesCase: 'Phân biệt hoa thường',
   rulesPreview: 'Xem trước thay đổi',
-  rulesRegexHelp: 'Biểu thức Unicode JavaScript; dùng $1 hoặc $<name> cho nhóm bắt. Xử lý trong worker tách biệt, giới hạn hai giây.',
+  rulesRegexHelp:
+    'Biểu thức Unicode JavaScript; dùng $1 hoặc $<name> cho nhóm bắt. Xử lý trong worker tách biệt, giới hạn hai giây.',
   rulesTimeout: 'Biểu thức mất quá nhiều thời gian. Hãy đơn giản hóa; phụ đề chưa bị thay đổi.',
   rulesInvalid: 'Không thể xem trước. Kiểm tra biểu thức, phạm vi chọn và kích thước kết quả.',
   rulesResult: '{{count}} câu thay đổi, {{matches}} kết quả khớp',
@@ -45,11 +50,13 @@ export const textRulesVi: Record<keyof typeof textRulesEn, string> = {
   rulesComparison: 'Đối chiếu thay thế văn bản',
   rulesBefore: 'Trước',
   rulesAfter: 'Sau',
-  rulesMore: 'Hiển thị 25 câu thay đổi đầu tiên. Khi áp dụng, tất cả thay đổi trong tổng số trên sẽ được lưu.',
+  rulesMore:
+    'Hiển thị 25 câu thay đổi đầu tiên. Khi áp dụng, tất cả thay đổi trong tổng số trên sẽ được lưu.',
   rulesApply: 'Áp dụng thay đổi đã xem',
   timingBulk: 'Dịch thời gian phụ đề',
   timingDelta: 'Dịch thêm (mili giây)',
   timingApply: 'Áp dụng dịch thời gian',
-  timingHelp: 'Số dương dịch muộn hơn; số âm dịch sớm hơn theo video nguồn. Có thể hoàn tác cả lượt; không thay đổi video.',
+  timingHelp:
+    'Số dương dịch muộn hơn; số âm dịch sớm hơn theo video nguồn. Có thể hoàn tác cả lượt; không thay đổi video.',
   timingRange: 'Thao tác sẽ đẩy phụ đề ra ngoài thời lượng nguồn. Chưa có gì thay đổi.',
 };

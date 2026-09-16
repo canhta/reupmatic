@@ -113,12 +113,7 @@
         }
       }
     },
-    "required": [
-      "id",
-      "start_ms",
-      "end_ms",
-      "text"
-    ],
+    "required": ["id", "start_ms", "end_ms", "text"],
     "additionalProperties": false
   },
   "$comment": "Unique IDs, end > start, NUL rejection and source-duration checks are semantic validation, not fully expressible here. Integer milliseconds. Display text only; not spoken-text authorization."

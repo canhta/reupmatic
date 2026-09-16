@@ -1,6 +1,6 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 // Source ZIPs are not Git checkouts. Never install into an unrelated parent repo.
@@ -13,12 +13,25 @@ export function shouldInstallHooks(root, env = process.env) {
 
 export function installHooks(root, env = process.env) {
   if (!shouldInstallHooks(root, env)) {
-    console.log('Reupmatic: hook setup skipped (CI or not a repository root). Run npm run hooks:install after git init.');
+    console.log(
+      'Reupmatic: hook setup skipped (CI or not a repository root). Run npm run hooks:install after git init.',
+    );
     return 0;
   }
-  const binary = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'lefthook.cmd' : 'lefthook');
-  if (!existsSync(binary)) throw new Error('Lefthook is missing. Install development dependencies first.');
-  const result = spawnSync(binary, ['install'], { cwd: root, env, stdio: 'inherit', shell: process.platform === 'win32' });
+  const binary = path.join(
+    root,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'lefthook.cmd' : 'lefthook',
+  );
+  if (!existsSync(binary))
+    throw new Error('Lefthook is missing. Install development dependencies first.');
+  const result = spawnSync(binary, ['install'], {
+    cwd: root,
+    env,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
   if (result.error) throw result.error;
   return result.status ?? 1;
 }

@@ -1,6 +1,6 @@
-import type { RecordMeta, MutationIdentity } from '../catalog/catalog-types.js';
-import type { ProcessingRecipe } from '../processing/recipe.js';
 import type { BatchJobInput } from '../batch/batch-types.js';
+import type { MutationIdentity, RecordMeta } from '../catalog/catalog-types.js';
+import type { ProcessingRecipe } from '../processing/recipe.js';
 export interface WorkflowData {
   name: string;
   item_ids: string[];
@@ -25,5 +25,16 @@ export interface WorkflowRunData {
   admission: 'prepared' | 'admitted';
 }
 export type WorkflowRun = WorkflowRunData & RecordMeta;
-export type WorkflowRunView = Omit<WorkflowRun, 'inputs'> & { input_names: string[]; output_dir: string };
-export type RunState = 'prepared' | 'queued' | 'running' | 'interrupted' | 'complete' | 'failed' | 'cancelled' | 'partial';
+export type WorkflowRunView = Omit<WorkflowRun, 'inputs'> & {
+  input_names: string[];
+  output_dir: string;
+};
+export type RunState =
+  | 'prepared'
+  | 'queued'
+  | 'running'
+  | 'interrupted'
+  | 'complete'
+  | 'failed'
+  | 'cancelled'
+  | 'partial';
