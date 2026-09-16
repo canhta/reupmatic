@@ -1,4 +1,4 @@
 # Explicit optional local adapter target; not a complete platform dependency lock.
 # No weights or tokenizer files are installed by these requirements.
 ctranslate2==4.6.0
-sentencepiece==0.2.1
+sentencepiece==0.2.2
