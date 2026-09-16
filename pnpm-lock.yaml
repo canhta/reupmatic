@@ -27,8 +27,8 @@ importers:
         specifier: 26.4.2
         version: 26.4.2(typescript@7.0.2)
       jassub:
-        specifier: 2.5.15
-        version: 2.5.15
+        specifier: 2.5.16
+        version: 2.5.16
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -859,8 +859,8 @@ packages:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
 
-  jassub@2.5.15:
-    resolution: {integrity: sha512-UOl1koOUPxAULJuw/9xtjKKZe9zJxQiTgBkOgTw41Pa+5JY5zzWId+LKEFh4xYbHd9YxLA8iM6ydgT8gAGzE2A==}
+  jassub@2.5.16:
+    resolution: {integrity: sha512-n4vjXfraf3o8k3/5TK6DhCYVcbQ/VqhVOgwqLd3l0xfMtsN4fpE/hPq2hPaGagBTOtJS9yHwRoRp3mmchQ9XVg==}
 
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
@@ -2044,7 +2044,7 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  jassub@2.5.15:
+  jassub@2.5.16:
     dependencies:
       abslink: 1.2.2
       lfa-ponyfill: 1.1.1
