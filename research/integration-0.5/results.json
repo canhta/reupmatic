@@ -1,0 +1,50 @@
+{
+  "date": "2026-09-15",
+  "core_compile": {
+    "status": "passed",
+    "compiler": "preinstalled TypeScript 5.8.3 with external Node declarations",
+    "target_toolchain_verified": false
+  },
+  "available_lanes": {
+    "node": {
+      "passed": 67,
+      "failed": 0
+    },
+    "python": {
+      "passed": 22,
+      "skipped": 1,
+      "failed": 0
+    },
+    "total_passed": 89,
+    "total_skipped": 1
+  },
+  "separate_blocked_gate": {
+    "chokidar_test": "ERR_MODULE_NOT_FOUND; initial broad Node invocation failed this lane",
+    "installed_os_events_tested": false
+  },
+  "source_only": [
+    "Electron UI",
+    "actual Chokidar event integration",
+    "macOS/Windows",
+    "Biome/Ruff/Lefthook execution",
+    "full dependency build",
+    "OCR/LaMa inference",
+    "visual review"
+  ],
+  "setup": "Owner deferred; no registry installation attempt in this pass",
+  "source_syntax": {
+    "kind": "syntax-only, not a full typecheck or UI run",
+    "files": 22,
+    "diagnostics": [],
+    "localeKeyCounts": {
+      "en": 157,
+      "vi": 157
+    },
+    "missing": [],
+    "extra": [],
+    "duplicateKeys": {
+      "en": [],
+      "vi": []
+    }
+  }
+}

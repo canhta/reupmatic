@@ -1,0 +1,214 @@
+TAP version 13
+# Subtest: one UI system complements, rather than replaces, media libraries
+ok 1 - one UI system complements, rather than replaces, media libraries
+  ---
+  duration_ms: 2.108295
+  type: 'test'
+  ...
+# Subtest: application uses library controls, not a parallel primitive implementation
+ok 2 - application uses library controls, not a parallel primitive implementation
+  ---
+  duration_ms: 2.423377
+  type: 'test'
+  ...
+# Subtest: theme, language and layer order are explicit and shared
+ok 3 - theme, language and layer order are explicit and shared
+  ---
+  duration_ms: 0.458807
+  type: 'test'
+  ...
+# Subtest: Astryx selections have a maintained catalogue and task-level rationale
+not ok 4 - Astryx selections have a maintained catalogue and task-level rationale
+  ---
+  duration_ms: 0.329233
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:48:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/mnt/data/work/reupmatic/docs/ui/astryx-inventory.json'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:442:20)
+    read (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:8:22)
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:49:32)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: navigation and disclosure use library semantics, not button lookalikes
+not ok 5 - navigation and disclosure use library semantics, not button lookalikes
+  ---
+  duration_ms: 1.935397
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:62:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /<AppShell/. Input:
+    
+    "import { Button } from '@astryxdesign/core/Button';\n" +
+      "import { useEffect, useState } from 'react';\n" +
+      "import { useTranslation } from 'react-i18next';\n" +
+      "import { BatchPanel } from './features/batch/BatchPanel';\n" +
+      "import { EditorProvider } from './features/editor/EditorContext';\n" +
+      "import { EditorHeader } from './features/editor/EditorHeader';\n" +
+      "import { EditorWorkspace } from './features/editor/EditorWorkspace';\n" +
+      "import { FolderAutomation } from './features/folders/FolderAutomation';\n" +
+      "import { LocaleSelect } from './shell/LocaleSelect';\n" +
+      '\n' +
+      "type Area = 'editor' | 'automation';\n" +
+      "const areas = ['sources', 'editor', 'channels', 'automation', 'settings'] as const;\n" +
+      '\n' +
+      'export function App() {\n' +
+      '  const { t, i18n } = useTranslation();\n' +
+      "  const [area, setArea] = useState<Area>('editor');\n" +
+      '  const [editorDirty, setEditorDirty] = useState(false);\n' +
+      '  const [batchDirty, setBatchDirty] = useState(false);\n' +
+      '  const [folderDirty, setFolderDirty] = useState(false);\n' +
+      '\n' +
+      '  useEffect(() => {\n' +
+      '    document.documentElement.lang = i18n.language;\n' +
+      "    localStorage.setItem('uiLocale', i18n.language);\n" +
+      '    void window.reupmatic.dirty(editorDirty || batchDirty || folderDirty, i18n.language);\n' +
+      '  }, [editorDirty, batchDirty, folderDirty, i18n.language]);\n' +
+      '\n' +
+      '  return (\n' +
+      '    <EditorProvider onDirty={setEditorDirty}>\n' +
+      '      <div className="shell">\n' +
+      '        <aside className="app-sidebar">\n' +
+      '          <strong className="brand"><span className="brand-mark" aria-hidden="true">R</span>Reupmatic</strong>\n' +
+      "          <nav aria-label={i18n.language === 'vi' ? 'Khu vực ứng dụng' : 'Application areas'}>\n" +
+      '            {areas.map(item => {\n' +
+      "              const enabled = item === 'editor' || item === 'automation';\n" +
+      '              return <Button\n' +
+      'label={String(t(item))}\n' +
+      'type="button"\n' +
+      'key={item}\n' +
+      "className={item === area ? 'active' : ''}\n" +
+      "aria-current={item === area ? 'page' : undefined}\n" +
+      'isDisabled={!enabled}\n' +
+      "title={enabled ? '' : t('planned')}\n" +
+      'onClick={() => { if (enabled) setArea(item); }}\n' +
+      '/>;\n' +
+      '            })}\n' +
+      '          </nav>\n' +
+      `          <small className="sidebar-footnote">{t('exercise')}</small>\n` +
+      '        </aside>\n' +
+      '        <main>\n' +
+      "          {area === 'editor' ? <EditorHeader /> : <header>\n" +
+      "            <div><h1>{t('automation')}</h1><p>{t('exercise')}</p></div><LocaleSelect />\n" +
+      '          </header>}\n' +
+      '          <BatchPanel onDirty={setBatchDirty} />\n' +
+      "          <div hidden={area !== 'automation'}><FolderAutomation onDirty={setFolderDirty} /></div>\n" +
+      "          <div hidden={area !== 'editor'}><EditorWorkspace /></div>\n" +
+      '        </main>\n' +
+      '      </div>\n' +
+      '    </EditorProvider>\n' +
+      '  );\n' +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { Button } from '@astryxdesign/core/Button';
+    import { useEffect, useState } from 'react';
+    import { useTranslation } from 'react-i18next';
+    import { BatchPanel } from './features/batch/BatchPanel';
+    import { EditorProvider } from './features/editor/EditorContext';
+    import { EditorHeader } from './features/editor/EditorHeader';
+    import { EditorWorkspace } from './features/editor/EditorWorkspace';
+    import { FolderAutomation } from './features/folders/FolderAutomation';
+    import { LocaleSelect } from './shell/LocaleSelect';
+    
+    type Area = 'editor' | 'automation';
+    const areas = ['sources', 'editor', 'channels', 'automation', 'settings'] as const;
+    
+    export function App() {
+      const { t, i18n } = useTranslation();
+      const [area, setArea] = useState<Area>('editor');
+      const [editorDirty, setEditorDirty] = useState(false);
+      const [batchDirty, setBatchDirty] = useState(false);
+      const [folderDirty, setFolderDirty] = useState(false);
+    
+      useEffect(() => {
+        document.documentElement.lang = i18n.language;
+        localStorage.setItem('uiLocale', i18n.language);
+        void window.reupmatic.dirty(editorDirty || batchDirty || folderDirty, i18n.language);
+      }, [editorDirty, batchDirty, folderDirty, i18n.language]);
+    
+      return (
+        <EditorProvider onDirty={setEditorDirty}>
+          <div className="shell">
+            <aside className="app-sidebar">
+              <strong className="brand"><span className="brand-mark" aria-hidden="true">R</span>Reupmatic</strong>
+              <nav aria-label={i18n.language === 'vi' ? 'Khu vực ứng dụng' : 'Application areas'}>
+                {areas.map(item => {
+                  const enabled = item === 'editor' || item === 'automation';
+                  return <Button
+    label={String(t(item))}
+    type="button"
+    key={item}
+    className={item === area ? 'active' : ''}
+    aria-current={item === area ? 'page' : undefined}
+    isDisabled={!enabled}
+    title={enabled ? '' : t('planned')}
+    onClick={() => { if (enabled) setArea(item); }}
+    />;
+                })}
+              </nav>
+              <small className="sidebar-footnote">{t('exercise')}</small>
+            </aside>
+            <main>
+              {area === 'editor' ? <EditorHeader /> : <header>
+                <div><h1>{t('automation')}</h1><p>{t('exercise')}</p></div><LocaleSelect />
+              </header>}
+              <BatchPanel onDirty={setBatchDirty} />
+              <div hidden={area !== 'automation'}><FolderAutomation onDirty={setFolderDirty} /></div>
+              <div hidden={area !== 'editor'}><EditorWorkspace /></div>
+            </main>
+          </div>
+        </EditorProvider>
+      );
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:63:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: choices with different execution consequences remain visible before submission
+not ok 6 - choices with different execution consequences remain visible before submission
+  ---
+  duration_ms: 0.152288
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:70:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/mnt/data/work/reupmatic/app/ui/features/folders/FolderRuleForm.tsx'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:442:20)
+    read (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:8:22)
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:71:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 3
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 73.495986

@@ -1,0 +1,1756 @@
+{
+  "format": "reupmatic.scope-traceability",
+  "version": 1,
+  "source_version": "0.15.0",
+  "authority": "BUSINESS_SCOPE.md",
+  "coverage_note": "Structural/planning traceability, not proof of full feature completion. Partial means a bounded slice exists; planned means no implementation is claimed.",
+  "modes": [
+    "direct-editing",
+    "user-started-batch",
+    "automation"
+  ],
+  "screens": [
+    {
+      "id": "SCR-01",
+      "area": "sources",
+      "module": "library"
+    },
+    {
+      "id": "SCR-02",
+      "area": "editor",
+      "module": "editor"
+    },
+    {
+      "id": "SCR-03",
+      "area": "channels",
+      "module": "distribution"
+    },
+    {
+      "id": "SCR-04",
+      "area": "automation",
+      "module": "automation"
+    },
+    {
+      "id": "SCR-05",
+      "area": "settings",
+      "module": "settings"
+    }
+  ],
+  "features": [
+    {
+      "id": "SC-01-F01",
+      "scope": "SC-01",
+      "title": "Local video intake",
+      "modules": [
+        "library"
+      ],
+      "status": "partial",
+      "delivered": "Native local import; optional Library and direct Editor opening.",
+      "remaining": "External-source intake is independent.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-01-F02",
+      "scope": "SC-01",
+      "title": "URL, profile and share-text discovery",
+      "modules": [
+        "downloads"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Source detection, available metadata, pagination, candidate selection and real-field filters.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-01-F03",
+      "scope": "SC-01",
+      "title": "Authorized source connection",
+      "modules": [
+        "downloads",
+        "accounts"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Douyin connect/reconnect, approved browser cookies, secure session persistence, headed/headless verification.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-01-F04",
+      "scope": "SC-01",
+      "title": "Download tasks and destination",
+      "modules": [
+        "downloads",
+        "batch"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Progress, cancellation, retry, duplicate handling and download-only completion to a chosen folder.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-01-F05",
+      "scope": "SC-01",
+      "title": "One-time download versus monitoring",
+      "modules": [
+        "downloads",
+        "automation"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Distinct Download selected and Create automation actions sharing asset/results state.",
+      "specs": [
+        "specs/sources-library.md",
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-01-F06",
+      "scope": "SC-01",
+      "title": "RedNote integration research",
+      "modules": [
+        "downloads"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Research target, not a committed connector or release date.",
+      "specs": [
+        "BUSINESS_SCOPE.md"
+      ]
+    },
+    {
+      "id": "SC-02-F01",
+      "scope": "SC-02",
+      "title": "Content entry and complete asset graph",
+      "modules": [
+        "library"
+      ],
+      "status": "partial",
+      "delivered": "Library asset views and immutable project/export/subtitle/audio references; composition projects may associate with member sources and saved project/export links extend to known member content records.",
+      "remaining": "Complete transcript/analysis/derivation graph, duplicate-entry propagation, dependency inspection and deletion lifecycle.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-02-F02",
+      "scope": "SC-02",
+      "title": "Reference-first import, copy and relink",
+      "modules": [
+        "library"
+      ],
+      "status": "partial",
+      "delivered": "Reference/copy import and hash-checked source relinking.",
+      "remaining": "Complete project-graph relocation and unresolved retention rules.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-02-F03",
+      "scope": "SC-02",
+      "title": "Identity and deliberate reuse",
+      "modules": [
+        "library",
+        "runtime"
+      ],
+      "status": "partial",
+      "delivered": "Original SHA-256 identity and immutable derived-link identities including byte size/hash; changed bytes at the same path produce a distinct link and fail old-link availability checks.",
+      "remaining": "Complete multi-stage dependency invalidation, external-source identity and retention/reclamation policy.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-02-F04",
+      "scope": "SC-02",
+      "title": "Search, selection and manual labels",
+      "modules": [
+        "library",
+        "taxonomy"
+      ],
+      "status": "partial",
+      "delivered": "Source search/labels plus paginated asset kind, content and filename/path search. Selection exposes original-record context.",
+      "remaining": "Combined taxonomy/semantic/date filters across all future text, audio, analysis and distribution artifacts.",
+      "specs": [
+        "specs/sources-library.md",
+        "specs/content-analysis.md"
+      ]
+    },
+    {
+      "id": "SC-02-F05",
+      "scope": "SC-02",
+      "title": "Exact asset opening and handoff",
+      "modules": [
+        "library",
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Exact linked project opening resolves anchor and every distinct clip/music source before replacing the editor; unchanged bytes and durations required. Other linked export/audio/subtitle viewing remains.",
+      "remaining": "Source-independent project discovery/editing, automatic repair and complete cross-stage artifact handoff.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-02-F06",
+      "scope": "SC-02",
+      "title": "Separate removal and file deletion",
+      "modules": [
+        "library",
+        "distribution",
+        "automation"
+      ],
+      "status": "partial",
+      "delivered": "Non-destructive Library removal and dependency visibility; referenced drafts/workflows block removal.",
+      "remaining": "Explicit original/generated/cache deletion, retention, active-use overrides and recovery policies remain open.",
+      "specs": [
+        "specs/sources-library.md"
+      ]
+    },
+    {
+      "id": "SC-03-F01",
+      "scope": "SC-03",
+      "title": "Baseline video transforms",
+      "modules": [
+        "editor"
+      ],
+      "status": "partial",
+      "delivered": "Source-time trim, normalized crop, output aspect/contain-cover sizing, flip and basic color in Astryx controls, shared recipe and native sample/full rendering.",
+      "remaining": "Clip splitting/composition, visual transform handles and interactive transform preview; real UI acceptance remains open.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-03-F02",
+      "scope": "SC-03",
+      "title": "Composition, speed and audio tools",
+      "modules": [
+        "editor",
+        "speech"
+      ],
+      "status": "partial",
+      "delivered": "Bounded 64-clip hard-cut composition with per-clip source trim/speed, split, contiguous join, reorder and removal. Shared native sample/full encoding normalizes mixed sources; global edits and one output-clock replacement/mixed soundtrack remain.",
+      "remaining": "Transitions, layered/multiple audio/video tracks, aligned/generated voiceover integration, per-clip effects and AI, multi-clip batch/folder admission, native-rate/VFR acceptance.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-03-F03",
+      "scope": "SC-03",
+      "title": "Media, preview and timeline workbench",
+      "modules": [
+        "editor",
+        "subtitles"
+      ],
+      "status": "partial",
+      "delivered": "Selected-layer table and specialist timeline share independent cues; media render/preview remains display-only. Composition spans and source audition use the existing clock maps.",
+      "remaining": "Continuous effects playback, composition waveform/proxies, VFR, installed keyboard/IME/accessibility and visual acceptance.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-03-F04",
+      "scope": "SC-03",
+      "title": "Actual sample processing and caches",
+      "modules": [
+        "editor",
+        "processing",
+        "runtime"
+      ],
+      "status": "partial",
+      "delivered": "Existing shared coordinator assembles only the requested composition/trim interval before final edits/captions/audio. Real FFmpeg tests cover mixed rates/sizes, silence, late/cross-cut samples, soundtrack timing, frame-grid rounding, cache and cancellation.",
+      "remaining": "Composition OCR/removal, resource-budgeted long-duration acceptance, motion-level sample/full equivalence and native-resolution final mastering.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-processing.md"
+      ]
+    },
+    {
+      "id": "SC-03-F05",
+      "scope": "SC-03",
+      "title": "Undo, project save, autosave and recovery",
+      "modules": [
+        "projects",
+        "subtitles"
+      ],
+      "status": "partial",
+      "delivered": "Atomic schema-4 project/history/recovery retains four text layers, provenance, stale states, composition, styles and music. Old project formats fail explicitly; native dependency reauthorization remains required.",
+      "remaining": "Durable unapplied AI evidence, full crash/close and installed desktop recovery acceptance.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-03-F06",
+      "scope": "SC-03",
+      "title": "Optional reusable profiles",
+      "modules": [
+        "profiles",
+        "processing"
+      ],
+      "status": "partial",
+      "delivered": "Reusable framing/color/speed/source-audio, OCR/removal and global subtitle appearance; same style form in Editor and processing profiles. Clip-specific trim/music/cue overrides stay out of reusable profiles.",
+      "remaining": "Speech/language/voice, rule chains, multi-stage preset dependencies and complete profile lifecycle.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-04-F01",
+      "scope": "SC-04",
+      "title": "Timestamped editable speech recognition",
+      "modules": [
+        "speech"
+      ],
+      "status": "partial",
+      "delivered": "Local faster-whisper CPU/int8 adapter, explicit manifest/language/source-range selection, segment timestamps, correlated draft review/apply and real worker cancellation; native tests use controlled SDKs.",
+      "remaining": "Real-model EN/VI/ZH accuracy and long-duration acceptance; terminology/punctuation tools, premium adapter and batch/Automation speech admission.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md"
+      ]
+    },
+    {
+      "id": "SC-04-F02",
+      "scope": "SC-04",
+      "title": "Translation and independent editing",
+      "modules": [
+        "speech",
+        "subtitles"
+      ],
+      "status": "partial",
+      "delivered": "Explicit local bilingual CTranslate2/SentencePiece adapter; captured source/languages/model/rules, complete timed draft, ID-based paginated comparison, default manual keep and confirmed replacement. Existing queue/cancellation; controlled SDK native tests.",
+      "remaining": "Real translation quality/model licenses, cross-cue context/model glossary, persistent presets/drafts and batch/Automation stages.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md",
+        "specs/local-translation.md"
+      ]
+    },
+    {
+      "id": "SC-04-F03",
+      "scope": "SC-04",
+      "title": "Speech generation and independent voice text",
+      "modules": [
+        "speech"
+      ],
+      "status": "partial",
+      "delivered": "Independent spoken text plus explicit local preset voice/model/language setup; bounded CPU synthesis on the existing queue; captured text/clocks, cancellable child, hashed natural WAV and JSON receipt, audition/manual review and native export with post-dialog stale checks. No automatic document or soundtrack edits.",
+      "remaining": "Actual model/runtime/voice rights and EN/VI quality evidence; segment alignment/mixing, durable Library/project/batch/Automation speech artifacts, resource budgets and installed UI acceptance.",
+      "specs": [
+        "specs/editor.md",
+        "specs/settings.md",
+        "specs/local-speech.md",
+        "specs/local-synthesis.md"
+      ]
+    },
+    {
+      "id": "SC-04-F04",
+      "scope": "SC-04",
+      "title": "Voice and subtitle alignment",
+      "modules": [
+        "speech",
+        "editor"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Segment-based alignment, length/rate/pauses, manual correction and full-duration mixing. Lip-sync is not committed.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-04-F05",
+      "scope": "SC-04",
+      "title": "Language independence and quality",
+      "modules": [
+        "speech",
+        "localization"
+      ],
+      "status": "partial",
+      "delivered": "Explicit STT and translation content languages remain independent of UI EN/VI. Translation requires the configured direction; no fallback. Captured source/model/runtime/rules are retained. TTS declares VI/EN independently; configured preset voices and a bilingual normalizer are explicit, not a guaranteed language/accent lock.",
+      "remaining": "Real language/terminology/completeness evidence, voice rights, resource/provider policy and installed EN/VI playback.",
+      "specs": [
+        "BUSINESS_SCOPE.md",
+        "specs/screens.md",
+        "specs/local-speech.md",
+        "specs/local-translation.md",
+        "specs/local-synthesis.md"
+      ]
+    },
+    {
+      "id": "SC-04-F06",
+      "scope": "SC-04",
+      "title": "Downstream invalidation",
+      "modules": [
+        "speech",
+        "projects"
+      ],
+      "status": "partial",
+      "delivered": "Upstream changes invalidate dependent copies and generated translations without overwriting words. Source changes reject old translation drafts; target-only changes permit new review. Keeping manual edits retains translation provenance; common clock edits rebase references. Spoken token/text/timing/language changes invalidate voice review/export; displayed-only edits do not. Source is checked again after native save selection.",
+      "remaining": "Durable audio/alignment dependency graph, full speech pipeline restart and resource lifecycle.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md",
+        "specs/local-translation.md",
+        "specs/local-synthesis.md"
+      ]
+    },
+    {
+      "id": "SC-05-F01",
+      "scope": "SC-05",
+      "title": "Substantial cue authoring",
+      "modules": [
+        "subtitles",
+        "editor"
+      ],
+      "status": "partial",
+      "delivered": "Four independent timed layers share selected-layer cue editor/timeline, import, rules, bulk timing and atomic undo. Provenance, explicit copy/review and composition clock mapping retain independent words.",
+      "remaining": "Reusable rule chains, larger-track performance and installed complete keyboard/IME/accessibility acceptance.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md"
+      ]
+    },
+    {
+      "id": "SC-05-F02",
+      "scope": "SC-05",
+      "title": "Scoped subtitle formatting",
+      "modules": [
+        "subtitles",
+        "editor"
+      ],
+      "status": "partial",
+      "delivered": "Global or one-cue full appearance: font family, size, text/outline/box colors, outline/shadow, box opacity, 9-way placement, margins, character spacing, bold/italic; inherit/reload/apply and retained undo.",
+      "remaining": "Multi-cue style application, advanced typography/line spacing, presets/font management and owner-run rendered visual acceptance.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-05-F03",
+      "scope": "SC-05",
+      "title": "Creation, SRT and burned output",
+      "modules": [
+        "subtitles",
+        "vision",
+        "speech"
+      ],
+      "status": "partial",
+      "delivered": "Selected transcript/translated/spoken/displayed layers can export SRT or ASS with source/composition or output-clock timing. Burning video remains display-only; other layers are not implicitly applied.",
+      "remaining": "Durable typed speech-sidecar asset roles, font policy and coordinated multi-artifact export transactions.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-vision.md",
+        "specs/local-speech.md"
+      ]
+    },
+    {
+      "id": "SC-05-F04",
+      "scope": "SC-05",
+      "title": "Layer-aware text rules",
+      "modules": [
+        "subtitles",
+        "speech"
+      ],
+      "status": "partial",
+      "delivered": "Existing selected-layer literal/regex/timing edits remain previewed. Translation additionally captures bounded ordered literal postprocessing rules, applied only to generated target text, with provenance.",
+      "remaining": "Persistent reusable rule chains, model-side terminology conditioning and installed IME/visual/performance acceptance.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md",
+        "specs/local-translation.md"
+      ]
+    },
+    {
+      "id": "SC-05-F05",
+      "scope": "SC-05",
+      "title": "Synchronization and edit protection",
+      "modules": [
+        "subtitles",
+        "projects"
+      ],
+      "status": "partial",
+      "delivered": "Selected table/timeline share cues. STT and translation are separate reviewable drafts. Translation keeps existing manual cues by default and guards explicit replacement; composition maps all layer clocks and render remains display-only. Natural speech drafts are separate, manually auditioned artifacts and never replace words or soundtrack.",
+      "remaining": "Real synthesized-voice alignment and complete installed playback/selection acceptance.",
+      "specs": [
+        "specs/editor.md",
+        "specs/local-speech.md",
+        "specs/local-translation.md",
+        "specs/local-synthesis.md"
+      ]
+    },
+    {
+      "id": "SC-06-F01",
+      "scope": "SC-06",
+      "title": "Manual region versus automatic removal",
+      "modules": [
+        "vision",
+        "processing"
+      ],
+      "status": "partial",
+      "delivered": "Distinct fixed-region and automatic text removal; automatic mode has no mandatory region review.",
+      "remaining": "Moving/time-varying targets and robust temporal masks.",
+      "specs": [
+        "specs/local-vision.md",
+        "specs/local-processing.md"
+      ]
+    },
+    {
+      "id": "SC-06-F02",
+      "scope": "SC-06",
+      "title": "Detection, tracking and inpainting",
+      "modules": [
+        "vision"
+      ],
+      "status": "partial",
+      "delivered": "Local OCR/LaMa worker seams and normalized fixed masks.",
+      "remaining": "Tracking, complex backgrounds, flicker/distortion and verified model quality/license coverage.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-06-F03",
+      "scope": "SC-06",
+      "title": "Full-duration processing and resources",
+      "modules": [
+        "vision",
+        "processing"
+      ],
+      "status": "partial",
+      "delivered": "Chunked full-video removal, source-audio encode and cancellation.",
+      "remaining": "Beyond 960-pixel longest edge/24-fps review output, memory/speed benchmarks and full-resolution delivery.",
+      "specs": [
+        "specs/local-processing.md"
+      ]
+    },
+    {
+      "id": "SC-06-F04",
+      "scope": "SC-06",
+      "title": "Authorization and redistribution licensing",
+      "modules": [
+        "vision",
+        "runtime"
+      ],
+      "status": "partial",
+      "delivered": "No access-control bypass or automatic model download.",
+      "remaining": "Authorized-content and model/native redistribution verification on real deployments.",
+      "specs": [
+        "BUSINESS_SCOPE.md"
+      ]
+    },
+    {
+      "id": "SC-07-F01",
+      "scope": "SC-07",
+      "title": "One shared job system across stages",
+      "modules": [
+        "batch",
+        "processing"
+      ],
+      "status": "partial",
+      "delivered": "Durable queue used by Editor rendering, manual batch, folder intake and saved workflow admission.",
+      "remaining": "Download, speech, classification and publishing stage support in the same system.",
+      "specs": [
+        "specs/batch-jobs.md",
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-07-F02",
+      "scope": "SC-07",
+      "title": "Per-job control and progress",
+      "modules": [
+        "batch"
+      ],
+      "status": "partial",
+      "delivered": "Real render progress, pause/resume, cancellation and retry with persistent errors.",
+      "remaining": "Stage-level selective retry, progress and failure-isolation policies for the expanded pipeline.",
+      "specs": [
+        "specs/batch-jobs.md"
+      ]
+    },
+    {
+      "id": "SC-07-F03",
+      "scope": "SC-07",
+      "title": "Restart, crash recovery and idempotency",
+      "modules": [
+        "batch",
+        "automation"
+      ],
+      "status": "partial",
+      "delivered": "Saved queue, interrupted state and replayable workflow admission IDs.",
+      "remaining": "Production crash matrix, cross-stage checkpoints, charges/posts and approved recovery policies.",
+      "specs": [
+        "specs/execution-policy.md"
+      ]
+    },
+    {
+      "id": "SC-07-F04",
+      "scope": "SC-07",
+      "title": "Content/recipe validity",
+      "modules": [
+        "processing",
+        "runtime"
+      ],
+      "status": "partial",
+      "delivered": "Existing cache includes source/subtitle/soundtrack bytes, edited recipe and renderer revision; soundtrack is rechecked on cache hits and before publishing. Batch finished files are linked only after matching the queued output hash.",
+      "remaining": "Whole-graph selective invalidation, resumable independent AI stage outputs and complete stage lineage.",
+      "specs": [
+        "specs/local-processing.md"
+      ]
+    },
+    {
+      "id": "SC-07-F05",
+      "scope": "SC-07",
+      "title": "Manual batch and autonomous policy",
+      "modules": [
+        "batch",
+        "accounts"
+      ],
+      "status": "partial",
+      "delivered": "Manual batch is distinct from developer-gated workflow execution.",
+      "remaining": "Approved Free/Plus limits, entitlements and commercial execution policy; no invented prices.",
+      "specs": [
+        "specs/execution-policy.md"
+      ]
+    },
+    {
+      "id": "SC-08-F01",
+      "scope": "SC-08",
+      "title": "Flexible source selection",
+      "modules": [
+        "automation",
+        "folders",
+        "downloads"
+      ],
+      "status": "partial",
+      "delivered": "Saved workflows accept concrete Library selections; developer folder intake exists.",
+      "remaining": "Dynamic Library filters and supported remote source/link/channel intake.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F02",
+      "scope": "SC-08",
+      "title": "Manual, new-content and scheduled triggers",
+      "modules": [
+        "automation",
+        "folders"
+      ],
+      "status": "partial",
+      "delivered": "Explicit manual admission and developer local folder watching.",
+      "remaining": "Product scheduler, polling, timezone/catch-up, intake defaults and trigger contracts.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F03",
+      "scope": "SC-08",
+      "title": "Configurable steps and independent endpoints",
+      "modules": [
+        "automation",
+        "processing",
+        "downloads",
+        "content-analysis",
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Optional OCR/removal or plain local render/export; no required profile or affiliate setup.",
+      "remaining": "Download-only, extraction-only, classification-only and authorized publishing endpoints.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F04",
+      "scope": "SC-08",
+      "title": "Saved configuration and immutable run inputs",
+      "modules": [
+        "automation",
+        "profiles"
+      ],
+      "status": "partial",
+      "delivered": "Saved workflows, revisions, profile application, model fingerprints, input snapshots and run history.",
+      "remaining": "General step graph, templates, explicit update/override policy and all stage dependencies.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F05",
+      "scope": "SC-08",
+      "title": "Fixed/label routing and multiple matches",
+      "modules": [
+        "automation",
+        "taxonomy",
+        "distribution"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Allowed-destination matching, priority/rotation/all-authorized modes, explicit no-match behavior and stable allocation.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F06",
+      "scope": "SC-08",
+      "title": "Side-effect-free rule test",
+      "modules": [
+        "automation"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Dry-run trace using valid existing evidence, never hidden OCR, post creation, billing or publishing.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F07",
+      "scope": "SC-08",
+      "title": "Workflow/run/rule monitoring",
+      "modules": [
+        "automation",
+        "batch"
+      ],
+      "status": "partial",
+      "delivered": "Saved local workflows and runs linked to the existing queue, including per-job results and controls.",
+      "remaining": "Routing editor, per-stage run detail and concrete post/workflow/run navigation.",
+      "specs": [
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-08-F08",
+      "scope": "SC-08",
+      "title": "Plus local execution and lifecycle",
+      "modules": [
+        "automation",
+        "accounts"
+      ],
+      "status": "partial",
+      "delivered": "Developer execution gate retained without pretending to validate Plus.",
+      "remaining": "Approved entitlement, permission, offline, sleep, expiry, reconciliation and missed-schedule policy.",
+      "specs": [
+        "specs/execution-policy.md"
+      ]
+    },
+    {
+      "id": "SC-09-F01",
+      "scope": "SC-09",
+      "title": "OCR to evidence-backed classification",
+      "modules": [
+        "content-analysis",
+        "vision"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Independent OCR-to-analysis-to-category/tag branch with product/topic evidence, not exact identity claims.",
+      "specs": [
+        "specs/content-analysis.md"
+      ]
+    },
+    {
+      "id": "SC-09-F02",
+      "scope": "SC-09",
+      "title": "Corrections, uncertainty and multiple products",
+      "modules": [
+        "content-analysis",
+        "taxonomy"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Manual correction, conflicting evidence, multi-product handling and uncertainty policies.",
+      "specs": [
+        "specs/content-analysis.md"
+      ]
+    },
+    {
+      "id": "SC-09-F03",
+      "scope": "SC-09",
+      "title": "Shared in-context labels",
+      "modules": [
+        "taxonomy",
+        "library",
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "One persisted catalog; labels created/selected on videos, channels and links; stable IDs.",
+      "remaining": "Taxonomy merge/delete, automatic creation and uncertainty policies remain open.",
+      "specs": [
+        "specs/content-analysis.md",
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-09-F04",
+      "scope": "SC-09",
+      "title": "Manual Shopee inventory",
+      "modules": [
+        "distribution",
+        "taxonomy"
+      ],
+      "status": "partial",
+      "delivered": "Manually entered names and HTTPS URLs, preserved tracking parameters, labels and archival state.",
+      "remaining": "Optional URL resolution/product availability checks need consent; no crawling/link conversion.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-09-F05",
+      "scope": "SC-09",
+      "title": "Reverse usage per destination post",
+      "modules": [
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Reverse draft-post list and count from shared post records; one destination per post; edits retain URL snapshots.",
+      "remaining": "Published/accepted platform state filters and approved deleted/cancelled usage policy.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-09-F06",
+      "scope": "SC-09",
+      "title": "Evidence reused by conditions",
+      "modules": [
+        "content-analysis",
+        "automation"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Use existing valid labels/metadata or preceding analysis without unnecessary AI; broad category is not exact product proof.",
+      "specs": [
+        "specs/content-analysis.md",
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-10-F01",
+      "scope": "SC-10",
+      "title": "Multiple channel configuration",
+      "modules": [
+        "distribution",
+        "taxonomy"
+      ],
+      "status": "partial",
+      "delivered": "Local YouTube/Facebook Page records with editable names, URLs, shared labels and archive state.",
+      "remaining": "Remote account connections and verified permission metadata.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F02",
+      "scope": "SC-10",
+      "title": "Connection, management and publishing access",
+      "modules": [
+        "distribution",
+        "accounts"
+      ],
+      "status": "partial",
+      "delivered": "Local records explicitly stay not connected and cannot publish.",
+      "remaining": "OAuth, token storage/refresh/revoke, scopes and independently verified management/publishing capability.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F03",
+      "scope": "SC-10",
+      "title": "Configuration, Published and Upcoming views",
+      "modules": [
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Channel detail navigation to local drafts/planned drafts and an explicitly empty Published view.",
+      "remaining": "Remote and Automation-origin published records, schedules and readback coverage.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F04",
+      "scope": "SC-10",
+      "title": "Concrete post and schedule data",
+      "modules": [
+        "distribution",
+        "automation"
+      ],
+      "status": "partial",
+      "delivered": "One destination draft with frozen export hash, links and optional planned instant/timezone. Planned drafts do not execute.",
+      "remaining": "Automation/rule/run origin and local-versus-platform schedule execution/reconciliation.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F05",
+      "scope": "SC-10",
+      "title": "Selection preservation and counting",
+      "modules": [
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Draft edits preserve destination/export/link snapshots; cancelled drafts retain history and visible usage.",
+      "remaining": "Submission idempotency, concurrent routing allocation and retry/reconciliation after unknown outcomes.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F06",
+      "scope": "SC-10",
+      "title": "Verified publishing outcomes",
+      "modules": [
+        "distribution"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Platform upload, format/quota/link placement, scheduling, readback and distinct uploaded/accepted/published states.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-10-F07",
+      "scope": "SC-10",
+      "title": "External history and freshness",
+      "modules": [
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "Local-only coverage is disclosed; no fabricated live or complete history.",
+      "remaining": "External posts/schedules, last-reconciled timestamps and remote edits/deletion policy remain open.",
+      "specs": [
+        "specs/channels-affiliate.md"
+      ]
+    },
+    {
+      "id": "SC-11-F01",
+      "scope": "SC-11",
+      "title": "Three Settings groups and Advanced",
+      "modules": [
+        "settings"
+      ],
+      "status": "partial",
+      "delivered": "General, AI & processing, Account and collapsed Advanced; default output directory and local model configuration.",
+      "remaining": "Functional account and resource controls; presentation does not drop technical scope.",
+      "specs": [
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-11-F02",
+      "scope": "SC-11",
+      "title": "Contextual model lifecycle",
+      "modules": [
+        "settings",
+        "vision",
+        "accounts"
+      ],
+      "status": "partial",
+      "delivered": "Selected local manifest, checksum validation, cancellation and missing-model feedback.",
+      "remaining": "Purpose/size/download actions, install/update/remove lifecycle and hardware-compatible recommendations.",
+      "specs": [
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-11-F03",
+      "scope": "SC-11",
+      "title": "Premium service choice and costs",
+      "modules": [
+        "settings",
+        "accounts",
+        "speech"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Step-local service choice, cost visibility and consent; no silent paid/cloud fallback or separate AI BYOK tier.",
+      "specs": [
+        "specs/settings.md",
+        "specs/execution-policy.md"
+      ]
+    },
+    {
+      "id": "SC-11-F04",
+      "scope": "SC-11",
+      "title": "Hardware, resources, cache and diagnostics",
+      "modules": [
+        "runtime",
+        "settings"
+      ],
+      "status": "partial",
+      "delivered": "Worker runtime diagnostics and bounded local processing.",
+      "remaining": "CPU/GPU evaluation, concurrency budgets, user-consented cache cleanup and supported hardware verification.",
+      "specs": [
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-11-F05",
+      "scope": "SC-11",
+      "title": "Sensitive-data protection",
+      "modules": [
+        "accounts",
+        "runtime"
+      ],
+      "status": "partial",
+      "delivered": "Narrow IPC verbs, source-path authority and no token entry in local catalog records.",
+      "remaining": "Secure cookie/token storage, permissions and credential lifecycle; no automatic secret upload.",
+      "specs": [
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-11-F06",
+      "scope": "SC-11",
+      "title": "Account, Plus, credits and settlement",
+      "modules": [
+        "accounts"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Approved account/billing contract, reservations/debits/refunds/expiry and local/paid execution gates. Prices and commercial defaults remain unapproved.",
+      "specs": [
+        "specs/execution-policy.md"
+      ]
+    },
+    {
+      "id": "SC-11-F07",
+      "scope": "SC-11",
+      "title": "Shared labels and defaults",
+      "modules": [
+        "taxonomy",
+        "settings"
+      ],
+      "status": "partial",
+      "delivered": "In-context labels and persisted output/model defaults without onboarding prerequisite.",
+      "remaining": "Full default precedence, model evolution and background-execution policies remain open.",
+      "specs": [
+        "specs/settings.md"
+      ]
+    },
+    {
+      "id": "SC-12-F01",
+      "scope": "SC-12",
+      "title": "Off-device compute versus orchestration",
+      "modules": [
+        "cloud"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Later extension for heavy computation and scheduler infrastructure; local automation has no cloud prerequisite.",
+      "specs": [
+        "BUSINESS_SCOPE.md",
+        "specs/automation.md"
+      ]
+    },
+    {
+      "id": "SC-12-F02",
+      "scope": "SC-12",
+      "title": "Data, authorization and consent",
+      "modules": [
+        "cloud",
+        "accounts"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Hybrid steps require available data and authorization; desktop-only discovery does not become cloud discovery and cookies are not uploaded by default.",
+      "specs": [
+        "BUSINESS_SCOPE.md"
+      ]
+    },
+    {
+      "id": "SC-12-F03",
+      "scope": "SC-12",
+      "title": "Storage, synchronization and placement",
+      "modules": [
+        "cloud"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Retention, costs, placement, cross-device recovery and infrastructure contracts remain open.",
+      "specs": [
+        "BUSINESS_SCOPE.md"
+      ]
+    },
+    {
+      "id": "SC-13-F01",
+      "scope": "SC-13",
+      "title": "Independent OCR extraction",
+      "modules": [
+        "vision"
+      ],
+      "status": "partial",
+      "delivered": "Whole-source OCR endpoint independent of trim, rendering, removal, STT, translation and TTS; bounded chunks preserve source/model fingerprints and explicit draft application.",
+      "remaining": "Actual-model quality, language acceptance and downstream classification integration.",
+      "specs": [
+        "specs/local-vision.md",
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-13-F02",
+      "scope": "SC-13",
+      "title": "Timing, deduplication and SRT sidecar",
+      "modules": [
+        "vision",
+        "subtitles"
+      ],
+      "status": "partial",
+      "delivered": "Merged adjacent OCR cues across chunk boundaries, retained raw chunk evidence and independent whole-source SRT export; full scan verified through actual worker/FFmpeg with controlled OCR SDK.",
+      "remaining": "Scene-text output and complete OCR/STT layer conflict policy; no actual OCR accuracy claim.",
+      "specs": [
+        "specs/editor.md"
+      ]
+    },
+    {
+      "id": "SC-13-F03",
+      "scope": "SC-13",
+      "title": "Analysis-oriented extraction",
+      "modules": [
+        "vision",
+        "content-analysis"
+      ],
+      "status": "planned",
+      "delivered": "No implementation in this release.",
+      "remaining": "Automatic extraction for classification without region-review gates, exact-product assumptions or forced subtitle editing.",
+      "specs": [
+        "specs/content-analysis.md"
+      ]
+    },
+    {
+      "id": "SC-14-F01",
+      "scope": "SC-14",
+      "title": "Canonical English documentation",
+      "modules": [
+        "localization"
+      ],
+      "status": "partial",
+      "delivered": "Single English scope/spec/contract set and EN/VI UI resources.",
+      "remaining": "Keep new specifications canonical rather than parallel translated copies.",
+      "specs": [
+        "specs/screens.md"
+      ]
+    },
+    {
+      "id": "SC-14-F02",
+      "scope": "SC-14",
+      "title": "Bilingual application coverage",
+      "modules": [
+        "localization"
+      ],
+      "status": "partial",
+      "delivered": "EN/VI messages for current five areas, catalog/profile/workflow forms and common errors.",
+      "remaining": "Unbuilt flows, account/credits/model setup and real screenshots in both locales.",
+      "specs": [
+        "specs/screens.md"
+      ]
+    },
+    {
+      "id": "SC-14-F03",
+      "scope": "SC-14",
+      "title": "Independent UI/content/voice/timezone",
+      "modules": [
+        "localization",
+        "taxonomy",
+        "distribution"
+      ],
+      "status": "partial",
+      "delivered": "UI locale does not rewrite user labels, URLs, recipes, planned post instants or stored text.",
+      "remaining": "Speech-language separation and complete scheduled execution checks.",
+      "specs": [
+        "specs/screens.md"
+      ]
+    },
+    {
+      "id": "SC-14-F04",
+      "scope": "SC-14",
+      "title": "Keyboard, IME and responsive states",
+      "modules": [
+        "localization"
+      ],
+      "status": "partial",
+      "delivered": "Astryx controls and retained specialist/native media seams; no raw control library.",
+      "remaining": "Actual installed-library focus, keyboard, IME, long-label, screen-reader and target-OS checks.",
+      "specs": [
+        "specs/screens.md"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "FLOW-01",
+      "title": "Local Library to exact edit/export",
+      "scope": [
+        "SC-01",
+        "SC-02",
+        "SC-03",
+        "SC-05"
+      ],
+      "modules": [
+        "library",
+        "editor",
+        "projects",
+        "subtitles"
+      ],
+      "status": "partial",
+      "steps": [
+        "Import local media",
+        "Open source or exact linked project",
+        "Arrange clips / edit captions",
+        "Render requested sample or full output",
+        "Save project / SRT / ASS / MP4",
+        "Retain known Library member links"
+      ],
+      "remaining": "Independent timed text layers, direct composition edit/export and known member links exist. Complete Library derivation graph, generated voice and installed format/visual acceptance remain."
+    },
+    {
+      "id": "FLOW-02",
+      "title": "Reference, copy, duplicate reuse and relocation",
+      "scope": [
+        "SC-02"
+      ],
+      "modules": [
+        "library",
+        "runtime"
+      ],
+      "status": "partial",
+      "steps": [
+        "Choose reference or copy",
+        "Compare content identity",
+        "Reuse or deliberate separate entry",
+        "Relink only matching source bytes"
+      ],
+      "remaining": "Retention, remote identity and graph relocation policies."
+    },
+    {
+      "id": "FLOW-03",
+      "title": "Direct editing without Library or profile",
+      "scope": [
+        "SC-03",
+        "SC-05"
+      ],
+      "modules": [
+        "editor",
+        "projects",
+        "profiles"
+      ],
+      "status": "partial",
+      "steps": [
+        "Open local video or project",
+        "Configure directly",
+        "Preview sample",
+        "Save requested output"
+      ],
+      "remaining": "Direct multi-clip editing stays independent of Library/profiles. Layered tracks, speech layers and owner-run native UI acceptance remain."
+    },
+    {
+      "id": "FLOW-04",
+      "title": "Download-only completion",
+      "scope": [
+        "SC-01",
+        "SC-08"
+      ],
+      "modules": [
+        "downloads",
+        "batch",
+        "automation"
+      ],
+      "status": "planned",
+      "steps": [
+        "Connect authorized source",
+        "Parse URL/share/profile",
+        "Inspect/filter available candidates",
+        "Download selection to chosen folder",
+        "Finish without AI or publishing"
+      ],
+      "remaining": "All external-download execution remains planned; never force a render endpoint."
+    },
+    {
+      "id": "FLOW-05",
+      "title": "User-started Library batch",
+      "scope": [
+        "SC-02",
+        "SC-07"
+      ],
+      "modules": [
+        "library",
+        "batch",
+        "processing",
+        "profiles"
+      ],
+      "status": "partial",
+      "steps": [
+        "Select Library items",
+        "Stage existing queue draft",
+        "Configure directly or apply profile",
+        "Choose output",
+        "Enqueue",
+        "Start/control queue",
+        "Inspect/reveal results"
+      ],
+      "remaining": "Download/speech/analysis/publishing stages and complete stage recovery."
+    },
+    {
+      "id": "FLOW-06",
+      "title": "Standalone OCR to subtitle file",
+      "scope": [
+        "SC-13",
+        "SC-05"
+      ],
+      "modules": [
+        "vision",
+        "subtitles"
+      ],
+      "status": "partial",
+      "steps": [
+        "Select video",
+        "Extract automatically without removal/STT",
+        "Review/edit only when desired",
+        "Export SRT without burning video"
+      ],
+      "remaining": "Whole-source draft and direct SRT export are implemented. Actual-model quality, scene text and combined-output transaction remain open."
+    },
+    {
+      "id": "FLOW-07",
+      "title": "Independent manual or automatic text removal",
+      "scope": [
+        "SC-06"
+      ],
+      "modules": [
+        "vision",
+        "processing",
+        "editor"
+      ],
+      "status": "partial",
+      "steps": [
+        "Choose manual fixed region or automatic target",
+        "Preview sample",
+        "Process entire video",
+        "Preserve source and audio",
+        "Inspect output"
+      ],
+      "remaining": "Single-source OCR/removal remains; composition AI is explicitly unsupported. Full-resolution output, tracking and real-model quality remain."
+    },
+    {
+      "id": "FLOW-08",
+      "title": "Independent speech localization stages",
+      "scope": [
+        "SC-04",
+        "SC-05"
+      ],
+      "modules": [
+        "speech",
+        "subtitles",
+        "editor"
+      ],
+      "status": "partial",
+      "steps": [
+        "Recognize timed speech",
+        "Edit source",
+        "Translate/edit",
+        "Edit separate TTS text",
+        "Explicit voice generation",
+        "Align/correct",
+        "Export"
+      ],
+      "remaining": "STT, four text layers, reviewed translation and natural preset-voice WAV/receipt review/export are implemented. Segment alignment, full-duration mixing, durable speech workflow admission and actual model/language quality remain; controlled SDK tests do not establish voice quality."
+    },
+    {
+      "id": "FLOW-09",
+      "title": "OCR to classification without subtitle pipeline",
+      "scope": [
+        "SC-09",
+        "SC-13"
+      ],
+      "modules": [
+        "vision",
+        "content-analysis",
+        "taxonomy",
+        "library"
+      ],
+      "status": "planned",
+      "steps": [
+        "Extract evidence",
+        "Suggest category/product type/tags",
+        "Correct uncertainty/multiple products",
+        "Store labels/evidence",
+        "Use in Library/conditions"
+      ],
+      "remaining": "Classification executor and evidence contract remain missing."
+    },
+    {
+      "id": "FLOW-10",
+      "title": "Labels in context and routing dry run",
+      "scope": [
+        "SC-09",
+        "SC-10",
+        "SC-11",
+        "SC-08"
+      ],
+      "modules": [
+        "taxonomy",
+        "library",
+        "distribution",
+        "automation"
+      ],
+      "status": "partial",
+      "steps": [
+        "Create/select shared labels on video/link/channel",
+        "Configure allowed candidates",
+        "Dry-run matching",
+        "Inspect reasons without side effects"
+      ],
+      "remaining": "Label assignment is implemented; routing, priority/rotation/all-authorized and no-match dry run remain missing."
+    },
+    {
+      "id": "FLOW-11",
+      "title": "Flexible automation source to selected endpoint",
+      "scope": [
+        "SC-08"
+      ],
+      "modules": [
+        "automation",
+        "folders",
+        "downloads",
+        "processing",
+        "content-analysis",
+        "distribution"
+      ],
+      "status": "partial",
+      "steps": [
+        "Choose source and trigger",
+        "Set conditions",
+        "Choose only required steps",
+        "Optional profile",
+        "Selected endpoint",
+        "Run history"
+      ],
+      "remaining": "Local manual Library render and developer folders only; flexible non-render endpoints, source filters and production scheduler remain missing."
+    },
+    {
+      "id": "FLOW-12",
+      "title": "Per-destination publishing and reconciliation",
+      "scope": [
+        "SC-10",
+        "SC-08"
+      ],
+      "modules": [
+        "automation",
+        "distribution",
+        "accounts"
+      ],
+      "status": "planned",
+      "steps": [
+        "Authorized routing",
+        "Freeze destination/export/link and origin",
+        "Create concrete post",
+        "Submit",
+        "Reconcile remote result",
+        "Mark published only on confirmation"
+      ],
+      "remaining": "Local manual drafts exist; no Automation-origin public publishing or reconciliation."
+    },
+    {
+      "id": "FLOW-13",
+      "title": "Reusable profile without per-video edits",
+      "scope": [
+        "SC-03"
+      ],
+      "modules": [
+        "profiles",
+        "processing",
+        "editor",
+        "batch",
+        "folders",
+        "automation"
+      ],
+      "status": "partial",
+      "steps": [
+        "Save reusable processing recipe",
+        "Export/import versioned profile",
+        "Explicitly apply a copy",
+        "Continue editing",
+        "Run only by separate action"
+      ],
+      "remaining": "Reusable global subtitle appearance joins the existing processing profile; per-video music, trim and cue overrides remain excluded. Speech/rule/composition presets and complete portability remain."
+    },
+    {
+      "id": "FLOW-14",
+      "title": "Interrupted workflow admission and queue recovery",
+      "scope": [
+        "SC-07",
+        "SC-08"
+      ],
+      "modules": [
+        "automation",
+        "batch",
+        "runtime"
+      ],
+      "status": "partial",
+      "steps": [
+        "Capture run/input/model versions",
+        "Persist prepared run",
+        "Admit existing queue using same ID",
+        "Resume interrupted admission",
+        "Observe same jobs"
+      ],
+      "remaining": "Production crash matrix and stage-level external/paid settlement; missing jobs are not reported complete."
+    },
+    {
+      "id": "FLOW-15",
+      "title": "Changed content invalidates stale results",
+      "scope": [
+        "SC-02",
+        "SC-07"
+      ],
+      "modules": [
+        "runtime",
+        "processing",
+        "projects"
+      ],
+      "status": "partial",
+      "steps": [
+        "Fingerprint source/settings",
+        "Process/cache",
+        "Detect changed bytes or recipe",
+        "Refuse stale reuse",
+        "Rebuild affected result"
+      ],
+      "remaining": "All clip bytes/durations and composition/canvas/interval participate in validation; music/style/edit identities remain. Complete stage dependency invalidation and automatic missing-asset repair remain."
+    },
+    {
+      "id": "FLOW-16",
+      "title": "Contextual component and service setup",
+      "scope": [
+        "SC-11"
+      ],
+      "modules": [
+        "settings",
+        "accounts",
+        "vision",
+        "speech"
+      ],
+      "status": "partial",
+      "steps": [
+        "Start available work",
+        "Encounter missing dependency",
+        "Explain purpose/size/cost",
+        "User installs/selects service",
+        "Validate readiness",
+        "Explicit run"
+      ],
+      "remaining": "Explicit local vision and speech manifest checks exist. Runtime/weight installation, verified model download/update and premium-service setup remain separate work."
+    },
+    {
+      "id": "FLOW-17",
+      "title": "Plus, credits and lifecycle gates",
+      "scope": [
+        "SC-07",
+        "SC-08",
+        "SC-11"
+      ],
+      "modules": [
+        "accounts",
+        "runtime",
+        "automation"
+      ],
+      "status": "planned",
+      "steps": [
+        "Evaluate affected step entitlement/cost",
+        "Confirm/reserve when approved",
+        "Execute or pause affected work",
+        "Reconcile settlement and recovery"
+      ],
+      "remaining": "Commercial defaults remain proposals; no fabricated balance, pricing or implicit paid fallback."
+    },
+    {
+      "id": "FLOW-18",
+      "title": "Consented hybrid execution",
+      "scope": [
+        "SC-12"
+      ],
+      "modules": [
+        "cloud",
+        "accounts",
+        "runtime"
+      ],
+      "status": "planned",
+      "steps": [
+        "Select eligible remote steps",
+        "Explain data transfer",
+        "Obtain consent",
+        "Check assets/authorization",
+        "Execute",
+        "Reconcile retention/results"
+      ],
+      "remaining": "All cloud work remains a later extension; no implicit cookie transfer or desktop-off discovery."
+    },
+    {
+      "id": "FLOW-19",
+      "title": "Locale changes preserve business meaning",
+      "scope": [
+        "SC-14"
+      ],
+      "modules": [
+        "localization",
+        "taxonomy",
+        "distribution",
+        "automation"
+      ],
+      "status": "partial",
+      "steps": [
+        "Switch English/Vietnamese",
+        "Localize controls/errors/date display",
+        "Retain user content, IDs, voice languages and scheduled instants"
+      ],
+      "remaining": "Real EN/VI interaction checks and unbuilt service/speech flows."
+    },
+    {
+      "id": "FLOW-20",
+      "title": "Dependency-aware non-destructive removal",
+      "scope": [
+        "SC-02",
+        "SC-10"
+      ],
+      "modules": [
+        "library",
+        "distribution",
+        "automation"
+      ],
+      "status": "partial",
+      "steps": [
+        "Inspect source/generated/post/workflow references",
+        "Show affected scope",
+        "Remove Library entry only when safe",
+        "Keep original and history"
+      ],
+      "remaining": "Separate original/generated/cache deletion, archive/recovery policy and override approval."
+    },
+    {
+      "id": "FLOW-21",
+      "title": "Project autosave and editing recovery",
+      "scope": [
+        "SC-03"
+      ],
+      "modules": [
+        "projects",
+        "editor"
+      ],
+      "status": "partial",
+      "steps": [
+        "Edit project",
+        "Recoverable autosave",
+        "Restart/crash",
+        "Inspect recovered version",
+        "Resolve missing/changed media",
+        "Resume editing"
+      ],
+      "remaining": "Recovery retains whole applied composition and all dependencies. Opening reauthorizes each distinct clip/music source; cancelled or changed input preserves the current editor. Anchor-independent repair and owner-run crash/close acceptance remain."
+    },
+    {
+      "id": "FLOW-22",
+      "title": "Full video/audio/subtitle editing",
+      "scope": [
+        "SC-03",
+        "SC-04",
+        "SC-05"
+      ],
+      "modules": [
+        "editor",
+        "subtitles",
+        "speech"
+      ],
+      "status": "partial",
+      "steps": [
+        "Arrange/transform clips",
+        "Edit independent text layers",
+        "Apply scoped styles/rules",
+        "Sync timing/voice",
+        "Preview",
+        "Export"
+      ],
+      "remaining": "Hard-cut composition, soundtrack, independent text layers, STT, translation, natural speech draft review/export and scoped display style exist. Aligned voice integration, transitions/layered media, advanced typography and installed visual/keyboard/media acceptance remain."
+    },
+    {
+      "id": "FLOW-23",
+      "title": "Channel and affiliate reverse navigation",
+      "scope": [
+        "SC-09",
+        "SC-10"
+      ],
+      "modules": [
+        "distribution"
+      ],
+      "status": "partial",
+      "steps": [
+        "Configure channel/link",
+        "Select registered export",
+        "Save per-destination draft",
+        "Inspect Upcoming/Published coverage",
+        "Open link usage and same post/export"
+      ],
+      "remaining": "Local draft schedules do not execute; published and external history remain empty/unavailable until verified."
+    },
+    {
+      "id": "FLOW-24",
+      "title": "Watcher continues waiting after each item",
+      "scope": [
+        "SC-08",
+        "SC-07"
+      ],
+      "modules": [
+        "folders",
+        "automation",
+        "batch"
+      ],
+      "status": "partial",
+      "steps": [
+        "Choose explicit first-run scope",
+        "Watch source folder",
+        "Wait for stable file",
+        "Admit shared queue",
+        "Finish item",
+        "Keep watcher waiting"
+      ],
+      "remaining": "Developer gate, product lifecycle/Plus policy and remote/scheduled triggers."
+    }
+  ],
+  "acceptance_sources": [
+    "specs/screens.md",
+    "specs/sources-library.md",
+    "specs/editor.md",
+    "specs/content-analysis.md",
+    "specs/automation.md",
+    "specs/channels-affiliate.md",
+    "specs/settings.md",
+    "specs/execution-policy.md",
+    "specs/local-speech.md"
+  ],
+  "open_policy_sources": [
+    "DECISIONS.md",
+    "specs/execution-policy.md",
+    "specs/sources-library.md",
+    "specs/channels-affiliate.md"
+  ]
+}

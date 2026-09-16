@@ -1,0 +1,40 @@
+{
+  "version": "0.4.0",
+  "date": "2026-09-15",
+  "core_compile": "passed with installed TypeScript 5.8.3 / external Node declarations",
+  "node": {
+    "passed": 50,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python": {
+    "passed": 21,
+    "failed": 0,
+    "skipped": 1
+  },
+  "total": {
+    "passed": 71,
+    "failed": 0,
+    "skipped": 1
+  },
+  "not_executed": [
+    "registry install",
+    "dependency lock resolution",
+    "Biome",
+    "Lefthook",
+    "Ruff",
+    "full app typecheck/build",
+    "Electron E2E",
+    "Windows/macOS",
+    "OCR/LaMa",
+    "GPU benchmarks",
+    "remote CI"
+  ],
+  "source_only": [
+    "Electron BatchPanel and native picker IPC",
+    "conditional SQLite runtime loading",
+    "single-instance Electron ownership",
+    "EN/VI batch E2E and app restart"
+  ],
+  "note": "Local controlled lifecycle + real SQLite/native media checks. Not a production release."
+}

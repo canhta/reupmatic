@@ -1,0 +1,24 @@
+test_normalized_rectangle_uses_half_open_pixel_edges (test_vision.MaskGeometryTests.test_normalized_rectangle_uses_half_open_pixel_edges) ... ERROR
+test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue (test_vision.TimedEvidenceTests.test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue) ... ERROR
+test_missing_models_are_actionable_and_do_not_break_render_capabilities (test_vision.VisionProtocolTests.test_missing_models_are_actionable_and_do_not_break_render_capabilities) ... ok
+
+======================================================================
+ERROR: test_normalized_rectangle_uses_half_open_pixel_edges (test_vision.MaskGeometryTests.test_normalized_rectangle_uses_half_open_pixel_edges)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/work/reupmatic/tests/test_vision.py", line 37, in test_normalized_rectangle_uses_half_open_pixel_edges
+    from vision_algorithms import make_mask
+ModuleNotFoundError: No module named 'vision_algorithms'
+
+======================================================================
+ERROR: test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue (test_vision.TimedEvidenceTests.test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/work/reupmatic/tests/test_vision.py", line 26, in test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue
+    from vision_algorithms import timed_cues
+ModuleNotFoundError: No module named 'vision_algorithms'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.693s
+
+FAILED (errors=2)

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:speech-model-manifest:1",
+  "title": "Explicit local faster-whisper bundle",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "engine": {
+      "const": "faster-whisper"
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!.*://)(?![/\\\\]{2})[^\\u0000]+$"
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "vi",
+          "zh"
+        ]
+      }
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "config.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "model.bin": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "tokenizer.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "vocabulary.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "vocabulary.txt": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "preprocessor_config.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "config.json",
+        "model.bin",
+        "tokenizer.json"
+      ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "vocabulary.json"
+          ]
+        },
+        {
+          "required": [
+            "vocabulary.txt"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "version",
+    "engine",
+    "directory",
+    "languages",
+    "files"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,5 @@
+{
+  "source_files": 17,
+  "parse_diagnostics": [],
+  "note": "Syntax only; not a UI or Electron typecheck"
+}

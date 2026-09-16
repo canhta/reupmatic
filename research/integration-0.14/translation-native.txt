@@ -1,0 +1,13 @@
+test_cancel_reaps_child_and_releases_same_worker_queue (test_translation_native.TranslationNativeTests.test_cancel_reaps_child_and_releases_same_worker_queue) ... ok
+test_changed_configuration_or_language_pair_requires_new_request (test_translation_native.TranslationNativeTests.test_changed_configuration_or_language_pair_requires_new_request) ... ok
+test_incomplete_hypothesis_is_not_published (test_translation_native.TranslationNativeTests.test_incomplete_hypothesis_is_not_published) ... ok
+test_missing_segments_fail_atomically (test_translation_native.TranslationNativeTests.test_missing_segments_fail_atomically) ... ok
+test_model_modified_during_inference_is_rejected (test_translation_native.TranslationNativeTests.test_model_modified_during_inference_is_rejected) ... ok
+test_network_attempt_is_refused_without_fallback (test_translation_native.TranslationNativeTests.test_network_attempt_is_refused_without_fallback) ... ok
+test_real_worker_child_keeps_ids_times_languages_rules_and_runtime (test_translation_native.TranslationNativeTests.test_real_worker_child_keeps_ids_times_languages_rules_and_runtime) ... ok
+test_token_limit_does_not_silently_truncate_input (test_translation_native.TranslationNativeTests.test_token_limit_does_not_silently_truncate_input) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 10.369s
+
+OK

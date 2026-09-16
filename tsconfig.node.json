@@ -1,0 +1,1 @@
+{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","rootDir":"app","outDir":"dist-node","strict":true,"esModuleInterop":true,"skipLibCheck":true,"types":["node"]},"include":["app/core/**/*.ts","app/electron/**/*.ts","app/electron/**/*.cts"]}

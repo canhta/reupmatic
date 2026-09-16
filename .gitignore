@@ -1,0 +1,16 @@
+node_modules/
+dist-core/
+dist-node/
+dist-ui/
+.venv/
+__pycache__/
+*.pyc
+workspace/
+.ruff_cache/
+biome-logs/
+*.log
+.env
+.env.*
+!.env.example
+
+.test-artifacts/

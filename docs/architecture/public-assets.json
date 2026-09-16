@@ -1,0 +1,19 @@
+{
+  "source": "Owner-supplied public.zip",
+  "policy": "All 12 original files retained byte-for-byte. No fonts bundled.",
+  "note": "The original site.webmanifest is retained but not linked; its /content route is not a desktop route.",
+  "files": {
+    "public/favicon.ico": "110ca6bca064c9f4e43677858a5205a0297724e277b54422e595a015672a67aa",
+    "public/apple-touch-icon.png": "0ffbbd8a03bd48570567a2e1477f046bffc491a7f062223e6b8a5f6588413f18",
+    "public/favicon-16.png": "d48648b425b012bb4d22a4affdfa1ffed50b7477210e3b5269a4ffb63dd14200",
+    "public/icon-192.png": "071e80cdc6951fc524e87662735e5d66f82cae2870b2894dcd5f290ad04f060f",
+    "public/site.webmanifest": "63128e45445e24cff8cd0c39efccbc86cf8c78dcfb23c72f04ab7b8db7fde30d",
+    "public/favicon-32.png": "0267d45f781fe5eee70b8122141548ac9d1d2207784c256787806843b07fece6",
+    "public/favicon.svg": "4f6c4b0db36058f7881f933ece11caab46eb2902e246a33cf5fbaebb6b8dae56",
+    "public/icon-512.png": "ea6fb0793c952a57de41362c8117dd5009f861a67680d4a296cca1a834587674",
+    "public/brand/logo-white.png": "ff1efb82037ffc78f3cbd17421e7955116dd878d15f8112e0078522c5328727d",
+    "public/brand/logo.png": "40d3be58d89712f9f65ecd2d1b3cb795777dda692f53384d5861a3704994f695",
+    "public/brand/logo.svg": "1003c12324f03d436ef5cf46f53a4532a19d0fc01f654d166ec29ae3b41f81c6",
+    "public/brand/logo-white.svg": "1b2303f6d0571b69cff85d77eea1b24168d812ba68210a3ce37162512448e533"
+  }
+}

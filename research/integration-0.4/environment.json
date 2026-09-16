@@ -1,0 +1,12 @@
+{
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "node": "v22.16.0",
+  "typescript": "Version 5.8.3",
+  "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "sqlite_binding": "node:sqlite; local Node 22 runtime emits ExperimentalWarning",
+  "installation_attempted": false,
+  "electron_ui_executed": false,
+  "target_os_executed": false,
+  "formatter_executed": false
+}

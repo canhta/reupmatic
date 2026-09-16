@@ -1,0 +1,192 @@
+TAP version 13
+# Subtest: AGENTS.md is the only root instruction file and owns engineering rules
+ok 1 - AGENTS.md is the only root instruction file and owns engineering rules
+  ---
+  duration_ms: 5.598223
+  type: 'test'
+  ...
+# Subtest: application source stays under the readable-file size limit
+ok 2 - application source stays under the readable-file size limit
+  ---
+  duration_ms: 9.033872
+  type: 'test'
+  ...
+# Subtest: core owns business logic, not UI or Electron dependencies
+ok 3 - core owns business logic, not UI or Electron dependencies
+  ---
+  duration_ms: 2.488682
+  type: 'test'
+  ...
+# Subtest: entry points remain composition-only and features have clear ownership
+ok 4 - entry points remain composition-only and features have clear ownership
+  ---
+  duration_ms: 0.828946
+  type: 'test'
+  ...
+# Subtest: abstractions own behavior instead of adding forwarding layers
+ok 5 - abstractions own behavior instead of adding forwarding layers
+  ---
+  duration_ms: 2.312223
+  type: 'test'
+  ...
+# (node:1074) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reference import survives reopening without copying original content
+ok 6 - reference import survives reopening without copying original content
+  ---
+  duration_ms: 23.594312
+  type: 'test'
+  ...
+# Subtest: same bytes are reused only under reuse policy; separate import is explicit
+ok 7 - same bytes are reused only under reuse policy; separate import is explicit
+  ---
+  duration_ms: 11.124792
+  type: 'test'
+  ...
+# Subtest: copy import has an independent verified destination and leaves source untouched
+ok 8 - copy import has an independent verified destination and leaves source untouched
+  ---
+  duration_ms: 19.339082
+  type: 'test'
+  ...
+# Subtest: relink rejects different bytes without losing project associations
+ok 9 - relink rejects different bytes without losing project associations
+  ---
+  duration_ms: 7.394944
+  type: 'test'
+  ...
+# Subtest: open detects changed source bytes; missing source retains library history
+ok 10 - open detects changed source bytes; missing source retains library history
+  ---
+  duration_ms: 5.955963
+  type: 'test'
+  ...
+# Subtest: removing a listing never deletes originals, copies, projects or exports
+ok 11 - removing a listing never deletes originals, copies, projects or exports
+  ---
+  duration_ms: 11.609165
+  type: 'test'
+  ...
+# Subtest: search treats SQL wildcard characters as literal text and caps pages
+ok 12 - search treats SQL wildcard characters as literal text and caps pages
+  ---
+  duration_ms: 5.443343
+  type: 'test'
+  ...
+# Subtest: a failed copy is not recorded as an available library item
+ok 13 - a failed copy is not recorded as an available library item
+  ---
+  duration_ms: 13.474985
+  type: 'test'
+  ...
+# Subtest: new settings do not guess a save folder or manufacture account status
+ok 14 - new settings do not guess a save folder or manufacture account status
+  ---
+  duration_ms: 9.285886
+  type: 'test'
+  ...
+# Subtest: output default persists; changing it leaves previous output files in place
+ok 15 - output default persists; changing it leaves previous output files in place
+  ---
+  duration_ms: 12.432816
+  type: 'test'
+  ...
+# Subtest: corrupt and future-version settings are preserved rather than silently replaced
+ok 16 - corrupt and future-version settings are preserved rather than silently replaced
+  ---
+  duration_ms: 10.993116
+  type: 'test'
+  ...
+# Subtest: parallel writes are serialized and snapshot callers cannot mutate saved defaults
+ok 17 - parallel writes are serialized and snapshot callers cannot mutate saved defaults
+  ---
+  duration_ms: 8.440755
+  type: 'test'
+  ...
+# Subtest: invalid directories do not replace the last valid settings
+ok 18 - invalid directories do not replace the last valid settings
+  ---
+  duration_ms: 4.703013
+  type: 'test'
+  ...
+# Subtest: one UI system complements, rather than replaces, media libraries
+ok 19 - one UI system complements, rather than replaces, media libraries
+  ---
+  duration_ms: 3.170514
+  type: 'test'
+  ...
+# Subtest: application uses library controls, not a parallel primitive implementation
+ok 20 - application uses library controls, not a parallel primitive implementation
+  ---
+  duration_ms: 5.393621
+  type: 'test'
+  ...
+# Subtest: theme, language and layer order are explicit and shared
+ok 21 - theme, language and layer order are explicit and shared
+  ---
+  duration_ms: 0.553753
+  type: 'test'
+  ...
+# Subtest: Astryx selections have a maintained catalogue and task-level rationale
+ok 22 - Astryx selections have a maintained catalogue and task-level rationale
+  ---
+  duration_ms: 1.880818
+  type: 'test'
+  ...
+# Subtest: navigation and disclosure use library semantics, not button lookalikes
+ok 23 - navigation and disclosure use library semantics, not button lookalikes
+  ---
+  duration_ms: 0.916449
+  type: 'test'
+  ...
+# Subtest: choices with different execution consequences remain visible before submission
+ok 24 - choices with different execution consequences remain visible before submission
+  ---
+  duration_ms: 0.210703
+  type: 'test'
+  ...
+# Subtest: workspace CSS does not reach into library controls or shell landmarks
+ok 25 - workspace CSS does not reach into library controls or shell landmarks
+  ---
+  duration_ms: 1.311998
+  type: 'test'
+  ...
+# Subtest: literal UI messages exist in both application languages
+ok 26 - literal UI messages exist in both application languages
+  ---
+  duration_ms: 9.640953
+  type: 'test'
+  ...
+# Subtest: model setup messages refer to the shipped development guide
+ok 27 - model setup messages refer to the shipped development guide
+  ---
+  duration_ms: 0.58957
+  type: 'test'
+  ...
+# Subtest: Electron flows target library interactions rather than native select elements
+ok 28 - Electron flows target library interactions rather than native select elements
+  ---
+  duration_ms: 1.664604
+  type: 'test'
+  ...
+# Subtest: Sources stages batches and exposes storage consequences before import
+ok 29 - Sources stages batches and exposes storage consequences before import
+  ---
+  duration_ms: 0.402981
+  type: 'test'
+  ...
+# Subtest: public assets and local settings have actual application wiring
+ok 30 - public assets and local settings have actual application wiring
+  ---
+  duration_ms: 0.215111
+  type: 'test'
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 211.685012

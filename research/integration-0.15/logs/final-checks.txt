@@ -1,0 +1,67 @@
+
+> reupmatic@0.15.0 structure:check
+> node scripts/system-structure.mjs
+
+{ modules: 22, reserved: 83 }
+
+> reupmatic@0.15.0 scope:check
+> node scripts/scope-traceability.mjs
+
+{ scopes: 14, screens: 5, modules: 22, features: 76, flows: 24 }
+
+> reupmatic@0.15.0 contracts:check
+> node scripts/python.mjs scripts/sync-contracts.py --check
+
+Current cue, processing, project and worker contracts are synchronized.
+
+> reupmatic@0.15.0 test:architecture
+> node --test tests/architecture.test.mjs
+
+TAP version 13
+# Subtest: AGENTS.md is the only root instruction file and owns engineering rules
+ok 1 - AGENTS.md is the only root instruction file and owns engineering rules
+  ---
+  duration_ms: 3.563968
+  type: 'test'
+  ...
+# Subtest: application source stays under the readable-file size limit
+ok 2 - application source stays under the readable-file size limit
+  ---
+  duration_ms: 6.412623
+  type: 'test'
+  ...
+# Subtest: core owns business logic, not UI or Electron dependencies
+ok 3 - core owns business logic, not UI or Electron dependencies
+  ---
+  duration_ms: 1.616293
+  type: 'test'
+  ...
+# Subtest: entry points remain composition-only and features have clear ownership
+ok 4 - entry points remain composition-only and features have clear ownership
+  ---
+  duration_ms: 0.59845
+  type: 'test'
+  ...
+# Subtest: abstractions own behavior instead of adding forwarding layers
+ok 5 - abstractions own behavior instead of adding forwarding layers
+  ---
+  duration_ms: 2.930176
+  type: 'test'
+  ...
+# Subtest: shared media behavior is imported from its owner, not compatibility re-exports
+ok 6 - shared media behavior is imported from its owner, not compatibility re-exports
+  ---
+  duration_ms: 0.280887
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 65.53982
+EXIT_CODE=0
+[3JTERM environment variable not set.

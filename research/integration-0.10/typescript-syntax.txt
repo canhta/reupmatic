@@ -1,0 +1,2 @@
+Syntax-only transpilation with TypeScript 5.8.3: 147 source files, 0 diagnostics.
+Not a dependency-aware type check, bundle, renderer launch or installed Astryx verification.

@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: new settings do not guess a save folder or manufacture account status
+ok 1 - new settings do not guess a save folder or manufacture account status
+  ---
+  duration_ms: 6.277419
+  type: 'test'
+  ...
+# Subtest: output default persists; changing it leaves previous output files in place
+ok 2 - output default persists; changing it leaves previous output files in place
+  ---
+  duration_ms: 8.735324
+  type: 'test'
+  ...
+# Subtest: corrupt and future-version settings are preserved rather than silently replaced
+ok 3 - corrupt and future-version settings are preserved rather than silently replaced
+  ---
+  duration_ms: 5.566263
+  type: 'test'
+  ...
+# Subtest: parallel writes are serialized and snapshot callers cannot mutate saved defaults
+ok 4 - parallel writes are serialized and snapshot callers cannot mutate saved defaults
+  ---
+  duration_ms: 5.984372
+  type: 'test'
+  ...
+# Subtest: invalid directories do not replace the last valid settings
+ok 5 - invalid directories do not replace the last valid settings
+  ---
+  duration_ms: 3.128275
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 108.757545

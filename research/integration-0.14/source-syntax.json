@@ -1,0 +1,7 @@
+{
+  "tool": "5.8.3",
+  "app_files_parsed": 198,
+  "relative_imports_resolved": 646,
+  "errors": [],
+  "note": "Syntax/transpile and local import existence only; not dependency-resolved typecheck, build or rendered acceptance."
+}

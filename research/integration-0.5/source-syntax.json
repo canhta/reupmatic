@@ -1,0 +1,15 @@
+{
+  "kind": "syntax-only, not a full typecheck or UI run",
+  "files": 22,
+  "diagnostics": [],
+  "localeKeyCounts": {
+    "en": 157,
+    "vi": 157
+  },
+  "missing": [],
+  "extra": [],
+  "duplicateKeys": {
+    "en": [],
+    "vi": []
+  }
+}

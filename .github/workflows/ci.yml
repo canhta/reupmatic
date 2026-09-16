@@ -1,0 +1,93 @@
+name: Reupmatic CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reupmatic-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  desktop-source:
+    name: Desktop source / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - run: npm run structure:check
+      - run: npm run scope:check
+      - run: npm run test:structure
+      - name: Require a real dependency lock
+        shell: bash
+        run: |
+          node --input-type=module -e "import{existsSync}from'node:fs';if(!existsSync('package-lock.json')){console.error('Bootstrap npm install in a networked checkout; commit the genuine lockfile. CI never invents or silently replaces it.');process.exit(1)}"
+      - run: npm ci
+        env:
+          LEFTHOOK: "0"
+      - run: npm run check
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:core
+      - run: npm run test:tooling
+      - run: npm run test:architecture
+      - run: npm run test:ui-library
+      - run: npm run test:watcher
+  python-and-bridge:
+    name: Native media / Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Native test prerequisites (not shipping binaries)
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+      - run: python -m pip install -r worker/requirements-dev.txt
+      - run: npm run contracts:check
+      - run: npm run check:python
+      - run: npm run test:python
+      - run: npm ci
+        env:
+          LEFTHOOK: "0"
+      - run: npm run test:bridge
+# Source builds and native checks are not Electron UI E2E or signed installers.
+# First run is intentionally blocked until a genuine npm lock is committed.
+  electron-ui:
+    name: Electron UI / Linux integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Native test dependencies (not shipping binaries)
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg xvfb libgtk-3-0 libnss3 libasound2t64
+      - run: python -m pip install -r worker/requirements-dev.txt
+      - run: npm ci
+        env:
+          LEFTHOOK: "0"
+      - run: xvfb-run -a npm run test:e2e
+# This job is supplied for a networked runner. No remote execution is claimed.

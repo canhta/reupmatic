@@ -1,0 +1,9 @@
+{
+  "markdown_files": 13,
+  "local_links_checked": 99,
+  "missing_local_links": [],
+  "prior_confirmed_decisions_preserved": 39,
+  "confirmed_decisions_now": 41,
+  "smoke": 8,
+  "validation_scope": "document links/IDs/archive plus bounded native-media smoke; not target app or model tests"
+}

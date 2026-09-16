@@ -1,0 +1,7 @@
+{
+  "typecheck": 2,
+  "ui-typecheck": 2,
+  "build": 2,
+  "biome": 127,
+  "ruff": 1
+}

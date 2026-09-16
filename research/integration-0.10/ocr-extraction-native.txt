@@ -1,0 +1,7 @@
+test_full_scan_rejects_partial_range_without_publishing (test_ocr_extraction_native.OcrExtractionNativeTests.test_full_scan_rejects_partial_range_without_publishing) ... ok
+test_whole_source_exceeds_sample_limit_merges_cues_and_retains_raw_evidence (test_ocr_extraction_native.OcrExtractionNativeTests.test_whole_source_exceeds_sample_limit_merges_cues_and_retains_raw_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 4.799s
+
+OK

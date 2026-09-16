@@ -1,0 +1,15 @@
+
+> reupmatic@0.12.0 structure:check
+> node scripts/system-structure.mjs
+
+{ modules: 22, reserved: 90 }
+
+> reupmatic@0.12.0 scope:check
+> node scripts/scope-traceability.mjs
+
+{ scopes: 14, screens: 5, modules: 22, features: 76, flows: 24 }
+
+> reupmatic@0.12.0 contracts:check
+> node scripts/python.mjs scripts/sync-contracts.py --check
+
+Current cue, processing, project and worker contracts are synchronized.

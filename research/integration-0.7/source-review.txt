@@ -1,0 +1,6 @@
+TypeScript/TSX parser: 78 source files, 0 syntax diagnostics.
+Parser inspection is NOT full type checking, package API validation or a UI build.
+Resource keys: app/ui/i18n.ts: EN/VI match (168 direct keys).
+Resource keys: app/ui/features/library/i18n.ts: EN/VI match (61 direct keys).
+Resource keys: app/ui/features/settings/i18n.ts: EN/VI match (28 direct keys).
+Resource keys: app/ui/features/vision/i18n.ts: EN/VI match (52 direct keys).

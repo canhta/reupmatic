@@ -1,0 +1,32 @@
+
+> reupmatic@0.9.0 build
+> tsc -p tsconfig.node.json && tsc -p tsconfig.ui.json && vite build
+
+app/electron/features/automation/ipc.ts(1,24): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/batch/ipc.ts(2,51): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/catalog/context.ts(1,36): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/catalog/ipc.ts(2,36): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/distribution/ipc.ts(1,23): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/editor/ipc.ts(1,44): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/folders/ipc.ts(3,49): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/folders/ipc.ts(48,39): error TS2307: Cannot find module 'chokidar' or its corresponding type declarations.
+app/electron/features/folders/ipc.ts(49,41): error TS2307: Cannot find module 'chokidar' or its corresponding type declarations.
+app/electron/features/folders/ipc.ts(54,25): error TS7006: Parameter 'filename' implicitly has an 'any' type.
+app/electron/features/folders/ipc.ts(54,35): error TS7006: Parameter 'stat' implicitly has an 'any' type.
+app/electron/features/library/ipc.ts(1,51): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/profiles/ipc.ts(1,24): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/settings/ipc.ts(1,49): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/features/vision/ipc.ts(1,36): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/main.ts(2,44): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/main.ts(106,37): error TS7006: Parameter 'event' implicitly has an 'any' type.
+app/electron/main.ts(122,17): error TS7006: Parameter 'event' implicitly has an 'any' type.
+app/electron/main.ts(138,11): error TS7006: Parameter 'choice' implicitly has an 'any' type.
+app/electron/preload.cts(1,44): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/runtime/ipc.ts(1,45): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/runtime/ipc.ts(35,48): error TS7006: Parameter 'event' implicitly has an 'any' type.
+app/electron/runtime/protocols.ts(1,40): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+app/electron/runtime/protocols.ts(16,32): error TS7006: Parameter 'request' implicitly has an 'any' type.
+app/electron/runtime/protocols.ts(31,34): error TS7006: Parameter 'request' implicitly has an 'any' type.
+app/electron/runtime/protocols.ts(36,55): error TS7006: Parameter '_webContents' implicitly has an 'any' type.
+app/electron/runtime/protocols.ts(36,69): error TS7006: Parameter '_permission' implicitly has an 'any' type.
+app/electron/runtime/protocols.ts(36,82): error TS7006: Parameter 'callback' implicitly has an 'any' type.

@@ -1,0 +1,34 @@
+TAP version 13
+# Subtest: speech requests are bounded, explicit-language, local-model and reject extra fields
+ok 1 - speech requests are bounded, explicit-language, local-model and reject extra fields
+  ---
+  duration_ms: 1.539231
+  type: 'test'
+  ...
+# Subtest: results correlate source, language, model, time range and bounded plain cues
+ok 2 - results correlate source, language, model, time range and bounded plain cues
+  ---
+  duration_ms: 1.064876
+  type: 'test'
+  ...
+# Subtest: speech admission uses existing worker queue and maps early terminal results to public IDs
+ok 3 - speech admission uses existing worker queue and maps early terminal results to public IDs
+  ---
+  duration_ms: 1.274532
+  type: 'test'
+  ...
+# Subtest: cancelled inference never publishes a late successful result
+ok 4 - cancelled inference never publishes a late successful result
+  ---
+  duration_ms: 0.390439
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.665386

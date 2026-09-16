@@ -1,0 +1,21 @@
+test_cancel_reaps_real_child_cleans_audio_and_unblocks_shared_queue (test_speech_native.SpeechNativeTests.test_cancel_reaps_real_child_cleans_audio_and_unblocks_shared_queue) ... FAIL
+test_changed_hash_fails_before_inference_and_worker_survives (test_speech_native.SpeechNativeTests.test_changed_hash_fails_before_inference_and_worker_survives) ... ok
+test_controlled_recognition_returns_correlated_source_clock_unicode_and_provenance (test_speech_native.SpeechNativeTests.test_controlled_recognition_returns_correlated_source_clock_unicode_and_provenance) ... ok
+test_empty_result_is_not_fabricated_speech (test_speech_native.SpeechNativeTests.test_empty_result_is_not_fabricated_speech) ... ok
+test_inference_child_python_network_is_denied (test_speech_native.SpeechNativeTests.test_inference_child_python_network_is_denied) ... ok
+test_language_fallback_is_refused_and_no_audio_is_explicit (test_speech_native.SpeechNativeTests.test_language_fallback_is_refused_and_no_audio_is_explicit) ... ok
+test_real_audio_preserves_delayed_start_and_exact_sample_clock (test_speech_native.SpeechNativeTests.test_real_audio_preserves_delayed_start_and_exact_sample_clock) ... ok
+
+======================================================================
+FAIL: test_cancel_reaps_real_child_cleans_audio_and_unblocks_shared_queue (test_speech_native.SpeechNativeTests.test_cancel_reaps_real_child_cleans_audio_and_unblocks_shared_queue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/work-v013/reupmatic/tests/test_speech_native.py", line 160, in test_cancel_reaps_real_child_cleans_audio_and_unblocks_shared_queue
+    self.fail('Probe bypassed the active recognition queue item')
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Probe bypassed the active recognition queue item
+
+----------------------------------------------------------------------
+Ran 7 tests in 4.642s
+
+FAILED (failures=1)

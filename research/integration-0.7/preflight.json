@@ -1,0 +1,29 @@
+{
+  "baseline": "reupmatic-v0.6.zip",
+  "version": "0.7.0",
+  "public_files": 12,
+  "largest_implementation_files": [
+    {
+      "path": "app/ui/i18n.ts",
+      "lines": 271
+    },
+    {
+      "path": "app/core/folders/folder-monitor.ts",
+      "lines": 252
+    },
+    {
+      "path": "app/ui/features/editor/useEditorModel.ts",
+      "lines": 230
+    },
+    {
+      "path": "worker/vision/service.py",
+      "lines": 198
+    },
+    {
+      "path": "app/core/vision/vision.ts",
+      "lines": 190
+    }
+  ],
+  "instruction_file": "AGENTS.md",
+  "source_files_checked": 100
+}

@@ -1,0 +1,21 @@
+test_processing (unittest.loader._FailedTest.test_processing) ... ERROR
+
+======================================================================
+ERROR: test_processing (unittest.loader._FailedTest.test_processing)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_processing
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/work-v08/reupmatic/tests/test_processing.py", line 13, in <module>
+    from processing.chunks import intervals, ocr_window, progress_for, scan_subtitles
+ImportError: cannot import name 'ocr_window' from 'processing.chunks' (/mnt/data/work-v08/reupmatic/worker/processing/chunks.py)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

@@ -1,0 +1,51 @@
+[
+  {
+    "name": "npm-lock-resolution",
+    "command": [
+      "npm",
+      "install",
+      "--package-lock-only",
+      "--ignore-scripts",
+      "--fetch-retries=0",
+      "--fetch-timeout=5000",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "exit_code": 124,
+    "log": "npm-lock-resolution.txt"
+  },
+  {
+    "name": "biome-check",
+    "command": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "exit_code": 127,
+    "log": "biome-check.txt"
+  },
+  {
+    "name": "lefthook-install",
+    "command": [
+      "npm",
+      "run",
+      "hooks:install"
+    ],
+    "exit_code": 127,
+    "log": "lefthook-install.txt"
+  },
+  {
+    "name": "ruff-check",
+    "command": [
+      "/opt/pyvenv/bin/python",
+      "-m",
+      "ruff",
+      "check",
+      "worker",
+      "tests",
+      "scripts"
+    ],
+    "exit_code": 1,
+    "log": "ruff-check.txt"
+  }
+]

@@ -1,0 +1,10 @@
+
+> reupmatic@0.9.0 structure:check
+> node scripts/system-structure.mjs
+
+{ modules: 22, reserved: 96 }
+
+> reupmatic@0.9.0 scope:check
+> node scripts/scope-traceability.mjs
+
+{ scopes: 14, screens: 5, modules: 22, features: 76, flows: 24 }

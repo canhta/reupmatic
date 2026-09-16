@@ -1,0 +1,5 @@
+
+> reupmatic@0.12.0 check
+> biome ci .
+
+sh: 1: biome: not found

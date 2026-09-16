@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:speech-recognition:1",
+  "title": "Local speech recognition boundaries",
+  "$comment": "Runtime additionally enforces end > start, at most 7,200,000 ms, matching source/model/request identity, nonempty nonoverlapping result segments within range and a 1,000,000-byte response.",
+  "$defs": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "asset_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[^\\u0000]+$"
+            },
+            "model_id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "start_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "end_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            "language": {
+              "enum": [
+                "en",
+                "vi",
+                "zh"
+              ]
+            }
+          },
+          "required": [
+            "asset_id",
+            "model_id",
+            "start_ms",
+            "end_ms",
+            "language"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request_id",
+        "revision",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    "worker_params": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        }
+      },
+      "required": [
+        "asset_id",
+        "source_sha256",
+        "model_id",
+        "start_ms",
+        "end_ms",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "stt"
+        },
+        "asset_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "runtime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "clock": {
+          "const": "source"
+        },
+        "timing": {
+          "const": "segment"
+        },
+        "cues": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 10000
+              }
+            },
+            "required": [
+              "id",
+              "start_ms",
+              "end_ms",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "asset_id",
+        "source_sha256",
+        "model_id",
+        "start_ms",
+        "end_ms",
+        "language",
+        "runtime",
+        "clock",
+        "timing",
+        "cues"
+      ],
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "code": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Z_]{1,80}$"
+            }
+          ]
+        },
+        "model_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "languages": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "en",
+              "vi",
+              "zh"
+            ]
+          }
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "available",
+        "code",
+        "model_id",
+        "languages",
+        "verified"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "type": "null"
+              },
+              "model_id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "languages": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/input"
+    },
+    {
+      "$ref": "#/$defs/worker_params"
+    },
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/status"
+    }
+  ]
+}

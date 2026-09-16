@@ -1,0 +1,18 @@
+test_normalized_rectangle_uses_half_open_pixel_edges (test_vision.MaskGeometryTests.test_normalized_rectangle_uses_half_open_pixel_edges) ... ok
+test_empty_mask_keeps_all_pixels_unchanged (test_vision.ModelAdapterDoubleTests.test_empty_mask_keeps_all_pixels_unchanged) ... ok
+test_lama_composites_only_masked_pixels_in_non_square_frame (test_vision.ModelAdapterDoubleTests.test_lama_composites_only_masked_pixels_in_non_square_frame) ... ok
+test_ocr_crop_offsets_and_confidence_filtering (test_vision.ModelAdapterDoubleTests.test_ocr_crop_offsets_and_confidence_filtering) ... ok
+test_wrong_model_shape_is_actionable (test_vision.ModelAdapterDoubleTests.test_wrong_model_shape_is_actionable) ... ok
+test_checksum_tampering_is_rejected (test_vision.ModelRegistryTests.test_checksum_tampering_is_rejected) ... ok
+test_status_does_not_claim_inference_verification (test_vision.ModelRegistryTests.test_status_does_not_claim_inference_verification) ... ok
+test_unconfigured_vietnamese_is_not_replaced_with_chinese (test_vision.ModelRegistryTests.test_unconfigured_vietnamese_is_not_replaced_with_chinese) ... ok
+test_url_and_unknown_manifest_fields_are_rejected (test_vision.ModelRegistryTests.test_url_and_unknown_manifest_fields_are_rejected) ... ok
+test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue (test_vision.TimedEvidenceTests.test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue) ... ok
+test_missing_models_are_actionable_and_do_not_break_render_capabilities (test_vision.VisionProtocolTests.test_missing_models_are_actionable_and_do_not_break_render_capabilities) ... ok
+test_bad_vision_request_does_not_kill_worker (test_vision.VisionValidationTests.test_bad_vision_request_does_not_kill_worker) ... ok
+test_invalid_numbers_regions_and_long_samples_are_rejected (test_vision.VisionValidationTests.test_invalid_numbers_regions_and_long_samples_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.532s
+
+OK

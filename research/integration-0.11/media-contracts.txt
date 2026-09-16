@@ -1,0 +1,8 @@
+test_all_nested_schemas_and_generated_embeddings (test_media_contracts.MediaContracts.test_all_nested_schemas_and_generated_embeddings) ... ok
+test_project_and_recipe_accept_style_and_audio_without_ai (test_media_contracts.MediaContracts.test_project_and_recipe_accept_style_and_audio_without_ai) ... ok
+test_worker_audio_uses_registration_not_renderer_paths (test_media_contracts.MediaContracts.test_worker_audio_uses_registration_not_renderer_paths) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.467s
+
+OK

@@ -1,0 +1,12 @@
+test_ocr_merges_only_adjacent_equal_text_across_chunks (test_processing.ChunkCompositionTests.test_ocr_merges_only_adjacent_equal_text_across_chunks) ... ok
+test_progress_does_not_regress_when_decode_inference_and_encode_phases_restart (test_processing.ChunkCompositionTests.test_progress_does_not_regress_when_decode_inference_and_encode_phases_restart) ... ok
+test_windows_preserve_sampling_grid_and_fit_worst_case_decoded_frames (test_processing.ChunkCompositionTests.test_windows_preserve_sampling_grid_and_fit_worst_case_decoded_frames) ... ok
+test_embedded_recipes_stay_identical_to_the_standalone_contract (test_processing.ProcessingSchemaTests.test_embedded_recipes_stay_identical_to_the_standalone_contract) ... ok
+test_processing_request_is_data_only_and_plain_render_stays_strict (test_processing.ProcessingSchemaTests.test_processing_request_is_data_only_and_plain_render_stays_strict) ... ok
+test_strict_recipe_and_independent_snapshot (test_processing.RecipeTests.test_strict_recipe_and_independent_snapshot) ... ok
+test_subtitle_conflict_and_model_snapshots_are_exact (test_processing.RecipeTests.test_subtitle_conflict_and_model_snapshots_are_exact) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.754s
+
+OK

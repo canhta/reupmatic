@@ -1,0 +1,31 @@
+.automation-workspace { max-width: 1240px; margin: var(--space-6) auto; }
+.folder-flow {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-6);
+  margin-block: var(--space-6) var(--space-4);
+}
+.folder-location { min-width: 0; }
+.folder-path { display: block; overflow-wrap: anywhere; white-space: normal; }
+.folder-location .folder-path { min-height: 42px; margin-block: var(--space-2) var(--space-3); }
+.folder-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.folder-rules { margin-top: var(--space-8); }
+.folder-scroll { overflow: auto; }
+@media (max-width: 980px) {
+  .folder-flow { grid-template-columns: minmax(0, 1fr); }
+  .folder-options { gap: var(--space-4); }
+}

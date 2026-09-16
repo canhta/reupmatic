@@ -1,0 +1,52 @@
+{
+  "baseline_archive": "reupmatic-v0.5.zip",
+  "baseline_sha256": "d377e451dc6362c6937364b0ad7e66248900493c8d17bdf5a39a5786951f68a9",
+  "baseline_has_git_commit": false,
+  "source_files": 84,
+  "largest_source_files": [
+    [
+      "app/ui/i18n.ts",
+      262
+    ],
+    [
+      "app/core/folders/folder-monitor.ts",
+      252
+    ],
+    [
+      "app/electron/main.ts",
+      199
+    ],
+    [
+      "worker/vision/service.py",
+      198
+    ],
+    [
+      "app/ui/features/editor/useEditorModel.ts",
+      196
+    ],
+    [
+      "app/core/vision/vision.ts",
+      190
+    ],
+    [
+      "app/core/batch/batch-queue.ts",
+      190
+    ],
+    [
+      "app/core/rendering/render-coordinator.ts",
+      180
+    ],
+    [
+      "worker/vision/algorithms.py",
+      163
+    ],
+    [
+      "app/ui/features/editor/CuePanel.tsx",
+      149
+    ]
+  ],
+  "python_syntax_files": 27,
+  "instruction_files": [
+    "AGENTS.md"
+  ]
+}

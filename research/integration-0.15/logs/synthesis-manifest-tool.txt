@@ -1,0 +1,19 @@
+test_generated_manifest_is_accepted_by_the_current_registry (test_synthesis_manifest.SynthesisManifestTests.test_generated_manifest_is_accepted_by_the_current_registry) ... FAIL
+test_in_bundle_output_and_duplicate_language_are_rejected (test_synthesis_manifest.SynthesisManifestTests.test_in_bundle_output_and_duplicate_language_are_rejected) ... ok
+
+======================================================================
+FAIL: test_generated_manifest_is_accepted_by_the_current_registry (test_synthesis_manifest.SynthesisManifestTests.test_generated_manifest_is_accepted_by_the_current_registry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/v015-work/reupmatic/tests/test_synthesis_manifest.py", line 26, in test_generated_manifest_is_accepted_by_the_current_registry
+    self.assertEqual(SynthesisRegistry(target).read()['model_id'], SynthesisRegistry(manifest).read()['model_id'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '329bc0a93db0d930ebb698101f8021dc2b2a87e51b8e64496372bffe92d2d439' != '2840c7eb5fac5f57bd7c05ae2b5ffd5b3ed9d7dd4d46c7930672c4754c69efe5'
+- 329bc0a93db0d930ebb698101f8021dc2b2a87e51b8e64496372bffe92d2d439
++ 2840c7eb5fac5f57bd7c05ae2b5ffd5b3ed9d7dd4d46c7930672c4754c69efe5
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.007s
+
+FAILED (failures=1)

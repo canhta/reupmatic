@@ -1,0 +1,85 @@
+
+> reupmatic@0.13.0 test:structure
+> node --test tests/structure.test.mjs tests/scope-traceability.test.mjs
+
+TAP version 13
+# Subtest: all scope groups, five screens and three modes have feature and flow traceability
+ok 1 - all scope groups, five screens and three modes have feature and flow traceability
+  ---
+  duration_ms: 12.996067
+  type: 'test'
+  ...
+# Subtest: omitting a scope, screen, mode or specification breaks the coverage guard
+ok 2 - omitting a scope, screen, mode or specification breaks the coverage guard
+  ---
+  duration_ms: 49.94237
+  type: 'test'
+  ...
+# Subtest: unknown ownership, duplicate IDs and false completion declarations are rejected
+ok 3 - unknown ownership, duplicate IDs and false completion declarations are rejected
+  ---
+  duration_ms: 34.596349
+  type: 'test'
+  ...
+# Subtest: independent endpoints and unfinished major capabilities remain explicit rather than hidden by scaffolding
+ok 4 - independent endpoints and unfinished major capabilities remain explicit rather than hidden by scaffolding
+  ---
+  duration_ms: 0.727357
+  type: 'test'
+  ...
+# Subtest: the human system map derives ownership and gaps from the current machine map
+ok 5 - the human system map derives ownership and gaps from the current machine map
+  ---
+  duration_ms: 1.823891
+  type: 'test'
+  ...
+# Subtest: the delivered tree retains source paths and 14 scope groups without counting placeholders as code
+not ok 6 - the delivered tree retains source paths and 14 scope groups without counting placeholders as code
+  ---
+  duration_ms: 18.62775
+  type: 'test'
+  location: '/mnt/data/work-v013/reupmatic/tests/structure.test.mjs:20:1'
+  failureType: 'testCodeFailure'
+  error: 'System map version differs from package.json'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    checkStructure (file:///mnt/data/work-v013/reupmatic/scripts/system-structure.mjs:96:30)
+    TestContext.<anonymous> (file:///mnt/data/work-v013/reupmatic/tests/structure.test.mjs:21:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: scaffolding is idempotent and never truncates existing markers or real code
+ok 7 - scaffolding is idempotent and never truncates existing markers or real code
+  ---
+  duration_ms: 22.801532
+  type: 'test'
+  ...
+# Subtest: unsafe paths and duplicate ownership fail before directory creation
+ok 8 - unsafe paths and duplicate ownership fail before directory creation
+  ---
+  duration_ms: 6.526431
+  type: 'test'
+  ...
+# Subtest: symlink ancestors and dangling marker links cannot redirect writes
+ok 9 - symlink ancestors and dangling marker links cannot redirect writes
+  ---
+  duration_ms: 6.764391
+  type: 'test'
+  ...
+# Subtest: routing is owned by Automation and an empty planned module cannot be relabeled as implemented
+ok 10 - routing is owned by Automation and an empty planned module cannot be relabeled as implemented
+  ---
+  duration_ms: 3.938568
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 9
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.354726

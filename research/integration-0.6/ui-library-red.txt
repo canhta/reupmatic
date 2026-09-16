@@ -1,0 +1,125 @@
+TAP version 13
+# Subtest: one UI system complements, rather than replaces, media libraries
+not ok 1 - one UI system complements, rather than replaces, media libraries
+  ---
+  duration_ms: 1.037113
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: '@astryxdesign/core'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:20:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: application uses library controls, not a parallel primitive implementation
+not ok 2 - application uses library controls, not a parallel primitive implementation
+  ---
+  duration_ms: 1.373037
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:26:1'
+  failureType: 'testCodeFailure'
+  error: 'app/ui/App.tsx'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { useEffect, useState } from 'react';
+    import { useTranslation } from 'react-i18next';
+    import { BatchPanel } from './features/batch/BatchPanel';
+    import { EditorProvider } from './features/editor/EditorContext';
+    import { EditorHeader } from './features/editor/EditorHeader';
+    import { EditorWorkspace } from './features/editor/EditorWorkspace';
+    import { FolderAutomation } from './features/folders/FolderAutomation';
+    import { LocaleSelect } from './shell/LocaleSelect';
+    
+    type Area = 'editor' | 'automation';
+    const areas = ['sources', 'editor', 'channels', 'automation', 'settings'] as const;
+    
+    export function App() {
+      const { t, i18n } = useTranslation();
+      const [area, setArea] = useState<Area>('editor');
+      const [editorDirty, setEditorDirty] = useState(false);
+      const [batchDirty, setBatchDirty] = useState(false);
+      const [folderDirty, setFolderDirty] = useState(false);
+    
+      useEffect(() => {
+        document.documentElement.lang = i18n.language;
+        localStorage.setItem('uiLocale', i18n.language);
+        void window.reupmatic.dirty(editorDirty || batchDirty || folderDirty, i18n.language);
+      }, [editorDirty, batchDirty, folderDirty, i18n.language]);
+    
+      return (
+        <EditorProvider onDirty={setEditorDirty}>
+          <div className="shell">
+            <aside className="app-sidebar">
+              <strong className="brand"><span className="brand-mark" aria-hidden="true">R</span>Reupmatic</strong>
+              <nav aria-label={i18n.language === 'vi' ? 'Khu vực ứng dụng' : 'Application areas'}>
+                {areas.map(item => {
+                  const enabled = item === 'editor' || item === 'automation';
+                  return <button type="button" key={item} className={item === area ? 'active' : ''}
+                    aria-current={item === area ? 'page' : undefined} disabled={!enabled}
+                    title={enabled ? '' : t('planned')}
+                    onClick={() => { if (enabled) setArea(item); }}>{t(item)}</button>;
+                })}
+              </nav>
+              <small className="sidebar-footnote">{t('exercise')}</small>
+            </aside>
+            <main>
+              {area === 'editor' ? <EditorHeader /> : <header>
+                <div><h1>{t('automation')}</h1><p>{t('exercise')}</p></div><LocaleSelect />
+              </header>}
+              <BatchPanel onDirty={setBatchDirty} />
+              <div hidden={area !== 'automation'}><FolderAutomation onDirty={setFolderDirty} /></div>
+              <div hidden={area !== 'editor'}><EditorWorkspace /></div>
+            </main>
+          </div>
+        </EditorProvider>
+      );
+    }
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:29:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: theme, language and layer order are explicit and shared
+not ok 3 - theme, language and layer order are explicit and shared
+  ---
+  duration_ms: 0.16001
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/ui-library.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/mnt/data/work/reupmatic/app/ui/design-system/DesignSystemProvider.tsx'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:442:20)
+    read (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:8:22)
+    TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/ui-library.test.mjs:36:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53.791701

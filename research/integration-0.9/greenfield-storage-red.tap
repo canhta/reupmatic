@@ -1,0 +1,270 @@
+TAP version 13
+# Subtest: AGENTS.md is the only root instruction file and owns engineering rules
+ok 1 - AGENTS.md is the only root instruction file and owns engineering rules
+  ---
+  duration_ms: 3.778003
+  type: 'test'
+  ...
+# Subtest: application source stays under the readable-file size limit
+ok 2 - application source stays under the readable-file size limit
+  ---
+  duration_ms: 6.05675
+  type: 'test'
+  ...
+# Subtest: core owns business logic, not UI or Electron dependencies
+ok 3 - core owns business logic, not UI or Electron dependencies
+  ---
+  duration_ms: 1.900599
+  type: 'test'
+  ...
+# Subtest: entry points remain composition-only and features have clear ownership
+ok 4 - entry points remain composition-only and features have clear ownership
+  ---
+  duration_ms: 0.520473
+  type: 'test'
+  ...
+# Subtest: abstractions own behavior instead of adding forwarding layers
+ok 5 - abstractions own behavior instead of adding forwarding layers
+  ---
+  duration_ms: 1.843313
+  type: 'test'
+  ...
+# Subtest: shared media behavior is imported from its owner, not compatibility re-exports
+not ok 6 - shared media behavior is imported from its owner, not compatibility re-exports
+  ---
+  duration_ms: 1.081036
+  type: 'test'
+  location: '/mnt/data/work-v0.9/reupmatic/tests/architecture.test.mjs:67:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /export\s*\{[^}]+\}\s*from/. Input:
+    
+    "import { constants } from 'node:fs';\n" +
+      "import fs from 'node:fs/promises';\n" +
+      "import path from 'node:path';\n" +
+      "import { randomUUID } from 'node:crypto';\n" +
+      "import { hashFile } from '../media/files.js';\n" +
+      "export { hashFile } from '../media/files.js';\n" +
+      "import { RemoteError } from '../worker/worker-client.js';\n" +
+      '\n' +
+      'export function outputFilename(name: string, jobId: string): string {\n' +
+      `  const stem = path.parse(name).name.replace(/[<>:"/\\\\|?*\\u0000-\\u001f]/g, '_').replace(/[. ]+$/g, '').slice(0, 60) || 'video';\n` +
+      '  // A stable full ID prevents new filenames on retry and different jobs colliding.\n' +
+      '  return `${stem}-${jobId}.mp4`;\n' +
+      '}\n' +
+      '\n' +
+      '/** Complete an export without overwriting any user file. The same-directory\n' +
+      ' * hardlink commit is exclusive. Filesystems without hardlinks fail explicitly;\n' +
+      ' * do not quietly fall back to a non-atomic overwrite or delete an existing file.\n' +
+      ' */\n' +
+      'export async function publishBatchOutput(source: string, directory: string, name: string, expectedHash: string, checkActive: () => void): Promise<string> {\n' +
+      "  if (path.basename(name) !== name || !/^[a-f0-9]{64}$/.test(expectedHash)) throw new RemoteError('INVALID_REQUEST');\n" +
+      "  const canonical = await fs.realpath(directory).catch(() => { throw new RemoteError('OUTPUT_DIRECTORY_MISSING'); });\n" +
+      "  if (canonical !== directory || !(await fs.stat(canonical)).isDirectory()) throw new RemoteError('OUTPUT_DIRECTORY_CHANGED');\n" +
+      '  const destination = path.join(directory, name);\n' +
+      '  const matches = async (): Promise<boolean> => {\n' +
+      '    try {\n' +
+      '      const info = await fs.lstat(destination);\n' +
+      "      if (!info.isFile() || info.isSymbolicLink() || await hashFile(destination) !== expectedHash) throw new RemoteError('OUTPUT_CONFLICT');\n" +
+      '      return true;\n' +
+      '    } catch (error) {\n' +
+      "      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;\n" +
+      '      throw error;\n' +
+      '    }\n' +
+      '  };\n' +
+      '  // Reconcile a completed copy whose SQLite acknowledgement was interrupted.\n' +
+      '  checkActive();\n' +
+      '  if (await matches()) return destination;\n' +
+      '  const temporary = path.join(directory, `.reupmatic-${randomUUID()}.partial`);\n' +
+      '  try {\n' +
+      '    checkActive();\n' +
+      '    await fs.copyFile(source, temporary, constants.COPYFILE_EXCL);\n' +
+      "    if (await hashFile(temporary) !== expectedHash) throw new RemoteError('OUTPUT_CHANGED');\n" +
+      "    const handle = await fs.open(temporary, 'r+');\n" +
+      '    try { await handle.sync(); } finally { await handle.close(); }\n' +
+      '    checkActive();\n' +
+      "    if (await fs.realpath(directory) !== directory) throw new RemoteError('OUTPUT_DIRECTORY_CHANGED');\n" +
+      '    try { await fs.link(temporary, destination); }\n' +
+      '    catch (error) {\n' +
+      "      if ((error as NodeJS.ErrnoException).code === 'EEXIST') { if (!await matches()) throw new RemoteError('OUTPUT_CONFLICT'); }\n" +
+      "      else if (['EXDEV', 'EPERM', 'ENOTSUP', 'EOPNOTSUPP'].includes((error as NodeJS.ErrnoException).code || '')) throw new RemoteError('OUTPUT_COMMIT_UNSUPPORTED');\n" +
+      '      else throw error;\n' +
+      '    }\n' +
+      '    // After committing, report the output even if Cancel arrived at this boundary.\n' +
+      '    return destination;\n' +
+      '  } finally { await fs.unlink(temporary).catch(() => undefined); }\n' +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { constants } from 'node:fs';
+    import fs from 'node:fs/promises';
+    import path from 'node:path';
+    import { randomUUID } from 'node:crypto';
+    import { hashFile } from '../media/files.js';
+    export { hashFile } from '../media/files.js';
+    import { RemoteError } from '../worker/worker-client.js';
+    
+    export function outputFilename(name: string, jobId: string): string {
+      const stem = path.parse(name).name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/[. ]+$/g, '').slice(0, 60) || 'video';
+      // A stable full ID prevents new filenames on retry and different jobs colliding.
+      return `${stem}-${jobId}.mp4`;
+    }
+    
+    /** Complete an export without overwriting any user file. The same-directory
+     * hardlink commit is exclusive. Filesystems without hardlinks fail explicitly;
+     * do not quietly fall back to a non-atomic overwrite or delete an existing file.
+     */
+    export async function publishBatchOutput(source: string, directory: string, name: string, expectedHash: string, checkActive: () => void): Promise<string> {
+      if (path.basename(name) !== name || !/^[a-f0-9]{64}$/.test(expectedHash)) throw new RemoteError('INVALID_REQUEST');
+      const canonical = await fs.realpath(directory).catch(() => { throw new RemoteError('OUTPUT_DIRECTORY_MISSING'); });
+      if (canonical !== directory || !(await fs.stat(canonical)).isDirectory()) throw new RemoteError('OUTPUT_DIRECTORY_CHANGED');
+      const destination = path.join(directory, name);
+      const matches = async (): Promise<boolean> => {
+        try {
+          const info = await fs.lstat(destination);
+          if (!info.isFile() || info.isSymbolicLink() || await hashFile(destination) !== expectedHash) throw new RemoteError('OUTPUT_CONFLICT');
+          return true;
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+          throw error;
+        }
+      };
+      // Reconcile a completed copy whose SQLite acknowledgement was interrupted.
+      checkActive();
+      if (await matches()) return destination;
+      const temporary = path.join(directory, `.reupmatic-${randomUUID()}.partial`);
+      try {
+        checkActive();
+        await fs.copyFile(source, temporary, constants.COPYFILE_EXCL);
+        if (await hashFile(temporary) !== expectedHash) throw new RemoteError('OUTPUT_CHANGED');
+        const handle = await fs.open(temporary, 'r+');
+        try { await handle.sync(); } finally { await handle.close(); }
+        checkActive();
+        if (await fs.realpath(directory) !== directory) throw new RemoteError('OUTPUT_DIRECTORY_CHANGED');
+        try { await fs.link(temporary, destination); }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'EEXIST') { if (!await matches()) throw new RemoteError('OUTPUT_CONFLICT'); }
+          else if (['EXDEV', 'EPERM', 'ENOTSUP', 'EOPNOTSUPP'].includes((error as NodeJS.ErrnoException).code || '')) throw new RemoteError('OUTPUT_COMMIT_UNSUPPORTED');
+          else throw error;
+        }
+        // After committing, report the output even if Cancel arrived at this boundary.
+        return destination;
+      } finally { await fs.unlink(temporary).catch(() => undefined); }
+    }
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v0.9/reupmatic/tests/architecture.test.mjs:69:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# (node:6407) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: BatchStore: initialize a fresh store and reopen only its current schema
+ok 7 - BatchStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 9.794964
+  type: 'test'
+  ...
+# Subtest: BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+not ok 8 - BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 3.127153
+  type: 'test'
+  location: '/mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:33:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:40:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CatalogDatabase: initialize a fresh store and reopen only its current schema
+ok 9 - CatalogDatabase: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 3.3569
+  type: 'test'
+  ...
+# Subtest: CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+not ok 10 - CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 3.475047
+  type: 'test'
+  location: '/mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:33:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:40:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: FolderStore: initialize a fresh store and reopen only its current schema
+ok 11 - FolderStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.409364
+  type: 'test'
+  ...
+# Subtest: FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+not ok 12 - FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 3.215366
+  type: 'test'
+  location: '/mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:33:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:40:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: LibraryStore: initialize a fresh store and reopen only its current schema
+ok 13 - LibraryStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.740362
+  type: 'test'
+  ...
+# Subtest: LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+not ok 14 - LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 2.895986
+  type: 'test'
+  location: '/mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:33:3'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v0.9/reupmatic/tests/current-schema.test.mjs:40:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 9
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 100.59647

@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: real TypeScript -> Python -> FFmpeg bridge and one failed batch item
+ok 1 - real TypeScript -> Python -> FFmpeg bridge and one failed batch item
+  ---
+  duration_ms: 1242.079227
+  type: 'test'
+  ...
+# Subtest: invalid timing rejected
+ok 2 - invalid timing rejected
+  ---
+  duration_ms: 0.998278
+  type: 'test'
+  ...
+# Subtest: duplicate cue IDs rejected
+ok 3 - duplicate cue IDs rejected
+  ---
+  duration_ms: 0.786569
+  type: 'test'
+  ...
+# Subtest: split preserves Unicode text and partitions timing
+ok 4 - split preserves Unicode text and partitions timing
+  ---
+  duration_ms: 0.258781
+  type: 'test'
+  ...
+# Subtest: split does not cut surrogate pair
+ok 5 - split does not cut surrogate pair
+  ---
+  duration_ms: 0.162616
+  type: 'test'
+  ...
+# Subtest: merge preserves both cue contents
+ok 6 - merge preserves both cue contents
+  ---
+  duration_ms: 0.223177
+  type: 'test'
+  ...
+# Subtest: replace scope leaves unselected content intact
+ok 7 - replace scope leaves unselected content intact
+  ---
+  duration_ms: 0.162636
+  type: 'test'
+  ...
+# Subtest: history snapshots are independent
+ok 8 - history snapshots are independent
+  ---
+  duration_ms: 0.242957
+  type: 'test'
+  ...
+# Subtest: stale revision and superseded request rejected
+ok 9 - stale revision and superseded request rejected
+  ---
+  duration_ms: 0.101172
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1301.286437

@@ -1,0 +1,8 @@
+$ npm run check
+
+> reupmatic@0.15.0 check
+> biome ci .
+
+sh: 1: biome: not found
+
+EXIT_CODE=127

@@ -1,0 +1,2 @@
+{ compiler: '5.8.3', files: 207, parseDiagnostics: 0 }
+Parse-only; not dependency-resolved type checking, Astryx API, Electron or UI acceptance.

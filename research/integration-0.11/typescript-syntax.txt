@@ -1,0 +1,6 @@
+{
+  "typescript": "5.8.3",
+  "checked": 163,
+  "errors": [],
+  "kind": "transpilation/syntax only; no installed dependency or UI type claims"
+}

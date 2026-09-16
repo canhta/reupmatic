@@ -1,0 +1,448 @@
+TAP version 13
+# (node:1054) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: actual SQLite batch -> shared Python/FFmpeg -> folder; restart retains outputs and revalidates inputs
+ok 1 - actual SQLite batch -> shared Python/FFmpeg -> folder; restart retains outputs and revalidates inputs
+  ---
+  duration_ms: 2876.030733
+  type: 'test'
+  ...
+# (node:1055) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+ok 2 - SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+  ---
+  duration_ms: 25.557932
+  type: 'test'
+  ...
+# Subtest: claim increments attempt; explicit retry retains job identity and input
+ok 3 - claim increments attempt; explicit retry retains job identity and input
+  ---
+  duration_ms: 8.588143
+  type: 'test'
+  ...
+# Subtest: restart retains queued/done rows and recovers running versus acknowledged cancellation
+ok 4 - restart retains queued/done rows and recovers running versus acknowledged cancellation
+  ---
+  duration_ms: 4.678571
+  type: 'test'
+  ...
+# Subtest: invalid batch does not partly enqueue and relative paths are rejected
+ok 5 - invalid batch does not partly enqueue and relative paths are rejected
+  ---
+  duration_ms: 13.812492
+  type: 'test'
+  ...
+# Subtest: queue starts paused, isolates a bad item, then exports good item through same renderer
+ok 6 - queue starts paused, isolates a bad item, then exports good item through same renderer
+  ---
+  duration_ms: 63.76286
+  type: 'test'
+  ...
+# Subtest: pause allows current output, keeps next queued; closing the UI is not cancellation
+ok 7 - pause allows current output, keeps next queued; closing the UI is not cancellation
+  ---
+  duration_ms: 31.049024
+  type: 'test'
+  ...
+# Subtest: cancel running and queued entries; retry never creates a second job
+ok 8 - cancel running and queued entries; retry never creates a second job
+  ---
+  duration_ms: 19.697944
+  type: 'test'
+  ...
+# Subtest: a changed source cannot reach render; runtime failure pauses the waiting group
+ok 9 - a changed source cannot reach render; runtime failure pauses the waiting group
+  ---
+  duration_ms: 15.242236
+  type: 'test'
+  ...
+# Subtest: existing preview has dispatch priority before the next batch item
+ok 10 - existing preview has dispatch priority before the next batch item
+  ---
+  duration_ms: 17.777054
+  type: 'test'
+  ...
+# Subtest: output commit is exclusive, retries reconcile identical files and preserve conflicts
+ok 11 - output commit is exclusive, retries reconcile identical files and preserve conflicts
+  ---
+  duration_ms: 5.882967
+  type: 'test'
+  ...
+# Subtest: cancel before output commit produces no final export, does not delete the source
+ok 12 - cancel before output commit produces no final export, does not delete the source
+  ---
+  duration_ms: 6.642857
+  type: 'test'
+  ...
+# Subtest: queue shutdown retains interrupted state and does not start the next item
+ok 13 - queue shutdown retains interrupted state and does not start the next item
+  ---
+  duration_ms: 13.916625
+  type: 'test'
+  ...
+# Subtest: real TypeScript -> Python -> FFmpeg bridge and one failed batch item
+ok 14 - real TypeScript -> Python -> FFmpeg bridge and one failed batch item
+  ---
+  duration_ms: 2704.101904
+  type: 'test'
+  ...
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'chokidar' imported from /mnt/data/reupmatic-v0.5/tests/chokidar.test.mjs
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/chokidar.test.mjs
+not ok 4 - tests/chokidar.test.mjs
+  ---
+  duration_ms: 61.712382
+  type: 'test'
+  location: '/mnt/data/reupmatic-v0.5/tests/chokidar.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: real shared coordinator: no-subtitle render, imported SRT, cache and failed-item isolation
+ok 16 - real shared coordinator: no-subtitle render, imported SRT, cache and failed-item isolation
+  ---
+  duration_ms: 3674.998068
+  type: 'test'
+  ...
+# Subtest: invalid timing rejected
+ok 17 - invalid timing rejected
+  ---
+  duration_ms: 0.819437
+  type: 'test'
+  ...
+# Subtest: duplicate cue IDs rejected
+ok 18 - duplicate cue IDs rejected
+  ---
+  duration_ms: 1.223878
+  type: 'test'
+  ...
+# Subtest: split preserves Unicode text and partitions timing
+ok 19 - split preserves Unicode text and partitions timing
+  ---
+  duration_ms: 0.288344
+  type: 'test'
+  ...
+# Subtest: split does not cut surrogate pair
+ok 20 - split does not cut surrogate pair
+  ---
+  duration_ms: 0.189575
+  type: 'test'
+  ...
+# Subtest: merge preserves both cue contents
+ok 21 - merge preserves both cue contents
+  ---
+  duration_ms: 0.222129
+  type: 'test'
+  ...
+# Subtest: replace scope leaves unselected content intact
+ok 22 - replace scope leaves unselected content intact
+  ---
+  duration_ms: 0.404189
+  type: 'test'
+  ...
+# Subtest: history snapshots are independent
+ok 23 - history snapshots are independent
+  ---
+  duration_ms: 0.266849
+  type: 'test'
+  ...
+# Subtest: stale revision and superseded request rejected
+ok 24 - stale revision and superseded request rejected
+  ---
+  duration_ms: 0.098513
+  type: 'test'
+  ...
+# Subtest: local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+ok 25 - local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+  ---
+  duration_ms: 1.6789
+  type: 'test'
+  ...
+# Subtest: UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+ok 26 - UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+  ---
+  duration_ms: 0.460065
+  type: 'test'
+  ...
+# Subtest: selected solid text/surface pairs meet the project 4.5:1 token target (not a full a11y audit)
+ok 27 - selected solid text/surface pairs meet the project 4.5:1 token target (not a full a11y audit)
+  ---
+  duration_ms: 0.879981
+  type: 'test'
+  ...
+# (node:1251) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: actual folder reconciliation -> SQLite queue -> Python/FFmpeg -> output, with failed-file isolation
+ok 28 - actual folder reconciliation -> SQLite queue -> Python/FFmpeg -> output, with failed-file isolation
+  ---
+  duration_ms: 1303.130132
+  type: 'test'
+  ...
+# (node:1281) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: folder config saves paused; access gate is checked at create and start
+ok 29 - folder config saves paused; access gate is checked at create and start
+  ---
+  duration_ms: 157.346268
+  type: 'test'
+  ...
+# Subtest: stable file is admitted once; intake does not unpause the shared queue
+ok 30 - stable file is admitted once; intake does not unpause the shared queue
+  ---
+  duration_ms: 99.224136
+  type: 'test'
+  ...
+# Subtest: file changed while being observed resets the readiness window
+ok 31 - file changed while being observed resets the readiness window
+  ---
+  duration_ms: 46.586242
+  type: 'test'
+  ...
+# Subtest: new-only baselines existing path versions, receives later files and changed versions
+ok 32 - new-only baselines existing path versions, receives later files and changed versions
+  ---
+  duration_ms: 61.619884
+  type: 'test'
+  ...
+# Subtest: content receipts prevent re-admission of a renamed or copied admitted video
+ok 33 - content receipts prevent re-admission of a renamed or copied admitted video
+  ---
+  duration_ms: 35.493055
+  type: 'test'
+  ...
+# Subtest: receipt failure after queue commit retries the same admission ID
+ok 34 - receipt failure after queue commit retries the same admission ID
+  ---
+  duration_ms: 30.613499
+  type: 'test'
+  ...
+# Subtest: pause stops new intake without cancelling accepted jobs
+ok 35 - pause stops new intake without cancelling accepted jobs
+  ---
+  duration_ms: 16.071067
+  type: 'test'
+  ...
+# Subtest: restart preserves baseline/receipts, stays paused, then admits files missed while off
+ok 36 - restart preserves baseline/receipts, stays paused, then admits files missed while off
+  ---
+  duration_ms: 18.800782
+  type: 'test'
+  ...
+# Subtest: scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+ok 37 - scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+  ---
+  duration_ms: 16.194538
+  type: 'test'
+  ...
+# Subtest: reject equal roots, source inside output and linked automation loops
+ok 38 - reject equal roots, source inside output and linked automation loops
+  ---
+  duration_ms: 40.721295
+  type: 'test'
+  ...
+# Subtest: pause during async watcher attachment closes the late handle and admits nothing
+ok 39 - pause during async watcher attachment closes the late handle and admits nothing
+  ---
+  duration_ms: 15.146767
+  type: 'test'
+  ...
+# Subtest: shutdown waits for a pending attachment before closing storage
+ok 40 - shutdown waits for a pending attachment before closing storage
+  ---
+  duration_ms: 21.169928
+  type: 'test'
+  ...
+# Subtest: missing source reports needs-attention, keeps queued data, can recover after restore
+ok 41 - missing source reports needs-attention, keeps queued data, can recover after restore
+  ---
+  duration_ms: 26.541522
+  type: 'test'
+  ...
+# Subtest: standard ranges: bounded, open-ended, suffix and huge values
+ok 42 - standard ranges: bounded, open-ended, suffix and huge values
+  ---
+  duration_ms: 12.868348
+  type: 'test'
+  ...
+# Subtest: unsatisfiable, invalid and unsupported ranges are distinct
+ok 43 - unsatisfiable, invalid and unsupported ranges are distinct
+  ---
+  duration_ms: 0.258501
+  type: 'test'
+  ...
+# Subtest: registered file response serves actual ranges, HEAD, misses and cancel safely
+ok 44 - registered file response serves actual ranges, HEAD, misses and cancel safely
+  ---
+  duration_ms: 54.102734
+  type: 'test'
+  ...
+# Subtest: project round-trip retains Unicode cues and sample interval without media copies
+ok 45 - project round-trip retains Unicode cues and sample interval without media copies
+  ---
+  duration_ms: 23.508748
+  type: 'test'
+  ...
+# Subtest: project snapshots are independent from subsequent editor changes
+ok 46 - project snapshots are independent from subsequent editor changes
+  ---
+  duration_ms: 0.392737
+  type: 'test'
+  ...
+# Subtest: unknown version, external instructions, URL sources and malformed cue data are rejected
+ok 47 - unknown version, external instructions, URL sources and malformed cue data are rejected
+  ---
+  duration_ms: 0.986891
+  type: 'test'
+  ...
+# Subtest: malformed, oversized and invalid UTF-8 input never becomes a partial project
+ok 48 - malformed, oversized and invalid UTF-8 input never becomes a partial project
+  ---
+  duration_ms: 28.714346
+  type: 'test'
+  ...
+# Subtest: saving invalid edits preserves the existing valid project
+ok 49 - saving invalid edits preserves the existing valid project
+  ---
+  duration_ms: 19.212532
+  type: 'test'
+  ...
+# Subtest: source overwrite checks include same path and hardlink aliases
+ok 50 - source overwrite checks include same path and hardlink aliases
+  ---
+  duration_ms: 7.185779
+  type: 'test'
+  ...
+# Subtest: runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+ok 51 - runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+  ---
+  duration_ms: 0.377627
+  type: 'test'
+  ...
+# Subtest: empty cues bypass subtitle dependency and finish through the common renderer
+ok 52 - empty cues bypass subtitle dependency and finish through the common renderer
+  ---
+  duration_ms: 1.513846
+  type: 'test'
+  ...
+# Subtest: cancel while preparing subtitle prevents dispatch even if preparation wins the race
+ok 53 - cancel while preparing subtitle prevents dispatch even if preparation wins the race
+  ---
+  duration_ms: 0.704962
+  type: 'test'
+  ...
+# Subtest: progress is public-ID correlated during preparation and rendering
+ok 54 - progress is public-ID correlated during preparation and rendering
+  ---
+  duration_ms: 5.401241
+  type: 'test'
+  ...
+# Subtest: one failed preparation leaves independent render usable
+ok 55 - one failed preparation leaves independent render usable
+  ---
+  duration_ms: 0.403105
+  type: 'test'
+  ...
+# Subtest: cancel during render ignores a late artifact and reports cancellation once
+ok 56 - cancel during render ignores a late artifact and reports cancellation once
+  ---
+  duration_ms: 0.344658
+  type: 'test'
+  ...
+# Subtest: validation and duplicate public IDs cannot launch native work
+ok 57 - validation and duplicate public IDs cannot launch native work
+  ---
+  duration_ms: 0.403694
+  type: 'test'
+  ...
+# Subtest: closing coordinator cancels preparation and rejects new dispatch
+ok 58 - closing coordinator cancels preparation and rejects new dispatch
+  ---
+  duration_ms: 0.675566
+  type: 'test'
+  ...
+# Subtest: a cached result may finish before IPC acknowledgement without returning to queued
+ok 59 - a cached result may finish before IPC acknowledgement without returning to queued
+  ---
+  duration_ms: 0.988749
+  type: 'test'
+  ...
+# Subtest: a late result is not accepted after subtitle edits
+ok 60 - a late result is not accepted after subtitle edits
+  ---
+  duration_ms: 0.187412
+  type: 'test'
+  ...
+# Subtest: a superseded request cannot clear the active render
+ok 61 - a superseded request cannot clear the active render
+  ---
+  duration_ms: 0.161441
+  type: 'test'
+  ...
+# Subtest: duplicate terminal events and acknowledgements do not restart a render
+ok 62 - duplicate terminal events and acknowledgements do not restart a render
+  ---
+  duration_ms: 1.587008
+  type: 'test'
+  ...
+# Subtest: source ZIP and CI do not install Git hooks
+ok 63 - source ZIP and CI do not install Git hooks
+  ---
+  duration_ms: 1.626787
+  type: 'test'
+  ...
+# Subtest: hook setup recognizes only its own Git root, not a parent
+ok 64 - hook setup recognizes only its own Git root, not a parent
+  ---
+  duration_ms: 14.202774
+  type: 'test'
+  ...
+# Subtest: Python commands prefer explicit executable, then project virtualenv
+ok 65 - Python commands prefer explicit executable, then project virtualenv
+  ---
+  duration_ms: 0.642744
+  type: 'test'
+  ...
+# Subtest: Reupmatic uses one formatter and hook manager with separate typechecking
+ok 66 - Reupmatic uses one formatter and hook manager with separate typechecking
+  ---
+  duration_ms: 1.838507
+  type: 'test'
+  ...
+# Subtest: pre-commit checks do not mutate staging or start media jobs
+ok 67 - pre-commit checks do not mutate staging or start media jobs
+  ---
+  duration_ms: 0.409896
+  type: 'test'
+  ...
+# Subtest: format configurations parse and retain recommended checks
+ok 68 - format configurations parse and retain recommended checks
+  ---
+  duration_ms: 0.173179
+  type: 'test'
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 67
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4579.896639

@@ -1,0 +1,569 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:translation:1",
+  "title": "Local reviewed translation boundaries",
+  "$comment": "Runtime additionally enforces distinct languages, unique ordered cue IDs, end > start, nonblank text, UTF-16 string bounds, 100000 source UTF-8 bytes, 511000 parameter JSON bytes, 512000 public-envelope bytes and 1000000 result bytes. Response identities/order/times/rules must match the captured input. Rules are ordered literal case-sensitive target replacements; no fallback. All defs are self-contained.",
+  "$defs": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "source_layer": {
+              "enum": [
+                "transcript",
+                "displayed"
+              ]
+            },
+            "source_token": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+            },
+            "source_language": {
+              "enum": [
+                "en",
+                "vi",
+                "zh"
+              ]
+            },
+            "target_language": {
+              "enum": [
+                "en",
+                "vi",
+                "zh"
+              ]
+            },
+            "model_id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "cues": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 500,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[^\\u0000]+$"
+                  },
+                  "start_ms": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 86400000
+                  },
+                  "end_ms": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 86400000
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000,
+                    "pattern": "^[^\\u0000]+$"
+                  }
+                },
+                "required": [
+                  "id",
+                  "start_ms",
+                  "end_ms",
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "rules": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "find": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000]+$"
+                  },
+                  "replace": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "pattern": "^[^\\u0000]*$"
+                  }
+                },
+                "required": [
+                  "find",
+                  "replace"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "source_layer",
+            "source_token",
+            "source_language",
+            "target_language",
+            "model_id",
+            "cues",
+            "rules"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request_id",
+        "revision",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    "worker_params": {
+      "type": "object",
+      "properties": {
+        "source_layer": {
+          "enum": [
+            "transcript",
+            "displayed"
+          ]
+        },
+        "source_token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "source_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "target_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cues": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[^\\u0000]+$"
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000,
+                "pattern": "^[^\\u0000]+$"
+              }
+            },
+            "required": [
+              "id",
+              "start_ms",
+              "end_ms",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rules": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "properties": {
+              "find": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]+$"
+              },
+              "replace": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]*$"
+              }
+            },
+            "required": [
+              "find",
+              "replace"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "source_layer",
+        "source_token",
+        "source_language",
+        "target_language",
+        "model_id",
+        "cues",
+        "rules"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "source_layer": {
+          "enum": [
+            "transcript",
+            "displayed"
+          ]
+        },
+        "source_token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "source_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "target_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "cues": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[^\\u0000]+$"
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "^[^\\u0000]+$"
+              }
+            },
+            "required": [
+              "id",
+              "start_ms",
+              "end_ms",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rules": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "properties": {
+              "find": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]+$"
+              },
+              "replace": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]*$"
+              }
+            },
+            "required": [
+              "find",
+              "replace"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "kind": {
+          "const": "translation"
+        },
+        "runtime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000]+$"
+        }
+      },
+      "required": [
+        "source_layer",
+        "source_token",
+        "source_language",
+        "target_language",
+        "model_id",
+        "cues",
+        "rules",
+        "kind",
+        "runtime"
+      ],
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "code": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Z_]{1,80}$"
+            }
+          ]
+        },
+        "model_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "source_language": {
+          "enum": [
+            null,
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "target_language": {
+          "enum": [
+            null,
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "verified": {
+          "const": false
+        }
+      },
+      "required": [
+        "available",
+        "code",
+        "model_id",
+        "source_language",
+        "target_language",
+        "verified"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "code": {
+                "const": null
+              },
+              "model_id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "source_language": {
+                "enum": [
+                  "en",
+                  "vi",
+                  "zh"
+                ]
+              },
+              "target_language": {
+                "enum": [
+                  "en",
+                  "vi",
+                  "zh"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "translation"
+        },
+        "layer": {
+          "enum": [
+            "transcript",
+            "displayed"
+          ]
+        },
+        "token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "source_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "target_language": {
+          "enum": [
+            "en",
+            "vi",
+            "zh"
+          ]
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runtime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "rules": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "properties": {
+              "find": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]+$"
+              },
+              "replace": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[^\\u0000]*$"
+              }
+            },
+            "required": [
+              "find",
+              "replace"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "policy": {
+          "enum": [
+            "keep-existing",
+            "replace-all"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "layer",
+        "token",
+        "request_id",
+        "source_language",
+        "target_language",
+        "model_id",
+        "runtime",
+        "rules",
+        "policy"
+      ],
+      "additionalProperties": false
+    },
+    "rules": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "find": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "replace": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[^\\u0000]*$"
+          }
+        },
+        "required": [
+          "find",
+          "replace"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

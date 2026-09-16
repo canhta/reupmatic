@@ -1,0 +1,6 @@
+test_cache_and_revision_echo (test_worker.NativeWorkerTests.test_cache_and_revision_echo) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.342s
+
+OK

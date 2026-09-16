@@ -1,0 +1,90 @@
+TAP version 13
+# (node:3137) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: version 2 project round-trips processing without changing legacy project format
+ok 1 - version 2 project round-trips processing without changing legacy project format
+  ---
+  duration_ms: 8.093966
+  type: 'test'
+  ...
+# Subtest: batch recipe and model pins survive restart, interruption and explicit retry
+ok 2 - batch recipe and model pins survive restart, interruption and explicit retry
+  ---
+  duration_ms: 6.771952
+  type: 'test'
+  ...
+# Subtest: batch rejects unpinned processing and subtitle conflicts atomically
+ok 3 - batch rejects unpinned processing and subtitle conflicts atomically
+  ---
+  duration_ms: 2.19226
+  type: 'test'
+  ...
+# Subtest: folder rule persists its immutable recipe and refuses a model-free recipe
+ok 4 - folder rule persists its immutable recipe and refuses a model-free recipe
+  ---
+  duration_ms: 2.771359
+  type: 'test'
+  ...
+# Subtest: empty cues bypass subtitle dependency and finish through the common renderer
+ok 5 - empty cues bypass subtitle dependency and finish through the common renderer
+  ---
+  duration_ms: 1.47932
+  type: 'test'
+  ...
+# Subtest: cancel while preparing subtitle prevents dispatch even if preparation wins the race
+ok 6 - cancel while preparing subtitle prevents dispatch even if preparation wins the race
+  ---
+  duration_ms: 0.622064
+  type: 'test'
+  ...
+# Subtest: progress is public-ID correlated during preparation and rendering
+ok 7 - progress is public-ID correlated during preparation and rendering
+  ---
+  duration_ms: 3.86479
+  type: 'test'
+  ...
+# Subtest: one failed preparation leaves independent render usable
+ok 8 - one failed preparation leaves independent render usable
+  ---
+  duration_ms: 0.367171
+  type: 'test'
+  ...
+# Subtest: cancel during render ignores a late artifact and reports cancellation once
+ok 9 - cancel during render ignores a late artifact and reports cancellation once
+  ---
+  duration_ms: 0.29293
+  type: 'test'
+  ...
+# Subtest: validation and duplicate public IDs cannot launch native work
+ok 10 - validation and duplicate public IDs cannot launch native work
+  ---
+  duration_ms: 0.504788
+  type: 'test'
+  ...
+# Subtest: closing coordinator cancels preparation and rejects new dispatch
+ok 11 - closing coordinator cancels preparation and rejects new dispatch
+  ---
+  duration_ms: 0.265338
+  type: 'test'
+  ...
+# Subtest: processing snapshots recipe and pins while retaining the public render lifecycle
+ok 12 - processing snapshots recipe and pins while retaining the public render lifecycle
+  ---
+  duration_ms: 0.652849
+  type: 'test'
+  ...
+# Subtest: OCR conflicts and unsupported processing encoding fail before any worker request
+ok 13 - OCR conflicts and unsupported processing encoding fail before any worker request
+  ---
+  duration_ms: 0.551398
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 74.047983

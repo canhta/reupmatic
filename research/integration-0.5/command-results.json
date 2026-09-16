@@ -1,0 +1,26 @@
+[
+  {
+    "command": "tsc -p tsconfig.core.json --typeRoots /opt/nvm/versions/node/v22.16.0/lib/node_modules/ts-node/node_modules/@types",
+    "exit_code": 0,
+    "log": "core-compile.txt",
+    "qualification": "preinstalled compiler only"
+  },
+  {
+    "command": "node --test tests/*.test.mjs",
+    "exit_code": 1,
+    "log": "node-tests-initial.txt",
+    "qualification": "67 checks passed; the separate Chokidar file could not load its absent package"
+  },
+  {
+    "command": "node --test $(find tests -maxdepth 1 -name '*.test.mjs' ! -name 'chokidar.test.mjs' | sort)",
+    "exit_code": 0,
+    "log": "node-tests.txt",
+    "qualification": "67 executable checks; not an installed-watcher pass"
+  },
+  {
+    "command": "python -m unittest discover -s tests -p 'test_*.py' -v",
+    "exit_code": 0,
+    "log": "python-tests.txt",
+    "qualification": "22 passed, 1 skipped for absent pysubs2"
+  }
+]

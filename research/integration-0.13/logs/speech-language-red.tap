@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: speech requests are bounded, explicit-language, local-model and reject extra fields
+not ok 1 - speech requests are bounded, explicit-language, local-model and reject extra fields
+  ---
+  duration_ms: 1.891894
+  type: 'test'
+  location: '/mnt/data/work-v013/reupmatic/tests/speech.test.mjs:22:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v013/reupmatic/tests/speech.test.mjs:26:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: results correlate source, language, model, time range and bounded plain cues
+ok 2 - results correlate source, language, model, time range and bounded plain cues
+  ---
+  duration_ms: 1.042843
+  type: 'test'
+  ...
+# Subtest: speech admission uses existing worker queue and maps early terminal results to public IDs
+ok 3 - speech admission uses existing worker queue and maps early terminal results to public IDs
+  ---
+  duration_ms: 0.705875
+  type: 'test'
+  ...
+# Subtest: cancelled inference never publishes a late successful result
+ok 4 - cancelled inference never publishes a late successful result
+  ---
+  duration_ms: 0.355436
+  type: 'test'
+  ...
+# Subtest: model status is validated without claiming a verified runtime
+ok 5 - model status is validated without claiming a verified runtime
+  ---
+  duration_ms: 0.407594
+  type: 'test'
+  ...
+# Subtest: renderer-safe speech and text commands never import the Node worker process adapter
+ok 6 - renderer-safe speech and text commands never import the Node worker process adapter
+  ---
+  duration_ms: 14.57905
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 73.163378

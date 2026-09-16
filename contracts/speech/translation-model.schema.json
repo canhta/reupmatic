@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:translation-model:1",
+  "title": "Local bilingual CPU/int8 CTranslate2 SentencePiece bundle",
+  "$comment": "Runtime requires distinct declared languages, regular local files without symlinks, exactly one vocabulary layout, no unhashed runtime files and matching SHA-256 hashes. Model.bin at most 4 GiB; other files at most 16 MiB. Model architecture/tokenizers must support the adapter documented in local-translation.md.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "engine": {
+      "const": "ctranslate2-sentencepiece"
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*://)(?!//)(?!\\\\\\\\)[^\\u0000]+$"
+    },
+    "source_language": {
+      "enum": [
+        "en",
+        "vi",
+        "zh"
+      ]
+    },
+    "target_language": {
+      "enum": [
+        "en",
+        "vi",
+        "zh"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "model.bin": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "config.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source.spm": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "target.spm": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "shared_vocabulary.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_vocabulary.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "target_vocabulary.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "vmap.txt": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "model.bin",
+        "config.json",
+        "source.spm",
+        "target.spm"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "shared_vocabulary.json"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "source_vocabulary.json"
+                ]
+              },
+              {
+                "required": [
+                  "target_vocabulary.json"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "source_vocabulary.json",
+            "target_vocabulary.json"
+          ],
+          "not": {
+            "required": [
+              "shared_vocabulary.json"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "version",
+    "engine",
+    "directory",
+    "source_language",
+    "target_language",
+    "files"
+  ],
+  "additionalProperties": false
+}

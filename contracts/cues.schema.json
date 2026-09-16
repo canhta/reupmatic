@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:video-workbench:cues:1",
+  "title": "Edited subtitle cues — integration boundary v1",
+  "type": "array",
+  "maxItems": 10000,
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "start_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 86400000
+      },
+      "end_ms": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 86400000
+      },
+      "text": {
+        "type": "string",
+        "maxLength": 10000
+      },
+      "style": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "font_family",
+          "font_size_pct",
+          "outline_pct",
+          "shadow_pct",
+          "box_opacity",
+          "margin_x_pct",
+          "margin_y_pct",
+          "spacing_pct",
+          "text_color",
+          "outline_color",
+          "box_color",
+          "position",
+          "bold",
+          "italic"
+        ],
+        "properties": {
+          "font_family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[^,\\r\\n{}\\\\\\u0000]+$"
+          },
+          "font_size_pct": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 15
+          },
+          "outline_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "shadow_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "box_opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "margin_x_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 40
+          },
+          "margin_y_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 40
+          },
+          "spacing_pct": {
+            "type": "number",
+            "minimum": -0.2,
+            "maximum": 2
+          },
+          "text_color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "outline_color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "box_color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "bold": {
+            "type": "boolean"
+          },
+          "italic": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "required": [
+      "id",
+      "start_ms",
+      "end_ms",
+      "text"
+    ],
+    "additionalProperties": false
+  },
+  "$comment": "Unique IDs, end > start, NUL rejection and source-duration checks are semantic validation, not fully expressible here. Integer milliseconds. Display text only; not spoken-text authorization."
+}

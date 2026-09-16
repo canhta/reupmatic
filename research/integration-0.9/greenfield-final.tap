@@ -1,0 +1,164 @@
+TAP version 13
+# Subtest: AGENTS.md is the only root instruction file and owns engineering rules
+ok 1 - AGENTS.md is the only root instruction file and owns engineering rules
+  ---
+  duration_ms: 5.826674
+  type: 'test'
+  ...
+# Subtest: application source stays under the readable-file size limit
+ok 2 - application source stays under the readable-file size limit
+  ---
+  duration_ms: 7.950259
+  type: 'test'
+  ...
+# Subtest: core owns business logic, not UI or Electron dependencies
+ok 3 - core owns business logic, not UI or Electron dependencies
+  ---
+  duration_ms: 2.488684
+  type: 'test'
+  ...
+# Subtest: entry points remain composition-only and features have clear ownership
+ok 4 - entry points remain composition-only and features have clear ownership
+  ---
+  duration_ms: 0.639973
+  type: 'test'
+  ...
+# Subtest: abstractions own behavior instead of adding forwarding layers
+ok 5 - abstractions own behavior instead of adding forwarding layers
+  ---
+  duration_ms: 2.642796
+  type: 'test'
+  ...
+# Subtest: shared media behavior is imported from its owner, not compatibility re-exports
+ok 6 - shared media behavior is imported from its owner, not compatibility re-exports
+  ---
+  duration_ms: 0.201693
+  type: 'test'
+  ...
+# (node:6473) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: BatchStore: initialize a fresh store and reopen only its current schema
+ok 7 - BatchStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 7.756988
+  type: 'test'
+  ...
+# Subtest: BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 8 - BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 14.330967
+  type: 'test'
+  ...
+# Subtest: CatalogDatabase: initialize a fresh store and reopen only its current schema
+ok 9 - CatalogDatabase: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 3.31106
+  type: 'test'
+  ...
+# Subtest: CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 10 - CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 10.625353
+  type: 'test'
+  ...
+# Subtest: FolderStore: initialize a fresh store and reopen only its current schema
+ok 11 - FolderStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.154201
+  type: 'test'
+  ...
+# Subtest: FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 12 - FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 8.389629
+  type: 'test'
+  ...
+# Subtest: LibraryStore: initialize a fresh store and reopen only its current schema
+ok 13 - LibraryStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.819581
+  type: 'test'
+  ...
+# Subtest: LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 14 - LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 8.360376
+  type: 'test'
+  ...
+# (node:6474) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: one current project schema round-trips both plain and processing snapshots
+ok 15 - one current project schema round-trips both plain and processing snapshots
+  ---
+  duration_ms: 19.634149
+  type: 'test'
+  ...
+# Subtest: batch recipe and model pins survive restart, interruption and explicit retry
+ok 16 - batch recipe and model pins survive restart, interruption and explicit retry
+  ---
+  duration_ms: 5.230117
+  type: 'test'
+  ...
+# Subtest: batch rejects unpinned processing and subtitle conflicts atomically
+ok 17 - batch rejects unpinned processing and subtitle conflicts atomically
+  ---
+  duration_ms: 3.588518
+  type: 'test'
+  ...
+# Subtest: folder rule persists its immutable recipe and refuses a model-free recipe
+ok 18 - folder rule persists its immutable recipe and refuses a model-free recipe
+  ---
+  duration_ms: 4.664095
+  type: 'test'
+  ...
+# Subtest: project round-trip retains Unicode cues and sample interval without media copies
+ok 19 - project round-trip retains Unicode cues and sample interval without media copies
+  ---
+  duration_ms: 9.981585
+  type: 'test'
+  ...
+# Subtest: project snapshots are independent from subsequent editor changes
+ok 20 - project snapshots are independent from subsequent editor changes
+  ---
+  duration_ms: 0.266
+  type: 'test'
+  ...
+# Subtest: unknown version, external instructions, URL sources and malformed cue data are rejected
+ok 21 - unknown version, external instructions, URL sources and malformed cue data are rejected
+  ---
+  duration_ms: 0.543988
+  type: 'test'
+  ...
+# Subtest: malformed, oversized and invalid UTF-8 input never becomes a partial project
+ok 22 - malformed, oversized and invalid UTF-8 input never becomes a partial project
+  ---
+  duration_ms: 5.704651
+  type: 'test'
+  ...
+# Subtest: saving invalid edits preserves the existing valid project
+ok 23 - saving invalid edits preserves the existing valid project
+  ---
+  duration_ms: 4.670005
+  type: 'test'
+  ...
+# Subtest: source overwrite checks include same path and hardlink aliases
+ok 24 - source overwrite checks include same path and hardlink aliases
+  ---
+  duration_ms: 3.564522
+  type: 'test'
+  ...
+# Subtest: runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+ok 25 - runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+  ---
+  duration_ms: 0.23215
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 153.306603

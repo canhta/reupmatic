@@ -1,0 +1,11 @@
+
+> reupmatic@0.13.0 test:core
+> npm run build:core && node --test tests/core.test.mjs tests/render-tracker.test.mjs tests/media-response.test.mjs tests/render-coordinator.test.mjs tests/project.test.mjs tests/batch.test.mjs tests/folder.test.mjs tests/design-skill.test.mjs tests/vision.test.mjs tests/library.test.mjs tests/settings.test.mjs tests/export-file.test.mjs tests/processing.test.mjs tests/processing-persistence.test.mjs tests/render-artifact.test.mjs tests/catalog.test.mjs tests/distribution.test.mjs tests/profiles.test.mjs tests/workflows.test.mjs tests/post-schedule.test.mjs tests/current-schema.test.mjs tests/editing.test.mjs tests/recovery.test.mjs tests/text-rules.test.mjs tests/editor-history.test.mjs tests/ocr-extraction.test.mjs tests/library-assets.test.mjs tests/subtitle-style.test.mjs tests/soundtrack.test.mjs tests/composition.test.mjs tests/text-layers.test.mjs tests/speech.test.mjs
+
+
+> reupmatic@0.13.0 build:core
+> tsc -p tsconfig.core.json
+
+error TS2688: Cannot find type definition file for 'node'.
+  The file is in the program because:
+    Entry point of type library 'node' specified in compilerOptions

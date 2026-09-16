@@ -1,0 +1,8 @@
+@layer app {
+  .processing-options {
+    display: grid;
+    gap: var(--space-3);
+    margin-block: var(--space-4);
+    min-width: 0;
+  }
+}

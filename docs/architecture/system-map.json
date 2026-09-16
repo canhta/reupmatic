@@ -1,0 +1,481 @@
+{
+  "format": "reupmatic.system-map",
+  "version": 1,
+  "source_version": "0.15.0",
+  "scope_authority": "BUSINESS_SCOPE.md",
+  "areas": [
+    "sources",
+    "editor",
+    "channels",
+    "automation",
+    "settings"
+  ],
+  "modules": [
+    {
+      "id": "library",
+      "title": "Local media library",
+      "scope": [
+        "SC-02"
+      ],
+      "area": "sources",
+      "status": "partial",
+      "implemented": [
+        "app/core/library",
+        "app/electron/features/library",
+        "app/ui/features/library"
+      ],
+      "reserved": [
+        "app/core/library/file-lifecycle",
+        "app/core/library/asset-graph",
+        "app/ui/features/library/assets",
+        "contracts/content-lifecycle"
+      ],
+      "remaining": "Asset browsing and exact-content links include composition member project/export associations. Full transcript/analysis/derivation graph, duplicate-entry provenance propagation, retention and explicit file-deletion policy remain."
+    },
+    {
+      "id": "downloads",
+      "title": "Authorized video intake",
+      "scope": [
+        "SC-01",
+        "SC-02"
+      ],
+      "area": "sources",
+      "status": "planned",
+      "implemented": [],
+      "reserved": [
+        "app/core/downloads",
+        "app/electron/features/downloads",
+        "app/electron/integrations/douyin",
+        "app/ui/features/downloads",
+        "worker/downloads",
+        "contracts/downloads",
+        "tests/acceptance/downloads"
+      ],
+      "remaining": "Authorized Douyin connector, durable download tasks, interruption recovery and import handoff; no restriction bypass."
+    },
+    {
+      "id": "editor",
+      "title": "Video and audio editing",
+      "scope": [
+        "SC-03"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/ui/features/editor",
+        "worker/media",
+        "app/core/editing",
+        "app/ui/features/editor/video-tools",
+        "app/ui/features/editor/audio-tools",
+        "worker/media/editing",
+        "app/ui/features/editor/composition",
+        "app/electron/features/editor/composition",
+        "worker/media/composition"
+      ],
+      "reserved": [
+        "contracts/editing",
+        "tests/acceptance/editing",
+        "app/core/editing/composition",
+        "app/core/editing/transforms",
+        "worker/media/audio"
+      ],
+      "remaining": "Bounded hard-cut composition, clip trim/speed/split/join/reorder, montage clock mapping and sample/full encoding are implemented alongside soundtrack/global edits. Transitions, layered tracks, per-clip effects/AI, native-rate/VFR mastery, multitrack/aligned voiceover integration and owner-run UI acceptance remain."
+    },
+    {
+      "id": "projects",
+      "title": "Project persistence and recovery",
+      "scope": [
+        "SC-02",
+        "SC-03"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/core/projects",
+        "app/electron/features/editor",
+        "app/ui/features/projects",
+        "app/electron/features/projects"
+      ],
+      "reserved": [
+        "app/core/projects/recovery",
+        "tests/acceptance/recovery"
+      ],
+      "remaining": "Current schema-5 snapshots, atomic undo and recovery retain independent text layers and translation provenance, clip sources, music and styles. Old formats are explicitly rejected without migration. Source-independent browsing, durable unapplied speech drafts, automatic dependency repair and owner crash/desktop acceptance remain."
+    },
+    {
+      "id": "subtitles",
+      "title": "Subtitle authoring",
+      "scope": [
+        "SC-05"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/core/subtitles",
+        "worker/subtitles",
+        "app/ui/features/editor/text-rules",
+        "app/core/subtitles/layers",
+        "app/ui/features/editor/text-layers"
+      ],
+      "reserved": [
+        "app/core/subtitles/text-rules",
+        "tests/acceptance/subtitles",
+        "app/ui/features/editor/subtitle-styles"
+      ],
+      "remaining": "Four independent timed text layers now retain language/provenance, copy invalidation and explicit replace/keep-edits review. Scoped rules, selected-layer timeline/export and composition clock maps exist. Reusable rule chains, multi-cue styling, advanced typography and installed visual/IME acceptance remain."
+    },
+    {
+      "id": "speech",
+      "title": "Recognition, translation and dubbing",
+      "scope": [
+        "SC-04",
+        "SC-05"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/core/speech",
+        "app/electron/features/speech",
+        "app/ui/features/speech",
+        "worker/speech/recognition",
+        "worker/speech/translation",
+        "worker/speech/synthesis"
+      ],
+      "reserved": [
+        "contracts/speech",
+        "tests/acceptance/speech",
+        "worker/speech/alignment"
+      ],
+      "remaining": "Local CPU STT, translation and preset-voice synthesis use native hashed setup, correlated session drafts, explicit review and cancellation on the existing queue. Natural speech WAV/receipt preview and native export are implemented; alignment/mixing, durable speech stages in batch/Automation, real-model/language/license acceptance, installed UI and resource budgets remain."
+    },
+    {
+      "id": "vision",
+      "title": "OCR and text removal",
+      "scope": [
+        "SC-06",
+        "SC-13"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/core/vision",
+        "app/electron/features/vision",
+        "app/ui/features/vision",
+        "worker/vision"
+      ],
+      "reserved": [
+        "app/core/vision/extraction",
+        "worker/vision/extraction",
+        "tests/acceptance/vision"
+      ],
+      "remaining": "Full-resolution inpainting, temporal quality, scene-text semantics, actual-model verification and analysis/classification consumers. Standalone whole-source OCR, retained chunk evidence and direct SRT export are implemented."
+    },
+    {
+      "id": "processing",
+      "title": "Shared processing recipes",
+      "scope": [
+        "SC-03",
+        "SC-04",
+        "SC-05",
+        "SC-06"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/core/processing",
+        "app/ui/features/processing",
+        "worker/processing"
+      ],
+      "reserved": [
+        "contracts/processing-pipeline"
+      ],
+      "remaining": "Same coordinator/worker handles bounded Editor compositions with global edits, captions and soundtrack. Speech stages, composition AI, multi-clip batch/folder admission, richer stage artifacts and independent stage recovery remain; no second queue."
+    },
+    {
+      "id": "profiles",
+      "title": "Reusable processing profiles",
+      "scope": [
+        "SC-03"
+      ],
+      "area": "editor",
+      "status": "partial",
+      "implemented": [
+        "app/core/profiles",
+        "app/electron/features/profiles",
+        "app/ui/features/profiles"
+      ],
+      "reserved": [
+        "tests/acceptance/profiles"
+      ],
+      "remaining": "Reusable global subtitle appearance, framing/color/speed/source-audio and OCR/removal settings exist. Clip-specific soundtrack, trim and per-cue overrides do not leak into profiles. Speech/rules/composition presets remain."
+    },
+    {
+      "id": "batch",
+      "title": "User-started queue",
+      "scope": [
+        "SC-07"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/core/batch",
+        "app/electron/features/batch",
+        "app/ui/features/batch"
+      ],
+      "reserved": [
+        "tests/acceptance/batch",
+        "app/core/batch/stages"
+      ],
+      "remaining": "AI stage expansion and complete artifact linkage through the existing durable queue."
+    },
+    {
+      "id": "folders",
+      "title": "Folder intake",
+      "scope": [
+        "SC-08"
+      ],
+      "area": "automation",
+      "status": "partial",
+      "implemented": [
+        "app/core/folders",
+        "app/electron/features/folders",
+        "app/ui/features/folders"
+      ],
+      "reserved": [
+        "tests/acceptance/folders"
+      ],
+      "remaining": "Product execution policy, permissions and scheduler integration; developer gating remains."
+    },
+    {
+      "id": "automation",
+      "title": "Saved workflows and runs",
+      "scope": [
+        "SC-08"
+      ],
+      "area": "automation",
+      "status": "partial",
+      "implemented": [
+        "app/core/automation",
+        "app/electron/features/automation",
+        "app/ui/features/automation"
+      ],
+      "reserved": [
+        "app/core/automation/triggers",
+        "app/core/automation/scheduling",
+        "contracts/scheduling",
+        "tests/acceptance/automation",
+        "app/core/automation/routing",
+        "app/ui/features/automation/routing",
+        "tests/acceptance/routing"
+      ],
+      "remaining": "Production triggers, schedules, missed-run recovery, flexible steps/endpoints and approved entitlement policy."
+    },
+    {
+      "id": "taxonomy",
+      "title": "Shared manual labels",
+      "scope": [
+        "SC-09",
+        "SC-11"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/core/taxonomy",
+        "app/ui/features/taxonomy"
+      ],
+      "reserved": [
+        "tests/acceptance/taxonomy"
+      ],
+      "remaining": "Identity-preserving catalog management; taxonomy merge/delete policy requires explicit decisions."
+    },
+    {
+      "id": "content-analysis",
+      "title": "Content classification",
+      "scope": [
+        "SC-09",
+        "SC-13"
+      ],
+      "area": "sources",
+      "status": "planned",
+      "implemented": [],
+      "reserved": [
+        "app/core/content-analysis",
+        "app/electron/features/content-analysis",
+        "app/ui/features/content-analysis",
+        "worker/content_analysis",
+        "contracts/content-analysis",
+        "tests/acceptance/content-analysis"
+      ],
+      "remaining": "OCR-based suggestions with evidence, manual correction and confidence; category match is not product identity."
+    },
+    {
+      "id": "distribution",
+      "title": "Channels, affiliate and posts",
+      "scope": [
+        "SC-09",
+        "SC-10"
+      ],
+      "area": "channels",
+      "status": "partial",
+      "implemented": [
+        "app/core/distribution",
+        "app/electron/features/distribution",
+        "app/ui/features/distribution"
+      ],
+      "reserved": [
+        "app/core/distribution/publishing",
+        "app/electron/integrations/youtube",
+        "app/electron/integrations/facebook",
+        "contracts/distribution",
+        "tests/acceptance/distribution",
+        "app/core/distribution/reconciliation",
+        "contracts/platform-authorization"
+      ],
+      "remaining": "OAuth, verified publisher capabilities, routing, uploads, schedules and platform reconciliation. Local drafts are not published posts."
+    },
+    {
+      "id": "catalog",
+      "title": "Workspace catalog persistence",
+      "scope": [
+        "SC-02",
+        "SC-03",
+        "SC-09",
+        "SC-10",
+        "SC-11"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/core/catalog",
+        "app/electron/features/catalog",
+        "app/ui/features/catalog"
+      ],
+      "reserved": [],
+      "remaining": "Current-schema backup/restore; explicitly reject unsupported formats, without migrations. SQLite records are not a cloud sync layer."
+    },
+    {
+      "id": "settings",
+      "title": "Preferences and component setup",
+      "scope": [
+        "SC-11"
+      ],
+      "area": "settings",
+      "status": "partial",
+      "implemented": [
+        "app/core/settings",
+        "app/electron/features/settings",
+        "app/ui/features/settings"
+      ],
+      "reserved": [
+        "app/core/models",
+        "app/electron/features/models",
+        "app/core/resources",
+        "app/ui/features/settings/resources",
+        "worker/models",
+        "tests/acceptance/settings"
+      ],
+      "remaining": "Model downloads/updates, integrity, hardware budget, cache lifecycle and user-consented cleanup."
+    },
+    {
+      "id": "accounts",
+      "title": "Accounts, Plus and credits",
+      "scope": [
+        "SC-11"
+      ],
+      "area": "settings",
+      "status": "planned",
+      "implemented": [],
+      "reserved": [
+        "app/core/accounts",
+        "app/core/entitlements",
+        "app/electron/features/accounts",
+        "app/electron/security",
+        "app/ui/features/accounts",
+        "contracts/accounts",
+        "tests/acceptance/accounts",
+        "app/core/entitlements/settlement",
+        "app/core/entitlements/execution-policy"
+      ],
+      "remaining": "Authentication, secure credentials and approved commercial execution policy. Do not invent prices, balances or access."
+    },
+    {
+      "id": "cloud",
+      "title": "Future off-device execution",
+      "scope": [
+        "SC-12"
+      ],
+      "area": "shared",
+      "status": "planned",
+      "implemented": [],
+      "reserved": [
+        "app/core/cloud",
+        "app/electron/integrations/cloud",
+        "services/cloud",
+        "contracts/cloud",
+        "tests/acceptance/cloud",
+        "services/cloud/workers",
+        "services/cloud/orchestration"
+      ],
+      "remaining": "Reserved extension only. Consent, storage, retention, placement, contracts and architecture remain open."
+    },
+    {
+      "id": "localization",
+      "title": "Bilingual application and accessibility",
+      "scope": [
+        "SC-14"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/ui/design-system",
+        "app/ui/shell"
+      ],
+      "reserved": [
+        "tests/acceptance/accessibility",
+        "tests/acceptance/localization"
+      ],
+      "remaining": "EN/VI keyboard, IME, responsive and screen-reader checks on the actual installed application."
+    },
+    {
+      "id": "runtime",
+      "title": "Trusted host and worker lifecycle",
+      "scope": [
+        "SC-03",
+        "SC-11"
+      ],
+      "area": "shared",
+      "status": "partial",
+      "implemented": [
+        "app/core/worker",
+        "app/core/media",
+        "app/core/rendering",
+        "app/electron/runtime",
+        "worker/runtime",
+        "worker/assets",
+        "app/core/storage"
+      ],
+      "reserved": [
+        "tests/acceptance/security",
+        "app/electron/runtime/recovery",
+        "contracts/resource-lifecycle"
+      ],
+      "remaining": "Dependency/OS integration, resource-aware execution and lifecycle policy verification."
+    },
+    {
+      "id": "delivery",
+      "title": "Desktop distribution",
+      "scope": [
+        "SC-11"
+      ],
+      "area": "shared",
+      "status": "planned",
+      "implemented": [],
+      "reserved": [
+        "packaging/windows",
+        "packaging/macos",
+        "tests/acceptance/installers"
+      ],
+      "remaining": "Source packaging exists; Windows/macOS installers, native dependency bundling, signing, upgrades and licenses remain. Empty folders are not installers."
+    }
+  ]
+}

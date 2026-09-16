@@ -1,0 +1,165 @@
+
+> reupmatic@0.15.0 build:core
+> tsc -p tsconfig.core.json
+
+TAP version 13
+# Subtest: only admitted confined WAV + receipt pairs become preview/export grants
+ok 1 - only admitted confined WAV + receipt pairs become preview/export grants
+  ---
+  duration_ms: 32.770769
+  type: 'test'
+  ...
+# Subtest: corrupt waveform or changed receipt is not admitted or exported
+ok 2 - corrupt waveform or changed receipt is not admitted or exported
+  ---
+  duration_ms: 14.438059
+  type: 'test'
+  ...
+# Subtest: symlink audio cannot grant arbitrary files even when hashes match
+ok 3 - symlink audio cannot grant arbitrary files even when hashes match
+  ---
+  duration_ms: 8.163702
+  type: 'test'
+  ...
+# Subtest: export protects imported originals, hardlinks, live drafts and active cancellation
+ok 4 - export protects imported originals, hardlinks, live drafts and active cancellation
+  ---
+  duration_ms: 25.627012
+  type: 'test'
+  ...
+# Subtest: coordinator uses existing worker, checks progress correlation and admits before result
+ok 5 - coordinator uses existing worker, checks progress correlation and admits before result
+  ---
+  duration_ms: 9.214493
+  type: 'test'
+  ...
+# Subtest: late result after cancel is not published and its verified generated artifact is removed
+ok 6 - late result after cancel is not published and its verified generated artifact is removed
+  ---
+  duration_ms: 6.786056
+  type: 'test'
+  ...
+# Subtest: invalid child result yields exactly one terminal and releases operation
+ok 7 - invalid child result yields exactly one terminal and releases operation
+  ---
+  duration_ms: 3.900412
+  type: 'test'
+  ...
+# Subtest: speech export never replaces selected model files or their hardlink aliases
+ok 8 - speech export never replaces selected model files or their hardlink aliases
+  ---
+  duration_ms: 20.847356
+  type: 'test'
+  ...
+# Subtest: real TS coordinator and Python worker promote an auditionable PCM artifact through the shared queue
+ok 9 - real TS coordinator and Python worker promote an auditionable PCM artifact through the shared queue
+  ---
+  duration_ms: 2175.665694
+  type: 'test'
+  ...
+# Subtest: real worker failure preserves an earlier admitted speech artifact and stays usable
+ok 10 - real worker failure preserves an earlier admitted speech artifact and stays usable
+  ---
+  duration_ms: 2014.26128
+  type: 'test'
+  ...
+# Subtest: voice UI keeps explicit generation, library controls and no document mutation
+ok 11 - voice UI keeps explicit generation, library controls and no document mutation
+  ---
+  duration_ms: 10.124358
+  type: 'test'
+  ...
+# Subtest: source rechecked across native dialogs, cancellation suppresses late preview
+ok 12 - source rechecked across native dialogs, cancellation suppresses late preview
+  ---
+  duration_ms: 1.759253
+  type: 'test'
+  ...
+# Subtest: draft correlation survives failed retries and ignores late job acknowledgements
+ok 13 - draft correlation survives failed retries and ignores late job acknowledgements
+  ---
+  duration_ms: 2.079367
+  type: 'test'
+  ...
+# Subtest: native synthesis boundary exposes allowlisted verbs, not arbitrary paths
+ok 14 - native synthesis boundary exposes allowlisted verbs, not arbitrary paths
+  ---
+  duration_ms: 1.282194
+  type: 'test'
+  ...
+# Subtest: EN/VI voice strings cover all task keys and truthful non-alignment language
+ok 15 - EN/VI voice strings cover all task keys and truthful non-alignment language
+  ---
+  duration_ms: 2.895269
+  type: 'test'
+  ...
+# Subtest: synthesis captures spoken words only, without changing any document layer
+ok 16 - synthesis captures spoken words only, without changing any document layer
+  ---
+  duration_ms: 5.613755
+  type: 'test'
+  ...
+# Subtest: selected synthesis uses document order and rejects missing or duplicate IDs
+ok 17 - selected synthesis uses document order and rejects missing or duplicate IDs
+  ---
+  duration_ms: 0.850533
+  type: 'test'
+  ...
+# Subtest: synthesis refuses empty, stale, mismatched or unknown voice-language input
+ok 18 - synthesis refuses empty, stale, mismatched or unknown voice-language input
+  ---
+  duration_ms: 1.28659
+  type: 'test'
+  ...
+# Subtest: display edits do not stale voice; spoken edits, timing or language changes do
+ok 19 - display edits do not stale voice; spoken edits, timing or language changes do
+  ---
+  duration_ms: 0.908969
+  type: 'test'
+  ...
+# Subtest: synthesis result requires complete frame spans, exact correlation and natural timing
+ok 20 - synthesis result requires complete frame spans, exact correlation and natural timing
+  ---
+  duration_ms: 1.054165
+  type: 'test'
+  ...
+# Subtest: synthesis readiness never pretends that status is hash/model-quality verification
+ok 21 - synthesis readiness never pretends that status is hash/model-quality verification
+  ---
+  duration_ms: 0.41079
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4260.328273
+test_frame_spans_must_exactly_cover_all_cues_and_gaps (test_synthesis.SynthesisContractTests.test_frame_spans_must_exactly_cover_all_cues_and_gaps) ... ok
+test_strict_spoken_input (test_synthesis.SynthesisContractTests.test_strict_spoken_input) ... ok
+test_cancellable_hash_verification (test_synthesis.SynthesisModelTests.test_cancellable_hash_verification) ... ok
+test_changed_hash_and_extra_files_are_rejected (test_synthesis.SynthesisModelTests.test_changed_hash_and_extra_files_are_rejected) ... ok
+test_identity_is_hash_based_and_status_is_not_quality_verification (test_synthesis.SynthesisModelTests.test_identity_is_hash_based_and_status_is_not_quality_verification) ... ok
+test_numeric_voice_data_must_be_bounded_finite_and_nonzero (test_synthesis.SynthesisModelTests.test_numeric_voice_data_must_be_bounded_finite_and_nonzero) ... ok
+test_symlink_and_traversal_cannot_enter_bundle (test_synthesis.SynthesisModelTests.test_symlink_and_traversal_cannot_enter_bundle) ... ok
+test_generated_manifest_is_accepted_by_the_current_registry (test_synthesis_manifest.SynthesisManifestTests.test_generated_manifest_is_accepted_by_the_current_registry) ... ok
+test_in_bundle_output_and_duplicate_language_are_rejected (test_synthesis_manifest.SynthesisManifestTests.test_in_bundle_output_and_duplicate_language_are_rejected) ... ok
+test_cancel_reaps_child_and_releases_existing_queue (test_synthesis_native.SynthesisNativeTests.test_cancel_reaps_child_and_releases_existing_queue) ... ok
+test_close_cleans_inflight_partial (test_synthesis_native.SynthesisNativeTests.test_close_cleans_inflight_partial) ... ok
+test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) ... ok
+test_failed_setup_keeps_previous_configuration (test_synthesis_native.SynthesisNativeTests.test_failed_setup_keeps_previous_configuration) ... ok
+test_hash_change_during_inference_never_promotes (test_synthesis_native.SynthesisNativeTests.test_hash_change_during_inference_never_promotes) ... ok
+test_model_and_voice_changes_require_new_input (test_synthesis_native.SynthesisNativeTests.test_model_and_voice_changes_require_new_input) ... ok
+test_network_is_refused_without_fallback (test_synthesis_native.SynthesisNativeTests.test_network_is_refused_without_fallback) ... ok
+test_real_child_promotes_correlated_natural_wave_and_receipt (test_synthesis_native.SynthesisNativeTests.test_real_child_promotes_correlated_natural_wave_and_receipt) ... ok
+test_sdk_cannot_start_another_child (test_synthesis_native.SynthesisNativeTests.test_sdk_cannot_start_another_child) ... ok
+test_token_limit_is_not_silent_input_truncation (test_synthesis_native.SynthesisNativeTests.test_token_limit_is_not_silent_input_truncation) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 19.555s
+
+OK
+EXIT_CODE=0

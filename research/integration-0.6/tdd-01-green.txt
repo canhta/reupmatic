@@ -1,0 +1,6 @@
+test_missing_models_are_actionable_and_do_not_break_render_capabilities (test_vision.VisionProtocolTests.test_missing_models_are_actionable_and_do_not_break_render_capabilities) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.788s
+
+OK

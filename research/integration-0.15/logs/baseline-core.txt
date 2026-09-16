@@ -1,0 +1,7 @@
+
+> reupmatic@0.14.0 build:core
+> tsc -p tsconfig.core.json
+
+error TS2688: Cannot find type definition file for 'node'.
+  The file is in the program because:
+    Entry point of type library 'node' specified in compilerOptions

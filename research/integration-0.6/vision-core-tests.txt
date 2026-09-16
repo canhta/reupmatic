@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: vision validates bounded requests and preserves content language
+ok 1 - vision validates bounded requests and preserves content language
+  ---
+  duration_ms: 1.79584
+  type: 'test'
+  ...
+# Subtest: manual masks require coordinates; automatic text masks do not require review
+ok 2 - manual masks require coordinates; automatic text masks do not require review
+  ---
+  duration_ms: 0.249594
+  type: 'test'
+  ...
+# Subtest: OCR draft cannot replace edits or follow a different source
+ok 3 - OCR draft cannot replace edits or follow a different source
+  ---
+  duration_ms: 0.828461
+  type: 'test'
+  ...
+# Subtest: vision completion uses public ID and original revision
+ok 4 - vision completion uses public ID and original revision
+  ---
+  duration_ms: 0.82805
+  type: 'test'
+  ...
+# Subtest: cancel wins over late successful inference and emits exactly one terminal event
+ok 5 - cancel wins over late successful inference and emits exactly one terminal event
+  ---
+  duration_ms: 0.535302
+  type: 'test'
+  ...
+# Subtest: malformed model results do not escape the coordinator
+ok 6 - malformed model results do not escape the coordinator
+  ---
+  duration_ms: 0.225218
+  type: 'test'
+  ...
+# Subtest: out-of-range evidence is rejected and the next operation can run
+ok 7 - out-of-range evidence is rejected and the next operation can run
+  ---
+  duration_ms: 0.381241
+  type: 'test'
+  ...
+# Subtest: duplicate admissions and admissions after shutdown are refused
+ok 8 - duplicate admissions and admissions after shutdown are refused
+  ---
+  duration_ms: 0.436454
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 69.086756

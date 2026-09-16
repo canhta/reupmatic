@@ -1,0 +1,47 @@
+test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) ... 
+  test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='quiet') ... FAIL
+  test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='nan') ... FAIL
+  test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='shape') ... FAIL
+  test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='long') ... FAIL
+
+======================================================================
+FAIL: test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='quiet')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/v015-work/reupmatic/tests/test_synthesis_native.py", line 108, in test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail
+    with self.assertRaisesRegex(RuntimeError, 'MODEL_OUTPUT_INVALID'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: RuntimeError not raised
+
+======================================================================
+FAIL: test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='nan')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/v015-work/reupmatic/tests/test_synthesis_native.py", line 112, in test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail
+    self.assertFalse(list((self.workspace / 'speech').iterdir()))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [PosixPath('/tmp/synthesis-native-uu3e4u2p/workspace/speech/569d9760-b50b-4e3e-869f-8b302bece25c')] is not false
+
+======================================================================
+FAIL: test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='shape')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/v015-work/reupmatic/tests/test_synthesis_native.py", line 112, in test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail
+    self.assertFalse(list((self.workspace / 'speech').iterdir()))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [PosixPath('/tmp/synthesis-native-uu3e4u2p/workspace/speech/569d9760-b50b-4e3e-869f-8b302bece25c')] is not false
+
+======================================================================
+FAIL: test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) (mode='long')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/v015-work/reupmatic/tests/test_synthesis_native.py", line 112, in test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail
+    self.assertFalse(list((self.workspace / 'speech').iterdir()))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [PosixPath('/tmp/synthesis-native-uu3e4u2p/workspace/speech/569d9760-b50b-4e3e-869f-8b302bece25c')] is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 9.741s
+
+FAILED (failures=4)
+EXIT_CODE=1

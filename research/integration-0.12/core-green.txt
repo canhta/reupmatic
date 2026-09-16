@@ -1,0 +1,1068 @@
+
+> reupmatic@0.12.0 test:core
+> npm run build:core && node --test tests/core.test.mjs tests/render-tracker.test.mjs tests/media-response.test.mjs tests/render-coordinator.test.mjs tests/project.test.mjs tests/batch.test.mjs tests/folder.test.mjs tests/design-skill.test.mjs tests/vision.test.mjs tests/library.test.mjs tests/settings.test.mjs tests/export-file.test.mjs tests/processing.test.mjs tests/processing-persistence.test.mjs tests/render-artifact.test.mjs tests/catalog.test.mjs tests/distribution.test.mjs tests/profiles.test.mjs tests/workflows.test.mjs tests/post-schedule.test.mjs tests/current-schema.test.mjs tests/editing.test.mjs tests/recovery.test.mjs tests/text-rules.test.mjs tests/editor-history.test.mjs tests/ocr-extraction.test.mjs tests/library-assets.test.mjs tests/subtitle-style.test.mjs tests/soundtrack.test.mjs tests/composition.test.mjs
+
+
+> reupmatic@0.12.0 build:core
+> tsc -p tsconfig.core.json
+
+TAP version 13
+# (node:14572) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+ok 1 - SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+  ---
+  duration_ms: 12.606836
+  type: 'test'
+  ...
+# Subtest: claim increments attempt; explicit retry retains job identity and input
+ok 2 - claim increments attempt; explicit retry retains job identity and input
+  ---
+  duration_ms: 7.067931
+  type: 'test'
+  ...
+# Subtest: restart retains queued/done rows and recovers running versus acknowledged cancellation
+ok 3 - restart retains queued/done rows and recovers running versus acknowledged cancellation
+  ---
+  duration_ms: 5.801893
+  type: 'test'
+  ...
+# Subtest: invalid batch does not partly enqueue and relative paths are rejected
+ok 4 - invalid batch does not partly enqueue and relative paths are rejected
+  ---
+  duration_ms: 2.556593
+  type: 'test'
+  ...
+# Subtest: queue starts paused, isolates a bad item, then exports good item through same renderer
+ok 5 - queue starts paused, isolates a bad item, then exports good item through same renderer
+  ---
+  duration_ms: 35.723364
+  type: 'test'
+  ...
+# Subtest: pause allows current output, keeps next queued; closing the UI is not cancellation
+ok 6 - pause allows current output, keeps next queued; closing the UI is not cancellation
+  ---
+  duration_ms: 36.007683
+  type: 'test'
+  ...
+# Subtest: cancel running and queued entries; retry never creates a second job
+ok 7 - cancel running and queued entries; retry never creates a second job
+  ---
+  duration_ms: 23.709222
+  type: 'test'
+  ...
+# Subtest: a changed source cannot reach render; runtime failure pauses the waiting group
+ok 8 - a changed source cannot reach render; runtime failure pauses the waiting group
+  ---
+  duration_ms: 17.93499
+  type: 'test'
+  ...
+# Subtest: existing preview has dispatch priority before the next batch item
+ok 9 - existing preview has dispatch priority before the next batch item
+  ---
+  duration_ms: 20.608456
+  type: 'test'
+  ...
+# Subtest: output commit is exclusive, retries reconcile identical files and preserve conflicts
+ok 10 - output commit is exclusive, retries reconcile identical files and preserve conflicts
+  ---
+  duration_ms: 9.540671
+  type: 'test'
+  ...
+# Subtest: cancel before output commit produces no final export, does not delete the source
+ok 11 - cancel before output commit produces no final export, does not delete the source
+  ---
+  duration_ms: 6.035277
+  type: 'test'
+  ...
+# Subtest: queue shutdown retains interrupted state and does not start the next item
+ok 12 - queue shutdown retains interrupted state and does not start the next item
+  ---
+  duration_ms: 13.384975
+  type: 'test'
+  ...
+# Subtest: library provenance is durable and part of idempotent batch admission
+ok 13 - library provenance is durable and part of idempotent batch admission
+  ---
+  duration_ms: 2.484667
+  type: 'test'
+  ...
+# Subtest: shared queue forwards the saved recipe, model pins and stage progress on every attempt
+ok 14 - shared queue forwards the saved recipe, model pins and stage progress on every attempt
+  ---
+  duration_ms: 19.448804
+  type: 'test'
+  ...
+# (node:14573) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: channel records never grant publishing capability and reject stale writes
+ok 15 - channel records never grant publishing capability and reject stale writes
+  ---
+  duration_ms: 2.821694
+  type: 'test'
+  ...
+# Subtest: shared labels retain their identity and reject duplicate normalized names
+ok 16 - shared labels retain their identity and reject duplicate normalized names
+  ---
+  duration_ms: 1.592511
+  type: 'test'
+  ...
+# Subtest: composition validates a bounded current document and owns source/output clock maps
+ok 17 - composition validates a bounded current document and owns source/output clock maps
+  ---
+  duration_ms: 2.402035
+  type: 'test'
+  ...
+# Subtest: reordering follows clip content and retains text/style without mutating the input
+ok 18 - reordering follows clip content and retains text/style without mutating the input
+  ---
+  duration_ms: 0.979216
+  type: 'test'
+  ...
+# Subtest: split and contiguous join keep source maps and captions; unrelated clips cannot merge
+ok 19 - split and contiguous join keep source maps and captions; unrelated clips cannot merge
+  ---
+  duration_ms: 0.976181
+  type: 'test'
+  ...
+# Subtest: trim and speed map remaining cue fragments, and removal drops only removed content
+ok 20 - trim and speed map remaining cue fragments, and removal drops only removed content
+  ---
+  duration_ms: 0.514088
+  type: 'test'
+  ...
+# Subtest: adding a repeated source never duplicates existing captions into the new instance
+ok 21 - adding a repeated source never duplicates existing captions into the new instance
+  ---
+  duration_ms: 0.324248
+  type: 'test'
+  ...
+# Subtest: composition, captions and sample window are one undo/recovery-compatible project snapshot
+ok 22 - composition, captions and sample window are one undo/recovery-compatible project snapshot
+  ---
+  duration_ms: 1.206461
+  type: 'test'
+  ...
+# Subtest: project clip references cannot authorize ungranted or changed native files
+ok 23 - project clip references cannot authorize ungranted or changed native files
+  ---
+  duration_ms: 6.864196
+  type: 'test'
+  ...
+# Subtest: composition snapshot clamps dependent ranges atomically without discarding other edits
+ok 24 - composition snapshot clamps dependent ranges atomically without discarding other edits
+  ---
+  duration_ms: 1.85629
+  type: 'test'
+  ...
+# (node:14574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: saved compositions protect every member source and recovery retains all dependencies
+ok 25 - saved compositions protect every member source and recovery retains all dependencies
+  ---
+  duration_ms: 15.506005
+  type: 'test'
+  ...
+# Subtest: composition cue fragmentation is bounded and a failed operation leaves the document intact
+ok 26 - composition cue fragmentation is bounded and a failed operation leaves the document intact
+  ---
+  duration_ms: 35.515561
+  type: 'test'
+  ...
+# Subtest: caption appearance survives splitting and cannot be mutated through the returned fragment
+ok 27 - caption appearance survives splitting and cannot be mutated through the returned fragment
+  ---
+  duration_ms: 1.643275
+  type: 'test'
+  ...
+# Subtest: deduplicated registrations cannot silently replace a conflicting pinned source duration
+ok 28 - deduplicated registrations cannot silently replace a conflicting pinned source duration
+  ---
+  duration_ms: 6.723313
+  type: 'test'
+  ...
+# Subtest: invalid timing rejected
+ok 29 - invalid timing rejected
+  ---
+  duration_ms: 1.151059
+  type: 'test'
+  ...
+# Subtest: duplicate cue IDs rejected
+ok 30 - duplicate cue IDs rejected
+  ---
+  duration_ms: 0.184242
+  type: 'test'
+  ...
+# Subtest: split preserves Unicode text and partitions timing
+ok 31 - split preserves Unicode text and partitions timing
+  ---
+  duration_ms: 0.381803
+  type: 'test'
+  ...
+# Subtest: split does not cut surrogate pair
+ok 32 - split does not cut surrogate pair
+  ---
+  duration_ms: 0.21037
+  type: 'test'
+  ...
+# Subtest: merge preserves both cue contents
+ok 33 - merge preserves both cue contents
+  ---
+  duration_ms: 0.245022
+  type: 'test'
+  ...
+# Subtest: replace scope leaves unselected content intact
+ok 34 - replace scope leaves unselected content intact
+  ---
+  duration_ms: 0.826069
+  type: 'test'
+  ...
+# Subtest: history snapshots are independent
+ok 35 - history snapshots are independent
+  ---
+  duration_ms: 0.375774
+  type: 'test'
+  ...
+# Subtest: stale revision and superseded request rejected
+ok 36 - stale revision and superseded request rejected
+  ---
+  duration_ms: 0.162389
+  type: 'test'
+  ...
+# (node:14616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: BatchStore: initialize a fresh store and reopen only its current schema
+ok 37 - BatchStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 8.951471
+  type: 'test'
+  ...
+# Subtest: BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 38 - BatchStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 16.3082
+  type: 'test'
+  ...
+# Subtest: CatalogDatabase: initialize a fresh store and reopen only its current schema
+ok 39 - CatalogDatabase: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.773253
+  type: 'test'
+  ...
+# Subtest: CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 40 - CatalogDatabase: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 8.731086
+  type: 'test'
+  ...
+# Subtest: FolderStore: initialize a fresh store and reopen only its current schema
+ok 41 - FolderStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.281317
+  type: 'test'
+  ...
+# Subtest: FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 42 - FolderStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 9.108303
+  type: 'test'
+  ...
+# Subtest: LibraryStore: initialize a fresh store and reopen only its current schema
+ok 43 - LibraryStore: initialize a fresh store and reopen only its current schema
+  ---
+  duration_ms: 2.32431
+  type: 'test'
+  ...
+# Subtest: LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+ok 44 - LibraryStore: refuse unversioned, unknown and incomplete stores without rewriting them
+  ---
+  duration_ms: 6.989436
+  type: 'test'
+  ...
+# Subtest: local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+ok 45 - local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+  ---
+  duration_ms: 1.990498
+  type: 'test'
+  ...
+# Subtest: UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+ok 46 - UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+  ---
+  duration_ms: 0.366481
+  type: 'test'
+  ...
+# Subtest: application color aliases resolve to Astryx rather than a parallel palette
+ok 47 - application color aliases resolve to Astryx rather than a parallel palette
+  ---
+  duration_ms: 0.297188
+  type: 'test'
+  ...
+# (node:14638) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SC-10: one destination post owns exact export and link snapshots
+ok 48 - SC-10: one destination post owns exact export and link snapshots
+  ---
+  duration_ms: 5.103873
+  type: 'test'
+  ...
+# Subtest: SC-09/10: per-channel count, retry conflict and cancellation never rewrite usage history
+ok 49 - SC-09/10: per-channel count, retry conflict and cancellation never rewrite usage history
+  ---
+  duration_ms: 3.124031
+  type: 'test'
+  ...
+# Subtest: SC-10/14: planned instants retain explicit timezone and do not publish
+ok 50 - SC-10/14: planned instants retain explicit timezone and do not publish
+  ---
+  duration_ms: 19.082784
+  type: 'test'
+  ...
+# Subtest: SC-02/09/10: catalog survives reopen with stable IDs and unchanged Unicode URLs
+ok 51 - SC-02/09/10: catalog survives reopen with stable IDs and unchanged Unicode URLs
+  ---
+  duration_ms: 2.62912
+  type: 'test'
+  ...
+# Subtest: catalog boundary rejects unknown fields, credentials, malformed IDs and forged permissions
+ok 52 - catalog boundary rejects unknown fields, credentials, malformed IDs and forged permissions
+  ---
+  duration_ms: 1.2193
+  type: 'test'
+  ...
+# Subtest: shared label archival preserves existing references but prevents new assignment
+ok 53 - shared label archival preserves existing references but prevents new assignment
+  ---
+  duration_ms: 2.040872
+  type: 'test'
+  ...
+# Subtest: editing-only recipes need no model and isolate the caller snapshot
+ok 54 - editing-only recipes need no model and isolate the caller snapshot
+  ---
+  duration_ms: 1.282002
+  type: 'test'
+  ...
+# Subtest: sample range intersects trim in source time and output duration respects speed
+ok 55 - sample range intersects trim in source time and output duration respects speed
+  ---
+  duration_ms: 0.662528
+  type: 'test'
+  ...
+# Subtest: editing rejects unknown keys, non-finite values and unbounded geometry
+ok 56 - editing rejects unknown keys, non-finite values and unbounded geometry
+  ---
+  duration_ms: 0.331048
+  type: 'test'
+  ...
+# Subtest: subtitle output is clipped and retimed without changing source cues
+ok 57 - subtitle output is clipped and retimed without changing source cues
+  ---
+  duration_ms: 0.347443
+  type: 'test'
+  ...
+# Subtest: editor undo restores video/audio, sample and subtitle changes as whole snapshots
+ok 58 - editor undo restores video/audio, sample and subtitle changes as whole snapshots
+  ---
+  duration_ms: 1.796612
+  type: 'test'
+  ...
+# Subtest: no-op changes retain identity, history is bounded and branch edits invalidate redo
+ok 59 - no-op changes retain identity, history is bounded and branch edits invalidate redo
+  ---
+  duration_ms: 2.599146
+  type: 'test'
+  ...
+# Subtest: chosen export atomically replaces only the explicitly selected destination
+ok 60 - chosen export atomically replaces only the explicitly selected destination
+  ---
+  duration_ms: 16.82427
+  type: 'test'
+  ...
+# Subtest: failure before commit preserves an earlier export and cleans the temporary
+ok 61 - failure before commit preserves an earlier export and cleans the temporary
+  ---
+  duration_ms: 5.424216
+  type: 'test'
+  ...
+# Subtest: a source or hardlink alias cannot be overwritten by export saving
+ok 62 - a source or hardlink alias cannot be overwritten by export saving
+  ---
+  duration_ms: 7.800232
+  type: 'test'
+  ...
+# Subtest: missing render output does not truncate a previously saved export
+ok 63 - missing render output does not truncate a previously saved export
+  ---
+  duration_ms: 2.508001
+  type: 'test'
+  ...
+# Subtest: symlink destinations are rejected rather than followed
+ok 64 - symlink destinations are rejected rather than followed
+  ---
+  duration_ms: 2.285123
+  type: 'test'
+  ...
+# Subtest: the render artifact itself stays protected when no originals were supplied
+ok 65 - the render artifact itself stays protected when no originals were supplied
+  ---
+  duration_ms: 4.972058
+  type: 'test'
+  ...
+# (node:14677) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: folder config saves paused; access gate is checked at create and start
+ok 66 - folder config saves paused; access gate is checked at create and start
+  ---
+  duration_ms: 18.074386
+  type: 'test'
+  ...
+# Subtest: stable file is admitted once; intake does not unpause the shared queue
+ok 67 - stable file is admitted once; intake does not unpause the shared queue
+  ---
+  duration_ms: 21.004511
+  type: 'test'
+  ...
+# Subtest: file changed while being observed resets the readiness window
+ok 68 - file changed while being observed resets the readiness window
+  ---
+  duration_ms: 13.658653
+  type: 'test'
+  ...
+# Subtest: new-only baselines existing path versions, receives later files and changed versions
+ok 69 - new-only baselines existing path versions, receives later files and changed versions
+  ---
+  duration_ms: 35.044997
+  type: 'test'
+  ...
+# Subtest: content receipts prevent re-admission of a renamed or copied admitted video
+ok 70 - content receipts prevent re-admission of a renamed or copied admitted video
+  ---
+  duration_ms: 20.399958
+  type: 'test'
+  ...
+# Subtest: receipt failure after queue commit retries the same admission ID
+ok 71 - receipt failure after queue commit retries the same admission ID
+  ---
+  duration_ms: 19.110936
+  type: 'test'
+  ...
+# Subtest: pause stops new intake without cancelling accepted jobs
+ok 72 - pause stops new intake without cancelling accepted jobs
+  ---
+  duration_ms: 11.387406
+  type: 'test'
+  ...
+# Subtest: restart preserves baseline/receipts, stays paused, then admits files missed while off
+ok 73 - restart preserves baseline/receipts, stays paused, then admits files missed while off
+  ---
+  duration_ms: 13.5309
+  type: 'test'
+  ...
+# Subtest: scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+ok 74 - scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+  ---
+  duration_ms: 10.363946
+  type: 'test'
+  ...
+# Subtest: reject equal roots, source inside output and linked automation loops
+ok 75 - reject equal roots, source inside output and linked automation loops
+  ---
+  duration_ms: 6.256134
+  type: 'test'
+  ...
+# Subtest: pause during async watcher attachment closes the late handle and admits nothing
+ok 76 - pause during async watcher attachment closes the late handle and admits nothing
+  ---
+  duration_ms: 4.813945
+  type: 'test'
+  ...
+# Subtest: shutdown waits for a pending attachment before closing storage
+ok 77 - shutdown waits for a pending attachment before closing storage
+  ---
+  duration_ms: 9.738043
+  type: 'test'
+  ...
+# Subtest: missing source reports needs-attention, keeps queued data, can recover after restore
+ok 78 - missing source reports needs-attention, keeps queued data, can recover after restore
+  ---
+  duration_ms: 6.040726
+  type: 'test'
+  ...
+# Subtest: folder processing recipe and original model pins reach the existing queue only once
+ok 79 - folder processing recipe and original model pins reach the existing queue only once
+  ---
+  duration_ms: 14.55044
+  type: 'test'
+  ...
+# (node:14689) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: asset association is immutable by content and repeated registration is idempotent
+ok 80 - asset association is immutable by content and repeated registration is idempotent
+  ---
+  duration_ms: 20.617579
+  type: 'test'
+  ...
+# Subtest: derived audio and export remain accessible without the original and detect same-size timestamp changes
+ok 81 - derived audio and export remain accessible without the original and detect same-size timestamp changes
+  ---
+  duration_ms: 9.499039
+  type: 'test'
+  ...
+# Subtest: asset views filter type, content, literal search, pagination and hidden content
+ok 82 - asset views filter type, content, literal search, pagination and hidden content
+  ---
+  duration_ms: 9.864288
+  type: 'test'
+  ...
+# Subtest: project association verifies the source content before it is recorded
+ok 83 - project association verifies the source content before it is recorded
+  ---
+  duration_ms: 10.45456
+  type: 'test'
+  ...
+# Subtest: a composition project may belong to a member source, but not unrelated content
+ok 84 - a composition project may belong to a member source, but not unrelated content
+  ---
+  duration_ms: 16.478655
+  type: 'test'
+  ...
+# (node:14704) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reference import survives reopening without copying original content
+ok 85 - reference import survives reopening without copying original content
+  ---
+  duration_ms: 12.996441
+  type: 'test'
+  ...
+# Subtest: same bytes are reused only under reuse policy; separate import is explicit
+ok 86 - same bytes are reused only under reuse policy; separate import is explicit
+  ---
+  duration_ms: 8.365527
+  type: 'test'
+  ...
+# Subtest: copy import has an independent verified destination and leaves source untouched
+ok 87 - copy import has an independent verified destination and leaves source untouched
+  ---
+  duration_ms: 14.263482
+  type: 'test'
+  ...
+# Subtest: relink rejects different bytes without losing project associations
+ok 88 - relink rejects different bytes without losing project associations
+  ---
+  duration_ms: 5.163351
+  type: 'test'
+  ...
+# Subtest: open detects changed source bytes; missing source retains library history
+ok 89 - open detects changed source bytes; missing source retains library history
+  ---
+  duration_ms: 6.046214
+  type: 'test'
+  ...
+# Subtest: removing a listing never deletes originals, copies, projects or exports
+ok 90 - removing a listing never deletes originals, copies, projects or exports
+  ---
+  duration_ms: 12.193708
+  type: 'test'
+  ...
+# Subtest: search treats SQL wildcard characters as literal text and caps pages
+ok 91 - search treats SQL wildcard characters as literal text and caps pages
+  ---
+  duration_ms: 4.679446
+  type: 'test'
+  ...
+# Subtest: a failed copy is not recorded as an available library item
+ok 92 - a failed copy is not recorded as an available library item
+  ---
+  duration_ms: 10.133596
+  type: 'test'
+  ...
+# Subtest: copy imports never mutate the inspector-owned media registration
+ok 93 - copy imports never mutate the inspector-owned media registration
+  ---
+  duration_ms: 7.162531
+  type: 'test'
+  ...
+# Subtest: related output indexing is idempotent and distinguishes intentionally separate items
+ok 94 - related output indexing is idempotent and distinguishes intentionally separate items
+  ---
+  duration_ms: 5.978564
+  type: 'test'
+  ...
+# Subtest: standard ranges: bounded, open-ended, suffix and huge values
+ok 95 - standard ranges: bounded, open-ended, suffix and huge values
+  ---
+  duration_ms: 2.901272
+  type: 'test'
+  ...
+# Subtest: unsatisfiable, invalid and unsupported ranges are distinct
+ok 96 - unsatisfiable, invalid and unsupported ranges are distinct
+  ---
+  duration_ms: 0.263128
+  type: 'test'
+  ...
+# Subtest: registered file response serves actual ranges, HEAD, misses and cancel safely
+ok 97 - registered file response serves actual ranges, HEAD, misses and cancel safely
+  ---
+  duration_ms: 43.270453
+  type: 'test'
+  ...
+# Subtest: full extraction has an independent request contract beyond the sample limit
+ok 98 - full extraction has an independent request contract beyond the sample limit
+  ---
+  duration_ms: 1.668192
+  type: 'test'
+  ...
+# Subtest: full extraction validates evidence summary without implying that the UI shows every frame
+ok 99 - full extraction validates evidence summary without implying that the UI shows every frame
+  ---
+  duration_ms: 0.506688
+  type: 'test'
+  ...
+# Subtest: planned wall time uses the chosen timezone, not UI locale or machine zone
+ok 100 - planned wall time uses the chosen timezone, not UI locale or machine zone
+  ---
+  duration_ms: 14.697882
+  type: 'test'
+  ...
+# Subtest: nonexistent and repeated daylight-saving hours are never chosen silently
+ok 101 - nonexistent and repeated daylight-saving hours are never chosen silently
+  ---
+  duration_ms: 1.78877
+  type: 'test'
+  ...
+# Subtest: invalid dates, zones and forged local/instant pairs fail closed
+ok 102 - invalid dates, zones and forged local/instant pairs fail closed
+  ---
+  duration_ms: 0.426009
+  type: 'test'
+  ...
+# Subtest: unchanged drafts preserve exact stored milliseconds and optional plans remain optional
+ok 103 - unchanged drafts preserve exact stored milliseconds and optional plans remain optional
+  ---
+  duration_ms: 0.260895
+  type: 'test'
+  ...
+# (node:14743) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: one current project schema round-trips both plain and processing snapshots
+ok 104 - one current project schema round-trips both plain and processing snapshots
+  ---
+  duration_ms: 15.481278
+  type: 'test'
+  ...
+# Subtest: batch recipe and model pins survive restart, interruption and explicit retry
+ok 105 - batch recipe and model pins survive restart, interruption and explicit retry
+  ---
+  duration_ms: 7.116423
+  type: 'test'
+  ...
+# Subtest: batch rejects unpinned processing and subtitle conflicts atomically
+ok 106 - batch rejects unpinned processing and subtitle conflicts atomically
+  ---
+  duration_ms: 3.223838
+  type: 'test'
+  ...
+# Subtest: folder rule persists its immutable recipe and refuses a model-free recipe
+ok 107 - folder rule persists its immutable recipe and refuses a model-free recipe
+  ---
+  duration_ms: 3.666031
+  type: 'test'
+  ...
+# Subtest: recipes are canonical, independent snapshots, not executable configuration
+ok 108 - recipes are canonical, independent snapshots, not executable configuration
+  ---
+  duration_ms: 1.932783
+  type: 'test'
+  ...
+# Subtest: manual subtitles cannot be replaced by automatic OCR
+ok 109 - manual subtitles cannot be replaced by automatic OCR
+  ---
+  duration_ms: 0.225122
+  type: 'test'
+  ...
+# Subtest: model snapshots match exactly the requirements of the saved recipe
+ok 110 - model snapshots match exactly the requirements of the saved recipe
+  ---
+  duration_ms: 0.349196
+  type: 'test'
+  ...
+# (node:14770) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SC-03: optional data-only profiles round trip without user media, cues or identity
+ok 111 - SC-03: optional data-only profiles round trip without user media, cues or identity
+  ---
+  duration_ms: 3.158291
+  type: 'test'
+  ...
+# Subtest: SC-03: reusable profiles reject video-specific removal masks
+ok 112 - SC-03: reusable profiles reject video-specific removal masks
+  ---
+  duration_ms: 0.692752
+  type: 'test'
+  ...
+# Subtest: SC-03: reusable profiles retain video/audio edits and reject source-specific trim
+ok 113 - SC-03: reusable profiles retain video/audio edits and reject source-specific trim
+  ---
+  duration_ms: 1.021307
+  type: 'test'
+  ...
+# Subtest: project round-trip retains Unicode cues and sample interval without media copies
+ok 114 - project round-trip retains Unicode cues and sample interval without media copies
+  ---
+  duration_ms: 10.181497
+  type: 'test'
+  ...
+# Subtest: project snapshots are independent from subsequent editor changes
+ok 115 - project snapshots are independent from subsequent editor changes
+  ---
+  duration_ms: 0.383305
+  type: 'test'
+  ...
+# Subtest: unknown version, external instructions, URL sources and malformed cue data are rejected
+ok 116 - unknown version, external instructions, URL sources and malformed cue data are rejected
+  ---
+  duration_ms: 0.820391
+  type: 'test'
+  ...
+# Subtest: malformed, oversized and invalid UTF-8 input never becomes a partial project
+ok 117 - malformed, oversized and invalid UTF-8 input never becomes a partial project
+  ---
+  duration_ms: 7.665063
+  type: 'test'
+  ...
+# Subtest: saving invalid edits preserves the existing valid project
+ok 118 - saving invalid edits preserves the existing valid project
+  ---
+  duration_ms: 10.198172
+  type: 'test'
+  ...
+# Subtest: source overwrite checks include same path and hardlink aliases
+ok 119 - source overwrite checks include same path and hardlink aliases
+  ---
+  duration_ms: 3.798346
+  type: 'test'
+  ...
+# Subtest: runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+ok 120 - runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+  ---
+  duration_ms: 0.409915
+  type: 'test'
+  ...
+# (node:14787) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: recovery persists complete current documents across reopen and rejects stale writes
+ok 121 - recovery persists complete current documents across reopen and rejects stale writes
+  ---
+  duration_ms: 8.581876
+  type: 'test'
+  ...
+# Subtest: discarding a draft never deletes source media and separate projects keep separate identities
+ok 122 - discarding a draft never deletes source media and separate projects keep separate identities
+  ---
+  duration_ms: 3.234815
+  type: 'test'
+  ...
+# Subtest: unsupported recovery stores fail without reset or automatic migration
+ok 123 - unsupported recovery stores fail without reset or automatic migration
+  ---
+  duration_ms: 1.89697
+  type: 'test'
+  ...
+# Subtest: host accepts the actual nested render cache and flat vision output contracts
+ok 124 - host accepts the actual nested render cache and flat vision output contracts
+  ---
+  duration_ms: 1.40932
+  type: 'test'
+  ...
+# Subtest: artifact mapping rejects traversal, wrong IDs, arbitrary files and sibling roots
+ok 125 - artifact mapping rejects traversal, wrong IDs, arbitrary files and sibling roots
+  ---
+  duration_ms: 2.408044
+  type: 'test'
+  ...
+# Subtest: empty cues bypass subtitle dependency and finish through the common renderer
+ok 126 - empty cues bypass subtitle dependency and finish through the common renderer
+  ---
+  duration_ms: 2.671312
+  type: 'test'
+  ...
+# Subtest: cancel while preparing subtitle prevents dispatch even if preparation wins the race
+ok 127 - cancel while preparing subtitle prevents dispatch even if preparation wins the race
+  ---
+  duration_ms: 0.978584
+  type: 'test'
+  ...
+# Subtest: progress is public-ID correlated during preparation and rendering
+ok 128 - progress is public-ID correlated during preparation and rendering
+  ---
+  duration_ms: 3.558161
+  type: 'test'
+  ...
+# Subtest: one failed preparation leaves independent render usable
+ok 129 - one failed preparation leaves independent render usable
+  ---
+  duration_ms: 0.550162
+  type: 'test'
+  ...
+# Subtest: cancel during render ignores a late artifact and reports cancellation once
+ok 130 - cancel during render ignores a late artifact and reports cancellation once
+  ---
+  duration_ms: 0.463735
+  type: 'test'
+  ...
+# Subtest: validation and duplicate public IDs cannot launch native work
+ok 131 - validation and duplicate public IDs cannot launch native work
+  ---
+  duration_ms: 0.945485
+  type: 'test'
+  ...
+# Subtest: closing coordinator cancels preparation and rejects new dispatch
+ok 132 - closing coordinator cancels preparation and rejects new dispatch
+  ---
+  duration_ms: 0.292682
+  type: 'test'
+  ...
+# Subtest: processing snapshots recipe and pins while retaining the public render lifecycle
+ok 133 - processing snapshots recipe and pins while retaining the public render lifecycle
+  ---
+  duration_ms: 1.367638
+  type: 'test'
+  ...
+# Subtest: OCR conflicts and unsupported processing encoding fail before any worker request
+ok 134 - OCR conflicts and unsupported processing encoding fail before any worker request
+  ---
+  duration_ms: 0.555209
+  type: 'test'
+  ...
+# Subtest: soundtrack is snapshotted, registered and dispatched by exact content through the shared renderer
+ok 135 - soundtrack is snapshotted, registered and dispatched by exact content through the shared renderer
+  ---
+  duration_ms: 3.02146
+  type: 'test'
+  ...
+# Subtest: changed or cancelled audio registration never dispatches encoding
+ok 136 - changed or cancelled audio registration never dispatches encoding
+  ---
+  duration_ms: 0.541429
+  type: 'test'
+  ...
+# Subtest: composition dependencies deduplicate registration and use the existing render lifecycle
+ok 137 - composition dependencies deduplicate registration and use the existing render lifecycle
+  ---
+  duration_ms: 1.225199
+  type: 'test'
+  ...
+# Subtest: composition dependency changes/cancellation stop before encoding
+ok 138 - composition dependency changes/cancellation stop before encoding
+  ---
+  duration_ms: 0.77861
+  type: 'test'
+  ...
+# Subtest: unsupported composition AI processing is explicit and cannot start work
+ok 139 - unsupported composition AI processing is explicit and cannot start work
+  ---
+  duration_ms: 0.305721
+  type: 'test'
+  ...
+# Subtest: a cached result may finish before IPC acknowledgement without returning to queued
+ok 140 - a cached result may finish before IPC acknowledgement without returning to queued
+  ---
+  duration_ms: 0.689237
+  type: 'test'
+  ...
+# Subtest: a late result is not accepted after subtitle edits
+ok 141 - a late result is not accepted after subtitle edits
+  ---
+  duration_ms: 0.142741
+  type: 'test'
+  ...
+# Subtest: a superseded request cannot clear the active render
+ok 142 - a superseded request cannot clear the active render
+  ---
+  duration_ms: 0.522772
+  type: 'test'
+  ...
+# Subtest: duplicate terminal events and acknowledgements do not restart a render
+ok 143 - duplicate terminal events and acknowledgements do not restart a render
+  ---
+  duration_ms: 1.033926
+  type: 'test'
+  ...
+# Subtest: new settings do not guess a save folder or manufacture account status
+ok 144 - new settings do not guess a save folder or manufacture account status
+  ---
+  duration_ms: 5.592103
+  type: 'test'
+  ...
+# Subtest: output default persists; changing it leaves previous output files in place
+ok 145 - output default persists; changing it leaves previous output files in place
+  ---
+  duration_ms: 7.48713
+  type: 'test'
+  ...
+# Subtest: corrupt and future-version settings are preserved rather than silently replaced
+ok 146 - corrupt and future-version settings are preserved rather than silently replaced
+  ---
+  duration_ms: 3.876791
+  type: 'test'
+  ...
+# Subtest: parallel writes are serialized and snapshot callers cannot mutate saved defaults
+ok 147 - parallel writes are serialized and snapshot callers cannot mutate saved defaults
+  ---
+  duration_ms: 4.458099
+  type: 'test'
+  ...
+# Subtest: invalid directories do not replace the last valid settings
+ok 148 - invalid directories do not replace the last valid settings
+  ---
+  duration_ms: 1.891702
+  type: 'test'
+  ...
+# Subtest: soundtrack remains a per-document asset, with strict current project and undo support
+ok 149 - soundtrack remains a per-document asset, with strict current project and undo support
+  ---
+  duration_ms: 2.758662
+  type: 'test'
+  ...
+# Subtest: invalid paths, hashes, audio bounds, fades, and arbitrary worker inputs are rejected
+ok 150 - invalid paths, hashes, audio bounds, fades, and arbitrary worker inputs are rejected
+  ---
+  duration_ms: 0.77224
+  type: 'test'
+  ...
+# Subtest: global and cue-specific subtitle styles survive project, processing and split boundaries
+ok 151 - global and cue-specific subtitle styles survive project, processing and split boundaries
+  ---
+  duration_ms: 4.061384
+  type: 'test'
+  ...
+# Subtest: style validation rejects ASS injection, invalid opacity, unsupported keys and non-finite numbers
+ok 152 - style validation rejects ASS injection, invalid opacity, unsupported keys and non-finite numbers
+  ---
+  duration_ms: 0.813721
+  type: 'test'
+  ...
+# Subtest: literal rules handle Unicode, case and replacement dollar signs without regex expansion
+ok 153 - literal rules handle Unicode, case and replacement dollar signs without regex expansion
+  ---
+  duration_ms: 1.831553
+  type: 'test'
+  ...
+# Subtest: regex groups and selected scope preview independently before apply
+ok 154 - regex groups and selected scope preview independently before apply
+  ---
+  duration_ms: 1.028839
+  type: 'test'
+  ...
+# Subtest: zero-width regex terminates on Unicode input and result sizes are bounded
+ok 155 - zero-width regex terminates on Unicode input and result sizes are bounded
+  ---
+  duration_ms: 0.373191
+  type: 'test'
+  ...
+# Subtest: bulk timing shifts preserve unselected cues and refuse partial/clamped changes
+ok 156 - bulk timing shifts preserve unselected cues and refuse partial/clamped changes
+  ---
+  duration_ms: 0.233815
+  type: 'test'
+  ...
+# Subtest: vision validates bounded requests and preserves content language
+ok 157 - vision validates bounded requests and preserves content language
+  ---
+  duration_ms: 2.388595
+  type: 'test'
+  ...
+# Subtest: manual masks require coordinates; automatic text masks do not require review
+ok 158 - manual masks require coordinates; automatic text masks do not require review
+  ---
+  duration_ms: 0.938194
+  type: 'test'
+  ...
+# Subtest: OCR draft cannot replace edits or follow a different source
+ok 159 - OCR draft cannot replace edits or follow a different source
+  ---
+  duration_ms: 0.235869
+  type: 'test'
+  ...
+# Subtest: vision completion uses public ID and original revision
+ok 160 - vision completion uses public ID and original revision
+  ---
+  duration_ms: 0.817457
+  type: 'test'
+  ...
+# Subtest: cancel wins over late successful inference and emits exactly one terminal event
+ok 161 - cancel wins over late successful inference and emits exactly one terminal event
+  ---
+  duration_ms: 0.535461
+  type: 'test'
+  ...
+# Subtest: malformed model results do not escape the coordinator
+ok 162 - malformed model results do not escape the coordinator
+  ---
+  duration_ms: 0.303168
+  type: 'test'
+  ...
+# Subtest: out-of-range evidence is rejected and the next operation can run
+ok 163 - out-of-range evidence is rejected and the next operation can run
+  ---
+  duration_ms: 0.417727
+  type: 'test'
+  ...
+# Subtest: duplicate admissions and admissions after shutdown are refused
+ok 164 - duplicate admissions and admissions after shutdown are refused
+  ---
+  duration_ms: 0.478526
+  type: 'test'
+  ...
+# (node:14881) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SC-08: workflow save has no execution side effects and duplicate run admission is stable
+ok 165 - SC-08: workflow save has no execution side effects and duplicate run admission is stable
+  ---
+  duration_ms: 5.463334
+  type: 'test'
+  ...
+# Subtest: SC-07/08: prepared admission reuses captured recipe and model versions after edits
+ok 166 - SC-07/08: prepared admission reuses captured recipe and model versions after edits
+  ---
+  duration_ms: 4.163956
+  type: 'test'
+  ...
+# Subtest: SC-08: reusing a prepared request for another workflow is rejected
+ok 167 - SC-08: reusing a prepared request for another workflow is rejected
+  ---
+  duration_ms: 2.477146
+  type: 'test'
+  ...
+# Subtest: SC-08: stale/archived or missing-input workflows cannot partially enqueue
+ok 168 - SC-08: stale/archived or missing-input workflows cannot partially enqueue
+  ---
+  duration_ms: 1.383172
+  type: 'test'
+  ...
+# Subtest: SC-08: change during source resolution is detected before a run is saved
+ok 169 - SC-08: change during source resolution is detected before a run is saved
+  ---
+  duration_ms: 1.372496
+  type: 'test'
+  ...
+# Subtest: SC-07: missing jobs and mixed outcomes cannot be called a completed workflow
+ok 170 - SC-07: missing jobs and mixed outcomes cannot be called a completed workflow
+  ---
+  duration_ms: 0.150773
+  type: 'test'
+  ...
+# Subtest: SC-07/08: a crash after queue commit but before run update cannot create duplicate jobs
+ok 171 - SC-07/08: a crash after queue commit but before run update cannot create duplicate jobs
+  ---
+  duration_ms: 1.477641
+  type: 'test'
+  ...
+1..171
+# tests 171
+# suites 0
+# pass 171
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 938.120111

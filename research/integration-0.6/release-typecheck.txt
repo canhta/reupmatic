@@ -1,0 +1,7 @@
+
+> reupmatic@0.6.0 typecheck
+> tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.ui.json --noEmit
+
+error TS2688: Cannot find type definition file for 'node'.
+  The file is in the program because:
+    Entry point of type library 'node' specified in compilerOptions

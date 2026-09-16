@@ -1,0 +1,20 @@
+
+> reupmatic@0.9.0 test:packaging
+> node scripts/python.mjs -m unittest discover -s tests -p test_packaging.py -v
+
+test_archive_version_root_and_embedded_hashes_match_the_sources (test_packaging.SourcePackagingTests.test_archive_version_root_and_embedded_hashes_match_the_sources) ... ok
+test_conflicting_instruction_file_and_unsynced_readme_are_rejected (test_packaging.SourcePackagingTests.test_conflicting_instruction_file_and_unsynced_readme_are_rejected) ... ok
+test_current_system_map_versions_and_scope_must_match_release (test_packaging.SourcePackagingTests.test_current_system_map_versions_and_scope_must_match_release) ... ok
+test_dependencies_secrets_fonts_models_and_archives_are_excluded (test_packaging.SourcePackagingTests.test_dependencies_secrets_fonts_models_and_archives_are_excluded) ... ok
+test_direct_packager_refuses_missing_declared_markers (test_packaging.SourcePackagingTests.test_direct_packager_refuses_missing_declared_markers) ... ok
+test_direct_packager_refuses_unrecorded_source_removal (test_packaging.SourcePackagingTests.test_direct_packager_refuses_unrecorded_source_removal) ... ok
+test_older_version_is_rejected_without_touching_newer_release (test_packaging.SourcePackagingTests.test_older_version_is_rejected_without_touching_newer_release) ... ok
+test_public_brand_assets_survive_packaging_without_fonts_or_weights (test_packaging.SourcePackagingTests.test_public_brand_assets_survive_packaging_without_fonts_or_weights) ... ok
+test_reserved_modules_and_future_cloud_delivery_boundaries_survive_packaging (test_packaging.SourcePackagingTests.test_reserved_modules_and_future_cloud_delivery_boundaries_survive_packaging) ... ok
+test_semver_comparison_is_numeric_and_patch_handoffs_keep_the_patch (test_packaging.SourcePackagingTests.test_semver_comparison_is_numeric_and_patch_handoffs_keep_the_patch) ... ok
+test_symlinks_cannot_import_content_outside_the_repository (test_packaging.SourcePackagingTests.test_symlinks_cannot_import_content_outside_the_repository) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 8.074s
+
+OK

@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: composition validates a bounded current document and owns source/output clock maps
+ok 1 - composition validates a bounded current document and owns source/output clock maps
+  ---
+  duration_ms: 2.018639
+  type: 'test'
+  ...
+# Subtest: reordering follows clip content and retains text/style without mutating the input
+ok 2 - reordering follows clip content and retains text/style without mutating the input
+  ---
+  duration_ms: 0.634356
+  type: 'test'
+  ...
+# Subtest: split and contiguous join keep source maps and captions; unrelated clips cannot merge
+ok 3 - split and contiguous join keep source maps and captions; unrelated clips cannot merge
+  ---
+  duration_ms: 0.626885
+  type: 'test'
+  ...
+# Subtest: trim and speed map remaining cue fragments, and removal drops only removed content
+ok 4 - trim and speed map remaining cue fragments, and removal drops only removed content
+  ---
+  duration_ms: 0.337578
+  type: 'test'
+  ...
+# Subtest: adding a repeated source never duplicates existing captions into the new instance
+ok 5 - adding a repeated source never duplicates existing captions into the new instance
+  ---
+  duration_ms: 0.218783
+  type: 'test'
+  ...
+# Subtest: composition, captions and sample window are one undo/recovery-compatible project snapshot
+ok 6 - composition, captions and sample window are one undo/recovery-compatible project snapshot
+  ---
+  duration_ms: 0.819069
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 66.279647

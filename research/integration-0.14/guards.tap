@@ -1,0 +1,250 @@
+TAP version 13
+# Subtest: AGENTS.md is the only root instruction file and owns engineering rules
+ok 1 - AGENTS.md is the only root instruction file and owns engineering rules
+  ---
+  duration_ms: 5.437999
+  type: 'test'
+  ...
+# Subtest: application source stays under the readable-file size limit
+ok 2 - application source stays under the readable-file size limit
+  ---
+  duration_ms: 9.049719
+  type: 'test'
+  ...
+# Subtest: core owns business logic, not UI or Electron dependencies
+ok 3 - core owns business logic, not UI or Electron dependencies
+  ---
+  duration_ms: 2.476472
+  type: 'test'
+  ...
+# Subtest: entry points remain composition-only and features have clear ownership
+ok 4 - entry points remain composition-only and features have clear ownership
+  ---
+  duration_ms: 0.71536
+  type: 'test'
+  ...
+# Subtest: abstractions own behavior instead of adding forwarding layers
+ok 5 - abstractions own behavior instead of adding forwarding layers
+  ---
+  duration_ms: 3.619831
+  type: 'test'
+  ...
+# Subtest: shared media behavior is imported from its owner, not compatibility re-exports
+ok 6 - shared media behavior is imported from its owner, not compatibility re-exports
+  ---
+  duration_ms: 0.279197
+  type: 'test'
+  ...
+# Subtest: all scope groups, five screens and three modes have feature and flow traceability
+ok 7 - all scope groups, five screens and three modes have feature and flow traceability
+  ---
+  duration_ms: 14.987373
+  type: 'test'
+  ...
+# Subtest: omitting a scope, screen, mode or specification breaks the coverage guard
+ok 8 - omitting a scope, screen, mode or specification breaks the coverage guard
+  ---
+  duration_ms: 60.471708
+  type: 'test'
+  ...
+# Subtest: unknown ownership, duplicate IDs and false completion declarations are rejected
+ok 9 - unknown ownership, duplicate IDs and false completion declarations are rejected
+  ---
+  duration_ms: 36.674083
+  type: 'test'
+  ...
+# Subtest: independent endpoints and unfinished major capabilities remain explicit rather than hidden by scaffolding
+ok 10 - independent endpoints and unfinished major capabilities remain explicit rather than hidden by scaffolding
+  ---
+  duration_ms: 0.672755
+  type: 'test'
+  ...
+# Subtest: the human system map derives ownership and gaps from the current machine map
+ok 11 - the human system map derives ownership and gaps from the current machine map
+  ---
+  duration_ms: 2.144836
+  type: 'test'
+  ...
+# Subtest: the delivered tree retains source paths and 14 scope groups without counting placeholders as code
+ok 12 - the delivered tree retains source paths and 14 scope groups without counting placeholders as code
+  ---
+  duration_ms: 39.112919
+  type: 'test'
+  ...
+# Subtest: scaffolding is idempotent and never truncates existing markers or real code
+ok 13 - scaffolding is idempotent and never truncates existing markers or real code
+  ---
+  duration_ms: 35.265583
+  type: 'test'
+  ...
+# Subtest: unsafe paths and duplicate ownership fail before directory creation
+ok 14 - unsafe paths and duplicate ownership fail before directory creation
+  ---
+  duration_ms: 6.071766
+  type: 'test'
+  ...
+# Subtest: symlink ancestors and dangling marker links cannot redirect writes
+ok 15 - symlink ancestors and dangling marker links cannot redirect writes
+  ---
+  duration_ms: 4.183725
+  type: 'test'
+  ...
+# Subtest: routing is owned by Automation and an empty planned module cannot be relabeled as implemented
+ok 16 - routing is owned by Automation and an empty planned module cannot be relabeled as implemented
+  ---
+  duration_ms: 4.265536
+  type: 'test'
+  ...
+# Subtest: source ZIP and CI do not install Git hooks
+ok 17 - source ZIP and CI do not install Git hooks
+  ---
+  duration_ms: 1.476977
+  type: 'test'
+  ...
+# Subtest: hook setup recognizes only its own Git root, not a parent
+ok 18 - hook setup recognizes only its own Git root, not a parent
+  ---
+  duration_ms: 10.260278
+  type: 'test'
+  ...
+# Subtest: Python commands prefer explicit executable, then project virtualenv
+ok 19 - Python commands prefer explicit executable, then project virtualenv
+  ---
+  duration_ms: 0.867787
+  type: 'test'
+  ...
+# Subtest: Reupmatic uses one formatter and hook manager with separate typechecking
+ok 20 - Reupmatic uses one formatter and hook manager with separate typechecking
+  ---
+  duration_ms: 0.252077
+  type: 'test'
+  ...
+# Subtest: pre-commit checks do not mutate staging or start media jobs
+ok 21 - pre-commit checks do not mutate staging or start media jobs
+  ---
+  duration_ms: 2.203294
+  type: 'test'
+  ...
+# Subtest: format configurations parse and retain recommended checks
+ok 22 - format configurations parse and retain recommended checks
+  ---
+  duration_ms: 0.183314
+  type: 'test'
+  ...
+# Subtest: translation has matching typed preload/host channels and participates in close cancellation
+ok 23 - translation has matching typed preload/host channels and participates in close cancellation
+  ---
+  duration_ms: 2.493458
+  type: 'test'
+  ...
+# Subtest: draft review exposes manual keep, explicit replacement, all rows and final timings
+ok 24 - draft review exposes manual keep, explicit replacement, all rows and final timings
+  ---
+  duration_ms: 0.340329
+  type: 'test'
+  ...
+# Subtest: translation hook retains draft on failed retry and does not apply from job events
+ok 25 - translation hook retains draft on failed retry and does not apply from job events
+  ---
+  duration_ms: 0.372187
+  type: 'test'
+  ...
+# Subtest: translation rule/setup forms use existing library primitives without starting work on selection
+ok 26 - translation rule/setup forms use existing library primitives without starting work on selection
+  ---
+  duration_ms: 0.442852
+  type: 'test'
+  ...
+# Subtest: dynamic translation phases/errors and capture consequences are bilingual and documented
+ok 27 - dynamic translation phases/errors and capture consequences are bilingual and documented
+  ---
+  duration_ms: 0.716481
+  type: 'test'
+  ...
+# Subtest: one UI system complements, rather than replaces, media libraries
+ok 28 - one UI system complements, rather than replaces, media libraries
+  ---
+  duration_ms: 2.061862
+  type: 'test'
+  ...
+# Subtest: application uses library controls, not a parallel primitive implementation
+ok 29 - application uses library controls, not a parallel primitive implementation
+  ---
+  duration_ms: 6.055503
+  type: 'test'
+  ...
+# Subtest: theme, language and layer order are explicit and shared
+ok 30 - theme, language and layer order are explicit and shared
+  ---
+  duration_ms: 0.261501
+  type: 'test'
+  ...
+# Subtest: Astryx selections have a maintained catalogue and task-level rationale
+ok 31 - Astryx selections have a maintained catalogue and task-level rationale
+  ---
+  duration_ms: 1.850616
+  type: 'test'
+  ...
+# Subtest: navigation and disclosure use library semantics, not button lookalikes
+ok 32 - navigation and disclosure use library semantics, not button lookalikes
+  ---
+  duration_ms: 1.395516
+  type: 'test'
+  ...
+# Subtest: choices with different execution consequences remain visible before submission
+ok 33 - choices with different execution consequences remain visible before submission
+  ---
+  duration_ms: 0.152127
+  type: 'test'
+  ...
+# Subtest: workspace CSS does not reach into library controls or shell landmarks
+ok 34 - workspace CSS does not reach into library controls or shell landmarks
+  ---
+  duration_ms: 0.947196
+  type: 'test'
+  ...
+# Subtest: literal UI messages exist in both application languages
+ok 35 - literal UI messages exist in both application languages
+  ---
+  duration_ms: 40.834773
+  type: 'test'
+  ...
+# Subtest: model setup messages refer to the shipped development guide
+ok 36 - model setup messages refer to the shipped development guide
+  ---
+  duration_ms: 0.518254
+  type: 'test'
+  ...
+# Subtest: Electron flows target library interactions rather than native select elements
+ok 37 - Electron flows target library interactions rather than native select elements
+  ---
+  duration_ms: 0.450263
+  type: 'test'
+  ...
+# Subtest: Sources stages batches and exposes storage consequences before import
+ok 38 - Sources stages batches and exposes storage consequences before import
+  ---
+  duration_ms: 0.344986
+  type: 'test'
+  ...
+# Subtest: public assets and local settings have actual application wiring
+ok 39 - public assets and local settings have actual application wiring
+  ---
+  duration_ms: 0.14692
+  type: 'test'
+  ...
+# Subtest: one domain processing form serves Editor, batch and folders without starting work
+ok 40 - one domain processing form serves Editor, batch and folders without starting work
+  ---
+  duration_ms: 0.3475
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 275.924086

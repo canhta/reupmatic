@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "id": "sample-example",
+  "revision": 3,
+  "method": "media.render",
+  "params": {
+    "asset_id": "registered-source",
+    "subtitle_id": "registered-srt",
+    "mode": "sample",
+    "encoding": "review",
+    "start_ms": 1000,
+    "end_ms": 3000
+  }
+}

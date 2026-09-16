@@ -1,0 +1,10 @@
+test_captions_burn_on_composition_time_for_late_sample (test_composition_native.CompositionNativeTests.test_captions_burn_on_composition_time_for_late_sample) ... ok
+test_global_trim_speed_and_source_audio_use_the_composition_clock (test_composition_native.CompositionNativeTests.test_global_trim_speed_and_source_audio_use_the_composition_clock) ... ok
+test_mixed_dimensions_rates_audio_and_clip_order_are_encoded (test_composition_native.CompositionNativeTests.test_mixed_dimensions_rates_audio_and_clip_order_are_encoded) ... ok
+test_sample_straddles_cut_and_materializes_only_its_interval (test_composition_native.CompositionNativeTests.test_sample_straddles_cut_and_materializes_only_its_interval) ... ok
+test_validation_and_cancel_do_not_poison_next_request (test_composition_native.CompositionNativeTests.test_validation_and_cancel_do_not_poison_next_request) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 9.630s
+
+OK

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:editing:1",
+  "title": "Current editing recipe",
+  "$comment": "Runtime additionally checks crop sums, trim ordering/source duration and sample intersection.",
+  "type": "object",
+  "properties": {
+    "trim": {
+      "type": "object",
+      "properties": {
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86399999
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        }
+      },
+      "required": [
+        "start_ms",
+        "end_ms"
+      ],
+      "additionalProperties": false
+    },
+    "crop": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "flip": {
+      "enum": [
+        "horizontal",
+        "vertical",
+        "both"
+      ]
+    },
+    "speed": {
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 4
+    },
+    "color": {
+      "type": "object",
+      "properties": {
+        "brightness": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "contrast": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "saturation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "required": [
+        "brightness",
+        "contrast",
+        "saturation"
+      ],
+      "additionalProperties": false
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "muted": {
+          "type": "boolean"
+        },
+        "gain_db": {
+          "type": "number",
+          "minimum": -60,
+          "maximum": 24
+        }
+      },
+      "required": [
+        "muted",
+        "gain_db"
+      ],
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "aspect": {
+          "enum": [
+            "source",
+            "9:16",
+            "16:9",
+            "1:1",
+            "4:5"
+          ]
+        },
+        "fit": {
+          "enum": [
+            "contain",
+            "cover"
+          ]
+        },
+        "height": {
+          "enum": [
+            0,
+            480,
+            720,
+            1080,
+            1920
+          ]
+        }
+      },
+      "required": [
+        "aspect",
+        "fit",
+        "height"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "minProperties": 1
+}

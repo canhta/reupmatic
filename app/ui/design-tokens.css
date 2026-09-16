@@ -1,0 +1,32 @@
+/* App geometry and native-media aliases inherit the selected Astryx theme. */
+:root {
+  color-scheme: dark;
+  --font-ui: var(--font-family-body), system-ui, sans-serif;
+  --text-xs: var(--font-size-sm);
+  --text-sm: var(--font-size-base);
+  --text-base: var(--font-size-lg);
+  --text-heading: var(--font-size-2xl);
+  --space-1: var(--spacing-1);
+  --space-2: var(--spacing-2);
+  --space-3: var(--spacing-3);
+  --space-4: var(--spacing-4);
+  --space-6: var(--spacing-6);
+  --space-8: var(--spacing-8);
+  --space-10: var(--spacing-10);
+  --bg-app: var(--color-background-body);
+  --bg-nav: var(--color-background-muted);
+  --bg-tray: var(--color-background-muted);
+  --bg-panel: var(--color-background-surface);
+  --text-strong: var(--color-text-primary);
+  --text-muted: var(--color-text-secondary);
+  --edge: var(--color-border-emphasized);
+  --edge-subtle: var(--color-border);
+  --accent: var(--color-accent);
+  --focus: var(--focus-outline-color);
+  --danger: var(--color-error);
+  --warning: var(--color-warning);
+  --radius-sm: var(--radius-inner);
+  --radius-md: var(--radius-element);
+  --radius-lg: var(--radius-container);
+  --shadow-surface: var(--shadow-low);
+}

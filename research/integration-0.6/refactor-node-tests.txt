@@ -1,0 +1,536 @@
+TAP version 13
+# (node:2941) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+ok 1 - SQLite idempotent batch admission keeps one snapshot, rejects reused key with changed data
+  ---
+  duration_ms: 11.683643
+  type: 'test'
+  ...
+# Subtest: claim increments attempt; explicit retry retains job identity and input
+ok 2 - claim increments attempt; explicit retry retains job identity and input
+  ---
+  duration_ms: 5.819888
+  type: 'test'
+  ...
+# Subtest: restart retains queued/done rows and recovers running versus acknowledged cancellation
+ok 3 - restart retains queued/done rows and recovers running versus acknowledged cancellation
+  ---
+  duration_ms: 4.466689
+  type: 'test'
+  ...
+# Subtest: invalid batch does not partly enqueue and relative paths are rejected
+ok 4 - invalid batch does not partly enqueue and relative paths are rejected
+  ---
+  duration_ms: 2.237225
+  type: 'test'
+  ...
+# Subtest: queue starts paused, isolates a bad item, then exports good item through same renderer
+ok 5 - queue starts paused, isolates a bad item, then exports good item through same renderer
+  ---
+  duration_ms: 31.302056
+  type: 'test'
+  ...
+# Subtest: pause allows current output, keeps next queued; closing the UI is not cancellation
+ok 6 - pause allows current output, keeps next queued; closing the UI is not cancellation
+  ---
+  duration_ms: 23.999435
+  type: 'test'
+  ...
+# Subtest: cancel running and queued entries; retry never creates a second job
+ok 7 - cancel running and queued entries; retry never creates a second job
+  ---
+  duration_ms: 19.211993
+  type: 'test'
+  ...
+# Subtest: a changed source cannot reach render; runtime failure pauses the waiting group
+ok 8 - a changed source cannot reach render; runtime failure pauses the waiting group
+  ---
+  duration_ms: 16.967492
+  type: 'test'
+  ...
+# Subtest: existing preview has dispatch priority before the next batch item
+ok 9 - existing preview has dispatch priority before the next batch item
+  ---
+  duration_ms: 20.217833
+  type: 'test'
+  ...
+# Subtest: output commit is exclusive, retries reconcile identical files and preserve conflicts
+ok 10 - output commit is exclusive, retries reconcile identical files and preserve conflicts
+  ---
+  duration_ms: 11.929462
+  type: 'test'
+  ...
+# Subtest: cancel before output commit produces no final export, does not delete the source
+ok 11 - cancel before output commit produces no final export, does not delete the source
+  ---
+  duration_ms: 7.246523
+  type: 'test'
+  ...
+# Subtest: queue shutdown retains interrupted state and does not start the next item
+ok 12 - queue shutdown retains interrupted state and does not start the next item
+  ---
+  duration_ms: 14.751184
+  type: 'test'
+  ...
+# Subtest: invalid timing rejected
+ok 13 - invalid timing rejected
+  ---
+  duration_ms: 0.821913
+  type: 'test'
+  ...
+# Subtest: duplicate cue IDs rejected
+ok 14 - duplicate cue IDs rejected
+  ---
+  duration_ms: 0.82639
+  type: 'test'
+  ...
+# Subtest: split preserves Unicode text and partitions timing
+ok 15 - split preserves Unicode text and partitions timing
+  ---
+  duration_ms: 0.246169
+  type: 'test'
+  ...
+# Subtest: split does not cut surrogate pair
+ok 16 - split does not cut surrogate pair
+  ---
+  duration_ms: 0.150556
+  type: 'test'
+  ...
+# Subtest: merge preserves both cue contents
+ok 17 - merge preserves both cue contents
+  ---
+  duration_ms: 0.181172
+  type: 'test'
+  ...
+# Subtest: replace scope leaves unselected content intact
+ok 18 - replace scope leaves unselected content intact
+  ---
+  duration_ms: 0.23988
+  type: 'test'
+  ...
+# Subtest: history snapshots are independent
+ok 19 - history snapshots are independent
+  ---
+  duration_ms: 0.240831
+  type: 'test'
+  ...
+# Subtest: stale revision and superseded request rejected
+ok 20 - stale revision and superseded request rejected
+  ---
+  duration_ms: 0.102914
+  type: 'test'
+  ...
+# Subtest: local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+ok 21 - local skill is linked from AGENTS and keeps reference distinct from desktop adaptation
+  ---
+  duration_ms: 1.582964
+  type: 'test'
+  ...
+# Subtest: UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+ok 22 - UI uses shared tokens, reduced motion, explicit hidden state and no expensive decorative blur
+  ---
+  duration_ms: 0.353471
+  type: 'test'
+  ...
+# Subtest: selected solid text/surface pairs meet the project 4.5:1 token target (not a full a11y audit)
+ok 23 - selected solid text/surface pairs meet the project 4.5:1 token target (not a full a11y audit)
+  ---
+  duration_ms: 0.527952
+  type: 'test'
+  ...
+# (node:2974) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: folder config saves paused; access gate is checked at create and start
+not ok 24 - folder config saves paused; access gate is checked at create and start
+  ---
+  duration_ms: 9.091495
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:37:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: stable file is admitted once; intake does not unpause the shared queue
+not ok 25 - stable file is admitted once; intake does not unpause the shared queue
+  ---
+  duration_ms: 6.592016
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:43:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:45:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: file changed while being observed resets the readiness window
+not ok 26 - file changed while being observed resets the readiness window
+  ---
+  duration_ms: 5.470324
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:53:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:55:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: new-only baselines existing path versions, receives later files and changed versions
+not ok 27 - new-only baselines existing path versions, receives later files and changed versions
+  ---
+  duration_ms: 6.451256
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:60:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:62:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: content receipts prevent re-admission of a renamed or copied admitted video
+not ok 28 - content receipts prevent re-admission of a renamed or copied admitted video
+  ---
+  duration_ms: 4.986738
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:70:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:72:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: receipt failure after queue commit retries the same admission ID
+not ok 29 - receipt failure after queue commit retries the same admission ID
+  ---
+  duration_ms: 4.521301
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:78:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:82:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: pause stops new intake without cancelling accepted jobs
+not ok 30 - pause stops new intake without cancelling accepted jobs
+  ---
+  duration_ms: 5.650644
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:88:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:90:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: restart preserves baseline/receipts, stays paused, then admits files missed while off
+not ok 31 - restart preserves baseline/receipts, stays paused, then admits files missed while off
+  ---
+  duration_ms: 4.473149
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:98:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+ok 32 - scan skips output subtrees, hidden/partial files, symlinks, and known generated files
+  ---
+  duration_ms: 22.219439
+  type: 'test'
+  ...
+# Subtest: reject equal roots, source inside output and linked automation loops
+not ok 33 - reject equal roots, source inside output and linked automation loops
+  ---
+  duration_ms: 8.949377
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:120:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:124:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: pause during async watcher attachment closes the late handle and admits nothing
+not ok 34 - pause during async watcher attachment closes the late handle and admits nothing
+  ---
+  duration_ms: 3.285868
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:130:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:133:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: shutdown waits for a pending attachment before closing storage
+not ok 35 - shutdown waits for a pending attachment before closing storage
+  ---
+  duration_ms: 4.862693
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:137:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:140:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: missing source reports needs-attention, keeps queued data, can recover after restore
+not ok 36 - missing source reports needs-attention, keeps queued data, can recover after restore
+  ---
+  duration_ms: 3.726119
+  type: 'test'
+  location: '/mnt/data/work/reupmatic/tests/folder.test.mjs:145:1'
+  failureType: 'testCodeFailure'
+  error: 'WATCH_OUTPUT_LOOP'
+  code: 'WATCH_OUTPUT_LOOP'
+  stack: |-
+    validateRoots (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:26:15)
+    async FolderMonitor.create (file:///mnt/data/work/reupmatic/dist-core/folders/folder-monitor.js:132:9)
+    async create (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:32:18)
+    async TestContext.<anonymous> (file:///mnt/data/work/reupmatic/tests/folder.test.mjs:146:42)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: standard ranges: bounded, open-ended, suffix and huge values
+ok 37 - standard ranges: bounded, open-ended, suffix and huge values
+  ---
+  duration_ms: 1.940731
+  type: 'test'
+  ...
+# Subtest: unsatisfiable, invalid and unsupported ranges are distinct
+ok 38 - unsatisfiable, invalid and unsupported ranges are distinct
+  ---
+  duration_ms: 0.152559
+  type: 'test'
+  ...
+# Subtest: registered file response serves actual ranges, HEAD, misses and cancel safely
+ok 39 - registered file response serves actual ranges, HEAD, misses and cancel safely
+  ---
+  duration_ms: 32.221576
+  type: 'test'
+  ...
+# Subtest: project round-trip retains Unicode cues and sample interval without media copies
+ok 40 - project round-trip retains Unicode cues and sample interval without media copies
+  ---
+  duration_ms: 17.323096
+  type: 'test'
+  ...
+# Subtest: project snapshots are independent from subsequent editor changes
+ok 41 - project snapshots are independent from subsequent editor changes
+  ---
+  duration_ms: 0.434753
+  type: 'test'
+  ...
+# Subtest: unknown version, external instructions, URL sources and malformed cue data are rejected
+ok 42 - unknown version, external instructions, URL sources and malformed cue data are rejected
+  ---
+  duration_ms: 0.902293
+  type: 'test'
+  ...
+# Subtest: malformed, oversized and invalid UTF-8 input never becomes a partial project
+ok 43 - malformed, oversized and invalid UTF-8 input never becomes a partial project
+  ---
+  duration_ms: 7.32725
+  type: 'test'
+  ...
+# Subtest: saving invalid edits preserves the existing valid project
+ok 44 - saving invalid edits preserves the existing valid project
+  ---
+  duration_ms: 6.602187
+  type: 'test'
+  ...
+# Subtest: source overwrite checks include same path and hardlink aliases
+ok 45 - source overwrite checks include same path and hardlink aliases
+  ---
+  duration_ms: 7.751986
+  type: 'test'
+  ...
+# Subtest: runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+ok 46 - runtime cue boundary rejects non-arrays and extra fields without raw TypeErrors
+  ---
+  duration_ms: 0.340591
+  type: 'test'
+  ...
+# Subtest: empty cues bypass subtitle dependency and finish through the common renderer
+ok 47 - empty cues bypass subtitle dependency and finish through the common renderer
+  ---
+  duration_ms: 1.933079
+  type: 'test'
+  ...
+# Subtest: cancel while preparing subtitle prevents dispatch even if preparation wins the race
+ok 48 - cancel while preparing subtitle prevents dispatch even if preparation wins the race
+  ---
+  duration_ms: 0.963555
+  type: 'test'
+  ...
+# Subtest: progress is public-ID correlated during preparation and rendering
+ok 49 - progress is public-ID correlated during preparation and rendering
+  ---
+  duration_ms: 5.998908
+  type: 'test'
+  ...
+# Subtest: one failed preparation leaves independent render usable
+ok 50 - one failed preparation leaves independent render usable
+  ---
+  duration_ms: 0.540791
+  type: 'test'
+  ...
+# Subtest: cancel during render ignores a late artifact and reports cancellation once
+ok 51 - cancel during render ignores a late artifact and reports cancellation once
+  ---
+  duration_ms: 0.484506
+  type: 'test'
+  ...
+# Subtest: validation and duplicate public IDs cannot launch native work
+ok 52 - validation and duplicate public IDs cannot launch native work
+  ---
+  duration_ms: 0.685408
+  type: 'test'
+  ...
+# Subtest: closing coordinator cancels preparation and rejects new dispatch
+ok 53 - closing coordinator cancels preparation and rejects new dispatch
+  ---
+  duration_ms: 0.495033
+  type: 'test'
+  ...
+# Subtest: a cached result may finish before IPC acknowledgement without returning to queued
+ok 54 - a cached result may finish before IPC acknowledgement without returning to queued
+  ---
+  duration_ms: 0.631917
+  type: 'test'
+  ...
+# Subtest: a late result is not accepted after subtitle edits
+ok 55 - a late result is not accepted after subtitle edits
+  ---
+  duration_ms: 0.115854
+  type: 'test'
+  ...
+# Subtest: a superseded request cannot clear the active render
+ok 56 - a superseded request cannot clear the active render
+  ---
+  duration_ms: 0.091637
+  type: 'test'
+  ...
+# Subtest: duplicate terminal events and acknowledgements do not restart a render
+ok 57 - duplicate terminal events and acknowledgements do not restart a render
+  ---
+  duration_ms: 0.872618
+  type: 'test'
+  ...
+# Subtest: vision validates bounded requests and preserves content language
+ok 58 - vision validates bounded requests and preserves content language
+  ---
+  duration_ms: 2.64693
+  type: 'test'
+  ...
+# Subtest: manual masks require coordinates; automatic text masks do not require review
+ok 59 - manual masks require coordinates; automatic text masks do not require review
+  ---
+  duration_ms: 0.357265
+  type: 'test'
+  ...
+# Subtest: OCR draft cannot replace edits or follow a different source
+ok 60 - OCR draft cannot replace edits or follow a different source
+  ---
+  duration_ms: 1.086259
+  type: 'test'
+  ...
+# Subtest: vision completion uses public ID and original revision
+ok 61 - vision completion uses public ID and original revision
+  ---
+  duration_ms: 1.149784
+  type: 'test'
+  ...
+# Subtest: cancel wins over late successful inference and emits exactly one terminal event
+ok 62 - cancel wins over late successful inference and emits exactly one terminal event
+  ---
+  duration_ms: 0.59954
+  type: 'test'
+  ...
+# Subtest: malformed model results do not escape the coordinator
+ok 63 - malformed model results do not escape the coordinator
+  ---
+  duration_ms: 0.207682
+  type: 'test'
+  ...
+# Subtest: out-of-range evidence is rejected and the next operation can run
+ok 64 - out-of-range evidence is rejected and the next operation can run
+  ---
+  duration_ms: 0.411567
+  type: 'test'
+  ...
+# Subtest: duplicate admissions and admissions after shutdown are refused
+ok 65 - duplicate admissions and admissions after shutdown are refused
+  ---
+  duration_ms: 0.375163
+  type: 'test'
+  ...
+1..65
+# tests 65
+# suites 0
+# pass 53
+# fail 12
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 316.331976

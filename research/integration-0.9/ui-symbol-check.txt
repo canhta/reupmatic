@@ -1,0 +1,6 @@
+
+{
+  "diagnostics": 1102,
+  "undefinedSymbols": 0,
+  "note": "Targeted unresolved-dependency diagnostics, not a UI typecheck pass. types:[] excludes unavailable vite/client without introducing stubs."
+}

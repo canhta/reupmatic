@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: only admitted confined WAV + receipt pairs become preview/export grants
+ok 1 - only admitted confined WAV + receipt pairs become preview/export grants
+  ---
+  duration_ms: 30.364212
+  type: 'test'
+  ...
+# Subtest: corrupt waveform or changed receipt is not admitted or exported
+ok 2 - corrupt waveform or changed receipt is not admitted or exported
+  ---
+  duration_ms: 9.006703
+  type: 'test'
+  ...
+# Subtest: symlink audio cannot grant arbitrary files even when hashes match
+ok 3 - symlink audio cannot grant arbitrary files even when hashes match
+  ---
+  duration_ms: 5.176025
+  type: 'test'
+  ...
+# Subtest: export protects imported originals, hardlinks, live drafts and active cancellation
+ok 4 - export protects imported originals, hardlinks, live drafts and active cancellation
+  ---
+  duration_ms: 21.715809
+  type: 'test'
+  ...
+# Subtest: coordinator uses existing worker, checks progress correlation and admits before result
+ok 5 - coordinator uses existing worker, checks progress correlation and admits before result
+  ---
+  duration_ms: 7.26818
+  type: 'test'
+  ...
+# Subtest: late result after cancel is not published and its verified generated artifact is removed
+ok 6 - late result after cancel is not published and its verified generated artifact is removed
+  ---
+  duration_ms: 5.519728
+  type: 'test'
+  ...
+# Subtest: invalid child result yields exactly one terminal and releases operation
+ok 7 - invalid child result yields exactly one terminal and releases operation
+  ---
+  duration_ms: 4.591892
+  type: 'test'
+  ...
+# Subtest: speech export never replaces selected model files or their hardlink aliases
+ok 8 - speech export never replaces selected model files or their hardlink aliases
+  ---
+  duration_ms: 17.730824
+  type: 'test'
+  ...
+# Subtest: real TS coordinator and Python worker promote an auditionable PCM artifact through the shared queue
+ok 9 - real TS coordinator and Python worker promote an auditionable PCM artifact through the shared queue
+  ---
+  duration_ms: 2186.261994
+  type: 'test'
+  ...
+# Subtest: real worker failure preserves an earlier admitted speech artifact and stays usable
+ok 10 - real worker failure preserves an earlier admitted speech artifact and stays usable
+  ---
+  duration_ms: 2028.638823
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4278.075461

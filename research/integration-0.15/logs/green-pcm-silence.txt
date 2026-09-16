@@ -1,0 +1,7 @@
+test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 9.184s
+
+OK
+EXIT_CODE=0

@@ -1,0 +1,139 @@
+[
+  {
+    "name": "release-core-compile",
+    "command": [
+      "tsc",
+      "-p",
+      "tsconfig.core.json",
+      "--typeRoots",
+      "/opt/nvm/versions/node/v22.16.0/lib/node_modules/ts-node/node_modules/@types"
+    ],
+    "exit_code": 0,
+    "seconds": 1.065
+  },
+  {
+    "name": "release-node-tests",
+    "command": [
+      "node",
+      "--test",
+      "tests/architecture.test.mjs",
+      "tests/ui-library.test.mjs",
+      "tests/tooling.test.mjs",
+      "tests/core.test.mjs",
+      "tests/render-tracker.test.mjs",
+      "tests/media-response.test.mjs",
+      "tests/render-coordinator.test.mjs",
+      "tests/project.test.mjs",
+      "tests/batch.test.mjs",
+      "tests/folder.test.mjs",
+      "tests/design-skill.test.mjs",
+      "tests/vision.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.451
+  },
+  {
+    "name": "release-native-bridge",
+    "command": [
+      "node",
+      "--test",
+      "tests/bridge.test.mjs",
+      "tests/coordinator-native.test.mjs",
+      "tests/batch-native.test.mjs",
+      "tests/folder-native.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 2.635
+  },
+  {
+    "name": "release-python-tests",
+    "command": [
+      "/opt/pyvenv/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 31.636
+  },
+  {
+    "name": "release-typecheck",
+    "command": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 2,
+    "seconds": 0.567
+  },
+  {
+    "name": "release-build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 2,
+    "seconds": 1.126
+  },
+  {
+    "name": "release-biome",
+    "command": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "exit_code": 127,
+    "seconds": 0.115
+  },
+  {
+    "name": "release-ruff",
+    "command": [
+      "npm",
+      "run",
+      "check:python"
+    ],
+    "exit_code": 1,
+    "seconds": 0.769
+  },
+  {
+    "name": "release-astryx-cli",
+    "command": [
+      "npm",
+      "run",
+      "astryx",
+      "--",
+      "component"
+    ],
+    "exit_code": 1,
+    "seconds": 0.115
+  },
+  {
+    "name": "release-chokidar",
+    "command": [
+      "node",
+      "--test",
+      "tests/chokidar.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.114
+  },
+  {
+    "name": "release-registry",
+    "command": [
+      "npm",
+      "view",
+      "@astryxdesign/core@0.6.1",
+      "version",
+      "--fetch-timeout=5000",
+      "--fetch-retries=0"
+    ],
+    "exit_code": 1,
+    "seconds": 0.269
+  }
+]

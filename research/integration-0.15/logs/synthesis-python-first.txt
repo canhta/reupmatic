@@ -1,0 +1,22 @@
+test_frame_spans_must_exactly_cover_all_cues_and_gaps (test_synthesis.SynthesisContractTests.test_frame_spans_must_exactly_cover_all_cues_and_gaps) ... ok
+test_strict_spoken_input (test_synthesis.SynthesisContractTests.test_strict_spoken_input) ... ok
+test_cancellable_hash_verification (test_synthesis.SynthesisModelTests.test_cancellable_hash_verification) ... ok
+test_changed_hash_and_extra_files_are_rejected (test_synthesis.SynthesisModelTests.test_changed_hash_and_extra_files_are_rejected) ... ok
+test_identity_is_hash_based_and_status_is_not_quality_verification (test_synthesis.SynthesisModelTests.test_identity_is_hash_based_and_status_is_not_quality_verification) ... ok
+test_numeric_voice_data_must_be_bounded_finite_and_nonzero (test_synthesis.SynthesisModelTests.test_numeric_voice_data_must_be_bounded_finite_and_nonzero) ... ok
+test_symlink_and_traversal_cannot_enter_bundle (test_synthesis.SynthesisModelTests.test_symlink_and_traversal_cannot_enter_bundle) ... ok
+test_cancel_reaps_child_and_releases_existing_queue (test_synthesis_native.SynthesisNativeTests.test_cancel_reaps_child_and_releases_existing_queue) ... ok
+test_close_cleans_inflight_partial (test_synthesis_native.SynthesisNativeTests.test_close_cleans_inflight_partial) ... ok
+test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail (test_synthesis_native.SynthesisNativeTests.test_empty_silent_nonfinite_multichannel_and_overlong_audio_fail) ... ok
+test_failed_setup_keeps_previous_configuration (test_synthesis_native.SynthesisNativeTests.test_failed_setup_keeps_previous_configuration) ... ok
+test_hash_change_during_inference_never_promotes (test_synthesis_native.SynthesisNativeTests.test_hash_change_during_inference_never_promotes) ... ok
+test_model_and_voice_changes_require_new_input (test_synthesis_native.SynthesisNativeTests.test_model_and_voice_changes_require_new_input) ... ok
+test_network_is_refused_without_fallback (test_synthesis_native.SynthesisNativeTests.test_network_is_refused_without_fallback) ... ok
+test_real_child_promotes_correlated_natural_wave_and_receipt (test_synthesis_native.SynthesisNativeTests.test_real_child_promotes_correlated_natural_wave_and_receipt) ... ok
+test_sdk_cannot_start_another_child (test_synthesis_native.SynthesisNativeTests.test_sdk_cannot_start_another_child) ... ok
+test_token_limit_is_not_silent_input_truncation (test_synthesis_native.SynthesisNativeTests.test_token_limit_is_not_silent_input_truncation) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 18.783s
+
+OK

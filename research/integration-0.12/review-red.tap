@@ -1,0 +1,127 @@
+TAP version 13
+# Subtest: composition validates a bounded current document and owns source/output clock maps
+ok 1 - composition validates a bounded current document and owns source/output clock maps
+  ---
+  duration_ms: 2.0192
+  type: 'test'
+  ...
+# Subtest: reordering follows clip content and retains text/style without mutating the input
+ok 2 - reordering follows clip content and retains text/style without mutating the input
+  ---
+  duration_ms: 0.629278
+  type: 'test'
+  ...
+# Subtest: split and contiguous join keep source maps and captions; unrelated clips cannot merge
+ok 3 - split and contiguous join keep source maps and captions; unrelated clips cannot merge
+  ---
+  duration_ms: 0.622398
+  type: 'test'
+  ...
+# Subtest: trim and speed map remaining cue fragments, and removal drops only removed content
+ok 4 - trim and speed map remaining cue fragments, and removal drops only removed content
+  ---
+  duration_ms: 0.304199
+  type: 'test'
+  ...
+# Subtest: adding a repeated source never duplicates existing captions into the new instance
+ok 5 - adding a repeated source never duplicates existing captions into the new instance
+  ---
+  duration_ms: 0.257591
+  type: 'test'
+  ...
+# Subtest: composition, captions and sample window are one undo/recovery-compatible project snapshot
+ok 6 - composition, captions and sample window are one undo/recovery-compatible project snapshot
+  ---
+  duration_ms: 0.889302
+  type: 'test'
+  ...
+# Subtest: project clip references cannot authorize ungranted or changed native files
+ok 7 - project clip references cannot authorize ungranted or changed native files
+  ---
+  duration_ms: 7.964052
+  type: 'test'
+  ...
+# Subtest: composition snapshot clamps dependent ranges atomically without discarding other edits
+ok 8 - composition snapshot clamps dependent ranges atomically without discarding other edits
+  ---
+  duration_ms: 2.062764
+  type: 'test'
+  ...
+# (node:13298) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: saved compositions protect every member source and recovery retains all dependencies
+ok 9 - saved compositions protect every member source and recovery retains all dependencies
+  ---
+  duration_ms: 14.350105
+  type: 'test'
+  ...
+# Subtest: composition cue fragmentation is bounded and a failed operation leaves the document intact
+not ok 10 - composition cue fragmentation is bounded and a failed operation leaves the document intact
+  ---
+  duration_ms: 38.546
+  type: 'test'
+  location: '/mnt/data/work-v012/reupmatic/tests/composition.test.mjs:120:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /COMPOSITION_CUE_LIMIT/. Input:
+    
+    'Error: INVALID_CUES'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'INVALID_CUES'
+  stack: |-
+    assertCues (file:///mnt/data/work-v012/reupmatic/dist-core/subtitles/cues.js:7:15)
+    remapCompositionCues (file:///mnt/data/work-v012/reupmatic/dist-core/editing/composition/cue-mapping.js:41:5)
+    editComposition (file:///mnt/data/work-v012/reupmatic/dist-core/editing/composition/commands.js:54:33)
+    file:///mnt/data/work-v012/reupmatic/tests/composition.test.mjs:123:23
+    getActual (node:assert:531:5)
+    Function.throws (node:assert:677:24)
+    TestContext.<anonymous> (file:///mnt/data/work-v012/reupmatic/tests/composition.test.mjs:123:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/work-v012/reupmatic/tests/composition.test.mjs:123:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: caption appearance survives splitting and cannot be mutated through the returned fragment
+ok 11 - caption appearance survives splitting and cannot be mutated through the returned fragment
+  ---
+  duration_ms: 1.779856
+  type: 'test'
+  ...
+# Subtest: deduplicated registrations cannot silently replace a conflicting pinned source duration
+not ok 12 - deduplicated registrations cannot silently replace a conflicting pinned source duration
+  ---
+  duration_ms: 6.447715
+  type: 'test'
+  location: '/mnt/data/work-v012/reupmatic/tests/composition.test.mjs:138:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///mnt/data/work-v012/reupmatic/tests/composition.test.mjs:141:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 10
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 140.481569

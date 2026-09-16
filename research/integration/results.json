@@ -1,0 +1,67 @@
+{
+  "recorded_date": "2026-09-15",
+  "scope": "integration-0.1, Linux only",
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "node": "v22.16.0",
+    "typescript": "Version 5.8.3",
+    "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "python_tests": {
+    "discovered": 20,
+    "passed": 19,
+    "skipped": 1,
+    "failed": 0,
+    "skipped_reason": "pysubs2 unavailable; actual subtitle-library round trip not executed"
+  },
+  "node_tests": {
+    "passed": 9,
+    "failed": 0,
+    "note": "Core commands plus an actual TS-to-Python-to-FFmpeg process integration; not Electron E2E"
+  },
+  "typescript_core": {
+    "status": "passed",
+    "command": "tsc -p tsconfig.core.json",
+    "dependency_source": "preinstalled compiler and Node type declarations; not npm-installed UI packages"
+  },
+  "ui_source_syntax": {
+    "status": "passed",
+    "semantically_typechecked": false,
+    "launched": false,
+    "details": "transpileModule on first-party files only; no package resolution"
+  },
+  "sample_render": {
+    "fixture": "4-second synthetic 320x180 30 fps video + audio; 2-second lossless sample",
+    "matching_video_frames": 60,
+    "comparison": "decoded sample frames vs same source-time interval from full rendered output",
+    "source_unchanged": true,
+    "audio_retained": true
+  },
+  "limitations": [
+    "No successful npm dependency install",
+    "pysubs2 not installed",
+    "Electron/React/timeline/WaveSurfer/JASSUB not launched",
+    "No complete UI build or UI acceptance tests",
+    "No OCR/LaMa inference or performance benchmark",
+    "No macOS/Windows package test",
+    "No durable job store or folder watcher",
+    "No paid/publishing/source account calls",
+    "No verified shipping binary/font/model license set"
+  ],
+  "dependency_attempts": [
+    {
+      "operation": "curl registry.npmjs.org/react",
+      "result": "Could not resolve host"
+    },
+    {
+      "operation": "pip install pysubs2==1.8.0 into isolated temporary target",
+      "result": "No matching distribution available from configured environment; no package installed"
+    },
+    {
+      "operation": "pysubs2 version selection",
+      "result": "Current primary docs/PyPI show 1.9.0; declared as trial requirement, not successfully installed"
+    }
+  ],
+  "test_correction": "Initial cache rebuild test assumed byte-identical Matroska output. Rebuilt containers can differ in metadata. Corrected to verify rebuild, valid media duration and the manifest checksum; native decoded-frame parity is independently tested. The initial failing run is preserved."
+}

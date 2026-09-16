@@ -1,0 +1,46 @@
+[
+  {
+    "command": [
+      "tsc",
+      "-p",
+      "tsconfig.core.json",
+      "--typeRoots",
+      "/opt/nvm/versions/node/v22.16.0/lib/node_modules/ts-node/node_modules/@types"
+    ],
+    "exit_code": 0,
+    "log": "core-compile.txt"
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "tests/core.test.mjs",
+      "tests/render-tracker.test.mjs",
+      "tests/media-response.test.mjs",
+      "tests/render-coordinator.test.mjs",
+      "tests/project.test.mjs",
+      "tests/tooling.test.mjs",
+      "tests/bridge.test.mjs",
+      "tests/coordinator-native.test.mjs",
+      "tests/batch.test.mjs",
+      "tests/batch-native.test.mjs"
+    ],
+    "exit_code": 0,
+    "log": "node-tests.txt"
+  },
+  {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "exit_code": 0,
+    "log": "python-tests.txt"
+  }
+]
