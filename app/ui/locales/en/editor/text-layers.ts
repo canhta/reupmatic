@@ -1,0 +1,26 @@
+export const textLayersEn = {
+  textConfirmImport:
+    'Replace the entire {{layer}} layer with this SRT? Other text layers remain unchanged.',
+  textKeepReviewed: 'Keep my edits; source reviewed',
+  textKeepReviewedHelp: 'Dependent copies still need their own review.',
+  textLayer_transcript: 'Transcript',
+  textLayer_translated: 'Translated text',
+  textLayer_spoken: 'Spoken text',
+  textLayer_displayed: 'Displayed subtitles',
+  textEditingLayer: 'Layer',
+  textLayerLanguage: 'Language',
+  textLanguageUnknown: 'Not specified',
+  setLayerLanguage: 'Set the {{layer}} layer language',
+  textLayerStale: 'The source layer has changed',
+  textLayerStaleHelp: 'Your text is retained — review before replacing it.',
+  textCopyTitle: 'Copy from another layer',
+  textCopyHelp: "Replaces {{target}}'s text and timing.",
+  textCopyFrom: 'Copy from',
+  textCopyPreview: 'Preview replacement',
+  textCopyApply: 'Replace this layer',
+  textCopyCount:
+    '{{count}} cue(s) will replace the entire {{target}} layer, including any extra existing cues.',
+  textLayerEmpty: 'The source layer is empty. Add text or choose another source.',
+  textLayerInvalid: 'The text layer is invalid. Existing content has not been replaced.',
+  textLayerTooLarge: 'Text layer too large (1 MB limit). Shorten it.',
+} as const;

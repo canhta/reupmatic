@@ -1,0 +1,16 @@
+/* LabelManager renders an intro paragraph above its business-grid. The shared
+   .business-workspace (catalog.css) is a single 1fr row meant for one child;
+   with two, the grid gets squeezed into the same row as the paragraph and
+   collides with it once an ancestor bounds the height (business-area's
+   tabpanel, e.g. inside Sources & Library). Split the paragraph into its own
+   auto row and pin the grid to the remaining 1fr row. */
+.taxonomy-workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}
+.taxonomy-workspace > .business-grid {
+  grid-row: 2;
+}

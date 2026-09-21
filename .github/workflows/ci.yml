@@ -1,0 +1,105 @@
+name: Reupmatic CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reupmatic-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  desktop-source:
+    name: Desktop source / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # The committed pnpm-lock.yaml is the lock; --frozen-lockfile fails on a stale lock.
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run check
+      - run: pnpm run typecheck
+      - run: pnpm run build
+      - run: pnpm run test:core
+  python-and-bridge:
+    name: Native media / Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Native test prerequisites (not shipping binaries)
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+      - run: python -m pip install -r worker/requirements-dev.txt
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run contracts:generate
+      - run: pnpm run check:python
+      - run: pnpm run test:python
+      - run: pnpm run test:bridge
+# Source builds and native checks are not Electron UI E2E or signed installers.
+  marketing-web:
+    name: Marketing site / build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm --filter web typecheck
+      - run: pnpm --filter web build
+  electron-ui:
+    name: Electron UI / Linux integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Native test dependencies (not shipping binaries)
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg xvfb libgtk-3-0 libnss3 libasound2t64
+      - run: python -m pip install -r worker/requirements-dev.txt
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: xvfb-run -a pnpm run test:e2e
+# This job is supplied for a networked runner. No remote execution is claimed.

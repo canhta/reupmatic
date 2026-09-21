@@ -1,0 +1,171 @@
+/* Root is `.business-area` (catalog.css) so the shared DetailSurface fills
+   the workspace height instead of the list's own content height. Its single
+   tabpanel child gets a bounded 1fr row; this splits that row into the
+   optional error banner (auto) plus the actual workspace content (1fr), and
+   pins the content to row 2 so it still fills the row when no banner shows. */
+.library-panel-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+}
+.library-panel-body > .business-workspace {
+  grid-row: 2;
+}
+.library-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.library-toolbar-actions {
+  display: flex;
+  align-items: end;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+.library-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* Pushes the clear-all command to the row's trailing edge without a wrapper element. */
+.library-filter-clear {
+  margin-inline-start: auto;
+}
+/* Downloads pins the Douyin source bar above one scrolling result column, so the session state
+   stays visible while candidates scroll. catalog.css's .business-workspace is a single 1fr row
+   meant for one child; this splits it into the auto-height bar and the tall list. */
+.downloads-workspace {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+/* The saved Douyin channels: a chip row between the Search field and its result table. */
+.downloads-channels {
+  display: grid;
+  gap: var(--space-2);
+}
+.downloads-channel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+/* Candidate facets in the Downloads Search result (ticket 08); the same chip row as the Library's
+   filter bar, scoped under the Sources workspace. */
+.downloads-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* A scope note is a sentence, not a control: give it its own line rather than
+   letting it stretch the selector row. */
+.library-filter-scope {
+  flex-basis: 100%;
+}
+.library-selection-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+}
+.library-row {
+  cursor: pointer;
+}
+.library-table-scroll {
+  overflow-x: auto;
+}
+/* Standard auto-table-layout trick: shrink the selection column to its
+   checkbox instead of sharing in the leftover width the Video column needs. */
+.library-select-col {
+  width: 1%;
+  white-space: nowrap;
+}
+.library-file-name {
+  overflow-wrap: anywhere;
+}
+/* UI-CM06: the cover box is reserved (the Thumbnail owns its square ratio) and the image sits
+   under a hairline over its own bounds, so pale covers do not dissolve into the row surface. */
+.library-cover {
+  display: block;
+  width: fit-content;
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+/* The original path can run to a full filesystem path; keep it one quiet
+   line with the full value on hover/focus (title) rather than costing the
+   inspector three lines of vertical space for every item. */
+.library-path {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.library-pagination {
+  margin-block: var(--space-4);
+}
+.library-link {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+}
+/* Astryx's MetadataList grid sizes its label column from the value column's
+   min-content; without this the unwrapped path row forces that min-content
+   to the full path width and every label collapses to one character per
+   line (see the comment beside this list's markup). */
+.library-detail-facts dd {
+  min-width: 0;
+  overflow: hidden;
+}
+.library-detail-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.library-detail-more {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--space-3);
+  padding-block-start: var(--space-2);
+}
+.library-import-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.library-assets {
+  display: grid;
+  gap: var(--space-3);
+  /* The shared tabpanel row now clips overflow (catalog.css); this tab has no
+     inner business-list scroller of its own, so it needs its own scroll. */
+  min-height: 0;
+  overflow: auto;
+}
+.library-asset-preview video {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+}
+.library-asset-preview audio {
+  width: 100%;
+}
+.library-asset-cues {
+  max-height: 26rem;
+  overflow: auto;
+}
+.library-cue-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,563 @@
+{
+  "models": [
+    {
+      "id": "faster-whisper-tiny",
+      "task": "recognition",
+      "engine": "faster-whisper",
+      "purpose": {
+        "en": "Fastest multilingual drafts on CPU",
+        "vi": "Bản nháp đa ngôn ngữ nhanh nhất, chạy trên CPU"
+      },
+      "licence": "MIT",
+      "source_host": "huggingface.co",
+      "languages": ["en", "vi", "zh"],
+      "download_size": 78203619,
+      "on_disk_size": 78203619,
+      "files": [
+        {
+          "name": "config.json",
+          "path": "Systran/faster-whisper-tiny/resolve/main/config.json",
+          "sha256": "a73a28cdfe1c43ccc7202fa333d1f89c202477271407ae9a7f19afa52039cac8",
+          "size": 2249
+        },
+        {
+          "name": "model.bin",
+          "path": "Systran/faster-whisper-tiny/resolve/main/model.bin",
+          "sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1",
+          "size": 75538270
+        },
+        {
+          "name": "tokenizer.json",
+          "path": "Systran/faster-whisper-tiny/resolve/main/tokenizer.json",
+          "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+          "size": 2203239
+        },
+        {
+          "name": "vocabulary.txt",
+          "path": "Systran/faster-whisper-tiny/resolve/main/vocabulary.txt",
+          "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913",
+          "size": 459861
+        }
+      ]
+    },
+    {
+      "id": "faster-whisper-base",
+      "task": "recognition",
+      "engine": "faster-whisper",
+      "purpose": {
+        "en": "Balanced multilingual drafts on CPU",
+        "vi": "Bản nháp đa ngôn ngữ cân bằng tốc độ và độ chính xác, chạy trên CPU"
+      },
+      "licence": "MIT",
+      "source_host": "huggingface.co",
+      "languages": ["en", "vi", "zh"],
+      "download_size": 147882941,
+      "on_disk_size": 147882941,
+      "files": [
+        {
+          "name": "config.json",
+          "path": "Systran/faster-whisper-base/resolve/main/config.json",
+          "sha256": "56a6d8110d311f19c8f0471e562832c7527f146b567275bfca59fcf7c184da9a",
+          "size": 2309
+        },
+        {
+          "name": "model.bin",
+          "path": "Systran/faster-whisper-base/resolve/main/model.bin",
+          "sha256": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9",
+          "size": 145217532
+        },
+        {
+          "name": "tokenizer.json",
+          "path": "Systran/faster-whisper-base/resolve/main/tokenizer.json",
+          "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+          "size": 2203239
+        },
+        {
+          "name": "vocabulary.txt",
+          "path": "Systran/faster-whisper-base/resolve/main/vocabulary.txt",
+          "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913",
+          "size": 459861
+        }
+      ]
+    },
+    {
+      "id": "qwen3-asr-0.6b",
+      "task": "recognition",
+      "engine": "qwen3-asr",
+      "purpose": {
+        "en": "Higher-accuracy multilingual recognition, Vietnamese included",
+        "vi": "Nhận dạng đa ngôn ngữ chính xác hơn, có hỗ trợ tiếng Việt"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "languages": ["en", "vi", "zh"],
+      "download_size": 1880560703,
+      "on_disk_size": 1880560703,
+      "files": [
+        {
+          "name": "chat_template.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/chat_template.json",
+          "sha256": "75a8cfca24f00de72d796fbfed6858fc9614ef3dabd8696684cc3bc03a9c58ff",
+          "size": 1161
+        },
+        {
+          "name": "config.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/config.json",
+          "sha256": "76d3ae4601ce939830b2517f4a6cadb86cc51316c3900af6b020b051c21a478c",
+          "size": 6193
+        },
+        {
+          "name": "generation_config.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/generation_config.json",
+          "sha256": "1da527824d81e07118facff437e03f2e24a23311e3bdeb2368973fe77e5f275c",
+          "size": 142
+        },
+        {
+          "name": "merges.txt",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/merges.txt",
+          "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+          "size": 1671853
+        },
+        {
+          "name": "model.safetensors",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/model.safetensors",
+          "sha256": "79d6cbd4c98c7bbffe9db2edac07f56cd6637d0d5944b27f6c2b8353840323ea",
+          "size": 1876091704
+        },
+        {
+          "name": "preprocessor_config.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/preprocessor_config.json",
+          "sha256": "45e120a4eda2c20c5d7f2ea9354e63536bf35e27aa573fb7cdf78017b378770d",
+          "size": 330
+        },
+        {
+          "name": "tokenizer_config.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/tokenizer_config.json",
+          "sha256": "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c",
+          "size": 12487
+        },
+        {
+          "name": "vocab.json",
+          "path": "Qwen/Qwen3-ASR-0.6B/resolve/main/vocab.json",
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+          "size": 2776833
+        }
+      ]
+    },
+    {
+      "id": "vieneu-v3-turbo-onnx",
+      "task": "synthesis",
+      "engine": "vieneu-v3-turbo-onnx",
+      "purpose": {
+        "en": "Natural Vietnamese narration; a line that runs long is shortened to fit",
+        "vi": "Giọng đọc tiếng Việt tự nhiên; dòng quá dài được rút ngắn cho vừa"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "languages": ["en", "vi"],
+      "download_size": 500970159,
+      "on_disk_size": 501105074,
+      "files": [
+        {
+          "name": "onnx/vieneu_prefill.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/onnx/vieneu_prefill.onnx",
+          "sha256": "27f8b064f6b57b5448e95d095f1959588c005d614678045c2b97ecccf3b7a0f7",
+          "size": 324499
+        },
+        {
+          "name": "onnx/vieneu_decode_step.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/onnx/vieneu_decode_step.onnx",
+          "sha256": "bedc379cea61ea5d616312750d95ad3924e055856662d19187a889a5edc24ceb",
+          "size": 306134
+        },
+        {
+          "name": "onnx/vieneu_acoustic_cached.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/onnx/vieneu_acoustic_cached.onnx",
+          "sha256": "df1995fea3831125e68f36491f0011e8975477446b3901a5d05b2d0bbf502132",
+          "size": 14305779
+        },
+        {
+          "name": "onnx/vieneu_backbone_shared.data",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/onnx/vieneu_backbone_shared.data",
+          "sha256": "6f28d66062bbd7a0b2c321cff7556baf416922de2b86400e8d1ef863dc91206f",
+          "size": 415319040
+        },
+        {
+          "name": "onnx/vieneu_v3_heads.npz",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/onnx/vieneu_v3_heads.npz",
+          "sha256": "37c416aecea3880908812a2504f37487f0bc17bd31d67ce58e904ff89c269965",
+          "size": 25809928
+        },
+        {
+          "name": "onnx/config.json",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/config.json",
+          "sha256": "eee8e032cb936a60312f594a8156c086173a9c0255a545bd11a448f22a7c77ae",
+          "size": 1553
+        },
+        {
+          "name": "onnx/tokenizer.json",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/tokenizer.json",
+          "sha256": "7ed8df3a1fa39a3a35a1ab4b72f9faa35980bea0b930ba4aa82f847d21c583af",
+          "size": 22412
+        },
+        {
+          "name": "codec/moss_audio_tokenizer_decode_full.onnx",
+          "path": "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX/resolve/main/moss_audio_tokenizer_decode_full.onnx",
+          "sha256": "0fbbafe3fd4afa2a019af5c5ced204af6e2d1db044fa40f021525d2aee95b4ac",
+          "size": 681902
+        },
+        {
+          "name": "codec/moss_audio_tokenizer_decode_shared.data",
+          "path": "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX/resolve/main/moss_audio_tokenizer_decode_shared.data",
+          "sha256": "e69d52e0f4e84ca27850557ee54face46632d3a5a16c89bd246c7c408466dcad",
+          "size": 44198912
+        }
+      ]
+    },
+    {
+      "id": "vieneu-v3-nano-onnx",
+      "task": "synthesis",
+      "engine": "vieneu-v3-nano-onnx",
+      "purpose": {
+        "en": "Faster Vietnamese narration that fits each line without speeding it up later",
+        "vi": "Giọng đọc tiếng Việt nhanh hơn, vừa từng dòng mà không cần tăng tốc về sau"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "languages": ["vi"],
+      "download_size": 281756486,
+      "on_disk_size": 283929236,
+      "files": [
+        {
+          "name": "text_encoder.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/text_encoder.onnx",
+          "sha256": "204f02cccae1f16ccb2d3840f05721a37fe250b82cbd456337a0ccb49615e4bf",
+          "size": 26519943
+        },
+        {
+          "name": "duration_predictor.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/duration_predictor.onnx",
+          "sha256": "20fd7fa60006d0a48ee82e0451b3f920d2052588c083c756cce669f3947c0a68",
+          "size": 727809
+        },
+        {
+          "name": "vector_estimator.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/vector_estimator.onnx",
+          "sha256": "c6c1d4398ca35d3ad1bd3f0459413d1b975d09e7f2f3a2b4493a7b92bbf6ce93",
+          "size": 155132418
+        },
+        {
+          "name": "codec_decoder.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/codec_decoder.onnx",
+          "sha256": "b0ab15e7828a39d53679e25b1ba4ba415a61311307202a6323130b9e1cc3029d",
+          "size": 99319941
+        },
+        {
+          "name": "config.json",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/config.json",
+          "sha256": "3762f1716fd8d7a1451ddf2e051c03b0a341e8adda4f1dbd0db0ae9777514e56",
+          "size": 2927
+        },
+        {
+          "name": "constants.npz",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Nano/resolve/main/constants.npz",
+          "sha256": "7c011938effe41687a9af85107a31a040dfcf0fb3d0f048ec10f4fb65c1a8829",
+          "size": 53448
+        }
+      ]
+    },
+    {
+      "id": "opus-mt-en-vi-ct2",
+      "task": "translation",
+      "engine": "ctranslate2-sentencepiece",
+      "purpose": {
+        "en": "Translate English subtitles into Vietnamese",
+        "vi": "Dịch phụ đề tiếng Anh sang tiếng Việt"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "source_language": "en",
+      "target_language": "vi",
+      "download_size": 76183343,
+      "on_disk_size": 76183343,
+      "files": [
+        {
+          "name": "model.bin",
+          "path": "dekthedev/opus-mt-en-vi-ct2-int8/resolve/main/model.bin",
+          "sha256": "53a1d87fbcdfe1b95e51a8da90b673208895fc986507b68dcd4a8031ca54676c",
+          "size": 73683276
+        },
+        {
+          "name": "config.json",
+          "path": "dekthedev/opus-mt-en-vi-ct2-int8/resolve/main/config.json",
+          "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8",
+          "size": 189
+        },
+        {
+          "name": "source.spm",
+          "path": "dekthedev/opus-mt-en-vi-ct2-int8/resolve/main/source.spm",
+          "sha256": "fdd9ab486ca8ea060967105e30db7d8928729c78a67448711d2dd7c3153b37cd",
+          "size": 808612
+        },
+        {
+          "name": "target.spm",
+          "path": "dekthedev/opus-mt-en-vi-ct2-int8/resolve/main/target.spm",
+          "sha256": "fb8ad63c818f073c246952c91b2cb1f16aa30728bf51b5c179b8481bc0e20bb5",
+          "size": 756198
+        },
+        {
+          "name": "shared_vocabulary.json",
+          "path": "dekthedev/opus-mt-en-vi-ct2-int8/resolve/main/shared_vocabulary.json",
+          "sha256": "5f2a279e57b170f567fb605bd44fb40f8ed22f73a06648eefa9b877831e95a3e",
+          "size": 935068
+        }
+      ]
+    },
+    {
+      "id": "opus-mt-vi-en-ct2",
+      "task": "translation",
+      "engine": "ctranslate2-sentencepiece",
+      "purpose": {
+        "en": "Translate Vietnamese subtitles into English",
+        "vi": "Dịch phụ đề tiếng Việt sang tiếng Anh"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "source_language": "vi",
+      "target_language": "en",
+      "download_size": 76212569,
+      "on_disk_size": 76212569,
+      "files": [
+        {
+          "name": "model.bin",
+          "path": "dekthedev/opus-mt-vi-en-ct2-int8/resolve/main/model.bin",
+          "sha256": "da0c1a36f92c9826f5ce28e01d9301e4cbbde47f2923ade0c030fc75e5b3d251",
+          "size": 73711356
+        },
+        {
+          "name": "config.json",
+          "path": "dekthedev/opus-mt-vi-en-ct2-int8/resolve/main/config.json",
+          "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8",
+          "size": 189
+        },
+        {
+          "name": "source.spm",
+          "path": "dekthedev/opus-mt-vi-en-ct2-int8/resolve/main/source.spm",
+          "sha256": "9deb4f9e7bebd3876f4bf238a9eb52f2f95a1fba2210a4a8239167c55c15e67d",
+          "size": 756168
+        },
+        {
+          "name": "target.spm",
+          "path": "dekthedev/opus-mt-vi-en-ct2-int8/resolve/main/target.spm",
+          "sha256": "629182070d11db929990c603779345a11743b749f6586f224829303fa979c138",
+          "size": 808853
+        },
+        {
+          "name": "shared_vocabulary.json",
+          "path": "dekthedev/opus-mt-vi-en-ct2-int8/resolve/main/shared_vocabulary.json",
+          "sha256": "1a261fb75cbe05d3f184b74199aecb8c764859d1324dd3203f080f3c181b4db5",
+          "size": 936003
+        }
+      ]
+    },
+    {
+      "id": "opus-mt-zh-en-ct2",
+      "task": "translation",
+      "engine": "ctranslate2-sentencepiece",
+      "purpose": {
+        "en": "Translate Chinese subtitles into English",
+        "vi": "Dịch phụ đề tiếng Trung sang tiếng Anh"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "source_language": "zh",
+      "target_language": "en",
+      "download_size": 158418043,
+      "on_disk_size": 158418043,
+      "files": [
+        {
+          "name": "model.bin",
+          "path": "ooeoeo/opus-mt-zh-en-ct2-float16/resolve/main/model.bin",
+          "sha256": "a188bc45bce24635a1eb0cc42ad0b43afdad806b86af9beb3065bba11f3b212c",
+          "size": 155502615
+        },
+        {
+          "name": "config.json",
+          "path": "ooeoeo/opus-mt-zh-en-ct2-float16/resolve/main/config.json",
+          "sha256": "8f6496adfc930cbfecbe8281112197705c488fab47d34b4829b06d7f478909af",
+          "size": 223
+        },
+        {
+          "name": "source.spm",
+          "path": "ooeoeo/opus-mt-zh-en-ct2-float16/resolve/main/source.spm",
+          "sha256": "e27a3a1b539f4959ec72ea60e453f49156289f95d4e6000b29332efc45616203",
+          "size": 804677
+        },
+        {
+          "name": "target.spm",
+          "path": "ooeoeo/opus-mt-zh-en-ct2-float16/resolve/main/target.spm",
+          "sha256": "6a881f4717cd7265f53fea54fd3dc689c767c05338fac7a4590f3088cb2d7855",
+          "size": 806530
+        },
+        {
+          "name": "shared_vocabulary.json",
+          "path": "ooeoeo/opus-mt-zh-en-ct2-float16/resolve/main/shared_vocabulary.json",
+          "sha256": "acbf13516c56af2bb78ebdb770c2e4648fd8232ddd17af75298119cbfa7ee33d",
+          "size": 1303998
+        }
+      ]
+    },
+    {
+      "id": "opus-mt-zh-vi-ct2",
+      "task": "translation",
+      "engine": "ctranslate2-sentencepiece",
+      "purpose": {
+        "en": "Translate Chinese subtitles into Vietnamese",
+        "vi": "Dịch phụ đề tiếng Trung sang tiếng Việt"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "source_language": "zh",
+      "target_language": "vi",
+      "download_size": 158215222,
+      "on_disk_size": 158215222,
+      "files": [
+        {
+          "name": "model.bin",
+          "path": "ooeoeo/opus-mt-zh-vi-ct2-float16/resolve/main/model.bin",
+          "sha256": "9f78b94fb5fa622a834cbeb3021b4f88055522af34edec6073ee0aa1719f5615",
+          "size": 155502615
+        },
+        {
+          "name": "config.json",
+          "path": "ooeoeo/opus-mt-zh-vi-ct2-float16/resolve/main/config.json",
+          "sha256": "8f6496adfc930cbfecbe8281112197705c488fab47d34b4829b06d7f478909af",
+          "size": 223
+        },
+        {
+          "name": "source.spm",
+          "path": "ooeoeo/opus-mt-zh-vi-ct2-float16/resolve/main/source.spm",
+          "sha256": "d617117f90da08f471ef72c649401748a26e9ffb22289986379a9b44f7d8810e",
+          "size": 750285
+        },
+        {
+          "name": "target.spm",
+          "path": "ooeoeo/opus-mt-zh-vi-ct2-float16/resolve/main/target.spm",
+          "sha256": "eb082ee05298800b89d0cfa7101ef9e468b2554459a8e7635cb56cc17d0f3f02",
+          "size": 766197
+        },
+        {
+          "name": "shared_vocabulary.json",
+          "path": "ooeoeo/opus-mt-zh-vi-ct2-float16/resolve/main/shared_vocabulary.json",
+          "sha256": "acd383a08ad1f6e9f21cb8d3e860f52de1df4ef882be1b043814d7b3c3457592",
+          "size": 1195902
+        }
+      ]
+    },
+    {
+      "id": "lama-onnx-fp32",
+      "task": "vision",
+      "engine": "rapidocr-lama",
+      "purpose": {
+        "en": "Remove on-screen text from the frame",
+        "vi": "Xoá chữ trên khung hình"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "inpainting": { "model": "lama_fp32.onnx" },
+      "download_size": 208044816,
+      "on_disk_size": 208044816,
+      "files": [
+        {
+          "name": "lama_fp32.onnx",
+          "path": "Carve/LaMa-ONNX/resolve/main/lama_fp32.onnx",
+          "sha256": "1faef5301d78db7dda502fe59966957ec4b79dd64e16f03ed96913c7a4eb68d6",
+          "size": 208044816
+        }
+      ]
+    },
+    {
+      "id": "rapidocr-ppocrv5-mobile",
+      "task": "vision",
+      "engine": "rapidocr-lama",
+      "purpose": {
+        "en": "Read on-screen text in Chinese, English and Vietnamese",
+        "vi": "Đọc chữ trên hình cho tiếng Trung, Anh và Việt"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "ocr": {
+        "vi": {
+          "det": "ch_PP-OCRv5_det_mobile.onnx",
+          "rec": "latin_PP-OCRv5_rec_mobile.onnx",
+          "keys": "ppocrv5_latin_dict.txt",
+          "det_version": "PP-OCRv5",
+          "rec_version": "PP-OCRv5",
+          "rec_height": 48
+        },
+        "en": {
+          "det": "ch_PP-OCRv5_det_mobile.onnx",
+          "rec": "en_PP-OCRv5_rec_mobile.onnx",
+          "keys": "ppocrv5_en_dict.txt",
+          "det_version": "PP-OCRv5",
+          "rec_version": "PP-OCRv5",
+          "rec_height": 48
+        },
+        "zh": {
+          "det": "ch_PP-OCRv5_det_mobile.onnx",
+          "rec": "ch_PP-OCRv5_rec_mobile.onnx",
+          "keys": "ppocrv5_dict.txt",
+          "det_version": "PP-OCRv5",
+          "rec_version": "PP-OCRv5",
+          "rec_height": 48
+        }
+      },
+      "download_size": 37304808,
+      "on_disk_size": 37304808,
+      "files": [
+        {
+          "name": "ch_PP-OCRv5_det_mobile.onnx",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/det/ch_PP-OCRv5_det_mobile.onnx",
+          "sha256": "4d97c44a20d30a81aad087d6a396b08f786c4635742afc391f6621f5c6ae78ae",
+          "size": 4819576
+        },
+        {
+          "name": "latin_PP-OCRv5_rec_mobile.onnx",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/rec/latin_PP-OCRv5_rec_mobile.onnx",
+          "sha256": "b20bd37c168a570f583afbc8cd7925603890efbcdc000a59e22c269d160b5f5a",
+          "size": 7904513
+        },
+        {
+          "name": "en_PP-OCRv5_rec_mobile.onnx",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/rec/en_PP-OCRv5_rec_mobile.onnx",
+          "sha256": "c3461add59bb4323ecba96a492ab75e06dda42467c9e3d0c18db5d1d21924be8",
+          "size": 7872351
+        },
+        {
+          "name": "ch_PP-OCRv5_rec_mobile.onnx",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/rec/ch_PP-OCRv5_rec_mobile.onnx",
+          "sha256": "5825fc7ebf84ae7a412be049820b4d86d77620f204a041697b0494669b1742c5",
+          "size": 16631306
+        },
+        {
+          "name": "ppocrv5_latin_dict.txt",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/dict/ppocrv5_latin_dict.txt",
+          "sha256": "3c0a8a79b612653c25f765271714f71281e4e955962c153e272b7b8c1d2b13ff",
+          "size": 1634
+        },
+        {
+          "name": "ppocrv5_en_dict.txt",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/dict/ppocrv5_en_dict.txt",
+          "sha256": "e025a66d31f327ba0c232e03f407ae8d105e1e709e7ccb3f408aa778c24e70d6",
+          "size": 1416
+        },
+        {
+          "name": "ppocrv5_dict.txt",
+          "path": "thrive2308/Rapid_OCR_Document_To_Markdown_Models/resolve/main/ocr-models/ppocrv5-models/dict/ppocrv5_dict.txt",
+          "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
+          "size": 74012
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,713 @@
+.editor-workspace {
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  /* Both rails are window edges, like the app sidebar is the shell's, and the
+     regions inside carry their own top inset — the workspace adds none of its
+     own (owner: the rails and the monitor were each sitting on a
+     third layer of the same space). */
+  padding: 0;
+}
+
+/* Owner requirement: the full region frame renders at its normal
+   proportions whether or not a video is open — no separate start-screen
+   layout branch any more, so this is the one shape `.editor-workspace`
+   ever takes. */
+.editor-workspace {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* No `gap` on `.editor-workspace` — seams are the only separation between
+   regions, no gaps plus borders: the studio body and the timeline are
+   already separated by their own ResizeHandle seam (`hasDivider`,
+   EditorRegions.tsx), so a flex `gap` there would double it. The feedback
+   band above the studio body is the one place with no seam of its own, so
+   each visible notice carries its own trailing space — `:not(:empty)` would
+   also fire on the band's visually-hidden live regions, reserving that space
+   at every launch (owner: too much space above the regions). */
+.editor-feedback > .error,
+.editor-feedback > .warning,
+.editor-feedback > .editor-notice {
+  margin-block-end: var(--space-3);
+}
+
+/* Region model: cue list · viewer (always the largest region, it is the
+   one `flex: 1 1 auto` member) · inspector, separated by ResizeHandle
+   seams (EditorRegions.tsx) instead of a fixed CSS grid ratio. */
+.editor-studio-body {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.editor-source-region,
+.editor-tool-panel-region {
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+  /* `clip`, not `hidden`: a focused field inside a row wider than this
+     region (an expanded cue's Start/End/Delete/Split/Merge controls, at the
+     study's own narrow cue-list default) makes the browser auto-scroll its
+     nearest scrollable ancestor into view even with no visible scrollbar —
+     `hidden` still allows that programmatic scroll, shifting this region's
+     own header out of view along with it; `clip` disables scrolling
+     entirely, so the region can only ever show its own top-left origin. */
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-viewer-region {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Below 1200px the tool panel becomes the overlay drawer (further down this
+   file); this wrapper must disappear from flow entirely so its JS-set inline
+   width doesn't reserve dead space beside the drawer. `1199.98px`, not
+   `1200px`: useIsWide.ts's own breakpoint is `min-width: 1200px`, so the two
+   queries are exact complements and the inline column never competes with the
+   drawer at exactly 1200px wide. */
+@media (max-width: 1199.98px) {
+  .editor-tool-panel-region {
+    display: contents;
+  }
+}
+
+.editor-timeline-region {
+  flex: none;
+  min-height: 0;
+  display: flex;
+}
+
+/* Coordinator review: the three regions' first rows ("Xem
+   trước", the tab strip, the cue selectors) used to sit at three different
+   y positions because each region padded itself differently (or not at
+   all). One shared inset — `var(--space-3)` on every side (UI-G05 pane
+   padding), applied at the same nesting depth in each region — lines up
+   their tops instead. The old `border-inline-start` on `.viewers`'/
+   `.cue-panel` doubled the ResizeHandle seam's own divider line
+   (`hasDivider`, EditorRegions.tsx) — dropped; the seam is the one
+   separator between regions now. */
+.viewers {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  /* No top inset here: the monitor header carries it, so its box starts at the
+     region's own top exactly as the side panels' header does and the two rows
+     line up (editor-frame.test.mjs). */
+  padding: 0 var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+/* The two icon rails (D-63): the source rail at the window's left edge and the
+   tool rail at its right. Neither collapses, and neither styles its items —
+   size, centring, hover, selected and focus states are Astryx IconButton's
+   (EditorRail.tsx). This rule is layout only: the column's width and inset. */
+.editor-rail {
+  flex: none;
+  width: var(--editor-rail-w);
+  align-items: center;
+  padding: var(--space-1);
+  background: var(--color-background-muted);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.editor-source-rail {
+  border-inline-end: var(--border-width) solid var(--color-border);
+}
+.editor-tool-rail {
+  border-inline-start: var(--border-width) solid var(--color-border);
+}
+/* The one presentational rule between rail item groups: no ARIA role, hidden
+   from assistive tech (a tablist may own only tabs). */
+.editor-rail-rule {
+  align-self: stretch;
+  block-size: var(--border-width);
+  margin-block: var(--space-1);
+  background: var(--color-border);
+}
+
+/* The cue list's own header (layer/language selectors, status, toolbar)
+   stays fixed while only its cue rows scroll — `.cue-panel` is a flex
+   column, and `.cue-list`, its one flex-grow child, is what actually
+   scrolls, not the whole region (the tool panel keeps scrolling as a whole:
+   its body sits inside a Card this lane doesn't restructure). */
+.cue-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+/* Stacked, not side by side: two Selectors sharing one ≈300px-wide row
+   each truncated their common values ("Phụ đề hiể…", "Chưa khai…"). Each
+   Selector still gets its own `width="100%"`; this only supplies the
+   vertical rhythm between them. */
+.cue-panel-layer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cue-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.cue-search-row .cue-search-field {
+  /* `min-width: 0` overrides a flex item's default `min-width: auto`
+     (its own content's intrinsic width) — without it the row measured
+     ~8px wider than the 1050px-width cue region, a real horizontal
+     scrollbar, since the Replace toggle beside it never had to shrink. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.find-replace-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* One table column, not two (UI-CC04 gap): Table's
+   children mode gives no CSS lever that reliably narrows one column — its
+   own `table-layout: fixed` default splits unwidthed columns equally, and a
+   width/min-width/max-width override on the `<td>` itself measured back
+   down to a fraction of the requested value (tried and rejected; see the
+   gap entry for the numbers). `.cue-row`, a plain flex row *inside* the
+   cell every row already has, does the same narrow-badge/wide-content split
+   as ordinary flexbox — no table column sizing involved. */
+.cue-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+}
+.cue-row-index {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Collapsed row: time range on one line, the clamped text under it — never
+   a separate Text column (that used to overflow the column at its default
+   width). */
+.cue-row-preview {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 2px;
+  padding-block: var(--space-1);
+  background: none;
+  border: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* Expanded (selected) row: full-width text area, then start/end and the
+   row's overflow menu on one compact line instead of three wrapping
+   buttons. */
+.cue-row-expanded {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--space-2);
+  padding-block: var(--space-1);
+}
+.cue-row-timing {
+  display: flex;
+  /* Defensive floor, not the normal case: at every width this lane ships
+     (down to the cue region's own minSize in EditorWorkspace.tsx) the two
+     112px TimeInputs plus the overflow menu trigger fit on one line — this
+     only keeps the row from being cut off by the cue region's `overflow:
+     clip` (see `.editor-cue-region` above) if that ever stops being true. */
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.cue-row-timing > :last-child {
+  margin-inline-start: auto;
+}
+
+/* Project media (ED-P01, D-63): the Media panel's body — a rows list, nothing
+   more. The panel shell (EditorSidePanel) owns the heading, the inset and the
+   scrolling; the Add… action lives in that heading, not above the list. */
+.project-media {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.project-media-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-2);
+}
+.surface-tray {
+  padding: var(--space-2);
+  background: var(--bg-tray);
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-surface);
+}
+/* Coordinator review: dropped the bordered/shadowed card this
+   used to share with `.surface-tray` — the viewer is one surface that fills
+   its region (`.viewers`'s own `var(--space-3)` inset is the only inset; no
+   second border/card-within-region), with its own dark background as the
+   video's bezel. The tray fills whatever height `.viewers` (flex column
+   above) leaves over and centers its content — the video/placeholder itself
+   keeps its own aspect ratio and letterboxes against that background
+   instead of the frame staying small with empty space below it. */
+.video-tray {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-nav);
+  border-radius: var(--radius-lg);
+}
+.video-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The inline `feColorMatrix` definition only needs to exist in the document;
+   it must not take up layout space or intercept pointer events. */
+/* The monitor's own transport row, directly under the frame (owner): the play control and the position reading, nothing else —
+   scrubbing belongs to the timeline below. */
+.monitor-transport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.monitor-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.color-preview-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.viewers video {
+  /* Fills the monitor and letterboxes, the way a studio monitor does — not the
+     source's own pixel size, which left a small picture adrift in a large dark
+     region (owner). */
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--bg-nav);
+  border-radius: var(--radius-sm);
+  /* Letterboxed, not cropped or stretched — the frame's own aspect ratio is
+     the source video's, whatever the region's current shape is. */
+  object-fit: contain;
+}
+/* The Source monitor's live framing preview. The stage is a size container so
+   the output frame can be contained inside it (min()/cq units), the frame is
+   the black output canvas the export writes, and the rotator carries the
+   rotate/flip transform while object-view-box on the video selects the crop.
+   See app/core/editing/geometry-preview.ts for the shared geometry. */
+.geometry-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+}
+.geometry-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--video-pad);
+  border-radius: var(--radius-sm);
+  container-type: size;
+}
+.geometry-rotator {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+}
+.viewers .geometry-video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
+}
+/* The static logo over the output frame, positioned by the shared box
+   (app/core/editing/logo-preview.ts) — the same placement the worker overlays. */
+.geometry-logo {
+  position: absolute;
+  pointer-events: none;
+  object-fit: fill;
+}
+.editor-start-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+}
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.editor-start-frame--drag-over .video-placeholder {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+/* Matches the cue list's own first row so both regions' header rows read at
+   the same height. `flex-wrap` stays as a fallback for a rare combination (a
+   stale Badge appearing at the narrowest width), but the heading disappears
+   below `isWide` precisely so the mode switch + Render sample group keeps
+   fitting on one row in the common case. */
+.monitor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding-block: var(--space-2);
+}
+.monitor-header-title {
+  /* The heading must yield width before the SegmentedControl does, or it
+     collapses toward zero and wraps one character per line; Heading's
+     maxLines handles the truncation itself. Below `isWide`, MediaStage
+     swaps it for a visually-hidden one instead of shrinking it further, so
+     the mode switch/Render sample group fits on one row. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Caps the stale Badge's own share of the header (it ellipsizes its own
+   label internally once this wrapper shrinks it — Badge's own documented
+   behaviour) so it cannot squeeze "Preview" down to nothing at 1050px; the
+   Source/Rendered switch stays `flex: none` below (primary controls, never
+   truncated). */
+.monitor-header-badge {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+}
+.monitor-mode-switch {
+  /* Shrinkable (not `flex: none`), or its own natural content width
+     (SegmentedControl + the always-visible Render sample button, ≈300px)
+     never has a reason to wrap even inside a `flex-wrap` parent — a flex
+     item only wraps its own children onto a second line once something has
+     actually constrained its own box narrower than their combined width. */
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+}
+.preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.monitor-render-actions {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.cue-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 120px;
+  overflow: auto;
+}
+.timeline {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-tray);
+  border-radius: var(--radius-md);
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+}
+/* One fixed header column per lane, aligned row for row with the band beside it.
+   The whole `.timeline` scrolls vertically, so headers stay with their rows. */
+.timeline-lanes {
+  display: flex;
+  align-items: flex-start;
+  min-height: 0;
+}
+.timeline-lane-headers {
+  flex: 0 0 var(--editor-lane-header-w);
+  width: var(--editor-lane-header-w);
+  display: flex;
+  flex-direction: column;
+}
+.timeline-lane-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.timeline-lane-header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-inline-end: var(--space-2);
+  overflow: hidden;
+}
+.timeline-lane-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-lane-subtitles {
+  min-width: 0;
+}
+/* A disabled clip keeps its place and trims but is dimmed: the render excludes it. */
+.timeline-action-disabled {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+/* The one existing waveform path, drawn inside the original lane's own action block so it
+   scales and scrolls with the timeline. */
+.timeline-waveform {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* The measured width the scale is fit to (TimelineStrip's own
+   ResizeObserver) — must be a plain block, not another flex item that could
+   itself get squeezed, so the measurement is stable. */
+.timeline-band {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Anchor for the placement drop line a Project media drag draws (ticket 05). */
+  position: relative;
+}
+/* A Project media video row dragged over the clips lane: the accent line marks
+   where the clip would be inserted. Pointer events stay off so it never eats the
+   drop itself. */
+.timeline-band--drop {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.timeline-drop-line {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 2;
+}
+.editor-timeline-region .timeline {
+  flex: 1 1 auto;
+}
+/* One shell for both side panels (EditorSidePanel.tsx): a fixed heading row
+   and one scrolling body, so the left and right columns share a header height
+   and an inset instead of each inventing its own. */
+.editor-side-panel {
+  /* The region wrapper (EditorRegions.tsx) carries the seam's own width; the
+     shell fills its height and owns the one scroll container inside. */
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.editor-side-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* The heading's top inset matches `.viewers`, so every region's first row
+     starts on the same y (editor-frame.test.mjs). */
+  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+/* The title yields width before the actions do; Heading's own maxLines
+   truncates it rather than wrapping the row. */
+.editor-side-panel-header > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.editor-side-panel-body {
+  padding: var(--space-3);
+  /* The body, not the panel, is the one scroll container. The extra block-end
+     inset keeps the last group from sitting flush against the scrollable edge,
+     which reads as clipped even though it isn't. */
+  padding-block-end: var(--space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+/* The first section sits right under the panel heading, not a whole
+   section-gap below it (the shared `.inspector-panel-section` rule carries a
+   top margin for sections stacked inside one panel). */
+.editor-side-panel-body > .inspector-panel-section:first-child {
+  margin-top: 0;
+}
+/* Native audio controls carry a ~300px intrinsic width; inside the tool panel's
+   own content column that overflowed horizontally (editor review item 5). */
+.soundtrack-preview {
+  width: 100%;
+  max-width: 100%;
+}
+/* Below 1200px the tool panel is an overlay drawer over the video, anchored
+   just left of the rail (--editor-rail-w) so the rail stays visible and
+   clickable. It only ever renders while it is open, so there is no off-screen
+   transform state to keep in sync. */
+@media (max-width: 1199.98px) {
+  .editor-tool-panel {
+    position: absolute;
+    z-index: 5;
+    inset: 0 var(--editor-rail-w) 0 auto;
+    width: min(380px, 82%);
+    padding: 0;
+    border: var(--border-width) solid color-mix(in srgb, var(--edge) 82%, transparent);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    background: var(--color-background-surface);
+    box-shadow: var(--shadow-overlay);
+  }
+  .editor-tool-panel .editor-side-panel-header {
+    background: var(--color-background-surface);
+  }
+}
+@media (max-width: 980px) {
+  .viewers {
+    max-width: 720px;
+  }
+}
+
+/* No Astryx colour picker exists (Gap list): a
+   native swatch sits beside the existing hex TextInput, sized to the
+   field's own control height so the two line up on one baseline. */
+.style-color-field {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.style-color-swatch {
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+.style-color-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.review-grid {
+  /* The grid lives in a `display: grid` form, whose items default to
+     `min-width: auto` (min-content). Without this the table's Astryx
+     horizontal-scroll region grows to its content and is clipped by the
+     inspector instead of scrolling, leaving the right-hand columns
+     unreachable. */
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The generator review fills the cue column and scrolls itself, the way
+   `.cue-list` does for the normal list. `overflow-x: hidden` is never a
+   substitute for wrapping — the review's own text blocks wrap via
+   `.rule-comparison-text` — it only guarantees a stray wide child cannot push
+   the action rows off-screen. */
+.generator-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.review-rows {
+  min-width: 0;
+}
+
+.rule-comparison-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.timeline-action-label {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-inline: var(--space-1);
+  box-sizing: border-box;
+  /* A composition clip's label is a real button (keyboard focus); the span
+     form for the primary clip passes through these resets unchanged. */
+  margin: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+/* A composition clip's label is focusable so its actions are reachable by
+   keyboard (Shift+F10); keep the focus ring inside the action block. */
+.timeline-action-label:focus-visible {
+  outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+  outline-offset: calc(-1 * var(--focus-outline-width));
+}
+
+.export-steps-summary {
+  margin: 0;
+  padding-inline-start: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

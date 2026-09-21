@@ -1,0 +1,63 @@
+.workflow-row {
+  cursor: pointer;
+}
+
+.run-state {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.workflow-editor {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}
+
+.workflow-editor-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.workflow-editor-stage {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  /* The stage header (Stepper) spans the full canvas; text-only stages
+     (identity/review) stay a readable line length within it. */
+  max-width: 640px;
+}
+
+.run-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.run-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.run-row-state[data-state="failed"] {
+  color: var(--danger);
+}
+
+.run-row-time {
+  color: var(--text-muted);
+}
+
+/* AutomationWorkspace's tabpanel clips overflow (see catalog.css's
+   .business-area rules) so each tab's own content must scroll internally;
+   .business-list already does for the workflow list (see catalog.css). */
+.run-history {
+  min-height: 0;
+  overflow: auto;
+}

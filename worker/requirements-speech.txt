@@ -1,0 +1,13 @@
+# Optional, explicit owner-installed adapter target; not a validated runtime lock.
+# API reviewed against the official v1.2.1 source; transitive wheels remain unverified.
+# No model weights are installed, bundled or downloaded by the application.
+faster-whisper==1.2.1
+
+# Qwen3-ASR (Apache-2.0). API reviewed against the qwen-asr==0.0.6 PyPI source,
+# confirmed byte-identical to the QwenLM/Qwen3-ASR GitHub main branch as of
+# (no tagged GitHub release exists). Pulls in transformers, torch,
+# librosa and soundfile; those wheels, and CPU inference speed/memory, remain
+# unverified. No model weights are installed, bundled or downloaded by the
+# application; the reviewed sources and what they could not establish are recorded in the
+# adapter modules.
+qwen-asr==0.0.6

@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Bangkok
+    versioning-strategy: increase
+    open-pull-requests-limit: 8
+    groups:
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+        update-types: [minor, patch]
+      localization:
+        patterns: ["i18next", "react-i18next"]
+        update-types: [minor, patch]
+      development-tools:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Runtime typings follow the chosen Node 24 LTS line, not Node Current.
+      - dependency-name: "@types/node"
+        versions: [">=25.0.0"]
+  - package-ecosystem: pip
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Bangkok
+    open-pull-requests-limit: 5
+    groups:
+      python-tools:
+        patterns: [ruff, jsonschema]
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Bangkok
+    open-pull-requests-limit: 5
+# No auto-merge, live publishing, model downloads, or end-user auto-updates.

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:composition:1",
+  "title": "Bounded hard-cut composition",
+  "$comment": "Runtime additionally checks unique IDs, source ranges, 100 ms minimum clip output, 24 h total duration, source grants and matching bytes/duration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["canvas", "clips"],
+  "properties": {
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 4096,
+          "multipleOf": 2
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 4096,
+          "multipleOf": 2
+        },
+        "fps": {
+          "const": 30
+        }
+      }
+    },
+    "clips": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source", "start_ms", "end_ms", "speed", "enabled"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "name", "sha256", "duration_ms"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              }
+            }
+          },
+          "start_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 86399999
+          },
+          "end_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 86400000
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.25,
+            "maximum": 4
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Kept with its placement and trims but left out of preview and export until enabled again."
+          }
+        }
+      }
+    }
+  }
+}

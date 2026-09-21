@@ -1,0 +1,9 @@
+@layer app {
+  /* The section spacing lives in Astryx `Stack` inside the section: an app-layer
+     `display: grid` here lost to Astryx's unlayered `Section` styling and
+     collapsed the gap between the Reset action and the next section trigger. */
+  .processing-options {
+    margin-block: var(--space-4);
+    min-width: 0;
+  }
+}

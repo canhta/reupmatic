@@ -1,0 +1,54 @@
+/* App geometry and native-media aliases inherit the selected Astryx theme. */
+:root {
+  color-scheme: dark;
+  --font-ui: var(--font-family-body), system-ui, sans-serif;
+  --text-xs: var(--font-size-sm);
+  --text-sm: var(--font-size-base);
+  --text-base: var(--font-size-lg);
+  --weight-semibold: var(--font-weight-semibold);
+  --space-1: var(--spacing-1);
+  --space-2: var(--spacing-2);
+  --space-3: var(--spacing-3);
+  --space-4: var(--spacing-4);
+  --space-6: var(--spacing-6);
+  --space-8: var(--spacing-8);
+  /* Window chrome: toolbar band, status bar, and the macOS traffic-light
+     clearance (main.ts trafficLightPosition {x: 14, y: 17}: three ~12px
+     dots on a ~20px pitch end near x:68). */
+  --shell-toolbar-h: 48px;
+  --shell-statusbar-h: 28px;
+  --shell-safe-inset: 80px;
+  /* One width for both of the Editor's icon rails (48px: an Astryx IconButton
+     plus its inset); the overlay drawer's inset reuses it so the two can
+     never drift apart. */
+  --editor-rail-w: var(--spacing-12);
+  /* One width for the Editor timeline's lane-header column (four spacing-12 steps plus a
+     spacing-6 step = 216px, the narrowest that holds a lane name, its toggle and the
+     burned-in marker without truncating in either locale). */
+  --editor-lane-header-w: calc(var(--spacing-12) * 4 + var(--spacing-6));
+  /* UI-G04 control height; first consumer is batch.css's jobs-tray action-row, which reserves
+     this height for the controls it wraps. */
+  --control-h: 32px;
+  --bg-app: var(--color-background-body);
+  --bg-nav: var(--color-background-muted);
+  --bg-tray: var(--color-background-muted);
+  --bg-panel: var(--color-background-surface);
+  --text-strong: var(--color-text-primary);
+  --text-muted: var(--color-text-secondary);
+  --edge: var(--color-border-emphasized);
+  --edge-subtle: var(--color-border);
+  --accent: var(--color-accent);
+  --focus: var(--focus-outline-color);
+  --danger: var(--color-error);
+  --warning: var(--color-warning);
+  --radius-sm: var(--radius-inner);
+  --radius-md: var(--radius-element);
+  --radius-lg: var(--radius-container);
+  --shadow-surface: var(--shadow-low);
+  --scrim: #000;
+  /* The output video frame's letterbox/pad and the black stage a head/tail
+     fade resolves to — the export's own `pad` colour, not the muted tray. */
+  --video-pad: #000;
+  /* One recipe for every panel that slides over content from the right. */
+  --shadow-overlay: -18px 0 44px color-mix(in srgb, var(--scrim) 28%, transparent);
+}

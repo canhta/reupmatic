@@ -1,0 +1,113 @@
+/**
+ * Every code the worker protocol's "error" event may carry: the TypeScript mirror of
+ * worker/runtime/errors.py's KNOWN_CODES. Hand-authored on both sides (these codes have no
+ * schema home, and neither language has machinery to generate one from the other); kept in sync
+ * by tests/native/worker-error-codes-contract.test.mjs, which diffs both lists' literal text.
+ *
+ * `RemoteError` itself stays untyped (`code: string`): it is reused across this codebase for
+ * host-local error codes (Batch job states, folder-watch limits, etc.) that never cross into
+ * Python, so it cannot be narrowed to this union without breaking those unrelated call sites.
+ * This union is consulted only where a reply actually came from the worker process.
+ */
+export const WORKER_ERROR_CODES = [
+  'ASSET_KIND',
+  'CANCELLED',
+  'COMPONENT_MISSING',
+  'COMPOSITION_CLIP_SHORT',
+  'COMPOSITION_DISK_LOW',
+  'COMPOSITION_DURATION',
+  'COMPOSITION_PROCESSING_UNAVAILABLE',
+  'COMPOSITION_SAMPLE_SHORT',
+  'DOWNLOAD_FAILED',
+  'DOWNLOAD_SIZE_MISMATCH',
+  'DOWNLOAD_STALLED',
+  'DUPLICATE_REQUEST',
+  'EDIT_EMPTY_RANGE',
+  'EDIT_OUTPUT_SIZE',
+  'EDIT_SOURCE_RANGE',
+  'EXERCISE_LIMIT',
+  'FORMAT_UNAVAILABLE',
+  'INVALID_COMPOSITION',
+  'INVALID_CUES',
+  'INVALID_DURATION',
+  'INVALID_EDITING',
+  'INVALID_FRAME_RATE',
+  'INVALID_PROCESSING',
+  'INVALID_PROCESSING_MODELS',
+  'INVALID_REQUEST',
+  'INVALID_SOUNDTRACK',
+  'INVALID_SUBTITLE_STYLE',
+  'INVALID_VOICE',
+  'METHOD_UNAVAILABLE',
+  'MODEL_CONFIG_OVERRIDE',
+  'MODEL_HASH_MISMATCH',
+  'MODEL_INFERENCE_FAILED',
+  'MODEL_LANGUAGE_UNAVAILABLE',
+  'MODEL_MANIFEST_INVALID',
+  'MODEL_MISSING',
+  'MODEL_NETWORK_DISABLED',
+  'MODEL_OUTPUT_INVALID',
+  'MODEL_RUNTIME_MISSING',
+  'MODEL_SHAPE_UNSUPPORTED',
+  'NO_AUDIO',
+  'NO_VIDEO',
+  'OUTPUT_DURATION',
+  'OUTPUT_UNSAFE',
+  'PATH_NOT_ABSOLUTE',
+  'PAYLOAD_TOO_LARGE',
+  'POSTER_FAILED',
+  'PROCESSING_CUE_LIMIT',
+  'PROCESSING_MODELS_CHANGED',
+  'PROCESSING_SUBTITLE_CONFLICT',
+  'PROTOCOL_VERSION',
+  'QUEUE_FULL',
+  'SESSION_LIMIT',
+  'SOURCE_CHANGED',
+  'SOURCE_MISSING',
+  'SPEECH_AUDIO_INVALID',
+  'SPEECH_CLOUD_LIMIT',
+  'SPEECH_DISK_LOW',
+  'SPEECH_LIMIT',
+  'SPEECH_MANIFEST_INVALID',
+  'SPEECH_MODEL_CHANGED',
+  'SPEECH_RESULT_TOO_LARGE',
+  'SPEECH_TIMING_INVALID',
+  'SYNTHESIS_ARTIFACT_INVALID',
+  'SYNTHESIS_DISK_LOW',
+  'SYNTHESIS_LIMIT',
+  'SYNTHESIS_MANIFEST_INVALID',
+  'SYNTHESIS_MODEL_CHANGED',
+  'SYNTHESIS_RUNTIME_VERSION',
+  'SYNTHESIS_SAMPLE_RATE_UNSUPPORTED',
+  'SYNTHESIS_TOKEN_LIMIT',
+  'SYNTHESIS_VOICES_INVALID',
+  'SYNTHESIS_VOICES_UNAVAILABLE',
+  'SYNTHESIS_VOICE_UNAVAILABLE',
+  'TOOL_FAILED',
+  'TOOL_TIMEOUT',
+  'TRANSLATION_DISK_LOW',
+  'TRANSLATION_LIMIT',
+  'TRANSLATION_MANIFEST_INVALID',
+  'TRANSLATION_MODEL_CHANGED',
+  'TRANSLATION_RESULT_TOO_LARGE',
+  'TRANSLATION_TOKEN_LIMIT',
+  'TRANSLATION_TRUNCATED',
+  'UNKNOWN_ASSET',
+  'UNSUPPORTED_ROTATION',
+  'VISION_DISK_LOW',
+  'VISION_EVIDENCE_LIMIT',
+  'VISION_FORMAT_UNSUPPORTED',
+  'VISION_FRAME_INVALID',
+  'VISION_LIMIT',
+  'VISION_RESULT_TOO_LARGE',
+  'WORKER_FAILURE',
+] as const;
+
+export type WorkerErrorCode = (typeof WORKER_ERROR_CODES)[number];
+
+const KNOWN = new Set<string>(WORKER_ERROR_CODES);
+
+export function workerErrorCode(data: Record<string, unknown>): WorkerErrorCode {
+  const code = data.code;
+  return typeof code === 'string' && KNOWN.has(code) ? (code as WorkerErrorCode) : 'WORKER_FAILURE';
+}

@@ -1,0 +1,33 @@
+packages:
+  - web
+allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
+  # The ffprobe installer packages chmod their per-platform binary in a build script; without it
+  # the binary lands non-executable. Only the current platform's package is installed.
+  '@ffprobe-installer/darwin-arm64': true
+  '@ffprobe-installer/darwin-x64': true
+  '@ffprobe-installer/linux-arm64': true
+  '@ffprobe-installer/linux-x64': true
+  '@ffprobe-installer/win32-x64': true
+  electron-winstaller: false
+  ffmpeg-static: true
+  lefthook: true
+  lfa-ponyfill: true
+minimumReleaseAgeExclude:
+  - lucide-react@1.47.0
+# @electron/osx-sign pins isbinaryfile ^4, whose 4.0.10 crashes (RangeError: Invalid array length)
+# while signing the bundled Python tree; 5.x is still CommonJS and app-builder-lib already uses it.
+overrides:
+  isbinaryfile: ^5.0.2
+onlyBuiltDependencies:
+  - "@astryxdesign/cli"
+  - "@astryxdesign/core"
+  - "@ffprobe-installer/darwin-arm64"
+  - "@ffprobe-installer/darwin-x64"
+  - "@ffprobe-installer/linux-arm64"
+  - "@ffprobe-installer/linux-x64"
+  - "@ffprobe-installer/win32-x64"
+  - ffmpeg-static
+  - lefthook
+  - lfa-ponyfill
