@@ -47,9 +47,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: actions/setup-python@v7.0.0
-        with:
-          python-version: "3.13"
       - name: Set the release version
         run: node scripts/set-version.mjs "${{ inputs.version }}"
       - run: pnpm install --frozen-lockfile
@@ -102,6 +99,7 @@ jobs:
     # PowerShell silently no-ops `pnpm run`/`pnpm exec` on the Windows runner; bash does not.
     defaults:
       run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -111,9 +109,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - uses: actions/setup-python@v7.0.0
-        with:
-          python-version: "3.13"
       - name: Set the release version
         run: node scripts/set-version.mjs "${{ inputs.version }}"
       - run: pnpm install --frozen-lockfile
