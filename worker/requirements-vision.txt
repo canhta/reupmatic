@@ -3,7 +3,7 @@
 # The worker's vision runtime check looks for numpy, cv2, onnxruntime and rapidocr; ranges rather
 # than exact pins, because a pin can have no wheel for every supported Python (see the translation
 # requirements for the same lesson). Install exactly one OpenCV wheel in the environment.
-rapidocr>=3,<4
+rapidocr>=3.9.2,<4
 opencv-python>=4.10,<6
 onnxruntime>=1.20,<2
 numpy>=2,<3
