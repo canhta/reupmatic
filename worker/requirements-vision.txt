@@ -4,6 +4,6 @@
 # than exact pins, because a pin can have no wheel for every supported Python (see the translation
 # requirements for the same lesson). Install exactly one OpenCV wheel in the environment.
 rapidocr>=3,<4
-opencv-python>=4.10,<6
+opencv-python>=5.0.0.93,<6
 onnxruntime>=1.20,<2
 numpy>=2,<3
