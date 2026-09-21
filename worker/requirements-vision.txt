@@ -5,5 +5,5 @@
 # requirements for the same lesson). Install exactly one OpenCV wheel in the environment.
 rapidocr>=3,<4
 opencv-python>=4.10,<6
-onnxruntime>=1.20,<2
+onnxruntime>=1.30.0,<2
 numpy>=2,<3
