@@ -1,0 +1,7 @@
+# Explicit optional local adapter target; not a complete platform dependency lock.
+# No weights or tokenizer files are installed by these requirements.
+# The adapter is written against the CTranslate2 Python API as of 4.6; the pin is a range because
+# 4.6.0 has no wheel for every supported Python (no cp314 wheel), so an exact pin made this file
+# uninstallable on the project's own interpreter.
+ctranslate2>=4.6,<5
+sentencepiece==0.2.1

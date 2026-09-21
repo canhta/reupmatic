@@ -1,0 +1,52 @@
+# electron-builder config for a directly-downloaded, auto-updating release (no app stores).
+# Layout it produces under `resources/`, which `app/electron/main.ts` resolves when packaged:
+#   resources/worker   — the Python worker source (not inside the asar, so Python can read it)
+#   resources/python   — a relocatable interpreter with the optional runtimes (scripts/package-python.mjs)
+#   resources/ffmpeg   — ffmpeg/ffprobe (scripts/package-ffmpeg.mjs)
+# `python/` and `ffmpeg/` are produced by the staging scripts; a package run before staging fails.
+appId: com.canhta.reupmatic
+productName: Reupmatic
+copyright: Copyright © 2026 canhta
+directories:
+  output: release
+files:
+  - package.json
+  - LICENSE
+  - THIRD-PARTY-NOTICES.md
+  - dist-ui/**
+  - dist-node/**
+  # Read by the host at `repo/app/core/speech/catalogue.json`; must be inside the asar.
+  - app/core/speech/catalogue.json
+asar: true
+extraResources:
+  - from: worker
+    to: worker
+    filter:
+      - "**/*"
+      - "!**/__pycache__/**"
+      - "!**/*.pyc"
+      - "!.venv/**"
+  - from: python
+    to: python
+  - from: ffmpeg
+    to: ffmpeg
+mac:
+  category: public.app-category.video
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+win:
+  target:
+    - nsis
+    - msi
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+# Direct download from GitHub Releases; electron-updater reads the same feed (ticket 07).
+publish:
+  provider: github
+  owner: canhta
+  repo: reupmatic

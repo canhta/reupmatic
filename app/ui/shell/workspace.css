@@ -1,0 +1,209 @@
+.workspace-content {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--shell-statusbar-h);
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 42% -20%,
+      color-mix(in srgb, var(--accent) 5%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--bg-app) 96%, var(--scrim));
+}
+
+.workspace-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: var(--space-2);
+  -webkit-app-region: no-drag;
+}
+.workspace-title-content {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.workspace-title-dirty {
+  flex: none;
+  color: var(--accent);
+  font-size: var(--text-base);
+  line-height: 1;
+}
+
+.workspace-command-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  /* Sits in the header's drag region, so it needs the same no-drag opt-out. */
+  -webkit-app-region: no-drag;
+}
+
+.workspace-scroll-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+}
+
+.workspace-scroll-region--filled {
+  position: relative;
+  overflow: hidden;
+}
+
+.workspace-scroll-region--editor {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.workspace-scroll-region--editor:has(.editor-workspace:not(.editor-workspace--loaded)) {
+  overflow-y: auto;
+}
+
+.workspace-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.astryx-app-shell-header {
+  min-height: var(--shell-toolbar-h);
+  /* macOS hiddenInset leaves the WCO env() rect unset; fall back to traffic-light clearance. */
+  padding-inline-start: env(titlebar-area-x, var(--shell-safe-inset));
+  padding-inline-end: max(
+    0px,
+    calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%))
+  );
+  border-bottom: 1px solid color-mix(in srgb, var(--edge-subtle) 72%, transparent);
+  background: var(--bg-nav);
+  -webkit-app-region: drag;
+}
+
+.workspace-toolbar-control {
+  -webkit-app-region: no-drag;
+}
+
+.workspace-brand {
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.astryx-app-shell-sidenav {
+  background: var(--bg-nav);
+  overflow: hidden;
+}
+
+.workspace-statusbar {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--edge-subtle) 72%, transparent);
+  background: var(--bg-nav);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1;
+}
+
+.workspace-status-local {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.workspace-status-queue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-status-jobs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 24px;
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.workspace-status-jobs:hover,
+.workspace-status-jobs:focus-visible {
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+}
+
+.workspace-status-notifications {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.notifications-list {
+  max-height: 60vh;
+}
+
+.jobs-tray {
+  position: absolute;
+  z-index: 4;
+  inset: 0 0 var(--shell-statusbar-h) auto;
+  width: min(430px, calc(100% - 72px));
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  border-left: 1px solid color-mix(in srgb, var(--edge) 78%, transparent);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-overlay);
+  animation: jobs-tray-enter 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.jobs-tray-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-3) 0 var(--space-4);
+  border-bottom: 1px solid var(--edge-subtle);
+}
+
+.jobs-tray-scroll {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--space-4) var(--space-6);
+}
+
+@keyframes jobs-tray-enter {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+@media (max-width: 1120px) {
+  .workspace-command-actions {
+    gap: var(--space-1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jobs-tray {
+    animation: none;
+  }
+}

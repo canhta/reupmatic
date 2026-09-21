@@ -1,0 +1,75 @@
+name: Reupmatic CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reupmatic-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  desktop-source:
+    name: Desktop source / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run check
+      - run: pnpm run typecheck
+      - run: pnpm run build
+      - run: pnpm run test:core
+  python-and-bridge:
+    name: Native media
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version-file: .python-version
+      - name: Native test prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+      - run: python -m pip install -r worker/requirements-dev.txt
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run check:python
+      - run: pnpm run test:python
+      - run: pnpm run test:bridge
+  marketing-web:
+    name: Marketing site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm --filter web typecheck
+      - run: pnpm --filter web build

@@ -1,0 +1,537 @@
+.editor-workspace {
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.editor-workspace {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-feedback > .error,
+.editor-feedback > .warning,
+.editor-feedback > .editor-notice {
+  margin-block-end: var(--space-3);
+}
+
+.editor-studio-body {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.editor-source-region,
+.editor-tool-panel-region {
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-viewer-region {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Below 1200px the tool panel becomes an overlay drawer; useIsWide mirrors this breakpoint. */
+@media (max-width: 1199.98px) {
+  .editor-tool-panel-region {
+    display: contents;
+  }
+}
+
+.editor-timeline-region {
+  flex: none;
+  min-height: 0;
+  display: flex;
+}
+
+.viewers {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0 var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.editor-rail {
+  flex: none;
+  width: var(--editor-rail-w);
+  align-items: center;
+  padding: var(--space-1);
+  background: var(--color-background-muted);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.editor-source-rail {
+  border-inline-end: var(--border-width) solid var(--color-border);
+}
+.editor-tool-rail {
+  border-inline-start: var(--border-width) solid var(--color-border);
+}
+.editor-rail-rule {
+  align-self: stretch;
+  block-size: var(--border-width);
+  margin-block: var(--space-1);
+  background: var(--color-border);
+}
+
+.cue-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.cue-panel-layer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cue-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.cue-search-row .cue-search-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.find-replace-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cue-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+}
+.cue-row-index {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.cue-row-preview {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 2px;
+  padding-block: var(--space-1);
+  background: none;
+  border: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+.cue-row-expanded {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--space-2);
+  padding-block: var(--space-1);
+}
+.cue-row-timing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.cue-row-timing > :last-child {
+  margin-inline-start: auto;
+}
+
+.project-media {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.project-media-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-2);
+}
+.surface-tray {
+  padding: var(--space-2);
+  background: var(--bg-tray);
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-surface);
+}
+.video-tray {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-nav);
+  border-radius: var(--radius-lg);
+}
+.video-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The inline feColorMatrix must exist but take no layout space or intercept pointer events. */
+.monitor-transport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.monitor-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.color-preview-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.viewers video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--bg-nav);
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+.geometry-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+}
+.geometry-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--video-pad);
+  border-radius: var(--radius-sm);
+  container-type: size;
+}
+.geometry-rotator {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+}
+.viewers .geometry-video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
+}
+.geometry-logo {
+  position: absolute;
+  pointer-events: none;
+  object-fit: fill;
+}
+.editor-start-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+}
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.editor-start-frame--drag-over .video-placeholder {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+.monitor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding-block: var(--space-2);
+}
+.monitor-header-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.monitor-header-badge {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+}
+.monitor-mode-switch {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+}
+.preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.monitor-render-actions {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.cue-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 120px;
+  overflow: auto;
+}
+.timeline {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-tray);
+  border-radius: var(--radius-md);
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+}
+.timeline-lanes {
+  display: flex;
+  align-items: flex-start;
+  min-height: 0;
+}
+.timeline-lane-headers {
+  flex: 0 0 var(--editor-lane-header-w);
+  width: var(--editor-lane-header-w);
+  display: flex;
+  flex-direction: column;
+}
+.timeline-lane-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.timeline-lane-header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-inline-end: var(--space-2);
+  overflow: hidden;
+}
+.timeline-lane-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-lane-subtitles {
+  min-width: 0;
+}
+.timeline-action-disabled {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.timeline-waveform {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.timeline-band {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+.timeline-band--drop {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.timeline-drop-line {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 2;
+}
+.editor-timeline-region .timeline {
+  flex: 1 1 auto;
+}
+.editor-side-panel {
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.editor-side-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* Top inset matches .viewers so every region's first row aligns (editor-frame.test.mjs). */
+  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+.editor-side-panel-header > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.editor-side-panel-body {
+  padding: var(--space-3);
+  padding-block-end: var(--space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.editor-side-panel-body > .inspector-panel-section:first-child {
+  margin-top: 0;
+}
+.soundtrack-preview {
+  width: 100%;
+  max-width: 100%;
+}
+@media (max-width: 1199.98px) {
+  .editor-tool-panel {
+    position: absolute;
+    z-index: 5;
+    inset: 0 var(--editor-rail-w) 0 auto;
+    width: min(380px, 82%);
+    padding: 0;
+    border: var(--border-width) solid color-mix(in srgb, var(--edge) 82%, transparent);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    background: var(--color-background-surface);
+    box-shadow: var(--shadow-overlay);
+  }
+  .editor-tool-panel .editor-side-panel-header {
+    background: var(--color-background-surface);
+  }
+}
+@media (max-width: 980px) {
+  .viewers {
+    max-width: 720px;
+  }
+}
+
+.style-color-field {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.style-color-swatch {
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+.style-color-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.review-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.generator-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.review-rows {
+  min-width: 0;
+}
+
+.rule-comparison-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.timeline-action-label {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-inline: var(--space-1);
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.timeline-action-label:focus-visible {
+  outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+  outline-offset: calc(-1 * var(--focus-outline-width));
+}
+
+.export-steps-summary {
+  margin: 0;
+  padding-inline-start: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

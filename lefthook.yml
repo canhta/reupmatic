@@ -1,0 +1,21 @@
+# Check-only hooks: never rewrite or stage a developer's uncommitted hunks.
+# Fix deliberately with npm run lint:fix / npm run format:python, then stage again.
+min_version: 2.1.14
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,css,html}"
+      run: npm exec --no -- biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+    python-lint:
+      glob: "*.py"
+      exclude: "research/**"
+      run: node scripts/python.mjs -m ruff check --force-exclude {staged_files}
+    python-format:
+      glob: "*.py"
+      exclude: "research/**"
+      run: node scripts/python.mjs -m ruff format --check --force-exclude {staged_files}
+pre-push:
+  commands:
+    typecheck-and-fast-tests:
+      run: npm run typecheck && npm run test:core

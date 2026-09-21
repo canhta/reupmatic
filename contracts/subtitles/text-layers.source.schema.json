@@ -1,0 +1,917 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:text-layers:1",
+  "title": "Independent text layers; displayed cues belong to the project cues field",
+  "$comment": "Semantic runtime checks enforce cue order/ranges, unique cue IDs, provenance ranges and a 1,000,000-byte supplemental-layer limit.",
+  "type": "object",
+  "properties": {
+    "transcript": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "language": {
+          "enum": [null, "en", "vi", "zh"]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": ["manual", "srt"]
+                }
+              },
+              "required": ["kind"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "copy"
+                },
+                "layer": {
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                }
+              },
+              "required": ["kind", "layer", "token"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "stt"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ocr"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "translation"
+                },
+                "layer": {
+                  "enum": ["transcript", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "target_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                },
+                "rules": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "find": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]+$"
+                      },
+                      "replace": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    },
+                    "required": ["find", "replace"],
+                    "additionalProperties": false
+                  }
+                },
+                "policy": {
+                  "enum": ["keep-existing", "replace-all"]
+                }
+              },
+              "required": [
+                "kind",
+                "layer",
+                "token",
+                "request_id",
+                "source_language",
+                "target_language",
+                "model_id",
+                "runtime",
+                "rules",
+                "policy"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "cues": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 10000
+              }
+            },
+            "required": ["id", "start_ms", "end_ms", "text"],
+            "additionalProperties": false
+          }
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "Shown on the subtitles lane and burned into the output; at most one layer is visible at a time."
+        }
+      },
+      "required": ["token", "language", "origin", "edited", "stale", "visible", "cues"],
+      "additionalProperties": false
+    },
+    "translated": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "language": {
+          "enum": [null, "en", "vi", "zh"]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": ["manual", "srt"]
+                }
+              },
+              "required": ["kind"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "copy"
+                },
+                "layer": {
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                }
+              },
+              "required": ["kind", "layer", "token"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "stt"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ocr"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "translation"
+                },
+                "layer": {
+                  "enum": ["transcript", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "target_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                },
+                "rules": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "find": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]+$"
+                      },
+                      "replace": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    },
+                    "required": ["find", "replace"],
+                    "additionalProperties": false
+                  }
+                },
+                "policy": {
+                  "enum": ["keep-existing", "replace-all"]
+                }
+              },
+              "required": [
+                "kind",
+                "layer",
+                "token",
+                "request_id",
+                "source_language",
+                "target_language",
+                "model_id",
+                "runtime",
+                "rules",
+                "policy"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "cues": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 10000
+              }
+            },
+            "required": ["id", "start_ms", "end_ms", "text"],
+            "additionalProperties": false
+          }
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "Shown on the subtitles lane and burned into the output; at most one layer is visible at a time."
+        }
+      },
+      "required": ["token", "language", "origin", "edited", "stale", "visible", "cues"],
+      "additionalProperties": false
+    },
+    "spoken": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "language": {
+          "enum": [null, "en", "vi", "zh"]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": ["manual", "srt"]
+                }
+              },
+              "required": ["kind"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "copy"
+                },
+                "layer": {
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                }
+              },
+              "required": ["kind", "layer", "token"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "stt"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ocr"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "translation"
+                },
+                "layer": {
+                  "enum": ["transcript", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "target_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                },
+                "rules": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "find": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]+$"
+                      },
+                      "replace": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    },
+                    "required": ["find", "replace"],
+                    "additionalProperties": false
+                  }
+                },
+                "policy": {
+                  "enum": ["keep-existing", "replace-all"]
+                }
+              },
+              "required": [
+                "kind",
+                "layer",
+                "token",
+                "request_id",
+                "source_language",
+                "target_language",
+                "model_id",
+                "runtime",
+                "rules",
+                "policy"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "cues": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "start_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86400000
+              },
+              "end_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400000
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 10000
+              }
+            },
+            "required": ["id", "start_ms", "end_ms", "text"],
+            "additionalProperties": false
+          }
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "Shown on the subtitles lane and burned into the output; at most one layer is visible at a time."
+        }
+      },
+      "required": ["token", "language", "origin", "edited", "stale", "visible", "cues"],
+      "additionalProperties": false
+    },
+    "displayed": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+        },
+        "language": {
+          "enum": [null, "en", "vi", "zh"]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": ["manual", "srt"]
+                }
+              },
+              "required": ["kind"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "copy"
+                },
+                "layer": {
+                  "enum": ["transcript", "translated", "spoken", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                }
+              },
+              "required": ["kind", "layer", "token"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "stt"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms", "model_id"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ocr"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 86400000
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                }
+              },
+              "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "translation"
+                },
+                "layer": {
+                  "enum": ["transcript", "displayed"]
+                },
+                "token": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "request_id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]{8,128}$"
+                },
+                "source_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "target_language": {
+                  "enum": ["en", "vi", "zh"]
+                },
+                "model_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "runtime": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[^\\u0000]+$"
+                },
+                "rules": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "find": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]+$"
+                      },
+                      "replace": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    },
+                    "required": ["find", "replace"],
+                    "additionalProperties": false
+                  }
+                },
+                "policy": {
+                  "enum": ["keep-existing", "replace-all"]
+                }
+              },
+              "required": [
+                "kind",
+                "layer",
+                "token",
+                "request_id",
+                "source_language",
+                "target_language",
+                "model_id",
+                "runtime",
+                "rules",
+                "policy"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "Shown on the subtitles lane and burned into the output; at most one layer is visible at a time."
+        }
+      },
+      "required": ["token", "language", "origin", "edited", "stale", "visible"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["transcript", "translated", "spoken", "displayed"],
+  "additionalProperties": false
+}

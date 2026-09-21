@@ -1,0 +1,41 @@
+@import "./base.css";
+@import "./features/catalog/catalog.css" layer(app);
+@import "./design-system/detail-surface.css" layer(app);
+@import "./features/processing/processing.css";
+@import "./shell/workspace.css" layer(app);
+@import "./features/editor/editor.css" layer(app);
+@import "./features/batch/batch.css" layer(app);
+@import "./features/folders/folders.css" layer(app);
+@import "./features/automation/automation.css" layer(app);
+@import "./features/vision/vision.css" layer(app);
+@import "./features/library/library.css" layer(app);
+@import "./features/taxonomy/taxonomy.css" layer(app);
+
+@layer app {
+  .numeric,
+  .count-label {
+    font-variant-numeric: tabular-nums;
+  }
+  .field-help {
+    color: var(--text-muted);
+  }
+  .inline-error {
+    color: var(--danger);
+    margin-top: var(--space-2);
+  }
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none;
+      transition: none;
+      scroll-behavior: auto;
+    }
+  }
+}

@@ -1,0 +1,25 @@
+export const profilesEn = {
+  profilesTitle: 'Reusable processing profiles',
+  profileApply: 'Apply settings',
+  profileNoSaved:
+    'No saved profiles. Continue with the controls below, or create a profile in Editor.',
+  profileExport: 'Export profile file',
+  profileExported: 'Profile exported: {{name}}',
+  profileImport: 'Import profile file',
+  profileImportedDraft: 'Imported as a draft — review and save it.',
+  profileNew: 'Create processing profile',
+  profileEdit: 'Edit processing profile',
+  profileNotes: 'Notes',
+  profileOptional: 'Optional processing profile',
+  profileSubtitleConflict:
+    'This profile includes OCR, but the draft already has subtitles. Remove the existing track explicitly or use another profile.',
+  profilesEmpty: 'No processing profiles',
+  profilesNoMatches: 'No matching profiles',
+  profilesCount_one: '{{count}} profile',
+  profilesCount_other: '{{count}} profiles',
+  profilesFilterStatus: 'Status',
+  profilesFilterAll: 'All',
+  profilesFilterActive: 'Active',
+  profilesFilterArchived: 'Archived',
+  profilesUpdated: 'Last updated',
+} as const;

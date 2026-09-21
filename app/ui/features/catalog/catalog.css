@@ -1,0 +1,101 @@
+.business-area {
+  position: absolute;
+  inset: 0;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+}
+.business-area > [role="tabpanel"] {
+  min-height: 0;
+  overflow: hidden;
+}
+.business-area > [role="tabpanel"]:not([hidden]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+}
+.business-workspace {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}
+.business-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+.business-grid:has(.detail-surface) {
+  grid-template-columns: minmax(320px, 1.15fr) minmax(320px, 1fr);
+}
+.business-list {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+.business-form {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.business-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+.business-toolbar-primary {
+  margin-left: auto;
+}
+.business-row {
+  cursor: pointer;
+}
+.business-row-open {
+  all: unset;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.business-row-open:hover,
+.business-row-open:focus-visible {
+  text-decoration: underline;
+}
+.business-row-open:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.business-path {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.business-table {
+  overflow: auto;
+  min-width: 0;
+}
+.business-details {
+  display: grid;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+.business-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+@media (max-width: 1200px) {
+  .business-grid:has(.detail-surface) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

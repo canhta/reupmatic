@@ -1,0 +1,37 @@
+.batch-workspace {
+  margin-block: var(--space-3);
+}
+.batch-workspace p {
+  max-width: 100ch;
+}
+.batch-scroll {
+  overflow: auto;
+  max-height: 360px;
+  margin-block: var(--space-3);
+}
+.batch-item-name {
+  min-width: 160px;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+.batch-draft-form {
+  margin-block: var(--space-4);
+}
+
+.jobs-tray .batch-workspace > .action-row:first-child {
+  min-height: var(--control-h);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--edge-subtle);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.batch-panel-content {
+  padding-top: var(--space-3);
+}
+
+.batch-panel-content > p:first-child {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}

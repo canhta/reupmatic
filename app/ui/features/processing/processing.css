@@ -1,0 +1,6 @@
+@layer app {
+  .processing-options {
+    margin-block: var(--space-4);
+    min-width: 0;
+  }
+}

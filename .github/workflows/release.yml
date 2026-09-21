@@ -1,0 +1,110 @@
+name: Release
+
+# Manual only (owner decision): a release is a deliberate act, never a side effect of a
+# push. Provide the version and which platforms to build; signing secrets come from the repository's
+# `release` environment. Nothing here runs on push or pull_request.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.1.0). Written into package.json for the build."
+        required: true
+        type: string
+      prerelease:
+        description: "Publish as a pre-release (not offered to stable auto-update)."
+        required: false
+        type: boolean
+        default: false
+      platforms:
+        description: "Which platforms to build."
+        required: true
+        type: choice
+        options:
+          - both
+          - mac
+          - win
+        default: both
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reupmatic-release
+  cancel-in-progress: false
+
+jobs:
+  mac:
+    name: macOS (signed, notarized)
+    if: ${{ inputs.platforms != 'win' }}
+    runs-on: macos-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Set the release version
+        run: node scripts/set-version.mjs "${{ inputs.version }}"
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      # Stage the bundled runtime and media tools (tickets 03/04). These must exist before packaging.
+      - run: pnpm run stage:python
+      - run: pnpm run stage:ffmpeg
+      - run: pnpm run build
+      - name: Package, sign, notarize and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm exec electron-builder --mac --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
+
+  win:
+    name: Windows (signed)
+    if: ${{ inputs.platforms != 'mac' }}
+    runs-on: windows-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Set the release version
+        run: node scripts/set-version.mjs "${{ inputs.version }}"
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run stage:python
+      - run: pnpm run stage:ffmpeg
+      - run: pnpm run build
+      - name: Package, sign and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: pnpm exec electron-builder --win --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
+
+# The pre-release flag controls whether a stable install is offered this build via electron-updater
+# (ticket 07); electron-builder publishes to the GitHub release for `v<version>`.
+# Owner secrets this workflow expects in the `release` environment:
+#   MAC_CSC_LINK, MAC_CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID,
+#   WIN_CSC_LINK, WIN_CSC_KEY_PASSWORD.
+# Staging scripts `stage:python` (ticket 03) and `stage:ffmpeg` (ticket 04, blocked on the FFmpeg
+# licence decision OD1) must exist and produce `python/` and `ffmpeg/` before this can pass.

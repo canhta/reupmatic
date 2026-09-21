@@ -1,0 +1,6 @@
+-r requirements.txt
+jsonschema==4.26.0
+ruff==0.16.7
+# The synthesis tests exercise the worker through controlled SDK doubles, but the numeric
+# work inside those doubles (and the synthesis adapter) is real.
+numpy==2.5.3
