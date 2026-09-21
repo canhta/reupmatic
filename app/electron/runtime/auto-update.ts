@@ -1,6 +1,12 @@
-import { autoUpdater } from 'electron-updater';
+import { createRequire } from 'node:module';
 import { shouldCheckForUpdates } from '../../core/runtime/auto-update-gate.js';
 import type { DiagnosticSink } from './diagnostic-sink.js';
+
+// electron-updater is CJS whose `autoUpdater` is a defineProperty getter; Node's ESM
+// interop cannot synthesise the named export, so require it explicitly.
+const { autoUpdater } = createRequire(import.meta.url)(
+  'electron-updater',
+) as typeof import('electron-updater');
 
 export interface AutoUpdateHost {
   packaged: boolean;
