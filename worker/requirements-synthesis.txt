@@ -1,3 +1,3 @@
 # Optional explicit installation; never installed or downloaded by the application.
 # The adapter targets the SDK's v3 Turbo ONNX/CPU engine at this exact version.
-vieneu==3.7.1
+vieneu==3.8.1
