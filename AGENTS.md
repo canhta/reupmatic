@@ -11,8 +11,8 @@ Runtime boundary: **UI (React) → typed IPC → host/core (TypeScript) → work
 | --- | --- |
 | How an agent works here | this file |
 | Install, run, feature overview | `README.md` |
-| Toolchain, hooks, bootstrap, release packaging | `CONTRIBUTING.md` |
-| Stack, process boundaries, source ownership | `ARCHITECTURE.md` |
+| Toolchain, hooks, bootstrap, release packaging | `docs/CONTRIBUTING.md` |
+| Stack, process boundaries, source ownership | `docs/ARCHITECTURE.md` |
 | Cross-runtime data shapes | `contracts/` |
 | Bundled licence obligations | `THIRD-PARTY-NOTICES.md` |
 
@@ -48,7 +48,7 @@ cancellation safeguards.
 - Never commit a derived file (wire schemas, generated Python, manifests): generate it at build or
   test time and `.gitignore` it.
 
-Record ownership changes in `ARCHITECTURE.md`.
+Record ownership changes in `docs/ARCHITECTURE.md`.
 
 ## UI
 
@@ -107,3 +107,17 @@ Badge is for counts, StatusDot/Token for status; style with tokens
 (`var(--color-*|--spacing-*|--radius-*)`), never raw hex/px; no StyleX/Tailwind compiler here, so
 don't use `xstyle` or utility classes. Self-check before finishing: replace any hand-rolled layout,
 imported `.css` and hardcoded value with the component or token.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

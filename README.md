@@ -80,13 +80,13 @@ pnpm start
 | `pnpm test` | Core, bridge and Python suites |
 | `pnpm run test:e2e` | Electron scenarios (needs native prerequisites) |
 
-Full setup, hooks, contracts and packaging live in [CONTRIBUTING.md](CONTRIBUTING.md); the stack and
-source layout are in [ARCHITECTURE.md](ARCHITECTURE.md). The marketing site is the `web` package —
+Full setup, hooks, contracts and packaging live in [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md); the
+stack and source layout are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The marketing site is the `web` package —
 `pnpm --filter web dev`.
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening one:
+Issues and pull requests are welcome. Read [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) before opening one:
 `pnpm run check`, `pnpm run check:python`, `pnpm run typecheck` and `pnpm test` must pass, and hooks
 run a subset of that on commit and push.
 
