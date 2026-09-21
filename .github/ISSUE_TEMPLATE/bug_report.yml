@@ -1,0 +1,61 @@
+name: Bug report
+description: Something is broken or behaves differently than expected.
+title: "[Bug]: "
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never paste cookies, tokens or account credentials. Redact paths and personal data from logs.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The observed behavior, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that triggers it. Note if it is intermittent.
+      placeholder: |
+        1. Import a folder with ...
+        2. Open the Editor and ...
+        3. Export
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Relevant output from the app or the terminal. Redact secrets and personal data.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version shown in the app, or the current commit if you run from source.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How are you running the app
+      options:
+        - Signed installer
+        - Built from source
+    validations:
+      required: true
