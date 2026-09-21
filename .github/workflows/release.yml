@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   mac:
-    name: macOS (signed, notarized)
+    name: macOS
     if: ${{ inputs.platforms != 'win' }}
     runs-on: macos-latest
     environment: release
@@ -59,18 +59,33 @@ jobs:
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
       - run: pnpm run build
-      - name: Package, sign, notarize and publish
+      - name: Export signing credentials when configured
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$MAC_CSC_LINK" ]; then
+            {
+              echo "CSC_LINK=$MAC_CSC_LINK"
+              echo "CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD"
+              echo "APPLE_ID=$APPLE_ID"
+              echo "APPLE_APP_SPECIFIC_PASSWORD=$APPLE_APP_SPECIFIC_PASSWORD"
+              echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No macOS certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Package, sign, notarize and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: pnpm exec electron-builder --mac --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
 
   win:
-    name: Windows (signed)
+    name: Windows
     if: ${{ inputs.platforms != 'mac' }}
     runs-on: windows-latest
     environment: release
@@ -94,11 +109,23 @@ jobs:
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
       - run: pnpm run build
+      - name: Export signing credentials when configured
+        shell: bash
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -n "$WIN_CSC_LINK" ]; then
+            {
+              echo "CSC_LINK=$WIN_CSC_LINK"
+              echo "CSC_KEY_PASSWORD=$WIN_CSC_KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No Windows certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Package, sign and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         run: pnpm exec electron-builder --win --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
 
 # The pre-release flag controls whether a stable install is offered this build via electron-updater

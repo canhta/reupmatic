@@ -36,8 +36,8 @@ const pythonExe = path.join(
   ...(process.platform === 'win32' ? ['python.exe'] : ['bin', 'python3']),
 );
 
-function run(command, args) {
-  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', env: process.env });
+function run(command, args, env = process.env) {
+  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', env });
   if (result.error) throw new Error(`${command}: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} exited ${result.status}`);
 }
@@ -116,17 +116,30 @@ run('tar', ['-xzf', tarball, '-C', root]);
 await stat(pythonExe);
 
 console.log('installing worker requirements into the staged interpreter');
-run(pythonExe, [
-  '-m',
-  'pip',
-  'install',
-  '--no-cache-dir',
-  '--no-warn-script-location',
-  '-r',
-  'worker/requirements.txt',
-  '-r',
-  'worker/requirements-optional.txt',
-]);
+// kaldi-native-fbank publishes no cp314 win_amd64 wheel, so pip builds it from source; MSVC's
+// FileTracker then cannot create its .tlog files under the runner's long %TEMP% path.
+const pipEnv = { ...process.env };
+if (process.platform === 'win32') {
+  const buildTmp = path.join(path.parse(root).root, 'reupmatic-build-tmp');
+  await mkdir(buildTmp, { recursive: true });
+  pipEnv.TMP = buildTmp;
+  pipEnv.TEMP = buildTmp;
+}
+run(
+  pythonExe,
+  [
+    '-m',
+    'pip',
+    'install',
+    '--no-cache-dir',
+    '--no-warn-script-location',
+    '-r',
+    'worker/requirements.txt',
+    '-r',
+    'worker/requirements-optional.txt',
+  ],
+  pipEnv,
+);
 
 await stripCaches(target);
 
