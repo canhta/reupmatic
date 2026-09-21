@@ -9,6 +9,7 @@ import {
 export const revalidate = 3600;
 
 type ReleaseAsset = { name: string; browser_download_url: string };
+type Release = { draft?: boolean; assets?: ReleaseAsset[] };
 
 export async function GET(
   _request: Request,
@@ -24,8 +25,8 @@ export async function GET(
       next: { revalidate },
     });
     if (response.ok) {
-      const release = (await response.json()) as { assets?: ReleaseAsset[] };
-      const assets = release.assets ?? [];
+      const releases = (await response.json()) as Release[];
+      const assets = releases.find((release) => !release.draft)?.assets ?? [];
       for (const pattern of PLATFORM_ASSETS[platform]) {
         const asset = assets.find((candidate) => pattern.test(candidate.name));
         if (asset) {

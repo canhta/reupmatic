@@ -1,7 +1,8 @@
 const RELEASE_REPO = 'canhta/reupmatic';
 
-export const RELEASE_PAGE_URL = `https://github.com/${RELEASE_REPO}/releases/latest`;
-export const RELEASE_API_URL = `https://api.github.com/repos/${RELEASE_REPO}/releases/latest`;
+export const RELEASE_PAGE_URL = `https://github.com/${RELEASE_REPO}/releases`;
+/** The list endpoint, not `/releases/latest`: that one ignores pre-releases, which is all we have. */
+export const RELEASE_API_URL = `https://api.github.com/repos/${RELEASE_REPO}/releases?per_page=5`;
 
 export type DownloadPlatform = 'mac' | 'windows';
 

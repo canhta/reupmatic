@@ -114,21 +114,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           LEFTHOOK: "0"
-      - name: Stage the bundled runtime
-        run: |
-          pnpm run stage:python
-          echo "--- after stage:python ---"
-          ls -la python | head -20 || true
-      - name: Stage ffmpeg
-        run: |
-          pnpm run stage:ffmpeg
-          echo "--- after stage:ffmpeg ---"
-          ls -la ffmpeg | head -20 || true
-      - name: Build
-        run: |
-          pnpm run build
-          echo "--- after build ---"
-          ls -la dist-ui dist-node | head -10 || true
+      - run: pnpm run stage:python
+      - run: pnpm run stage:ffmpeg
+      - run: pnpm run build
       - name: Export signing credentials when configured
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
