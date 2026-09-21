@@ -112,7 +112,9 @@ if (actual !== expected) throw new Error(`checksum mismatch for ${asset}`);
 console.log(`verified ${asset} (${actual.slice(0, 12)}…)`);
 
 await rm(target, { recursive: true, force: true });
-run('tar', ['-xzf', tarball, '-C', root]);
+// GNU tar reads an absolute `D:\...` archive operand as a remote host spec on Windows, so extract
+// using paths relative to the repo root (the runner already uses that as cwd).
+run('tar', ['-xzf', path.relative(root, tarball), '-C', '.']);
 await stat(pythonExe);
 
 console.log('installing worker requirements into the staged interpreter');
