@@ -52,7 +52,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           LEFTHOOK: "0"
-      # Stage the bundled runtime and media tools (tickets 03/04). These must exist before packaging.
+      # Packaging needs both staged: the bundled runtime and the media tools.
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
       - run: pnpm run build
@@ -145,10 +145,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm exec electron-builder --win --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
 
-# The pre-release flag controls whether a stable install is offered this build via electron-updater
-# (ticket 07); electron-builder publishes to the GitHub release for `v<version>`.
-# Owner secrets this workflow expects in the `release` environment:
-#   MAC_CSC_LINK, MAC_CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID,
-#   WIN_CSC_LINK, WIN_CSC_KEY_PASSWORD.
-# Staging scripts `stage:python` (ticket 03) and `stage:ffmpeg` (ticket 04, blocked on the FFmpeg
-# licence decision OD1) must exist and produce `python/` and `ffmpeg/` before this can pass.
+# The pre-release flag controls whether electron-updater offers this build as a stable update;
+# electron-builder publishes to the GitHub release for `v<version>`. Signing secrets are optional —
+# with none configured the run still publishes unsigned.
