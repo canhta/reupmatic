@@ -1,4 +1,5 @@
 import { InternationalizationProvider } from '@astryxdesign/core/i18n';
+import { LayerProvider } from '@astryxdesign/core/Layer';
 import { Theme } from '@astryxdesign/core/theme';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +13,9 @@ export function DesignSystemProvider({ children }: { children: ReactNode }) {
   return (
     <InternationalizationProvider locale={i18n.language} overrides={componentMessages}>
       <Theme theme={reupmaticNeutralTheme} mode="dark">
-        <ConfirmationProvider>{children}</ConfirmationProvider>
+        <LayerProvider>
+          <ConfirmationProvider>{children}</ConfirmationProvider>
+        </LayerProvider>
       </Theme>
     </InternationalizationProvider>
   );
