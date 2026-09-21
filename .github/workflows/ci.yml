@@ -12,6 +12,10 @@ jobs:
   desktop-source:
     name: Desktop source / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # PowerShell silently no-ops `pnpm run`/`pnpm exec` on the Windows runner; bash does not.
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:

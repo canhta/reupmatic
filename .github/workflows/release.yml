@@ -79,7 +79,6 @@ jobs:
             echo "No macOS certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Ensure the release exists
-        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -100,6 +99,9 @@ jobs:
     if: ${{ inputs.platforms != 'mac' }}
     runs-on: windows-latest
     environment: release
+    # PowerShell silently no-ops `pnpm run`/`pnpm exec` on the Windows runner; bash does not.
+    defaults:
+      run:
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -118,25 +120,21 @@ jobs:
         env:
           LEFTHOOK: "0"
       - name: Stage the bundled runtime
-        shell: bash
         run: |
           pnpm run stage:python
           echo "--- after stage:python ---"
           ls -la python | head -20 || true
       - name: Stage ffmpeg
-        shell: bash
         run: |
           pnpm run stage:ffmpeg
           echo "--- after stage:ffmpeg ---"
           ls -la ffmpeg | head -20 || true
       - name: Build
-        shell: bash
         run: |
           pnpm run build
           echo "--- after build ---"
           ls -la dist-ui dist-node | head -10 || true
       - name: Export signing credentials when configured
-        shell: bash
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
@@ -150,7 +148,6 @@ jobs:
             echo "No Windows certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Ensure the release exists
-        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
