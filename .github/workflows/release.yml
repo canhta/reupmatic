@@ -117,9 +117,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           LEFTHOOK: "0"
-      - run: pnpm run stage:python
-      - run: pnpm run stage:ffmpeg
-      - run: pnpm run build
+      - name: Stage the bundled runtime
+        shell: bash
+        run: |
+          pnpm run stage:python
+          echo "--- after stage:python ---"
+          ls -la python | head -20 || true
+      - name: Stage ffmpeg
+        shell: bash
+        run: |
+          pnpm run stage:ffmpeg
+          echo "--- after stage:ffmpeg ---"
+          ls -la ffmpeg | head -20 || true
+      - name: Build
+        shell: bash
+        run: |
+          pnpm run build
+          echo "--- after build ---"
+          ls -la dist-ui dist-node | head -10 || true
       - name: Export signing credentials when configured
         shell: bash
         env:
