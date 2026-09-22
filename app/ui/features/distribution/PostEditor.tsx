@@ -1,12 +1,14 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ExportChoice, Post } from '../../../core/distribution/distribution-contracts';
@@ -87,7 +89,7 @@ export function PostEditor({
   }
 
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       {!draft.saved ? (
         <>
           <FormLayout>
@@ -198,7 +200,7 @@ export function PostEditor({
           onChange={(state) => setDraft({ ...draft, state: state as PostDraft['state'] })}
         />
       )}
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('catalogSave')}
           variant="primary"
@@ -218,7 +220,7 @@ export function PostEditor({
           onClick={() => void form.reset()}
         />
         {form.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-      </div>
-    </div>
+      </HStack>
+    </VStack>
   );
 }

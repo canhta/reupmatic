@@ -20,12 +20,6 @@
     color: var(--danger);
     margin-top: var(--space-2);
   }
-  .action-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

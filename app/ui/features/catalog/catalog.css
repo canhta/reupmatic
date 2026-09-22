@@ -43,20 +43,6 @@
   min-height: 0;
   overflow: auto;
 }
-.business-form {
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
-}
-.business-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--space-3);
-}
-.business-toolbar-primary {
-  margin-left: auto;
-}
 .business-row {
   cursor: pointer;
 }

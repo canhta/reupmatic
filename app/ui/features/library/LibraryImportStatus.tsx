@@ -1,5 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Text } from '@astryxdesign/core/Text';
 import { useEffect, useState } from 'react';
@@ -44,7 +45,7 @@ export function LibraryImportStatus({ progress, result, onError }: Props) {
 
   if (progress?.phase === 'importing') {
     return (
-      <div className="library-import-status action-row" role="status">
+      <HStack className="library-import-status" gap={2} vAlign="center" wrap="wrap" role="status">
         <ProgressBar
           label={t('libraryImporting', { ...progress })}
           value={progress.completed}
@@ -55,7 +56,7 @@ export function LibraryImportStatus({ progress, result, onError }: Props) {
           isDisabled={cancelling}
           onClick={() => void cancel()}
         />
-      </div>
+      </HStack>
     );
   }
 

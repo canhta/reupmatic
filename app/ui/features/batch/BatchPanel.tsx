@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Section } from '@astryxdesign/core/Section';
 import { Text } from '@astryxdesign/core/Text';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +38,7 @@ export function BatchPanel({
       className="batch-workspace"
       aria-label={t('batchTitle')}
     >
-      <div className="action-row" role="status">
+      <HStack gap={2} vAlign="center" wrap="wrap" role="status">
         <Text type="body">{active ? `${t('batchRunning')} · ${active.name}` : t('queueIdle')}</Text>
         {done > 0 && <Text type="body">{t('batchCompleteCount', { count: done })}</Text>}
         {active && active.state !== 'cancelling' && (
@@ -54,7 +55,7 @@ export function BatchPanel({
             onClick={() => void queue.control('pause')}
           />
         )}
-      </div>
+      </HStack>
       {error && (
         <Banner
           status="error"
@@ -90,7 +91,7 @@ function BatchContent({ queue }: { queue: ReturnType<typeof useBatchQueue> }) {
   const { snapshot, drafts, output, busy } = queue;
   return (
     <>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('batchAddVideos')}
           isDisabled={busy || !snapshot}
@@ -104,7 +105,7 @@ function BatchContent({ queue }: { queue: ReturnType<typeof useBatchQueue> }) {
         <Text type="body" className="queue-file">
           {output?.name ?? t('batchNoFolder')}
         </Text>
-      </div>
+      </HStack>
       {drafts.length > 100 && <Banner status="warning" title={t('batchSelectionLimit')} />}
       {drafts.length > 0 && (
         <>
@@ -147,7 +148,7 @@ function BatchContent({ queue }: { queue: ReturnType<typeof useBatchQueue> }) {
         </Banner>
       )}
       <Divider />
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Heading level={5}>{t('batchQueue')}</Heading>
         {snapshot && <Text type="body">{t(snapshot.paused ? 'batchPaused' : 'queueReady')}</Text>}
         <Button
@@ -157,7 +158,7 @@ function BatchContent({ queue }: { queue: ReturnType<typeof useBatchQueue> }) {
           }
           onClick={() => void queue.control('resume')}
         />
-      </div>
+      </HStack>
       <Text as="p" type="body">
         {t('batchPauseHint')}
       </Text>

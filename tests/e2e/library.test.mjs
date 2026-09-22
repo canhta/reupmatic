@@ -156,7 +156,9 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       await drawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });
-      const labelsSection = drawerA.locator('.business-form').last();
+      const labelsSection = drawerA
+        .getByRole('heading', { name: 'Labels for vacation-clip.mp4', exact: true })
+        .locator('..');
       const [labelsBox, drawerBox] = await Promise.all([
         labelsSection.boundingBox(),
         drawerA.boundingBox(),
@@ -210,7 +212,9 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       await vietnameseDrawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });
-      const vietnameseLabelsSection = vietnameseSurface.locator('.business-form').last();
+      const vietnameseLabelsSection = vietnameseSurface
+        .getByRole('heading', { name: 'Nhãn của vacation-clip.mp4', exact: true })
+        .locator('..');
       const [vietnameseLabelsBox, vietnameseDrawerBox] = await Promise.all([
         vietnameseLabelsSection.boundingBox(),
         vietnameseSurface.boundingBox(),

@@ -1,4 +1,5 @@
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
 import { useTranslation } from 'react-i18next';
 
@@ -15,7 +16,7 @@ export function LibrarySelectionBar({ count, disabled, onPrepare, onClear }: Pro
   return (
     <div className="library-selection-bar" role="status">
       <Text type="body">{t('librarySelection', { count })}</Text>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('libraryProcess')}
           variant="primary"
@@ -23,7 +24,7 @@ export function LibrarySelectionBar({ count, disabled, onPrepare, onClear }: Pro
           onClick={onPrepare}
         />
         <Button label={t('libraryClearSelection')} isDisabled={disabled} onClick={onClear} />
-      </div>
+      </HStack>
     </div>
   );
 }

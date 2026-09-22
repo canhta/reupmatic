@@ -1,9 +1,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LabelKind } from '../../../core/taxonomy/taxonomy-contracts';
@@ -48,7 +50,7 @@ export function LabelPicker({
     }
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <MultiSelector
         label={t('catalogLabels')}
         value={value}
@@ -62,7 +64,7 @@ export function LabelPicker({
         searchPlaceholder={t('catalogSearch')}
       />
       <Collapsible trigger={t('labelCreate')} defaultIsOpen={false}>
-        <div className="business-toolbar">
+        <HStack gap={2} vAlign="end" wrap="wrap">
           <TextInput
             label={t('catalogName')}
             value={name}
@@ -84,11 +86,11 @@ export function LabelPicker({
             isDisabled={disabled || catalog.busy || !name.trim() || value.length >= 30}
             onClick={() => void create()}
           />
-        </div>
+        </HStack>
         <Text as="p" type="supporting">
           {t('labelsSharedHelp')}
         </Text>
       </Collapsible>
-    </div>
+    </VStack>
   );
 }

@@ -1,6 +1,8 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ContentEntry } from '../../../core/library/library-contracts';
@@ -46,7 +48,7 @@ export function ContentLabels({
         </Text>
       )}
       {item && (
-        <div className="business-form">
+        <VStack gap={3}>
           <Heading level={5}>{t('contentLabelsTitle', { name: item.name })}</Heading>
           <LabelPicker
             value={draft.label_ids}
@@ -55,7 +57,7 @@ export function ContentLabels({
               setDrafts((current) => ({ ...current, [item.id]: { ...draft, label_ids } }))
             }
           />
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button
               label={t('contentLabelsSave')}
               isDisabled={disabled || catalog.busy || !drafts[item.id]}
@@ -72,8 +74,8 @@ export function ContentLabels({
                 })
               }
             />
-          </div>
-        </div>
+          </HStack>
+        </VStack>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import type { TableColumn } from '@astryxdesign/core/Table';
 import {
   paginateData,
@@ -15,6 +16,7 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -155,14 +157,13 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
             />
           }
           endContent={
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
               <Text type="supporting">
                 {t('affiliateLinksCount', { count: sortedData.length })}
               </Text>
               <Button
                 label={t('affiliateNew')}
                 variant="primary"
-                className="business-toolbar-primary"
                 tooltip={t('affiliateNew')}
                 isDisabled={disabled}
                 onClick={() => {
@@ -170,7 +171,7 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
                   void form.choose(draftOf());
                 }}
               />
-            </div>
+            </HStack>
           }
         />
         {!all.length ? (
@@ -200,7 +201,7 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
         label={t(draft.expected_revision ? 'affiliateEdit' : 'affiliateNew')}
         onClose={() => void closeDetail()}
       >
-        <div className="business-form">
+        <VStack gap={3}>
           <FormLayout>
             <TextInput
               label={t('catalogName')}
@@ -232,7 +233,7 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
           <Text as="p" type="supporting">
             {t('affiliateSnapshotHelp')}
           </Text>
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button
               label={t('catalogSave')}
               variant="primary"
@@ -250,8 +251,8 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
               onClick={() => void form.reset()}
             />
             {dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-          </div>
-        </div>
+          </HStack>
+        </VStack>
       </DetailSurface>
     </div>
   );

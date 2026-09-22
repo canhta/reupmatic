@@ -1,6 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Step, Stepper } from '@astryxdesign/core/Stepper';
@@ -156,7 +157,7 @@ export function WorkflowEditor({
                 output: value.output_name || t('workflowStepReviewOutputMissing'),
               })}
             </Text>
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               <Button
                 label={t('catalogSave')}
                 variant="primary"
@@ -166,7 +167,7 @@ export function WorkflowEditor({
               />
               <Button label={t('catalogReset')} isDisabled={disabled || !dirty} onClick={onReset} />
               {dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-            </div>
+            </HStack>
             {saved && !dirty && (
               <Text as="p" type="body" role="status">
                 {t('workflowSaved')}

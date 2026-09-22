@@ -2,6 +2,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { Section } from '@astryxdesign/core/Section';
 import { Text } from '@astryxdesign/core/Text';
@@ -37,7 +38,7 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
 
   return (
     <Section variant="transparent" padding={0} aria-label={t('libraryDetails')}>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         {}
         {openable && (
           <Button
@@ -48,7 +49,7 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
             onClick={() => void onAction(() => onOpen(current.id))}
           />
         )}
-      </div>
+      </HStack>
       {}
       <div className="library-detail-facts">
         <MetadataList label={{ position: 'start' }}>

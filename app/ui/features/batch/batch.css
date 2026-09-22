@@ -10,7 +10,7 @@
   margin-block: var(--space-3);
 }
 
-.jobs-tray .batch-workspace > .action-row:first-child {
+.jobs-tray .batch-workspace > [role="status"]:first-child {
   min-height: var(--control-h);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--edge-subtle);

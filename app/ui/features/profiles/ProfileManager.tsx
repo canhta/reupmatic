@@ -1,6 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import type { TableColumn } from '@astryxdesign/core/Table';
 import {
@@ -16,6 +17,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProcessingProfile, SaveProfile } from '../../../core/profiles/profile-contracts';
@@ -132,7 +134,7 @@ export function ProfileManager() {
       width: pixel(200),
       resizable: false,
       renderCell: (profile) => (
-        <div className="action-row">
+        <HStack gap={2} vAlign="center" wrap="wrap">
           <Button
             label={t('catalogEdit')}
             isDisabled={disabled}
@@ -154,7 +156,7 @@ export function ProfileManager() {
               });
             }}
           />
-        </div>
+        </HStack>
       ),
     },
   ];
@@ -182,7 +184,7 @@ export function ProfileManager() {
             label={t('profilesTitle')}
             size="sm"
             startContent={
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap">
                 <TextInput
                   label={t('catalogSearch')}
                   isLabelHidden
@@ -211,10 +213,10 @@ export function ProfileManager() {
                     { value: 'all', label: t('profilesFilterAll') },
                   ]}
                 />
-              </div>
+              </HStack>
             }
             endContent={
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap">
                 {all.length > 0 && (
                   <Text type="supporting">{t('profilesCount', { count: sortedData.length })}</Text>
                 )}
@@ -229,7 +231,7 @@ export function ProfileManager() {
                   isDisabled={disabled}
                   onClick={() => void importProfile()}
                 />
-              </div>
+              </HStack>
             }
           />
           {!all.length ? (
@@ -266,7 +268,7 @@ export function ProfileManager() {
           label={t(value.expected_revision ? 'profileEdit' : 'profileNew')}
           onClose={() => void closeDetail()}
         >
-          <div className="business-form">
+          <VStack gap={3}>
             <TextInput
               label={t('catalogName')}
               value={value.name}
@@ -285,7 +287,7 @@ export function ProfileManager() {
               isDisabled={disabled}
               onChange={(archived) => draft.setValue({ ...value, archived })}
             />
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               <Button
                 label={t('catalogSave')}
                 variant="primary"
@@ -302,13 +304,13 @@ export function ProfileManager() {
                 onClick={() => void draft.reset()}
               />
               {draft.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-            </div>
+            </HStack>
             {message && (
               <Text as="p" type="body" role="status">
                 {message}
               </Text>
             )}
-          </div>
+          </VStack>
         </DetailSurface>
       </div>
     </div>

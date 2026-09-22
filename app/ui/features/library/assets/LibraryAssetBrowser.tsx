@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import type { TableColumn } from '@astryxdesign/core/Table';
@@ -107,7 +108,7 @@ export function LibraryAssetBrowser({ contentId, disabled, onOpen }: Props) {
           />
         }
         endContent={
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Selector
               label={t('assetKind')}
               isLabelHidden
@@ -122,7 +123,7 @@ export function LibraryAssetBrowser({ contentId, disabled, onOpen }: Props) {
               isDisabled={blocked || loading}
               onClick={() => void assets.action(assets.reload)}
             />
-          </div>
+          </HStack>
         }
       />
       <Collapsible trigger={t('assetAttachTitle')} defaultIsOpen={false}>
@@ -207,7 +208,7 @@ export function LibraryAssetBrowser({ contentId, disabled, onOpen }: Props) {
           <Text as="p" type="supporting">
             {t('assetIdentityHelp')}
           </Text>
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button
               label={t(selected.kind === 'project' ? 'openProject' : 'assetPreview')}
               isDisabled={blocked}
@@ -233,7 +234,7 @@ export function LibraryAssetBrowser({ contentId, disabled, onOpen }: Props) {
                 })
               }
             />
-          </div>
+          </HStack>
           <Collapsible trigger={t('libraryHash')} defaultIsOpen={false}>
             <code>{selected.sha256}</code>
           </Collapsible>

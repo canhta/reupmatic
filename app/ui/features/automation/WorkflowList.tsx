@@ -1,5 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import type { TableColumn } from '@astryxdesign/core/Table';
 import {
   paginateData,
@@ -88,7 +89,7 @@ export function WorkflowList({
       width: pixel(280),
       resizable: false,
       renderCell: (workflow) => (
-        <div className="action-row">
+        <HStack gap={2} vAlign="center" wrap="wrap">
           <Button
             label={t('catalogEdit')}
             isDisabled={disabled}
@@ -112,7 +113,7 @@ export function WorkflowList({
               {t('workflowRunUnavailable')}
             </Text>
           )}
-        </div>
+        </HStack>
       ),
     },
   ];
@@ -152,18 +153,17 @@ export function WorkflowList({
           />
         }
         endContent={
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
             <Text type="supporting">{t('workflowsCount', { count: sortedData.length })}</Text>
             <Button
               label={t('workflowNew')}
               variant="primary"
-              className="business-toolbar-primary"
               tooltip={t('workflowNew')}
               isDisabled={disabled}
               onClick={onCreate}
               data-workflow-focus="create"
             />
-          </div>
+          </HStack>
         }
       />
       {!all.length ? (

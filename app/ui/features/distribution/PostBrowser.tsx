@@ -1,6 +1,7 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import type { TableColumn, TableSortState } from '@astryxdesign/core/Table';
 import {
@@ -180,7 +181,7 @@ export function PostBrowser({
               />
             }
             endContent={
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
                 <Selector
                   label={t('postView')}
                   isLabelHidden
@@ -194,18 +195,17 @@ export function PostBrowser({
                 <Button
                   label={t('postNew')}
                   variant="primary"
-                  className="business-toolbar-primary"
                   isDisabled={catalog.busy || !catalog.snapshot}
                   onClick={() => {
                     setEditing(true);
                     void form.choose(postDraft());
                   }}
                 />
-              </div>
+              </HStack>
             }
           />
           {filtered && (
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               <Text type="body">
                 {t('postFilter', { name: filterName ?? filter.channel_id ?? filter.link_id })}
               </Text>
@@ -213,7 +213,7 @@ export function PostBrowser({
                 label={t('postClearFilter')}
                 onClick={() => onFilter({ view: filter.view })}
               />
-            </div>
+            </HStack>
           )}
           {error ? (
             <Banner

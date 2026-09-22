@@ -13,6 +13,7 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -116,7 +117,7 @@ export function WorkflowInputPicker({
   });
 
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <Heading level={5}>{t('workflowInputs')}</Heading>
       <Toolbar
         label={t('workflowInputs')}
@@ -188,6 +189,6 @@ export function WorkflowInputPicker({
           onClick={() => onChange([])}
         />
       </div>
-    </div>
+    </VStack>
   );
 }

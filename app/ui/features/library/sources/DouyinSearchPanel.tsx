@@ -374,7 +374,7 @@ export function DouyinSearchPanel({ search, connected, disabled, onReconnect, on
           {search.selected.size > 0 && (
             <div className="library-selection-bar" role="status">
               <Text type="body">{t('librarySelection', { count: search.selected.size })}</Text>
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap">
                 <Button
                   variant="primary"
                   label={t('douyinDownloadSelected')}
@@ -401,7 +401,7 @@ export function DouyinSearchPanel({ search, connected, disabled, onReconnect, on
                   isDisabled={downloading}
                   onClick={search.clearSelection}
                 />
-              </div>
+              </HStack>
             </div>
           )}
         </VStack>

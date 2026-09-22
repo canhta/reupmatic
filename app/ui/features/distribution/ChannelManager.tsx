@@ -2,6 +2,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import type { PowerSearchFilter } from '@astryxdesign/core/PowerSearch';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -21,6 +22,7 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -244,12 +246,11 @@ export function ChannelManager({
               />
             }
             endContent={
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
                 <Text type="supporting">{t('channelsCount', { count: sortedData.length })}</Text>
                 <Button
                   label={t('channelNew')}
                   variant="primary"
-                  className="business-toolbar-primary"
                   tooltip={t('channelNew')}
                   isDisabled={disabled}
                   onClick={() => {
@@ -257,7 +258,7 @@ export function ChannelManager({
                     void form.choose(draftOf());
                   }}
                 />
-              </div>
+              </HStack>
             }
           />
           {!all.length ? (
@@ -288,9 +289,9 @@ export function ChannelManager({
           label={t(draft.expected_revision ? 'channelEdit' : 'channelNew')}
           onClose={() => void closeDetail()}
         >
-          <div className="business-form">
+          <VStack gap={3}>
             {draft.expected_revision !== null && (
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap">
                 <Button
                   label={t('postView_upcoming')}
                   onClick={() => onPosts(draft.id, 'upcoming')}
@@ -299,7 +300,7 @@ export function ChannelManager({
                   label={t('postView_published')}
                   onClick={() => onPosts(draft.id, 'published')}
                 />
-              </div>
+              </HStack>
             )}
             <FormLayout>
               <TextInput
@@ -339,7 +340,7 @@ export function ChannelManager({
             <Text as="p" type="supporting">
               {t('channelArchiveHelp')}
             </Text>
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               <Button
                 label={t('catalogSave')}
                 variant="primary"
@@ -354,8 +355,8 @@ export function ChannelManager({
                 onClick={() => void form.reset()}
               />
               {dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-            </div>
-          </div>
+            </HStack>
+          </VStack>
         </DetailSurface>
       </div>
     </div>

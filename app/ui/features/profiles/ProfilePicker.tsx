@@ -1,6 +1,8 @@
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProcessingRecipe } from '../../../core/processing/recipe';
@@ -23,8 +25,8 @@ export function ProfilePicker({
   const conflict = Boolean(hasSubtitles && profile?.processing?.ocr);
 
   return (
-    <div className="business-form">
-      <div className="business-toolbar">
+    <VStack gap={3}>
+      <HStack gap={2} vAlign="end" wrap="wrap">
         <Selector
           label={t('profileOptional')}
           value={selected}
@@ -39,7 +41,7 @@ export function ProfilePicker({
             if (profile && !conflict) onApply(structuredClone(profile.processing ?? undefined));
           }}
         />
-      </div>
+      </HStack>
       {!profiles.length && (
         <Text as="p" type="supporting">
           {t('profileNoSaved')}
@@ -50,6 +52,6 @@ export function ProfilePicker({
           {t('profileSubtitleConflict')}
         </Text>
       )}
-    </div>
+    </VStack>
   );
 }

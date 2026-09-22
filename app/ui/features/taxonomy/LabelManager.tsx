@@ -1,6 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import type { PowerSearchFilter } from '@astryxdesign/core/PowerSearch';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -20,6 +21,7 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Label, SaveLabel } from '../../../core/taxonomy/taxonomy-contracts';
@@ -179,17 +181,16 @@ export function LabelManager() {
               />
             }
             endContent={
-              <div className="action-row">
+              <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
                 <Text type="supporting">{t('labelsCount', { count: sortedData.length })}</Text>
                 <Button
                   label={t('labelCreate')}
                   variant="primary"
-                  className="business-toolbar-primary"
                   tooltip={t('labelCreate')}
                   isDisabled={disabled}
                   onClick={() => openLabel()}
                 />
-              </div>
+              </HStack>
             }
           />
           {!all.length ? (
@@ -220,7 +221,7 @@ export function LabelManager() {
           label={t(draft.expected_revision ? 'labelEdit' : 'labelCreate')}
           onClose={() => void closeDetail()}
         >
-          <div className="business-form">
+          <VStack gap={3}>
             <TextInput
               label={t('catalogName')}
               value={draft.name}
@@ -243,7 +244,7 @@ export function LabelManager() {
               isDisabled={disabled}
               onChange={(archived) => setDraft({ ...draft, archived })}
             />
-            <div className="action-row">
+            <HStack gap={2} vAlign="center" wrap="wrap">
               <Button
                 label={t('catalogSave')}
                 variant="primary"
@@ -258,8 +259,8 @@ export function LabelManager() {
                 onClick={() => void form.reset()}
               />
               {form.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
-            </div>
-          </div>
+            </HStack>
+          </VStack>
         </DetailSurface>
       </div>
     </div>

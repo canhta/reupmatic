@@ -1,5 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import {
   Table,
   TableBody,
@@ -68,7 +69,7 @@ export function BatchDraftTable({ items, busy, onAttach, onRemoveSubtitle, onRem
                 </TableCell>
                 <TableCell>{item.subtitle_name ?? t('batchNoSubtitle')}</TableCell>
                 <TableCell>
-                  <div className="action-row">
+                  <HStack gap={2} vAlign="center" wrap="wrap">
                     <Button
                       label={t('batchAttachSrt')}
                       isDisabled={busy}
@@ -86,7 +87,7 @@ export function BatchDraftTable({ items, busy, onAttach, onRemoveSubtitle, onRem
                       isDisabled={busy}
                       onClick={() => onRemoveVideo(item.draft_key)}
                     />
-                  </div>
+                  </HStack>
                 </TableCell>
               </TableRow>
             ))}

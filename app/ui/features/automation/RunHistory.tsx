@@ -2,6 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -65,7 +66,7 @@ export function RunHistory({
           />
         }
         endContent={
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Selector
               label={t('workflowRunsOrder')}
               isLabelHidden
@@ -80,7 +81,7 @@ export function RunHistory({
               }}
             />
             <Text type="supporting">{t('workflowRunsCount', { count: runs.length })}</Text>
-          </div>
+          </HStack>
         }
       />
       {!all.length ? (

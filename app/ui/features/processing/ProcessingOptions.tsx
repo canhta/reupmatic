@@ -2,6 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Section } from '@astryxdesign/core/Section';
@@ -162,7 +163,7 @@ export function ProcessingOptions({
                 }
                 defaultIsOpen={false}
               >
-                <div className="vision-fields">
+                <HStack gap={3} vAlign="end" wrap="wrap">
                   <NumberInput
                     label={t('visionSample')}
                     min={100}
@@ -188,7 +189,7 @@ export function ProcessingOptions({
                       update({ ...value, ocr: { ...ocr, min_confidence } })
                     }
                   />
-                </div>
+                </HStack>
               </Collapsible>
             )}
             {inpaint && (

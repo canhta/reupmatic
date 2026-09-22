@@ -1,5 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import type { PowerSearchFilter } from '@astryxdesign/core/PowerSearch';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
@@ -121,7 +122,7 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
       header: t('batchActions'),
       resizable: false,
       renderCell: (item) => (
-        <div className="action-row">
+        <HStack gap={2} vAlign="center" wrap="wrap">
           {['queued', 'running', 'interrupted'].includes(item.state) && (
             <Button
               label={t('cancel')}
@@ -152,7 +153,7 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
               }}
             />
           )}
-        </div>
+        </HStack>
       ),
     },
   ];

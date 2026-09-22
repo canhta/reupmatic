@@ -1,6 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../core/editing/edit-recipe';
 import { AudioTools } from '../editor/audio-tools/AudioTools';
@@ -25,7 +26,7 @@ export function EditingOptions({
     onChange(Object.keys(next).length ? next : undefined);
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">
@@ -59,6 +60,6 @@ export function EditingOptions({
       {value && (
         <Button label={t('editReset')} isDisabled={disabled} onClick={() => onChange(undefined)} />
       )}
-    </div>
+    </VStack>
   );
 }

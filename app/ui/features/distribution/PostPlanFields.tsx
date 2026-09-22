@@ -3,6 +3,7 @@ import { DateTimeInput, type ISODateTimeString } from '@astryxdesign/core/DateTi
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import { type PlanDraft, plannedCandidates } from '../../../core/distribution/post-schedule';
 
@@ -35,7 +36,7 @@ export function PostPlanFields({
     }
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <CheckboxInput
         label={t('postPlanEnable')}
         value={value.enabled}
@@ -90,6 +91,6 @@ export function PostPlanFields({
           </Text>
         </>
       )}
-    </div>
+    </VStack>
   );
 }
