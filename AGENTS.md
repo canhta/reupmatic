@@ -62,7 +62,14 @@ Record ownership changes in `docs/ARCHITECTURE.md`.
 - Navigation has two tiers: Editor, Sources & Library, Automation, Channels & Affiliate are equal
   peers; only the optional utility area (Settings/Account) is demoted.
 - UI copy is for end users: no env var names, internal paths, or "this build does not yet…"
-  disclaimers. One short clause beats a paragraph.
+  disclaimers. One short clause beats a paragraph. Buttons are a verb of 1–2 words; helper text
+  appears only where it prevents a real mistake.
+- Controls follow one rule, not taste: on/off that the next run applies → CheckboxInput; a toggle
+  that takes effect instantly → Switch; a bounded number → NumberInput; free short text →
+  TextInput; mutually exclusive choices → Selector, or RadioList only when each option needs a
+  description.
+- Disclosure is deliberate: controls on the path to the primary action stay visible; only advanced
+  or rare options collapse, closed by default. Never collapse the only route to a primary action.
 - Compose a desktop studio, not a marketing page or a wall of settings.
 - Ship English and Vietnamese together; keep UI locale independent of content, voice and schedule
   timezone.

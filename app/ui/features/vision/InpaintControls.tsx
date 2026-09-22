@@ -1,7 +1,7 @@
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { Switch } from '@astryxdesign/core/Switch';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -75,7 +75,7 @@ export function InpaintControls({
 
   return (
     <VStack gap={3}>
-      <Switch
+      <CheckboxInput
         label={t('visionInclude')}
         value={included}
         isDisabled={!available || (!included && !canInclude)}
