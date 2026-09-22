@@ -166,9 +166,10 @@ export function installOfferedModels(host: Host) {
     if (!model) throw new RemoteError('MODEL_NOT_OFFERED');
     const manifest = manifestPath(bundleRoot, model.id);
     const directory = path.join(bundleRoot, model.id);
-    if (!existsSync(manifest)) return { removed: false };
+    const hasManifest = existsSync(manifest);
+    if (!hasManifest && !existsSync(directory)) return { removed: false };
     await host.worker.request(UNCONFIGURE_BY_TASK[model.task], { directory }).result;
-    await Promise.allSettled([
+    await Promise.all([
       rm(directory, { recursive: true, force: true }),
       rm(manifest, { force: true }),
     ]);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -169,4 +169,48 @@ test('removing a downloaded entry forgets its engine store, then deletes the bun
   await writeFile(path.join(directory, `${synthesis.id}.json`), '{}');
   assert.deepEqual(await offered.remove(synthesis.id), { removed: true });
   assert.deepEqual(calls.at(-1), ['synthesis.unconfigure', { directory: voice }]);
+});
+
+test('an orphan bundle is removable even when its manifest is gone', async (t) => {
+  const calls = [];
+  const { offered, workspace } = await harness({
+    worker: {
+      request: (operation, args) => {
+        calls.push([operation, args]);
+        return { result: Promise.resolve({}) };
+      },
+    },
+  });
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+
+  const { models } = await offered.list();
+  const recognition = models.find((model) => model.task === 'recognition');
+  const bundle = path.join(workspace, 'speech-models', recognition.id);
+  await mkdir(bundle, { recursive: true });
+  await writeFile(path.join(bundle, 'model.bin'), 'bytes');
+
+  assert.deepEqual(await offered.remove(recognition.id), { removed: true });
+  assert.deepEqual(calls, [['speech.unconfigure', { directory: bundle }]]);
+  assert.equal(existsSync(bundle), false, 'the orphan directory is gone');
+});
+
+test('a deletion that fails rejects instead of reporting success', async (t) => {
+  if (typeof process.getuid === 'function' && process.getuid() === 0) {
+    t.skip('root ignores directory permissions');
+    return;
+  }
+  const { offered, workspace } = await harness();
+  const { models } = await offered.list();
+  const recognition = models.find((model) => model.task === 'recognition');
+  const root = path.join(workspace, 'speech-models');
+  const bundle = path.join(root, recognition.id);
+  await mkdir(bundle, { recursive: true });
+  await writeFile(path.join(bundle, 'model.bin'), 'bytes');
+  t.after(async () => {
+    await chmod(root, 0o700).catch(() => {});
+    await rm(workspace, { recursive: true, force: true });
+  });
+
+  await chmod(root, 0o500);
+  await assert.rejects(offered.remove(recognition.id));
 });

@@ -10,6 +10,9 @@ const errors: Record<string, MessageKey> = {
   SPEECH_DISK_LOW: 'speechDiskLow',
   QUEUE_FULL: 'settingsOfferedBusy',
   CANCELLED: 'cancelled',
+  WORKER_EXITED: 'settingsOfferedWorkerUnavailable',
+  WORKER_START_FAILED: 'settingsOfferedWorkerUnavailable',
+  INVALID_WORKER_RESPONSE: 'settingsOfferedWorkerUnavailable',
 };
 
 export const offeredModelErrorKey = (code: string): MessageKey =>

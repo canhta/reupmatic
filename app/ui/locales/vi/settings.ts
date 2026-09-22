@@ -89,4 +89,5 @@ export const settingsVi = {
   settingsOfferedBusy: 'Đang có một lượt tải khác chạy.',
   settingsOfferedVoicesUnavailable:
     'Mô hình cần các giọng đọc sẵn có nhưng chúng bị thiếu. Không có gì được cài đặt.',
+  settingsOfferedWorkerUnavailable: 'Bộ xử lý cục bộ đã dừng. Hãy mở lại ứng dụng rồi thử lại.',
 } satisfies Record<keyof typeof settingsEn, string>;

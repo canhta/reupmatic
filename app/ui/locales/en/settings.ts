@@ -87,4 +87,5 @@ export const settingsEn = {
   settingsOfferedBusy: 'Another download is already running.',
   settingsOfferedVoicesUnavailable:
     'The model needs its voice presets, which are missing. Nothing was installed.',
+  settingsOfferedWorkerUnavailable: 'The local processor stopped. Reopen the app, then try again.',
 } as const;

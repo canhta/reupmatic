@@ -1,6 +1,6 @@
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -24,6 +24,7 @@ import type {
   OfferedModel,
 } from '../../../core/speech/model-catalogue';
 import { unwrap } from '../../bridge/client';
+import { useNotifications } from '../../shell/NotificationsProvider';
 import { formatBytes, phaseKey, purposeFor, taskKey } from '../speech/offered-model-text';
 import { offeredModelErrorKey } from './offered-model-error-message';
 
@@ -64,6 +65,7 @@ const TASK_ORDER: ModelTask[] = ['recognition', 'synthesis', 'translation', 'vis
 
 export function OfferedModels() {
   const { t, i18n } = useTranslation();
+  const { raiseError } = useNotifications();
   const [catalogue, setCatalogue] = useState<OfferedCatalogue | null>(null);
   const [error, setError] = useState('');
   const [active, setActive] = useState<Active | null>(null);
@@ -170,14 +172,16 @@ export function OfferedModels() {
 
   async function remove(model: OfferedModel) {
     setRemovingBusy(true);
-    setError('');
     try {
       await unwrap(window.reupmatic.speechModelRemove(model.id));
-      if (alive.current) setRemoving(null);
     } catch (reason) {
-      if (alive.current) setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
+      const code = reason instanceof Error ? reason.message : 'WORKER_FAILURE';
+      if (alive.current) raiseError(t(offeredModelErrorKey(code)));
     } finally {
-      if (alive.current) setRemovingBusy(false);
+      if (alive.current) {
+        setRemovingBusy(false);
+        setRemoving(null);
+      }
       void reload();
     }
   }
@@ -454,34 +458,19 @@ export function OfferedModels() {
         />
       )}
       {removing && (
-        <Dialog
+        <AlertDialog
           isOpen
-          onOpenChange={(open) => !open && !removingBusy && setRemoving(null)}
-          purpose="required"
-          width={420}
-        >
-          <DialogHeader
-            title={t('settingsOfferedRemoveTitle')}
-            onOpenChange={(open) => !open && !removingBusy && setRemoving(null)}
-          />
-          <Text as="p" type="body">
-            {t('settingsOfferedRemoveConfirm', { name: removing.id })}
-          </Text>
-          <HStack gap={2}>
-            <Button
-              variant="destructive"
-              label={t('settingsOfferedRemove')}
-              isDisabled={removingBusy}
-              onClick={() => void remove(removing)}
-            />
-            <Button
-              variant="secondary"
-              label={t('cancel')}
-              isDisabled={removingBusy}
-              onClick={() => setRemoving(null)}
-            />
-          </HStack>
-        </Dialog>
+          title={t('settingsOfferedRemoveTitle')}
+          description={t('settingsOfferedRemoveConfirm', { name: removing.id })}
+          cancelLabel={t('cancel')}
+          actionLabel={t('settingsOfferedRemove')}
+          actionVariant="destructive"
+          isActionLoading={removingBusy}
+          onOpenChange={(open) => {
+            if (!open && !removingBusy) setRemoving(null);
+          }}
+          onAction={() => void remove(removing)}
+        />
       )}
     </VStack>
   );
