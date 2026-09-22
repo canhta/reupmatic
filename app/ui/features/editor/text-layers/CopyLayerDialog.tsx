@@ -1,8 +1,10 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -60,11 +62,11 @@ export function CopyLayerDialog({ isOpen, onClose }: { isOpen: boolean; onClose:
   return (
     <Dialog isOpen={isOpen} onOpenChange={(open) => !open && close()} purpose="form" width={640}>
       <DialogHeader title={t('textCopyTitle')} onOpenChange={(open) => !open && close()} />
-      <div className="business-form">
+      <VStack gap={3}>
         <Text as="p" type="body">
           {t('textCopyHelp', { target: t(`textLayer_${to}`) })}
         </Text>
-        <div className="business-toolbar">
+        <HStack gap={2} vAlign="end" wrap="wrap">
           <Selector
             label={t('textCopyFrom')}
             value={from}
@@ -78,7 +80,7 @@ export function CopyLayerDialog({ isOpen, onClose }: { isOpen: boolean; onClose:
             isDisabled={from === to || editor.opening}
             onClick={prepare}
           />
-        </div>
+        </HStack>
         {error && (
           <Banner
             status="error"
@@ -159,10 +161,10 @@ export function CopyLayerDialog({ isOpen, onClose }: { isOpen: boolean; onClose:
             />
           </>
         )}
-        <div className="action-row">
+        <HStack gap={2} vAlign="center" wrap="wrap">
           <Button label={t('cancel')} onClick={close} />
-        </div>
-      </div>
+        </HStack>
+      </VStack>
     </Dialog>
   );
 }

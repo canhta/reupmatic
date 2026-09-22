@@ -1,6 +1,7 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StatusDot } from '@astryxdesign/core/StatusDot';
@@ -184,7 +185,7 @@ export function CuePanel() {
         label={t('cueActions')}
         size="sm"
         startContent={
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button label={t('add')} size="sm" isDisabled={!media} onClick={add} />
             {}
             <MoreMenu
@@ -203,7 +204,7 @@ export function CuePanel() {
                 },
               ]}
             />
-          </div>
+          </HStack>
         }
       />
       {!findReplace.preview && (

@@ -1,9 +1,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../core/editing/edit-recipe';
@@ -102,7 +104,7 @@ export function EditorExportDialog() {
       />
       <Dialog isOpen={isOpen} onOpenChange={setIsOpen} width={480} purpose="form">
         <DialogHeader title={t('exportDialogTitle')} onOpenChange={setIsOpen} />
-        <div className="business-form">
+        <VStack gap={3}>
           <RadioList
             label={t('exportKindLabel')}
             value={kind}
@@ -114,7 +116,7 @@ export function EditorExportDialog() {
             <RadioListItem value="both" label={t('exportKindBoth')} />
           </RadioList>
           {kind !== 'video' && (
-            <div className="business-toolbar">
+            <VStack gap={3}>
               <RadioList
                 label={t('styleExportFormat')}
                 value={format}
@@ -138,10 +140,10 @@ export function EditorExportDialog() {
                   if (value === 'source' || value === 'output') setTiming(value);
                 }}
               />
-            </div>
+            </VStack>
           )}
           {kind !== 'subtitle' && (
-            <div className="business-toolbar">
+            <FormLayout direction="vertical">
               <Selector
                 label={t('exportSizeAspect')}
                 value={output.aspect}
@@ -168,7 +170,7 @@ export function EditorExportDialog() {
                 ]}
                 onChange={(value) => changeOutput({ height: Number(value) as Output['height'] })}
               />
-            </div>
+            </FormLayout>
           )}
           {kind !== 'subtitle' && (
             <Collapsible trigger={t('exportAdvanced')} defaultIsOpen={false}>
@@ -216,7 +218,7 @@ export function EditorExportDialog() {
             isDisabled={disabled}
             onClick={() => void run()}
           />
-        </div>
+        </VStack>
       </Dialog>
     </>
   );

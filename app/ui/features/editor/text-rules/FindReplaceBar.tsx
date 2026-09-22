@@ -2,9 +2,12 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import { ReviewGrid } from '../text-layers/ReviewGrid';
 import type { useFindReplace } from './useFindReplace';
@@ -20,8 +23,8 @@ export function FindReplaceBar({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="find-replace-bar">
-      <div className="business-toolbar">
+    <VStack gap={2}>
+      <FormLayout direction="vertical">
         <TextInput label={t('replace')} value={state.replacement} onChange={state.setReplacement} />
         <Selector
           label={t('rulesScope')}
@@ -34,7 +37,7 @@ export function FindReplaceBar({
             label: t(`rulesScope_${value}`),
           }))}
         />
-      </div>
+      </FormLayout>
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">
@@ -43,7 +46,7 @@ export function FindReplaceBar({
         }
         defaultIsOpen={false}
       >
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <Selector
             label={t('rulesMode')}
             value={state.mode}
@@ -60,21 +63,21 @@ export function FindReplaceBar({
             value={state.caseSensitive}
             onChange={state.setCaseSensitive}
           />
-        </div>
+        </FormLayout>
         {state.mode === 'regex' && (
           <Text as="p" type="supporting">
             {t('rulesRegexHelp')}
           </Text>
         )}
       </Collapsible>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('rulesPreview')}
           isDisabled={!state.canRun || (state.scope === 'selected' && !hasSelection)}
           onClick={state.run}
         />
         {state.busy && <Button label={t('cancel')} onClick={state.cancel} />}
-      </div>
+      </HStack>
       {state.error && (
         <Banner
           status="error"
@@ -108,7 +111,7 @@ export function FindReplaceBar({
               {t('rulesMore')}
             </Text>
           )}
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button label={t('rulesDiscard')} onClick={state.reset} />
             <Button
               label={t('rulesApply')}
@@ -116,7 +119,7 @@ export function FindReplaceBar({
               isDisabled={!state.applicable || !state.preview.result.matched_cues}
               onClick={state.apply}
             />
-          </div>
+          </HStack>
         </>
       )}
       {!find && (
@@ -124,6 +127,6 @@ export function FindReplaceBar({
           {t('rulesFindEmpty')}
         </Text>
       )}
-    </div>
+    </VStack>
   );
 }

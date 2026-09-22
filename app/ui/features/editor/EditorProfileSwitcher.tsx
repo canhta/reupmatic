@@ -3,6 +3,7 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import type { DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type ProcessingRecipe, sameProcessing } from '../../../core/processing/recipe';
@@ -111,7 +112,7 @@ export function EditorProfileSwitcher() {
       />
       <Dialog isOpen={saveOpen} onOpenChange={setSaveOpen} width={420} purpose="form">
         <DialogHeader title={t('saveCurrentAsProfile')} onOpenChange={setSaveOpen} />
-        <div className="business-form">
+        <VStack gap={3}>
           <TextInput
             label={t('catalogName')}
             value={saveName}
@@ -124,7 +125,7 @@ export function EditorProfileSwitcher() {
             isDisabled={saving || !saveName.trim()}
             onClick={() => void saveCurrent()}
           />
-        </div>
+        </VStack>
       </Dialog>
       <Dialog isOpen={manageOpen} onOpenChange={setManageOpen} width={860} purpose="form">
         <DialogHeader title={t('profilesTitle')} onOpenChange={setManageOpen} />

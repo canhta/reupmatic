@@ -1,9 +1,12 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shiftCueTimes } from '../../../../core/subtitles/text-rules';
@@ -35,8 +38,8 @@ export function ShiftTimingDialog({ isOpen, onClose }: { isOpen: boolean; onClos
   return (
     <Dialog isOpen={isOpen} onOpenChange={(open) => !open && onClose()} purpose="form" width={480}>
       <DialogHeader title={t('timingBulk')} onOpenChange={(open) => !open && onClose()} />
-      <div className="business-form">
-        <div className="business-toolbar">
+      <VStack gap={3}>
+        <FormLayout direction="vertical">
           <NumberInput
             label={t('timingDelta')}
             value={delta}
@@ -56,12 +59,12 @@ export function ShiftTimingDialog({ isOpen, onClose }: { isOpen: boolean; onClos
               label: t(`rulesScope_${value}`),
             }))}
           />
-        </div>
+        </FormLayout>
         <Text as="p" type="supporting">
           {t('timingHelp')}
         </Text>
         {error && <Banner status="error" title={t('timingRange')} />}
-        <div className="action-row">
+        <HStack gap={2} vAlign="center" wrap="wrap">
           <Button
             label={t('timingApply')}
             variant="primary"
@@ -73,8 +76,8 @@ export function ShiftTimingDialog({ isOpen, onClose }: { isOpen: boolean; onClos
             onClick={apply}
           />
           <Button label={t('cancel')} onClick={onClose} />
-        </div>
-      </div>
+        </HStack>
+      </VStack>
     </Dialog>
   );
 }

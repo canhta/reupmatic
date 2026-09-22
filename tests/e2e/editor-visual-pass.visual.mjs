@@ -926,7 +926,7 @@ for (const locale of ['en', 'vi']) {
                 .map((button) => {
                   const computed = getComputedStyle(button);
                   const text = (button.textContent || '').trim();
-                  const row = button.closest('.action-row');
+                  const row = button.parentElement;
                   return {
                     text,
                     kind: text === recheckLabel ? 'recheck' : 'setUp',
