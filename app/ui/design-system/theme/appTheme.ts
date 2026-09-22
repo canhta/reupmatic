@@ -16,5 +16,16 @@ export const reupmaticNeutralTheme = defineTheme({
     'side-nav-item': {
       base: { borderRadius: 'var(--radius-sm)' },
     },
+    // A count badge pinned to the corner of the button that renders it.
+    badge: {
+      'variant:notificationCount': {
+        position: 'absolute',
+        insetBlockStart: 'calc(-1 * var(--spacing-1))',
+        insetInlineEnd: 'calc(-1 * var(--spacing-1))',
+        pointerEvents: 'none',
+        backgroundColor: 'var(--color-accent)',
+        color: 'var(--color-on-accent)',
+      },
+    },
   },
 });

@@ -89,18 +89,23 @@ export function NotificationsButton() {
         </Stack>
       }
     >
-      <span className="workspace-status-notifications">
-        <IconButton
-          label={label}
-          tooltip={t('notificationsTitle')}
-          variant="ghost"
-          size="sm"
-          icon={<Icon icon={Bell} size="sm" />}
-        />
-        {unreadCount > 0 && (
-          <Badge variant="info" label={unreadCount > 99 ? '99+' : String(unreadCount)} />
-        )}
-      </span>
+      <IconButton
+        label={label}
+        tooltip={t('notificationsTitle')}
+        variant="ghost"
+        size="sm"
+        icon={
+          <>
+            <Icon icon={Bell} size="sm" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="notificationCount"
+                label={unreadCount > 99 ? '99+' : String(unreadCount)}
+              />
+            )}
+          </>
+        }
+      />
     </Popover>
   );
 }

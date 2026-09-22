@@ -151,13 +151,6 @@
   background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
 }
 
-.workspace-status-notifications {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex: none;
-}
-
 .notifications-list {
   max-height: 60vh;
 }
