@@ -18,7 +18,7 @@ export const speechEn = {
   speechResultInfo: '{{language}} · source {{start}}–{{end}} s · {{engine}}',
   speechEmpty: 'No speech found — nothing was replaced. Try another range.',
   speechStaleHelp: 'Document changed — review before replacing the transcript.',
-  speechReview: 'Review against current transcript',
+  speechReview: 'Review',
   speechApply: 'Replace transcript',
   speechDiscard: 'Discard result',
   speechMissing: 'No local speech model is configured.',

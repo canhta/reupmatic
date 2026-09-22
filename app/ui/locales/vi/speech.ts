@@ -20,7 +20,7 @@ export const speechVi = {
   speechResultInfo: '{{language}} · nguồn {{start}}–{{end}} giây · {{engine}}',
   speechEmpty: 'Không tìm thấy lời nói — chưa thay gì. Thử khoảng khác.',
   speechStaleHelp: 'Tài liệu đã đổi — xem lại trước khi thay bản chép lời.',
-  speechReview: 'Duyệt với bản chép lời hiện tại',
+  speechReview: 'Duyệt',
   speechApply: 'Thay bản chép lời',
   speechDiscard: 'Bỏ kết quả',
   speechMissing: 'Chưa cấu hình mô hình nhận dạng cục bộ.',

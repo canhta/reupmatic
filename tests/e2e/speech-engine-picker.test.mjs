@@ -101,10 +101,7 @@ for (const locale of ['en', 'vi']) {
         );
 
         const languageField = speechSection.getByRole('combobox', {
-          name:
-            locale === 'vi'
-              ? 'Đặt ngôn ngữ cho lớp Bản chép lời'
-              : 'Set the Transcript layer language',
+          name: locale === 'vi' ? 'Ngôn ngữ lớp Bản chép lời' : 'Transcript language',
         });
         await languageField.waitFor();
         await languageField.click();

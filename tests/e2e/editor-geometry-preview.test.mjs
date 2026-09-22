@@ -45,7 +45,7 @@ test('Source monitor previews rotate, flip and crop with the export geometry', {
       await page.locator('video[data-monitor-video="source"]').waitFor();
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
-      await page.getByRole('button', { name: 'Video framing & color', exact: true }).click();
+      await page.getByRole('button', { name: 'Framing & color', exact: true }).click();
 
       await chooseSelector(page, 'Rotate', '90° right');
       const rotated = geometryPreview({ rotate: 90 }, SOURCE);
@@ -146,8 +146,8 @@ test('Source monitor ramps a head fade on the output clock', { timeout: 180000 }
       await page.locator('video[data-monitor-video="source"]').waitFor();
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
-      await page.getByRole('button', { name: 'Head and tail fades', exact: true }).click();
-      await page.getByRole('checkbox', { name: 'Fade the start and end', exact: true }).check();
+      await page.getByRole('button', { name: 'Fades', exact: true }).click();
+      await page.getByRole('checkbox', { name: 'Fade in/out', exact: true }).check();
 
       const opacity = async () =>
         Number.parseFloat(

@@ -14,7 +14,7 @@ import {
 const COPY = {
   editTab: 'Edit',
   logoSection: 'Logo',
-  enable: 'Show a logo over the video',
+  enable: 'Overlay logo',
   image: 'Logo image',
   addImage: 'Add image…',
   anchor: 'Position',

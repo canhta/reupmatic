@@ -243,7 +243,7 @@ test('Electron navigation and locale changes preserve Editor content and selecti
       const text = page.getByRole('textbox', { name: 'Text 1', exact: true });
       await text.waitFor();
       await text.fill('Edited before navigating away');
-      await page.getByRole('spinbutton', { name: 'Start (seconds) 1', exact: true }).fill('0.5');
+      await page.getByRole('spinbutton', { name: 'Start (s) 1', exact: true }).fill('0.5');
       await page
         .locator('.editor-feedback')
         .getByText('Unsaved changes', { exact: true })
@@ -262,7 +262,7 @@ test('Electron navigation and locale changes preserve Editor content and selecti
         'Edited before navigating away',
       );
       assert.equal(
-        await page.getByRole('spinbutton', { name: 'Bắt đầu (giây) 1', exact: true }).inputValue(),
+        await page.getByRole('spinbutton', { name: 'Bắt đầu (s) 1', exact: true }).inputValue(),
         '0.5',
       );
       await page

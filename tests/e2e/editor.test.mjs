@@ -96,10 +96,10 @@ for (const locale of ['en', 'vi']) {
         const text = page.getByRole('textbox', { name: 'Text 1', exact: true });
         await text.waitFor();
         await text.fill('Cà phê Việt Nam — changed');
-        await page.getByRole('spinbutton', { name: 'Start (seconds) 1', exact: true }).fill('0.5');
+        await page.getByRole('spinbutton', { name: 'Start (s) 1', exact: true }).fill('0.5');
         await text.focus();
         const startField = page.getByRole('spinbutton', {
-          name: 'Start (seconds) 1',
+          name: 'Start (s) 1',
           exact: true,
         });
         const startHandle = await startField.elementHandle();
@@ -399,7 +399,7 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
       const cuePanel = page.locator('.cue-panel');
       await content.waitFor();
       assert.equal(await cuePanel.getByText('Layer', { exact: true }).isVisible(), true);
-      assert.equal(await cuePanel.getByText('Copy from another layer').first().isVisible(), false);
+      assert.equal(await cuePanel.getByText('Copy layer…').first().isVisible(), false);
       assert.equal(
         await cuePanel.getByText('Export subtitles', { exact: true }).first().isVisible(),
         false,
@@ -670,7 +670,7 @@ test('cue rows are compact until selected, and clicking a row seeks the video', 
       await secondRowPreview.waitFor();
       assert.equal(await page.getByRole('textbox', { name: 'Text 2', exact: true }).count(), 0);
       assert.equal(
-        await page.getByRole('spinbutton', { name: 'Start (seconds) 2', exact: true }).count(),
+        await page.getByRole('spinbutton', { name: 'Start (s) 2', exact: true }).count(),
         0,
       );
 
@@ -678,7 +678,7 @@ test('cue rows are compact until selected, and clicking a row seeks the video', 
       const text2 = page.getByRole('textbox', { name: 'Text 2', exact: true });
       await text2.waitFor();
       assert.equal(await text2.inputValue(), 'Second cue, further along the timeline');
-      await page.getByRole('spinbutton', { name: 'Start (seconds) 2', exact: true }).waitFor();
+      await page.getByRole('spinbutton', { name: 'Start (s) 2', exact: true }).waitFor();
       const sourceVideo = page.locator('video[data-monitor-video="source"]');
       await sourceVideo.waitFor();
       await page.waitForFunction(() => {
@@ -729,12 +729,10 @@ test('Transcribe panel sets up speech recognition; no setup dialog, no cue-list 
     await panel.waitFor({ state: 'visible' });
 
     const speechSection = panel.getByLabel('Recognise speech', { exact: true });
-    await speechSection
-      .getByRole('combobox', { name: 'Set the Transcript layer language' })
-      .waitFor();
+    await speechSection.getByRole('combobox', { name: 'Transcript language' }).waitFor();
     await speechSection.getByRole('combobox', { name: 'Recognition range' }).waitFor();
-    const ocrSection = panel.getByLabel('Extract on-screen text', { exact: true });
-    await ocrSection.getByRole('heading', { name: 'Extract on-screen text' }).waitFor();
+    const ocrSection = panel.getByLabel('Extract text', { exact: true });
+    await ocrSection.getByRole('heading', { name: 'Extract text' }).waitFor();
 
     await speechSection.getByRole('button', { name: 'Set up…', exact: true }).waitFor();
     assert.equal(

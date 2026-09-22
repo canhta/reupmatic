@@ -40,7 +40,7 @@ test('Source monitor applies the eq colour preview and a rendered sample agrees'
       await page.locator('video[data-monitor-video="source"]').waitFor();
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
-      await page.getByRole('button', { name: 'Video framing & color', exact: true }).click();
+      await page.getByRole('button', { name: 'Framing & color', exact: true }).click();
       const accumulated = { brightness: 0, contrast: 1, saturation: 1 };
       for (const [name, key, value] of [
         ['Brightness', 'brightness', COLOR.brightness],
