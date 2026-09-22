@@ -542,7 +542,15 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     setOpening(true);
     const captured = rev.current;
     try {
-      if (dirty && !(await confirm(t('confirmOpen')))) return false;
+      if (
+        dirty &&
+        !(await confirm(t('confirmOpen'), {
+          title: t('confirmDiscardTitle'),
+          confirmLabel: t('confirmDiscardAction'),
+          destructive: true,
+        }))
+      )
+        return false;
       const value = await load();
       if (!value) return false;
       if (captured !== rev.current) throw new Error('STALE_OPERATION');
@@ -643,7 +651,15 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
 
   async function newProject() {
     if (openingRef.current || renderingPublic.busy) return;
-    if (dirty && !(await confirm(t('confirmNewProject')))) return;
+    if (
+      dirty &&
+      !(await confirm(t('confirmNewProject'), {
+        title: t('confirmDiscardTitle'),
+        confirmLabel: t('confirmDiscardAction'),
+        destructive: true,
+      }))
+    )
+      return;
     setDocumentId(crypto.randomUUID());
     setActiveTextLayer('displayed');
     setMedia(null);
@@ -750,7 +766,13 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
 
   async function applyImportedAudio(source: AudioSource) {
     const existing = document.getSnapshot().soundtrack;
-    if (existing && !(await confirm(t('mediaConfirmSoundtrack', { name: existing.source.name }))))
+    if (
+      existing &&
+      !(await confirm(t('mediaConfirmSoundtrack', { name: existing.source.name }), {
+        title: t('confirmReplaceTitle'),
+        confirmLabel: t('confirmReplaceAction'),
+      }))
+    )
       return;
     document.change({
       soundtrack: parseSoundtrack({
@@ -772,7 +794,10 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     const target = activeTextLayer;
     if (
       getTextLayer(document.getSnapshot(), target).cues.length &&
-      !(await confirm(t('textConfirmImport', { layer: t(`textLayer_${target}`) })))
+      !(await confirm(t('textConfirmImport', { layer: t(`textLayer_${target}`) }), {
+        title: t('confirmReplaceTitle'),
+        confirmLabel: t('confirmReplaceAction'),
+      }))
     ) {
       addMedia(item);
       return;

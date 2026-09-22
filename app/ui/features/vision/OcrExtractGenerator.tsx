@@ -197,7 +197,13 @@ export function OcrReview() {
 
   async function apply() {
     if (!draft || !draftCurrent || busy) return;
-    if (!(await confirm(t('visionApplyConfirm')))) return;
+    if (
+      !(await confirm(t('visionApplyConfirm'), {
+        title: t('confirmReplaceTitle'),
+        confirmLabel: t('confirmReplaceAction'),
+      }))
+    )
+      return;
     if (editor.applyOcr(draft.data, draft.revision)) {
       job.consumeDraft(draft);
     }

@@ -68,7 +68,7 @@ test('Electron Channels & Affiliate list/detail, explicit create mode, and posts
       await page.keyboard.press('Escape');
       await page
         .getByRole('alertdialog')
-        .getByRole('button', { name: 'Continue', exact: true })
+        .getByRole('button', { name: 'Discard', exact: true })
         .click();
       await page
         .getByRole('complementary', { name: 'Edit channel configuration' })

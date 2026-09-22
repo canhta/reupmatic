@@ -96,7 +96,14 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
     }
   }
   async function deleteClip(id: string) {
-    if (!(await confirm(t('compositionRemoveConfirm')))) return;
+    if (
+      !(await confirm(t('compositionRemoveConfirm'), {
+        title: t('confirmRemoveTitle'),
+        confirmLabel: t('confirmRemoveAction'),
+        destructive: true,
+      }))
+    )
+      return;
     try {
       editor.applyComposition([{ kind: 'remove', id }], editor.getRevision());
     } catch (reason) {

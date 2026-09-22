@@ -20,6 +20,8 @@ import { useTranslation } from 'react-i18next';
 import type { SpeechProvider, SpeechProviderModel } from '../../../core/speech/providers';
 import type { SpeechLanguage } from '../../../core/speech/recognition';
 import { unwrap } from '../../bridge/client';
+import { useConfirmation } from '../../design-system/ConfirmationProvider';
+import { useNotifications } from '../../shell/NotificationsProvider';
 import { providerErrorKey } from './provider-error-message';
 
 type ProviderDraft = { display_name: string; protocol: string; endpoint_host: string };
@@ -31,11 +33,12 @@ const emptyModelDraft: ModelDraft = { remote_model_name: '', languages: [], max_
 type PanelDialog =
   | { kind: 'provider-add' }
   | { kind: 'provider-edit'; provider: SpeechProvider }
-  | { kind: 'provider-remove'; provider: SpeechProvider }
   | { kind: 'models'; provider: SpeechProvider };
 
 export function SpeechProvidersPanel() {
   const { t } = useTranslation();
+  const confirm = useConfirmation();
+  const { raiseError } = useNotifications();
   const [providers, setProviders] = useState<SpeechProvider[] | null>(null);
   const [protocols, setProtocols] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -67,6 +70,23 @@ export function SpeechProvidersPanel() {
     void reload();
     return window.reupmatic.onSpeechModelsChanged(() => void reload());
   }, [reload]);
+
+  async function removeProvider(provider: SpeechProvider) {
+    if (
+      !(await confirm(t('settingsProviderRemoveConfirm', { name: provider.display_name }), {
+        title: t('confirmRemoveTitle'),
+        confirmLabel: t('settingsProviderRemove'),
+        destructive: true,
+      }))
+    )
+      return;
+    try {
+      await unwrap(window.reupmatic.speechProviderRemove(provider.id));
+      void reload();
+    } catch (reason) {
+      raiseError(t(providerErrorKey(reason instanceof Error ? reason.message : 'WORKER_FAILURE')));
+    }
+  }
 
   // No add affordance until a protocol is implemented in code; stored providers stay removable.
   const canAdd = protocols.length > 0;
@@ -152,7 +172,7 @@ export function SpeechProvidersPanel() {
                     variant="ghost"
                     label={`${provider.display_name}: ${t('settingsProviderRemove')}`}
                     icon={<Icon icon={Trash2} size="sm" />}
-                    onClick={() => setDialog({ kind: 'provider-remove', provider })}
+                    onClick={() => void removeProvider(provider)}
                   />
                 </HStack>
               }
@@ -176,16 +196,6 @@ export function SpeechProvidersPanel() {
           provider={dialog.provider}
           onClose={() => setDialog(null)}
           onSaved={() => {
-            setDialog(null);
-            void reload();
-          }}
-        />
-      )}
-      {dialog?.kind === 'provider-remove' && (
-        <RemoveProviderDialog
-          provider={dialog.provider}
-          onClose={() => setDialog(null)}
-          onRemoved={() => {
             setDialog(null);
             void reload();
           }}
@@ -320,58 +330,6 @@ function ProviderFormDialog({
   );
 }
 
-function RemoveProviderDialog({
-  provider,
-  onClose,
-  onRemoved,
-}: {
-  provider: SpeechProvider;
-  onClose: () => void;
-  onRemoved: () => void;
-}) {
-  const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function remove() {
-    setBusy(true);
-    setError('');
-    try {
-      await unwrap(window.reupmatic.speechProviderRemove(provider.id));
-      onRemoved();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
-      setBusy(false);
-    }
-  }
-  return (
-    <Dialog isOpen onOpenChange={(open) => !open && onClose()} purpose="required" width={420}>
-      <DialogHeader
-        title={t('settingsProviderRemove')}
-        onOpenChange={(open) => !open && onClose()}
-      />
-      <Text as="p" type="body">
-        {t('settingsProviderRemoveConfirm', { name: provider.display_name })}
-      </Text>
-      {error && (
-        <Banner
-          status="error"
-          title={t('settingsProviderSaveFailed')}
-          description={t(providerErrorKey(error))}
-        />
-      )}
-      <HStack gap={2}>
-        <Button
-          variant="destructive"
-          label={t('settingsProviderRemove')}
-          isDisabled={busy}
-          onClick={() => void remove()}
-        />
-        <Button variant="secondary" label={t('cancel')} isDisabled={busy} onClick={onClose} />
-      </HStack>
-    </Dialog>
-  );
-}
-
 function ProviderModelsDialog({
   provider,
   onClose,
@@ -382,26 +340,32 @@ function ProviderModelsDialog({
   onChanged: () => void;
 }) {
   const { t } = useTranslation();
+  const confirm = useConfirmation();
+  const { raiseError } = useNotifications();
   const [current, setCurrent] = useState(provider);
   const [form, setForm] = useState<
     { mode: 'add' } | { mode: 'edit'; model: SpeechProviderModel } | null
   >(null);
-  const [removing, setRemoving] = useState<SpeechProviderModel | null>(null);
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function removeModel(model: SpeechProviderModel) {
+    if (
+      !(await confirm(t('settingsModelRemoveConfirm', { name: model.remote_model_name }), {
+        title: t('confirmRemoveTitle'),
+        confirmLabel: t('settingsModelRemove'),
+        destructive: true,
+      }))
+    )
+      return;
     setBusy(true);
-    setError('');
     try {
       const updated = await unwrap(
         window.reupmatic.speechProviderModelRemove(current.id, model.id),
       );
       setCurrent(updated);
-      setRemoving(null);
       onChanged();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
+      raiseError(t(providerErrorKey(reason instanceof Error ? reason.message : 'WORKER_FAILURE')));
     } finally {
       setBusy(false);
     }
@@ -415,13 +379,6 @@ function ProviderModelsDialog({
       />
       {!form && (
         <>
-          {error && (
-            <Banner
-              status="error"
-              title={t('settingsProviderSaveFailed')}
-              description={t(providerErrorKey(error))}
-            />
-          )}
           {current.models.length === 0 && (
             <EmptyState
               isCompact
@@ -460,7 +417,8 @@ function ProviderModelsDialog({
                         variant="ghost"
                         label={`${model.remote_model_name}: ${t('settingsModelRemove')}`}
                         icon={<Icon icon={Trash2} size="sm" />}
-                        onClick={() => setRemoving(model)}
+                        isDisabled={busy}
+                        onClick={() => void removeModel(model)}
                       />
                     </HStack>
                   }
@@ -474,29 +432,6 @@ function ProviderModelsDialog({
             )}
             <Button variant="secondary" label={t('settingsProviderClose')} onClick={onClose} />
           </HStack>
-          {removing && (
-            <Banner
-              status="warning"
-              title={t('settingsModelRemoveConfirm', { name: removing.remote_model_name })}
-              endContent={
-                <HStack gap={2}>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    label={t('settingsModelRemove')}
-                    isDisabled={busy}
-                    onClick={() => void removeModel(removing)}
-                  />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    label={t('cancel')}
-                    onClick={() => setRemoving(null)}
-                  />
-                </HStack>
-              }
-            />
-          )}
         </>
       )}
       {form && (

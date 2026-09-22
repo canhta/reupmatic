@@ -118,6 +118,10 @@ export function WorkflowManager({
         t(queuePaused ? 'workflowQueueConfirm' : 'workflowQueueLiveConfirm', {
           name: workflow.name,
         }),
+        {
+          title: t('confirmRunTitle'),
+          confirmLabel: t('workflowQueue'),
+        },
       ))
     )
       return;

@@ -45,7 +45,15 @@ export function CompositionPanel() {
 
   async function choose(clip: CompositionClip) {
     const revision = editor.getRevision();
-    if (dirty && !(await confirm(t('compositionDiscard')))) return;
+    if (
+      dirty &&
+      !(await confirm(t('compositionDiscard'), {
+        title: t('confirmDiscardTitle'),
+        confirmLabel: t('confirmDiscardAction'),
+        destructive: true,
+      }))
+    )
+      return;
     if (revision !== editor.getRevision()) {
       setError('STALE_OPERATION');
       return;
@@ -69,7 +77,14 @@ export function CompositionPanel() {
     if (!draft) return;
     const revision = editor.getRevision(),
       id = draft.id;
-    if (await confirm(t('compositionRemoveConfirm'))) apply({ kind: 'remove', id }, revision);
+    if (
+      await confirm(t('compositionRemoveConfirm'), {
+        title: t('confirmRemoveTitle'),
+        confirmLabel: t('confirmRemoveAction'),
+        destructive: true,
+      })
+    )
+      apply({ kind: 'remove', id }, revision);
   }
   const index = composition?.clips.findIndex((clip) => clip.id === draft?.id) ?? -1;
   const next = composition?.clips[index + 1];

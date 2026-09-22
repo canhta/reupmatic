@@ -117,7 +117,7 @@ for (const locale of ['en', 'vi']) {
                 text: 'Nội dung 1',
                 render: 'Đoạn mẫu',
                 preview: 'Bản render',
-                accept: 'Tiếp tục',
+                discard: 'Huỷ',
                 fileMenu: 'Tệp',
                 saveProject: 'Lưu dự án',
                 openProject: 'Mở dự án…',
@@ -126,7 +126,7 @@ for (const locale of ['en', 'vi']) {
                 text: 'Text 1',
                 render: 'Sample',
                 preview: 'Rendered',
-                accept: 'Continue',
+                discard: 'Discard',
                 fileMenu: 'File',
                 saveProject: 'Save Project',
                 openProject: 'Open Project…',
@@ -167,7 +167,7 @@ for (const locale of ['en', 'vi']) {
         await clickMenuItem(application, labels.fileMenu, labels.openProject);
         await page
           .getByRole('alertdialog')
-          .getByRole('button', { name: labels.accept, exact: true })
+          .getByRole('button', { name: labels.discard, exact: true })
           .click();
         await page
           .getByText(locale === 'vi' ? 'Không có thay đổi chưa lưu' : 'No unsaved changes', {
@@ -823,7 +823,7 @@ test('A recovered draft is announced with Open and Discard, and Discard confirms
       await row.getByRole('button', { name: 'Discard', exact: true }).click();
       const confirmation = page.getByRole('alertdialog');
       await confirmation.waitFor();
-      await confirmation.getByRole('button', { name: 'Continue', exact: true }).click();
+      await confirmation.getByRole('button', { name: 'Discard', exact: true }).click();
       await page.waitForFunction(async () => {
         const reply = await window.reupmatic.recoveryList();
         return reply.ok === true && reply.data.length === 0;

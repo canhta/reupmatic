@@ -30,7 +30,14 @@ export function RecoveryNotification() {
       void editor.openRecovery(newest.id, newest.revision);
     };
     const discard = async () => {
-      if (!(await confirm(t('notificationsRecoveredConfirm')))) return;
+      if (
+        !(await confirm(t('notificationsRecoveredConfirm'), {
+          title: t('confirmDiscardTitle'),
+          confirmLabel: t('confirmDiscardAction'),
+          destructive: true,
+        }))
+      )
+        return;
       dismiss(id);
       await unwrap(
         window.reupmatic.recoveryDiscard({ id: newest.id, expected_revision: newest.revision }),

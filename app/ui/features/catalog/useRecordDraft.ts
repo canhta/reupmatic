@@ -16,19 +16,25 @@ export function useRecordDraft<T>(initial: () => T) {
     setBaseline(JSON.stringify(next));
   }
 
+  const discardOptions = {
+    title: t('confirmDiscardTitle'),
+    confirmLabel: t('confirmDiscardAction'),
+    destructive: true,
+  };
+
   async function choose(next: T) {
-    if (dirty && !(await confirm(t('catalogDiscard')))) return false;
+    if (dirty && !(await confirm(t('catalogDiscard'), discardOptions))) return false;
     replace(next);
     return true;
   }
 
   async function reset() {
-    if (await confirm(t('catalogDiscard'))) replace(JSON.parse(baseline) as T);
+    if (await confirm(t('catalogDiscard'), discardOptions)) replace(JSON.parse(baseline) as T);
   }
 
   async function discard() {
     if (!dirty) return true;
-    if (!(await confirm(t('catalogDiscard')))) return false;
+    if (!(await confirm(t('catalogDiscard'), discardOptions))) return false;
     replace(JSON.parse(baseline) as T);
     return true;
   }

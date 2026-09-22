@@ -113,7 +113,11 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
         isDisabled: disabled,
         onClick: () =>
           void library.action(async () => {
-            const accepted = await confirm(t('libraryForgetConfirm', { name: item.name }));
+            const accepted = await confirm(t('libraryForgetConfirm', { name: item.name }), {
+              title: t('confirmRemoveTitle'),
+              confirmLabel: t('confirmRemoveAction'),
+              destructive: true,
+            });
             if (accepted) await unwrap(window.reupmatic.libraryForget(item.id));
           }),
       },

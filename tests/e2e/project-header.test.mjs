@@ -37,7 +37,7 @@ const COPY = {
     openProject: 'Open project…',
     projectMedia: 'Media',
     recovered: 'Recovered',
-    continue: 'Continue',
+    discard: 'Discard',
     cancel: 'Cancel',
     draftSource: 'draft-source',
   },
@@ -57,7 +57,7 @@ const COPY = {
     openProject: 'Mở project…',
     projectMedia: 'Phương tiện',
     recovered: 'Đã khôi phục',
-    continue: 'Tiếp tục',
+    discard: 'Huỷ',
     cancel: 'Hủy',
     draftSource: 'draft-source',
   },
@@ -289,7 +289,7 @@ for (const locale of ['en', 'vi']) {
 
         await clickMenuItem(application, copy.fileMenu, copy.fileNewProject);
         await dialog.waitFor();
-        await dialog.getByRole('button', { name: copy.continue, exact: true }).click();
+        await dialog.getByRole('button', { name: copy.discard, exact: true }).click();
         await title.waitFor();
         assert.equal(await page.locator('.viewers video').count(), 0);
 

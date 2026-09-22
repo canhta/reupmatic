@@ -27,7 +27,11 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
   const openable = item.media_kind === 'video';
 
   async function forget() {
-    const accepted = await confirm(t('libraryForgetConfirm', { name: current.name }));
+    const accepted = await confirm(t('libraryForgetConfirm', { name: current.name }), {
+      title: t('confirmRemoveTitle'),
+      confirmLabel: t('confirmRemoveAction'),
+      destructive: true,
+    });
     if (accepted) await unwrap(window.reupmatic.libraryForget(current.id));
   }
 

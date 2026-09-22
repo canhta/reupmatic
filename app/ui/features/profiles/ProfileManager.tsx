@@ -69,7 +69,15 @@ export function ProfileManager() {
   }
 
   async function importProfile() {
-    if (draft.dirty && !(await confirm(t('catalogDiscard')))) return;
+    if (
+      draft.dirty &&
+      !(await confirm(t('catalogDiscard'), {
+        title: t('confirmDiscardTitle'),
+        confirmLabel: t('confirmDiscardAction'),
+        destructive: true,
+      }))
+    )
+      return;
     const document = await catalog.mutate(() => window.reupmatic.profileRead());
     if (document) {
       setEditing(true);

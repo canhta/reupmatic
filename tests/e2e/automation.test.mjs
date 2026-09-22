@@ -109,7 +109,10 @@ test('Automation opens on the saved-workflow list; the editor is a focused canva
         .getByRole('textbox', { name: 'Name', exact: true })
         .fill('Nightly export (edited)');
       await page.keyboard.press('Escape');
-      const confirmDialog = page.getByRole('alertdialog', { name: 'Confirm change', exact: true });
+      const confirmDialog = page.getByRole('alertdialog', {
+        name: 'Discard changes?',
+        exact: true,
+      });
       await confirmDialog.waitFor();
       await confirmDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
       await page.getByRole('textbox', { name: 'Name', exact: true }).waitFor();
@@ -119,7 +122,7 @@ test('Automation opens on the saved-workflow list; the editor is a focused canva
       );
       await page.keyboard.press('Escape');
       await confirmDialog.waitFor();
-      await confirmDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+      await confirmDialog.getByRole('button', { name: 'Discard', exact: true }).click();
 
       await page.getByRole('cell', { name: 'Nightly export', exact: false }).waitFor();
       assert.equal(await page.getByText('Nightly export (edited)').count(), 0);
@@ -180,8 +183,8 @@ test('Run history is a dense expandable list; queue capability and copy follow l
       assert.equal(await queueButton.isDisabled(), false);
       await queueButton.click({ timeout: T });
       await page
-        .getByRole('alertdialog', { name: 'Confirm change', exact: true })
-        .getByRole('button', { name: 'Continue', exact: true })
+        .getByRole('alertdialog', { name: 'Run workflow?', exact: true })
+        .getByRole('button', { name: 'Queue', exact: true })
         .click({ timeout: T });
 
       // Scope to #runs-panel: the hidden workflows panel repeats the same name.

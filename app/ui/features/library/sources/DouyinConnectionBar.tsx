@@ -49,7 +49,14 @@ export function DouyinConnectionBar({ session }: { session: ReturnType<typeof us
   }
 
   async function handleDisconnect() {
-    if (await confirm(t('downloadsDisconnectConfirm'))) await session.disconnect();
+    if (
+      await confirm(t('downloadsDisconnectConfirm'), {
+        title: t('confirmDisconnectTitle'),
+        confirmLabel: t('downloadsDisconnect'),
+        destructive: true,
+      })
+    )
+      await session.disconnect();
   }
 
   return (

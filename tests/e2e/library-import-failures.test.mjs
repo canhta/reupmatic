@@ -135,9 +135,9 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
       await inUseSurface
         .getByRole('button', { name: 'Remove library listing', exact: true })
         .click();
-      const inUseConfirm = page.getByRole('alertdialog', { name: 'Confirm change', exact: true });
+      const inUseConfirm = page.getByRole('alertdialog', { name: 'Remove item?', exact: true });
       await inUseConfirm.waitFor();
-      await inUseConfirm.getByRole('button', { name: 'Continue', exact: true }).click();
+      await inUseConfirm.getByRole('button', { name: 'Remove', exact: true }).click();
       await page.getByText('In use elsewhere — nothing was deleted.', { exact: true }).waitFor();
       await page.getByRole('cell', { name: 'linked-clip.mp4', exact: true }).waitFor();
       const snapshotAfterBlock = await page.evaluate(() => window.reupmatic.batchSnapshot());
@@ -166,7 +166,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
         .getByRole('button', { name: 'Remove library listing', exact: true })
         .click();
       const standaloneConfirm = page.getByRole('alertdialog', {
-        name: 'Confirm change',
+        name: 'Remove item?',
         exact: true,
       });
       await standaloneConfirm.waitFor();
@@ -178,7 +178,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
         .getByRole('button', { name: 'Remove library listing', exact: true })
         .click();
       await standaloneConfirm.waitFor();
-      await standaloneConfirm.getByRole('button', { name: 'Continue', exact: true }).click();
+      await standaloneConfirm.getByRole('button', { name: 'Remove', exact: true }).click();
       await page.getByRole('cell', { name: 'standalone-clip.mp4', exact: true }).waitFor({
         state: 'detached',
       });
