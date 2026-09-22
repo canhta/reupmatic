@@ -27,12 +27,6 @@
   flex: 0 1 auto;
   min-width: 0;
 }
-.workspace-title-dirty {
-  flex: none;
-  color: var(--accent);
-  font-size: var(--text-base);
-  line-height: 1;
-}
 
 .workspace-command-actions {
   display: flex;
@@ -59,10 +53,6 @@
   position: relative;
   overflow: hidden;
   padding: 0;
-}
-
-.workspace-scroll-region--editor:has(.editor-workspace:not(.editor-workspace--loaded)) {
-  overflow-y: auto;
 }
 
 .workspace-heading {

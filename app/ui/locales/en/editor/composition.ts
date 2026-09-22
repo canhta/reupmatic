@@ -24,7 +24,6 @@ export const compositionEn = {
   compositionInvalid: 'Not applied. Check the range and playhead, then retry.',
   compositionDiscard: 'Discard the unapplied clip range and select another clip?',
   compositionRemoveConfirm: 'Remove this clip? Source files stay untouched.',
-  compositionPreviewHelp: 'Subtitles and the final mix appear in Render sample.',
   compositionAiUnavailable: 'Turn off OCR and AI removal to render a composition.',
   compositionClock: "In/out use the clip's own time.",
 } as const;

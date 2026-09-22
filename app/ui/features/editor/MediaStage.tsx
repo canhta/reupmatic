@@ -362,11 +362,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
       {!media
         ? null
         : mode === 'source'
-          ? editor.composition && (
-              <Text as="p" type="supporting">
-                {t('compositionPreviewHelp')}
-              </Text>
-            )
+          ? null
           : preview && (
               <div className="preview-controls">
                 <div className="monitor-render-actions">

@@ -9,14 +9,6 @@
   max-height: 360px;
   margin-block: var(--space-3);
 }
-.batch-item-name {
-  min-width: 160px;
-  max-width: 320px;
-  overflow-wrap: anywhere;
-}
-.batch-draft-form {
-  margin-block: var(--space-4);
-}
 
 .jobs-tray .batch-workspace > .action-row:first-child {
   min-height: var(--control-h);

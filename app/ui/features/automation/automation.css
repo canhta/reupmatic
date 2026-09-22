@@ -1,7 +1,3 @@
-.workflow-row {
-  cursor: pointer;
-}
-
 .run-state {
   color: var(--text-muted);
   font-size: var(--text-sm);

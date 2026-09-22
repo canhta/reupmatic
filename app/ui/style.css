@@ -16,9 +16,6 @@
   .count-label {
     font-variant-numeric: tabular-nums;
   }
-  .field-help {
-    color: var(--text-muted);
-  }
   .inline-error {
     color: var(--danger);
     margin-top: var(--space-2);

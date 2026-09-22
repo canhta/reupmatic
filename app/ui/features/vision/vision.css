@@ -19,7 +19,3 @@
 .vision-evidence time {
   font-variant-numeric: tabular-nums;
 }
-.vision-draft,
-.ocr-controls {
-  margin-top: var(--space-4);
-}

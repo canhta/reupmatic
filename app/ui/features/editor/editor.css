@@ -15,7 +15,6 @@
   overflow: hidden;
 }
 
-.editor-feedback > .error,
 .editor-feedback > .warning,
 .editor-feedback > .editor-notice {
   margin-block-end: var(--space-3);
@@ -182,13 +181,6 @@
   align-items: center;
   gap: var(--space-2);
   padding-inline-start: var(--space-2);
-}
-.surface-tray {
-  padding: var(--space-2);
-  background: var(--bg-tray);
-  border: 1px solid var(--edge-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-surface);
 }
 .video-tray {
   flex: 1 1 auto;

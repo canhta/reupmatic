@@ -110,9 +110,6 @@ export function SoundtrackPanel() {
                 aria-label={t('soundtrackListen')}
               />
             )}
-            <Text as="p" type="supporting">
-              {t('soundtrackListenHelp')}
-            </Text>
             <RadioList
               label={t('soundtrackMode')}
               value={draft.mode}
@@ -196,11 +193,6 @@ export function SoundtrackPanel() {
                   }
                 />
               </FormLayout>
-            )}
-            {draft.duck.enabled && (
-              <Text as="p" type="supporting">
-                {t('soundtrackDuckHelp', { sample: t('sample') })}
-              </Text>
             )}
           </>
         ) : (

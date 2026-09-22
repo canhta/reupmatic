@@ -112,9 +112,6 @@ export function VoiceTrackPanel() {
           />
         </HStack>
         <Text as="p" type="supporting">
-          {t('voiceTrackAuditionHelp')}
-        </Text>
-        <Text as="p" type="supporting">
           {t('voiceTrackAuditionWarning')}
         </Text>
       </VStack>
