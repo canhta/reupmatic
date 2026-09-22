@@ -45,6 +45,7 @@ export const libraryDouyinEn = {
   douyinCandidateViews: 'Views',
   douyinCandidateLikes: 'Likes',
   douyinCandidateState: 'Download',
+  douyinCandidateDownload: 'Download',
   douyinChannelsTitle: 'Saved channels',
   douyinChannelAdd: 'Add channel',
   douyinChannelAddTitle: 'Add a Douyin channel',

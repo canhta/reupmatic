@@ -1,6 +1,7 @@
 import { Badge } from '@astryxdesign/core/Badge';
 import type { ContextMenuOption } from '@astryxdesign/core/ContextMenu';
 import { ContextMenu } from '@astryxdesign/core/ContextMenu';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import type {
   BodyRowRenderProps,
   TableColumn,
@@ -14,6 +15,7 @@ import {
   useTablePagination,
   useTableSelection,
   useTableSortable,
+  useTableStickyColumns,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
@@ -189,6 +191,21 @@ export function LibraryTable({
         </Text>
       ),
     },
+    {
+      key: 'actions',
+      header: t('libraryActions'),
+      width: pixel(48),
+      align: 'end',
+      renderCell: (item) => (
+        <MoreMenu
+          label={t('libraryRowActions', { name: item.name })}
+          size="sm"
+          alignment="end"
+          isDisabled={disabled}
+          items={contextCommands(item, 'row')}
+        />
+      ),
+    },
   ];
 
   const selectionPlugin = useTableSelection<ContentRow>({
@@ -203,6 +220,7 @@ export function LibraryTable({
     sort,
     onSortChange,
   });
+  const sticky = useTableStickyColumns<ContentRow>({ endKeys: ['actions'] });
   const showPagination = totalItems > PAGE_SIZE;
   const paginationPlugin = useTablePagination<ContentRow>({
     page,
@@ -265,6 +283,7 @@ export function LibraryTable({
             selection: selectionPlugin,
             sort: sortPlugin,
             rowOpen: rowOpenPlugin,
+            sticky,
             ...(showPagination ? { pagination: paginationPlugin } : {}),
           }}
         />

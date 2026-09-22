@@ -48,6 +48,7 @@ export const libraryDouyinVi = {
   douyinCandidateViews: 'Lượt xem',
   douyinCandidateLikes: 'Lượt thích',
   douyinCandidateState: 'Tải về',
+  douyinCandidateDownload: 'Tải về',
   douyinChannelsTitle: 'Kênh đã lưu',
   douyinChannelAdd: 'Thêm kênh',
   douyinChannelAddTitle: 'Thêm kênh Douyin',

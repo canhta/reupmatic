@@ -32,6 +32,8 @@ export const libraryVi = {
   libraryDuration: 'Thời lượng',
   libraryImported: 'Đã nhập lúc',
   libraryRelated: 'File liên quan',
+  libraryActions: 'Thao tác',
+  libraryRowActions: 'Thao tác cho {{name}}',
   libraryDetails: 'Chi tiết',
   libraryOpen: 'Mở trong Editor',
   libraryReveal: 'Hiện trong thư mục',

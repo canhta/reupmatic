@@ -30,6 +30,8 @@ export const libraryEn = {
   libraryDuration: 'Duration',
   libraryImported: 'Imported',
   libraryRelated: 'Related files',
+  libraryActions: 'Actions',
+  libraryRowActions: 'Actions for {{name}}',
   libraryDetails: 'Details',
   libraryOpen: 'Open in Editor',
   libraryReveal: 'Show in folder',

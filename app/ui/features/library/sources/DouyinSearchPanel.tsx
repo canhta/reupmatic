@@ -70,6 +70,10 @@ export function DouyinSearchPanel({ search, connected, disabled, onReconnect, on
     await downloads.start(items, saveTo);
   }
 
+  async function downloadOne(item: DouyinItem) {
+    await downloads.start([{ aweme_id: item.awemeId, tier_index: bestQualityTierIndex(item) }]);
+  }
+
   const lastSearch = useRef('');
 
   async function runSearch(text: string) {
@@ -341,8 +345,10 @@ export function DouyinSearchPanel({ search, connected, disabled, onReconnect, on
                     items={view.items}
                     selected={search.selected}
                     exactId={result.exact?.awemeId}
+                    disabled={busy || downloading}
                     stateOf={downloadState}
                     onToggle={search.toggle}
+                    onDownload={(item) => void downloadOne(item)}
                   />
                 )
               )}

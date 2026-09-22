@@ -1,3 +1,4 @@
+import { Button } from '@astryxdesign/core/Button';
 import type { TableColumn } from '@astryxdesign/core/Table';
 import {
   proportional,
@@ -24,11 +25,21 @@ interface Props {
   items: DouyinItem[];
   selected: Set<string>;
   exactId: string | undefined;
+  disabled: boolean;
   stateOf(awemeId: string): string | undefined;
   onToggle(awemeId: string, checked: boolean): void;
+  onDownload(item: DouyinItem): void;
 }
 
-export function DouyinCandidateTable({ items, selected, exactId, stateOf, onToggle }: Props) {
+export function DouyinCandidateTable({
+  items,
+  selected,
+  exactId,
+  disabled,
+  stateOf,
+  onToggle,
+  onDownload,
+}: Props) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const rows = items as CandidateRow[];
@@ -124,7 +135,18 @@ export function DouyinCandidateTable({ items, selected, exactId, stateOf, onTogg
       width: proportional(1),
       renderCell: (item) => {
         const state = stateOf(item.awemeId);
-        return <Text type="body">{state ? t(`douyinDownloadState_${state}`) : '—'}</Text>;
+        if (!state) {
+          return (
+            <Button
+              size="sm"
+              variant="secondary"
+              label={t('douyinCandidateDownload')}
+              isDisabled={disabled}
+              onClick={() => onDownload(item)}
+            />
+          );
+        }
+        return <Text type="body">{t(`douyinDownloadState_${state}`)}</Text>;
       },
     },
   ];
