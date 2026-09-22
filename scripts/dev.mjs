@@ -38,6 +38,8 @@ const astryx = path.join(
 await run(astryx, ['theme', 'build', 'app/ui/design-system/theme/appTheme.ts']);
 
 async function buildHost() {
+  // The worker imports the generated operations module; without it the child exits on import.
+  await run('node', ['scripts/python.mjs', 'scripts/sync-contracts.py']);
   await run(tsc, ['-p', 'tsconfig.node.json']);
   await run('node', ['scripts/generate-preload.mjs']);
 }

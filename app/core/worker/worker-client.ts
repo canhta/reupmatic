@@ -33,7 +33,9 @@ export class WorkerClient extends EventEmitter {
   private pending = new Map<string, Pending>();
   private closed = false;
   private exited = false;
+  private started = false;
   private diagnostics: DiagnosticRecorder;
+  private readonly launch: () => ChildProcessWithoutNullStreams;
   constructor(
     python: string,
     workerPath: string,
@@ -42,16 +44,24 @@ export class WorkerClient extends EventEmitter {
   ) {
     super();
     this.diagnostics = diagnostics;
-    this.child = spawn(python, ['-u', workerPath, '--workspace', workspace], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      windowsHide: true,
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
-    });
-    const lines = createInterface({ input: this.child.stdout });
+    this.launch = () =>
+      spawn(python, ['-u', workerPath, '--workspace', workspace], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+      });
+    this.child = this.attach(this.launch());
+  }
+
+  /** Wires one child's streams; a crashed child is replaced by the next request. */
+  private attach(child: ChildProcessWithoutNullStreams): ChildProcessWithoutNullStreams {
+    this.exited = false;
+    this.started = false;
+    const lines = createInterface({ input: child.stdout });
     lines.on('line', (line) => {
       if (Buffer.byteLength(line, 'utf8') > 16 * 1024 * 1024) {
-        this.fail(new RemoteError('INVALID_WORKER_RESPONSE'));
-        this.child.kill();
+        this.fail(child, new RemoteError('INVALID_WORKER_RESPONSE'));
+        child.kill();
         return;
       }
       try {
@@ -65,6 +75,7 @@ export class WorkerClient extends EventEmitter {
           typeof msg.data !== 'object'
         )
           throw new Error('protocol');
+        if (this.child === child) this.started = true;
         const pending = this.pending.get(msg.id);
         if (!pending) return;
         if (msg.revision !== pending.revision) throw new Error('revision');
@@ -82,21 +93,43 @@ export class WorkerClient extends EventEmitter {
           pending.reject(this.rejection(code, pending, msg.id));
         }
       } catch {
-        this.fail(new RemoteError('INVALID_WORKER_RESPONSE'));
-        this.child.kill();
+        this.fail(child, new RemoteError('INVALID_WORKER_RESPONSE'));
+        child.kill();
       }
     });
     // Raw stderr never reaches the renderer; each line is validated as a Diagnostic first.
-    createInterface({ input: this.child.stderr }).on('line', (line) => {
+    createInterface({ input: child.stderr }).on('line', (line) => {
       const record = parseDiagnosticLine(line);
       if (record) this.diagnostics.record(record);
     });
-    this.child.stdin.on('error', () => this.fail(new RemoteError('WORKER_EXITED')));
-    this.child.on('error', () => this.fail(new RemoteError('WORKER_START_FAILED')));
-    this.child.on('exit', () => {
+    child.stdin.on('error', () => this.fail(child, new RemoteError('WORKER_EXITED')));
+    child.on('error', () => this.fail(child, new RemoteError('WORKER_START_FAILED')));
+    child.on('exit', () => {
+      if (this.child !== child) return;
       this.exited = true;
-      this.fail(new RemoteError('WORKER_EXITED'));
+      this.fail(child, new RemoteError('WORKER_EXITED'));
+      this.emit('exit');
     });
+    return child;
+  }
+
+  /** A worker that died after starting is replaced on the next request. */
+  private respawn(): RemoteError | null {
+    if (!this.exited) return null;
+    // A child that never answered was broken on import, not crashed; respawning it per request
+    // would spawn-storm the status polls. Fail until the app restarts.
+    if (!this.started) return new RemoteError('WORKER_EXITED');
+    try {
+      this.child = this.attach(this.launch());
+    } catch {
+      return new RemoteError('WORKER_START_FAILED');
+    }
+    this.diagnostics.record({
+      level: 'warn',
+      source: { process: 'core', module: 'worker' },
+      event: 'worker.restarted',
+    });
+    return null;
   }
   request<M extends OperationName>(
     method: M,
@@ -105,8 +138,13 @@ export class WorkerClient extends EventEmitter {
   ): Ticket<OperationResult<M>> {
     const id = randomUUID();
     const result = new Promise<OperationResult<M>>((resolve, reject) => {
-      if (this.closed || this.exited) {
+      if (this.closed) {
         reject(new RemoteError('WORKER_EXITED'));
+        return;
+      }
+      const restartFailure = this.respawn();
+      if (restartFailure) {
+        reject(restartFailure);
         return;
       }
       const payload = `${JSON.stringify({ v: 1, id, revision, method, params })}\n`;
@@ -145,7 +183,8 @@ export class WorkerClient extends EventEmitter {
     });
     return new RemoteError(code);
   }
-  private fail(error: Error): void {
+  private fail(child: ChildProcessWithoutNullStreams, error: Error): void {
+    if (child !== this.child) return;
     for (const [id, pending] of this.pending)
       pending.reject(
         error instanceof RemoteError ? this.rejection(error.code, pending, id) : error,
