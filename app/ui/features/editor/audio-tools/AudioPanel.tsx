@@ -1,4 +1,5 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { useTranslation } from 'react-i18next';
 import type { ProcessingRecipe } from '../../../../core/processing/recipe';
@@ -28,7 +29,7 @@ function SourceAudioSection() {
   }
   return (
     <InspectorPanelSection title={t('audioSourceTitle')}>
-      <div className="business-toolbar">
+      <FormLayout direction="vertical">
         <NumberInput
           label={t('editGain')}
           value={audio.gain_db}
@@ -46,7 +47,7 @@ function SourceAudioSection() {
           isDisabled={disabled}
           onChange={(muted) => update({ audio: { ...audio, muted } })}
         />
-      </div>
+      </FormLayout>
     </InspectorPanelSection>
   );
 }

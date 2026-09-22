@@ -2,8 +2,10 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { engineTargetsDuration } from '../../../../core/speech/engine-capability';
@@ -163,7 +165,7 @@ export function SynthesisReview({
     seconds = (ms: number) => (ms / 1000).toFixed(3),
     compressed = (rate: number) => `${((1 - 1 / rate) * 100).toFixed(1)}%`;
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <Heading level={5}>{t('synthesisDraft')}</Heading>
       <Text as="p" type="body">
         {t('synthesisCaptured', {
@@ -265,7 +267,7 @@ export function SynthesisReview({
       <Text as="p" type="supporting">
         {t('synthesisReceiptHelp')}
       </Text>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('synthesisApply')}
           variant="primary"
@@ -291,7 +293,7 @@ export function SynthesisReview({
             }}
           />
         )}
-      </div>
+      </HStack>
       {busy && (
         <Text as="p" type="body" role="status">
           {t(stage === 'listen' ? 'synthesisVerifyingArtifact' : 'synthesisSaving')}
@@ -314,6 +316,6 @@ export function SynthesisReview({
           description={<code>{error}</code>}
         />
       )}
-    </div>
+    </VStack>
   );
 }

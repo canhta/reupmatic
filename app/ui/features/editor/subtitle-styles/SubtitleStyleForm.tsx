@@ -1,6 +1,8 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -54,11 +56,11 @@ export function SubtitleStyleForm({ value, inherited, disabled, onChange, onDirt
     }
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <SubtitleStyleFields value={draft} disabled={disabled} onChange={setDraft} />
       {error && <Banner status="error" title={t('styleInvalid')} />}
       {stale && dirty && <Banner status="warning" title={t('styleStale')} />}
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('styleApply')}
           variant="primary"
@@ -78,10 +80,10 @@ export function SubtitleStyleForm({ value, inherited, disabled, onChange, onDirt
             setOriginal(JSON.stringify(draft));
           }}
         />
-      </div>
+      </HStack>
       <Text as="p" type="supporting">
         {t('styleSrtHelp')}
       </Text>
-    </div>
+    </VStack>
   );
 }

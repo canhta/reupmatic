@@ -1,9 +1,12 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -82,151 +85,155 @@ export function SoundtrackPanel() {
   }
   return (
     <InspectorPanelSection title={t('soundtrackTitle')}>
-      <div className="action-row">
-        <Button
-          label={t('soundtrackRemove')}
-          isDisabled={disabled || !draft}
-          onClick={() => setDraft(undefined)}
-        />
-      </div>
-      {draft ? (
-        <>
-          <Text as="p" type="body">
-            {draft.source.name} · {(draft.source.duration_ms / 1000).toFixed(2)} s
-          </Text>
-          <Text as="p" type="supporting">
-            {t('soundtrackHelp')}
-          </Text>
-          {url && (
-            <audio
-              className="soundtrack-preview"
-              src={url}
-              controls
-              preload="metadata"
-              aria-label={t('soundtrackListen')}
-            />
-          )}
-          <Text as="p" type="supporting">
-            {t('soundtrackListenHelp')}
-          </Text>
-          <RadioList
-            label={t('soundtrackMode')}
-            value={draft.mode}
-            isDisabled={disabled}
-            onChange={(mode) => {
-              if (mode === 'replace' || mode === 'mix') setDraft({ ...draft, mode });
-            }}
-          >
-            <RadioListItem
-              value="replace"
-              label={t('soundtrackReplace')}
-              description={t('soundtrackReplaceHelp')}
-            />
-            <RadioListItem
-              value="mix"
-              label={t('soundtrackMix')}
-              description={t('soundtrackMixHelp')}
-            />
-          </RadioList>
-          <div className="vision-fields">
-            {milliseconds.map((key) => (
-              <NumberInput
-                key={key}
-                label={t(`soundtrack_${key}`)}
-                value={draft[key] / 1000}
-                min={0}
-                max={key === 'offset_ms' ? 86400 : draft.source.duration_ms / 1000}
-                step={0.1}
-                isDisabled={disabled}
-                isWheelEnabled={false}
-                onChange={(value) => setDraft({ ...draft, [key]: Math.round(value * 1000) })}
-              />
-            ))}
-            <NumberInput
-              label={t('soundtrackGain')}
-              value={draft.gain_db}
-              min={-60}
-              max={24}
-              step={1}
-              isWheelEnabled={false}
-              isDisabled={disabled}
-              onChange={(gain_db) => setDraft({ ...draft, gain_db })}
-            />
-          </div>
-          <CheckboxInput
-            label={t('soundtrackDuck')}
-            value={draft.duck.enabled}
-            isDisabled={disabled}
-            onChange={(enabled) => setDraft({ ...draft, duck: { ...draft.duck, enabled } })}
+      <VStack gap={3}>
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Button
+            label={t('soundtrackRemove')}
+            isDisabled={disabled || !draft}
+            onClick={() => setDraft(undefined)}
           />
-          {draft.duck.enabled && (
-            <div className="vision-fields">
+        </HStack>
+        {draft ? (
+          <>
+            <Text as="p" type="body">
+              {draft.source.name} · {(draft.source.duration_ms / 1000).toFixed(2)} s
+            </Text>
+            <Text as="p" type="supporting">
+              {t('soundtrackHelp')}
+            </Text>
+            {url && (
+              <audio
+                className="soundtrack-preview"
+                src={url}
+                controls
+                preload="metadata"
+                aria-label={t('soundtrackListen')}
+              />
+            )}
+            <Text as="p" type="supporting">
+              {t('soundtrackListenHelp')}
+            </Text>
+            <RadioList
+              label={t('soundtrackMode')}
+              value={draft.mode}
+              isDisabled={disabled}
+              onChange={(mode) => {
+                if (mode === 'replace' || mode === 'mix') setDraft({ ...draft, mode });
+              }}
+            >
+              <RadioListItem
+                value="replace"
+                label={t('soundtrackReplace')}
+                description={t('soundtrackReplaceHelp')}
+              />
+              <RadioListItem
+                value="mix"
+                label={t('soundtrackMix')}
+                description={t('soundtrackMixHelp')}
+              />
+            </RadioList>
+            <FormLayout direction="vertical">
+              {milliseconds.map((key) => (
+                <NumberInput
+                  key={key}
+                  label={t(`soundtrack_${key}`)}
+                  value={draft[key] / 1000}
+                  min={0}
+                  max={key === 'offset_ms' ? 86400 : draft.source.duration_ms / 1000}
+                  step={0.1}
+                  isDisabled={disabled}
+                  isWheelEnabled={false}
+                  onChange={(value) => setDraft({ ...draft, [key]: Math.round(value * 1000) })}
+                />
+              ))}
               <NumberInput
-                label={t('soundtrackDuckAmount')}
-                value={draft.duck.amount_db}
-                min={1}
+                label={t('soundtrackGain')}
+                value={draft.gain_db}
+                min={-60}
                 max={24}
                 step={1}
                 isWheelEnabled={false}
                 isDisabled={disabled}
-                onChange={(amount_db) => setDraft({ ...draft, duck: { ...draft.duck, amount_db } })}
+                onChange={(gain_db) => setDraft({ ...draft, gain_db })}
               />
-              <NumberInput
-                label={t('soundtrackDuckRelease')}
-                value={draft.duck.release_ms / 1000}
-                min={0.01}
-                max={5}
-                step={0.01}
-                isWheelEnabled={false}
-                isDisabled={disabled}
-                onChange={(seconds) =>
-                  setDraft({
-                    ...draft,
-                    duck: {
-                      ...draft.duck,
-                      release_ms: Math.max(10, Math.min(5000, Math.round(seconds * 1000))),
-                    },
-                  })
-                }
-              />
-            </div>
-          )}
-          {draft.duck.enabled && (
-            <Text as="p" type="supporting">
-              {t('soundtrackDuckHelp', { sample: t('sample') })}
-            </Text>
-          )}
-        </>
-      ) : (
-        <Text as="p" type="body">
-          {t('soundtrackNone')}
-        </Text>
-      )}
-      {dirty && (
-        <Text as="p" type="body" role="status">
-          {t('soundtrackDraft')}
-        </Text>
-      )}
-      {(error || stale) && (
-        <Banner
-          status="error"
-          title={t(stale ? 'soundtrackStale' : 'soundtrackInvalid')}
-          description={error ? <code>{error}</code> : undefined}
-        />
-      )}
-      <div className="action-row">
-        <Button
-          label={t('soundtrackApply')}
-          variant="primary"
-          isDisabled={disabled || !dirty || stale}
-          onClick={apply}
-        />
-        <Button
-          label={t('soundtrackReload')}
-          isDisabled={disabled || (!dirty && !stale)}
-          onClick={reload}
-        />
-      </div>
+            </FormLayout>
+            <CheckboxInput
+              label={t('soundtrackDuck')}
+              value={draft.duck.enabled}
+              isDisabled={disabled}
+              onChange={(enabled) => setDraft({ ...draft, duck: { ...draft.duck, enabled } })}
+            />
+            {draft.duck.enabled && (
+              <FormLayout direction="vertical">
+                <NumberInput
+                  label={t('soundtrackDuckAmount')}
+                  value={draft.duck.amount_db}
+                  min={1}
+                  max={24}
+                  step={1}
+                  isWheelEnabled={false}
+                  isDisabled={disabled}
+                  onChange={(amount_db) =>
+                    setDraft({ ...draft, duck: { ...draft.duck, amount_db } })
+                  }
+                />
+                <NumberInput
+                  label={t('soundtrackDuckRelease')}
+                  value={draft.duck.release_ms / 1000}
+                  min={0.01}
+                  max={5}
+                  step={0.01}
+                  isWheelEnabled={false}
+                  isDisabled={disabled}
+                  onChange={(seconds) =>
+                    setDraft({
+                      ...draft,
+                      duck: {
+                        ...draft.duck,
+                        release_ms: Math.max(10, Math.min(5000, Math.round(seconds * 1000))),
+                      },
+                    })
+                  }
+                />
+              </FormLayout>
+            )}
+            {draft.duck.enabled && (
+              <Text as="p" type="supporting">
+                {t('soundtrackDuckHelp', { sample: t('sample') })}
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text as="p" type="body">
+            {t('soundtrackNone')}
+          </Text>
+        )}
+        {dirty && (
+          <Text as="p" type="body" role="status">
+            {t('soundtrackDraft')}
+          </Text>
+        )}
+        {(error || stale) && (
+          <Banner
+            status="error"
+            title={t(stale ? 'soundtrackStale' : 'soundtrackInvalid')}
+            description={error ? <code>{error}</code> : undefined}
+          />
+        )}
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Button
+            label={t('soundtrackApply')}
+            variant="primary"
+            isDisabled={disabled || !dirty || stale}
+            onClick={apply}
+          />
+          <Button
+            label={t('soundtrackReload')}
+            isDisabled={disabled || (!dirty && !stale)}
+            onClick={reload}
+          />
+        </HStack>
+      </VStack>
     </InspectorPanelSection>
   );
 }

@@ -1,12 +1,15 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { offeredSpeechEngines } from '../../../core/speech/engine-capability';
@@ -50,35 +53,7 @@ export function SpeechSetup() {
         ) : (
           !media?.has_audio && <Banner status="warning" title={t('speechNoAudio')} />
         )}
-        {(job.checking || !available) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : !language
-                  ? t('speechChooseLanguage')
-                  : t(speechErrorKey(problemCode(job.models, language)))}
-            </Text>
-            {}
-            <div className="action-row">
-              {job.models && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </div>
-          </>
-        )}
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <LayerLanguageField
             layerName="transcript"
             language={language}
@@ -110,14 +85,42 @@ export function SpeechSetup() {
               }}
             />
           )}
-        </div>
+        </FormLayout>
         {engines.length === 1 && (
           <Text as="p" display="block" type="supporting">
             {t('speechEngineSingle', { engine: engines[0].engine })}
           </Text>
         )}
+        {(job.checking || !available) && (
+          <>
+            <Text as="p" display="block" type="body" role="status">
+              {job.checking
+                ? t('visionChecking')
+                : !language
+                  ? t('speechChooseLanguage')
+                  : t(speechErrorKey(problemCode(job.models, language)))}
+            </Text>
+            {}
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              {job.models && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('setUp')}
+                  onClick={() => void editor.openSettings('processing')}
+                />
+              )}
+              <Button
+                size="sm"
+                label={t('visionRefresh')}
+                isDisabled={busy || job.checking}
+                onClick={() => void job.refresh()}
+              />
+            </HStack>
+          </>
+        )}
         {job.active && (
-          <div className="action-row" role="status">
+          <HStack gap={2} vAlign="center" role="status">
             <ProgressBar
               label={t(job.active.phase)}
               max={1}
@@ -129,7 +132,7 @@ export function SpeechSetup() {
               isDisabled={job.active.phase === 'cancelling'}
               onClick={() => void job.cancel()}
             />
-          </div>
+          </HStack>
         )}
         {job.error && (
           <Banner
@@ -138,7 +141,7 @@ export function SpeechSetup() {
             description={<code>{job.error}</code>}
           />
         )}
-        <div className="action-row">
+        <HStack gap={2} vAlign="center">
           <Button
             label={t('speechStart')}
             variant="primary"
@@ -158,7 +161,7 @@ export function SpeechSetup() {
               }
             }}
           />
-        </div>
+        </HStack>
       </Stack>
     </InspectorPanelSection>
   );
@@ -179,8 +182,8 @@ export function SpeechReview() {
   const before = transcript.cues;
 
   return (
-    <div className="generator-review">
-      <div className="action-row">
+    <VStack gap={3}>
+      <HStack gap={2} vAlign="center" hAlign="between">
         <Heading level={5}>{t('speechDraft')}</Heading>
         <IconButton
           label={t('cancel')}
@@ -190,7 +193,7 @@ export function SpeechReview() {
           icon={<Icon icon="close" size="sm" />}
           onClick={() => job.consume(draft)}
         />
-      </div>
+      </HStack>
       {}
       <Text as="p" display="block" type="body">
         {t('speechReplaceHelp', { count: draft.data.cues.length })}
@@ -223,7 +226,7 @@ export function SpeechReview() {
               ],
             }))}
           />
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button label={t('speechDiscard')} onClick={() => job.consume(draft)} />
             {!fresh && (
               <Button
@@ -246,7 +249,7 @@ export function SpeechReview() {
                 }
               }}
             />
-          </div>
+          </HStack>
         </>
       )}
       {job.error && (
@@ -256,6 +259,6 @@ export function SpeechReview() {
           description={<code>{job.error}</code>}
         />
       )}
-    </div>
+    </VStack>
   );
 }

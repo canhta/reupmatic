@@ -1,6 +1,8 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe, FadeOptions } from '../../../../core/editing/edit-recipe';
 
@@ -21,7 +23,7 @@ export function FadeTools({
     onChange({ fade: { ...(fade ?? DEFAULT_FADE), ...patch } });
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <CheckboxInput
         label={t('editFade')}
         value={Boolean(fade)}
@@ -29,7 +31,7 @@ export function FadeTools({
         onChange={(enabled) => onChange({ fade: enabled ? { ...DEFAULT_FADE } : undefined })}
       />
       {fade && (
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <NumberInput
             label={t('editFadeIn')}
             value={fade.in_ms / 1000}
@@ -58,11 +60,11 @@ export function FadeTools({
             isDisabled={disabled}
             onChange={(audio) => patchFade({ audio })}
           />
-        </div>
+        </FormLayout>
       )}
       <Text as="p" type="supporting">
         {t('editFadeHint')}
       </Text>
-    </div>
+    </VStack>
   );
 }

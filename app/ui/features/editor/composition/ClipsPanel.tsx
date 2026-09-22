@@ -1,7 +1,9 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe, TimeRange } from '../../../../core/editing/edit-recipe';
 import { resolveEditWindow } from '../../../../core/editing/edit-recipe';
@@ -94,7 +96,7 @@ function WholeVideoClip() {
     editor.changeProcessing(Object.keys(recipe).length > 0 ? recipe : undefined);
   }
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <CheckboxInput
         label={t('editTrim')}
         value={Boolean(editing?.trim)}
@@ -102,7 +104,7 @@ function WholeVideoClip() {
         onChange={(enabled) => update({ trim: enabled ? trim : undefined })}
       />
       {editing?.trim && (
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <NumberInput
             label={t('editTrimStart')}
             value={trim.start_ms / 1000}
@@ -129,7 +131,7 @@ function WholeVideoClip() {
               update({ trim: { ...trim, end_ms: Math.round(value * 1000) } as TimeRange })
             }
           />
-        </div>
+        </FormLayout>
       )}
       <NumberInput
         label={t('compositionSpeed')}
@@ -147,6 +149,6 @@ function WholeVideoClip() {
           ? t('editRangeInvalid')
           : t('editDuration', { seconds: (outputDuration / 1000).toFixed(3) })}
       </Text>
-    </div>
+    </VStack>
   );
 }

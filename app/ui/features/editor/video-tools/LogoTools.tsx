@@ -1,8 +1,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import {
   DEFAULT_LOGO,
@@ -33,7 +36,7 @@ export function LogoTools({
   }
 
   return (
-    <div className="business-form">
+    <VStack gap={3}>
       <CheckboxInput
         label={t('editLogo')}
         value={Boolean(logo)}
@@ -42,7 +45,7 @@ export function LogoTools({
       />
       {logo && (
         <>
-          <div className="business-toolbar">
+          <HStack gap={2} vAlign="end" wrap="wrap">
             <Selector
               label={t('editLogoImage')}
               value={logo.media_id ?? ''}
@@ -58,8 +61,8 @@ export function LogoTools({
               isDisabled={disabled}
               onClick={() => void editor.addLogoImage()}
             />
-          </div>
-          <div className="business-toolbar">
+          </HStack>
+          <FormLayout direction="vertical">
             <Selector
               label={t('editLogoAnchor')}
               value={logo.anchor}
@@ -103,12 +106,12 @@ export function LogoTools({
               isDisabled={disabled}
               onChange={(percent) => patchLogo({ opacity: percent / 100 })}
             />
-          </div>
+          </FormLayout>
           <Text as="p" type="supporting">
             {t('editLogoHint')}
           </Text>
         </>
       )}
-    </div>
+    </VStack>
   );
 }

@@ -1,7 +1,9 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
@@ -10,6 +12,7 @@ import { Section } from '@astryxdesign/core/Section';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,39 +55,9 @@ export function TranslateSetup() {
   }));
 
   return (
-    <Section
-      variant="transparent"
-      padding={0}
-      className="inspector-panel-section"
-      aria-label={t('translationTitle')}
-    >
+    <Section variant="transparent" padding={0} aria-label={t('translationTitle')}>
       <Stack direction="vertical" gap={3}>
-        {(job.checking || !job.models?.available) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))}
-            </Text>
-            <div className="action-row">
-              {job.models && !job.models.available && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </div>
-          </>
-        )}
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <Selector
             label={t('translationSource')}
             value={sourceLayer}
@@ -114,7 +87,7 @@ export function TranslateSetup() {
               if (value === 'en' || value === 'vi' || value === 'zh') setTo(value);
             }}
           />
-        </div>
+        </FormLayout>
         {!source.cues.length && (
           <Text as="p" display="block" type="body" role="status">
             {t('textLayerEmpty')}
@@ -122,8 +95,33 @@ export function TranslateSetup() {
         )}
         {source.stale && <Banner status="warning" title={t('textLayerStale')} />}
         <TranslationRules rules={rules} onChange={setRules} disabled={busy} />
+        {(job.checking || !job.models?.available) && (
+          <>
+            <Text as="p" display="block" type="body" role="status">
+              {job.checking
+                ? t('visionChecking')
+                : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))}
+            </Text>
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              {job.models && !job.models.available && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('setUp')}
+                  onClick={() => void editor.openSettings('processing')}
+                />
+              )}
+              <Button
+                size="sm"
+                label={t('visionRefresh')}
+                isDisabled={busy || job.checking}
+                onClick={() => void job.refresh()}
+              />
+            </HStack>
+          </>
+        )}
         {job.active && (
-          <div className="action-row" role="status">
+          <HStack gap={2} vAlign="center" role="status">
             <ProgressBar
               label={t(job.active.phase)}
               max={1}
@@ -135,7 +133,7 @@ export function TranslateSetup() {
               isDisabled={job.active.phase === 'cancelling'}
               onClick={() => void job.cancel()}
             />
-          </div>
+          </HStack>
         )}
         {job.error && (
           <Banner
@@ -144,7 +142,7 @@ export function TranslateSetup() {
             description={<code>{job.error}</code>}
           />
         )}
-        <div className="action-row">
+        <HStack gap={2} vAlign="center">
           <Button
             label={t('translationStart')}
             variant="primary"
@@ -162,7 +160,7 @@ export function TranslateSetup() {
               });
             }}
           />
-        </div>
+        </HStack>
       </Stack>
     </Section>
   );
@@ -221,8 +219,8 @@ function TranslationDraftReview({
   }
 
   return (
-    <div className="generator-review">
-      <div className="action-row">
+    <VStack gap={3}>
+      <HStack gap={2} vAlign="center" hAlign="between">
         <Heading level={5}>{t('translationDraft')}</Heading>
         <IconButton
           label={t('cancel')}
@@ -232,7 +230,7 @@ function TranslationDraftReview({
           icon={<Icon icon="close" size="sm" />}
           onClick={onDiscard}
         />
-      </div>
+      </HStack>
       <Text as="p" display="block" type="body">
         {t('translationCaptured', {
           source: t(`textLayer_${p.source_layer}`),
@@ -333,7 +331,7 @@ function TranslationDraftReview({
               onChange={setConfirmed}
             />
           )}
-          <div className="action-row">
+          <HStack gap={2} vAlign="center" wrap="wrap">
             <Button label={t('translationDiscard')} onClick={onDiscard} />
             <Button
               label={t('translationApply')}
@@ -350,9 +348,9 @@ function TranslationDraftReview({
                 }
               }}
             />
-          </div>
+          </HStack>
         </>
       )}
-    </div>
+    </VStack>
   );
 }

@@ -2,7 +2,9 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
@@ -10,6 +12,7 @@ import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getTextLayer } from '../../../core/subtitles/layers/document';
@@ -41,32 +44,7 @@ export function OcrSetup() {
     <InspectorPanelSection title={t('visionExtractTitle')}>
       <Stack direction="vertical" gap={3}>
         {}
-        {(job.checking || !job.models?.ocr.available) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : t(visionErrorKey(job.models?.ocr.code || 'MODEL_MISSING'))}
-            </Text>
-            <div className="action-row">
-              {job.models && !job.models.ocr.available && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </div>
-          </>
-        )}
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           <LayerLanguageField
             layerName="displayed"
             language={language}
@@ -87,7 +65,7 @@ export function OcrSetup() {
               if (value === 'sample' || value === 'full') setScope(value);
             }}
           />
-        </div>
+        </FormLayout>
         <Collapsible
           trigger={
             <Text type="label" weight="semibold">
@@ -96,7 +74,7 @@ export function OcrSetup() {
           }
           defaultIsOpen={false}
         >
-          <div className="vision-fields">
+          <HStack gap={3} vAlign="end" wrap="wrap">
             <NumberInput
               label={t('visionSample')}
               min={100}
@@ -120,10 +98,35 @@ export function OcrSetup() {
               isWheelEnabled={false}
               onChange={setConfidence}
             />
-          </div>
+          </HStack>
         </Collapsible>
+        {(job.checking || !job.models?.ocr.available) && (
+          <>
+            <Text as="p" display="block" type="body" role="status">
+              {job.checking
+                ? t('visionChecking')
+                : t(visionErrorKey(job.models?.ocr.code || 'MODEL_MISSING'))}
+            </Text>
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              {job.models && !job.models.ocr.available && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('setUp')}
+                  onClick={() => void editor.openSettings('processing')}
+                />
+              )}
+              <Button
+                size="sm"
+                label={t('visionRefresh')}
+                isDisabled={busy || job.checking}
+                onClick={() => void job.refresh()}
+              />
+            </HStack>
+          </>
+        )}
         {job.active && (
-          <div className="action-row" role="status">
+          <HStack gap={2} vAlign="center" role="status">
             <ProgressBar
               label={t(job.active.phase)}
               max={1}
@@ -135,7 +138,7 @@ export function OcrSetup() {
               isDisabled={job.active.phase === 'cancelling'}
               onClick={() => void job.cancel()}
             />
-          </div>
+          </HStack>
         )}
         {job.error && (
           <Banner
@@ -144,7 +147,7 @@ export function OcrSetup() {
             description={<code>{job.error}</code>}
           />
         )}
-        <div className="action-row">
+        <HStack gap={2} vAlign="center">
           <Button
             label={t('visionExtractFull')}
             variant="primary"
@@ -159,7 +162,7 @@ export function OcrSetup() {
               });
             }}
           />
-        </div>
+        </HStack>
       </Stack>
     </InspectorPanelSection>
   );
@@ -210,8 +213,8 @@ export function OcrReview() {
   }
 
   return (
-    <div className="generator-review">
-      <div className="action-row">
+    <VStack gap={3}>
+      <HStack gap={2} vAlign="center" hAlign="between">
         <Heading level={5}>{t('visionDraft', { count: draft.data.cues.length })}</Heading>
         <IconButton
           label={t('cancel')}
@@ -221,7 +224,7 @@ export function OcrReview() {
           icon={<Icon icon="close" size="sm" />}
           onClick={() => job.consumeDraft(draft)}
         />
-      </div>
+      </HStack>
       {savedSrt === draft.data.analysis_id && (
         <Text as="p" type="body" role="status">
           {t('visionSrtSaved')}
@@ -268,7 +271,7 @@ export function OcrReview() {
           ))}
         </div>
       </Collapsible>
-      <div className="action-row">
+      <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('visionExportSrt')}
           isDisabled={!draft.data.cues.length || busy}
@@ -280,7 +283,7 @@ export function OcrReview() {
           isDisabled={!draftCurrent || !draft.data.cues.length || busy}
           onClick={() => void apply()}
         />
-      </div>
+      </HStack>
       {job.error && (
         <Banner
           status="error"
@@ -288,6 +291,6 @@ export function OcrReview() {
           description={<code>{job.error}</code>}
         />
       )}
-    </div>
+    </VStack>
   );
 }

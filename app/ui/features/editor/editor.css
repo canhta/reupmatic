@@ -487,17 +487,6 @@
   max-width: 100%;
 }
 
-.generator-review {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
 .review-rows {
   min-width: 0;
 }

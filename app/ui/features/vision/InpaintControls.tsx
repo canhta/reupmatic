@@ -1,6 +1,8 @@
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Switch } from '@astryxdesign/core/Switch';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -72,7 +74,7 @@ export function InpaintControls({
   }
 
   return (
-    <div className="inpaint-controls">
+    <VStack gap={3}>
       <Switch
         label={t('visionInclude')}
         value={included}
@@ -97,7 +99,7 @@ export function InpaintControls({
         <RadioListItem value="manual" label={t('visionManual')} />
         <RadioListItem value="text" label={t('visionAuto')} description={t('visionAutoNote')} />
       </RadioList>
-      <div className="vision-fields">
+      <FormLayout direction="vertical">
         <NumberInput
           label={t('visionPadding')}
           min={0}
@@ -113,7 +115,7 @@ export function InpaintControls({
             update(target, value, rectangle);
           }}
         />
-      </div>
+      </FormLayout>
       {target === 'manual' && (
         <MaskRegionFields
           value={rectangle}
@@ -124,6 +126,6 @@ export function InpaintControls({
           disabled={!included}
         />
       )}
-    </div>
+    </VStack>
   );
 }

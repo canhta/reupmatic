@@ -1,6 +1,8 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../../core/editing/edit-recipe';
 
@@ -16,8 +18,8 @@ export function AudioTools({
   const { t } = useTranslation();
   const audio = value.audio ?? { muted: false, gain_db: 0 };
   return (
-    <div className="business-form">
-      <div className="business-toolbar">
+    <VStack gap={3}>
+      <FormLayout direction="vertical">
         <NumberInput
           label={t('editSpeed')}
           value={value.speed ?? 1}
@@ -46,10 +48,10 @@ export function AudioTools({
           isDisabled={disabled}
           onChange={(muted) => onChange({ audio: { ...audio, muted } })}
         />
-      </div>
+      </FormLayout>
       <Text as="p" type="supporting">
         {t('editAudioHint')}
       </Text>
-    </div>
+    </VStack>
   );
 }

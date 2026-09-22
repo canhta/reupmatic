@@ -1,6 +1,7 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Section } from '@astryxdesign/core/Section';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { applyCueStyle, type SubtitleStyle } from '../../../../core/subtitles/style';
@@ -27,36 +28,33 @@ export function SubtitleStylesPanel() {
     editor.changeProcessing(Object.keys(next).length > 0 ? next : undefined);
   }
   return (
-    <Section
-      variant="transparent"
-      padding={0}
-      className="inspector-panel-section"
-      aria-label={t('styleTitle')}
-    >
-      <CheckboxInput
-        label={t('styleCustomizeCue')}
-        value={customize}
-        isDisabled={disabled || dirty || !selected}
-        onChange={setCustomize}
-      />
-      {customize && !selected && (
-        <Text as="p" type="body" role="status">
-          {t('styleChooseCue')}
-        </Text>
-      )}
-      {dirty && (
-        <Text as="p" type="body" role="status">
-          {t('styleFinishDraft')}
-        </Text>
-      )}
-      <SubtitleStyleForm
-        key={scope === 'cue' ? selected?.id : 'global'}
-        value={scope === 'cue' ? selected?.style : globalStyle}
-        inherited={scope === 'cue' ? globalStyle : undefined}
-        disabled={disabled}
-        onChange={apply}
-        onDirtyChange={setDirty}
-      />
+    <Section variant="transparent" padding={0} aria-label={t('styleTitle')}>
+      <VStack gap={3}>
+        <CheckboxInput
+          label={t('styleCustomizeCue')}
+          value={customize}
+          isDisabled={disabled || dirty || !selected}
+          onChange={setCustomize}
+        />
+        {customize && !selected && (
+          <Text as="p" type="body" role="status">
+            {t('styleChooseCue')}
+          </Text>
+        )}
+        {dirty && (
+          <Text as="p" type="body" role="status">
+            {t('styleFinishDraft')}
+          </Text>
+        )}
+        <SubtitleStyleForm
+          key={scope === 'cue' ? selected?.id : 'global'}
+          value={scope === 'cue' ? selected?.style : globalStyle}
+          inherited={scope === 'cue' ? globalStyle : undefined}
+          disabled={disabled}
+          onChange={apply}
+          onDirtyChange={setDirty}
+        />
+      </VStack>
     </Section>
   );
 }

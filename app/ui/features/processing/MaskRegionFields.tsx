@@ -1,3 +1,4 @@
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,7 @@ export function MaskRegionFields({ value, disabled, onChange }: Props) {
     value.y + value.height <= 1 + 1e-9;
   return (
     <>
-      <div className="vision-fields">
+      <FormLayout direction="vertical">
         {fields.map(([key, label]) => (
           <NumberInput
             key={key}
@@ -39,7 +40,7 @@ export function MaskRegionFields({ value, disabled, onChange }: Props) {
             onChange={(percent) => onChange({ ...value, [key]: percent / 100 })}
           />
         ))}
-      </div>
+      </FormLayout>
       {!valid && (
         <Text as="p" type="body" className="inline-error" role="alert">
           {t('visionInvalid')}

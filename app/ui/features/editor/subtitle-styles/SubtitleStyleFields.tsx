@@ -1,9 +1,11 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { SubtitleStyle } from '../../../../core/subtitles/style';
 
@@ -59,8 +61,8 @@ const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; ste
 export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
   const { t } = useTranslation();
   return (
-    <>
-      <div className="vision-fields">
+    <VStack gap={3}>
+      <FormLayout direction="vertical">
         <TextInput
           label={t('styleFontFamily')}
           value={value.font_family}
@@ -87,8 +89,8 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
           }))}
           onChange={(position) => onChange({ ...value, position: Number(position) })}
         />
-      </div>
-      <div className="vision-fields">
+      </FormLayout>
+      <FormLayout direction="vertical">
         {colorFields.map((key) => (
           <ColorField
             key={key}
@@ -99,7 +101,7 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
             onChange={(next) => onChange({ ...value, [key]: next })}
           />
         ))}
-      </div>
+      </FormLayout>
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">
@@ -108,7 +110,7 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
         }
         defaultIsOpen={false}
       >
-        <div className="vision-fields">
+        <FormLayout direction="vertical">
           {advancedNumeric.map(({ key, min, max, step }) => (
             <NumberInput
               key={key}
@@ -134,8 +136,8 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
             isDisabled={disabled}
             onChange={(italic) => onChange({ ...value, italic })}
           />
-        </div>
+        </FormLayout>
       </Collapsible>
-    </>
+    </VStack>
   );
 }

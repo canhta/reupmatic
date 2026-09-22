@@ -1,7 +1,9 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../../core/editing/edit-recipe';
 
@@ -22,8 +24,8 @@ export function VideoTools({
   };
   const color = value.color ?? { brightness: 0, contrast: 1, saturation: 1 };
   return (
-    <div className="business-form">
-      <div className="business-toolbar">
+    <VStack gap={3}>
+      <FormLayout direction="vertical">
         <Selector
           label={t('editAspect')}
           value={output.aspect}
@@ -81,7 +83,7 @@ export function VideoTools({
             })
           }
         />
-      </div>
+      </FormLayout>
       <CheckboxInput
         label={t('editCrop')}
         value={Boolean(value.crop)}
@@ -91,7 +93,7 @@ export function VideoTools({
         }
       />
       {value.crop && (
-        <div className="business-toolbar">
+        <FormLayout direction="vertical">
           {(['x', 'y', 'width', 'height'] as const).map((key) => {
             const crop = value.crop;
             if (!crop) return null;
@@ -110,9 +112,9 @@ export function VideoTools({
               />
             );
           })}
-        </div>
+        </FormLayout>
       )}
-      <div className="business-toolbar">
+      <FormLayout direction="vertical">
         {(
           [
             ['brightness', -1, 1],
@@ -133,10 +135,10 @@ export function VideoTools({
             onChange={(number) => onChange({ color: { ...color, [key]: number } })}
           />
         ))}
-      </div>
+      </FormLayout>
       <Text as="p" type="supporting">
         {t('editGeometryHint')}
       </Text>
-    </div>
+    </VStack>
   );
 }
