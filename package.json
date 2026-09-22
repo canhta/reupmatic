@@ -21,7 +21,7 @@
     "build:core": "node scripts/tsc.cjs -p tsconfig.core.json",
     "build:node": "node scripts/tsc.cjs -p tsconfig.node.json",
     "theme:build": "astryx theme build app/ui/design-system/theme/appTheme.ts",
-    "build": "npm run theme:build && npm run build:node && node scripts/generate-preload.mjs && node scripts/tsc.cjs -p tsconfig.ui.json && vite build",
+    "build": "npm run contracts:generate && npm run theme:build && npm run build:node && node scripts/generate-preload.mjs && node scripts/tsc.cjs -p tsconfig.ui.json && vite build",
     "start": "node --env-file-if-exists=.env.local node_modules/electron/cli.js .",
     "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
     "test:core": "npm run contracts:generate && npm run build:core && node --test 'tests/core/*.test.mjs'",

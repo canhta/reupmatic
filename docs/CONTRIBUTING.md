@@ -44,8 +44,8 @@ Settings row reports the missing runtime.
 Run `pnpm run contracts:generate` before anything that talks to the worker. It composes the
 gitignored schemas under `contracts/` from the tracked `*.source.schema.json` files and generates
 `worker/runtime/operations.py`, which `worker/runtime/worker.py` imports directly. Without it the
-worker exits on import and reports `WORKER_EXITED`. `test:core`, `test:bridge`, `test:python` and
-`test` each run it first; `pnpm run dev` does not.
+worker exits on import and reports `WORKER_EXITED`. `test:core`, `test:bridge`, `test:python`,
+`test`, `pnpm run build` and `pnpm run dev` each run it first.
 
 ## Checks and hooks
 
