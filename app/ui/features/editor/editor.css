@@ -421,9 +421,6 @@
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
-.editor-side-panel-body > .inspector-panel-section:first-child {
-  margin-top: 0;
-}
 .soundtrack-preview {
   width: 100%;
   max-width: 100%;

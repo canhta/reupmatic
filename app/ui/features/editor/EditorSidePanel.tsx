@@ -1,6 +1,7 @@
 import { Heading } from '@astryxdesign/core/Heading';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { VStack } from '@astryxdesign/core/VStack';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -42,7 +43,7 @@ export function EditorSidePanel({
         tabIndex={-1}
         className="editor-side-panel-body"
       >
-        {children}
+        <VStack gap={6}>{children}</VStack>
       </div>
     </div>
   );
