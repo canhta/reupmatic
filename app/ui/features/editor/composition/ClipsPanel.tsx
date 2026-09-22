@@ -18,10 +18,10 @@ export function ClipsPanel() {
   const editor = useEditor();
   const disabled = editor.opening || editor.busy;
   return (
-    <>
+    <VStack gap={5}>
       {editor.composition ? <CompositionPanel /> : <WholeVideoClip />}
       <GlobalEditSections disabled={disabled} />
-    </>
+    </VStack>
   );
 }
 
@@ -41,7 +41,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
   }
 
   return (
-    <>
+    <VStack gap={2}>
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">
@@ -72,7 +72,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
       >
         <LogoTools value={editing ?? {}} disabled={disabled} onChange={update} />
       </Collapsible>
-    </>
+    </VStack>
   );
 }
 
