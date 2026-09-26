@@ -1224,3 +1224,39 @@ test('M1: a TikTok refresh marks reauthorize only for a definite invalid_grant r
     await refused.close();
   }
 });
+
+test('an unmapped TikTok privacy level is reported as unknown, never mislabelled', async () => {
+  const cases = [
+    ['PUBLIC_TO_EVERYONE', 'public'],
+    ['SELF_ONLY', 'private'],
+    ['MUTUAL_FOLLOW_FRIENDS', null],
+    ['FOLLOWER_OF_CREATOR', null],
+  ];
+  for (const [level, expected] of cases) {
+    const graph = await fakeTikTok([
+      {
+        match: (r) => r.path === '/v2/post/publish/status/fetch/',
+        reply: () => ({
+          body: {
+            data: { status: 'PUBLISH_COMPLETE', publicaly_available_post_id: 'p' },
+            error: { code: 'ok' },
+          },
+        }),
+      },
+    ]);
+    try {
+      const post = {
+        ...TT_POST,
+        options: { youtube: null, tiktok: { ...TT_OPTIONS, privacy_level: level } },
+      };
+      const next = await tiktokService(graph.base).reconcile({
+        post: { ...post, publication: { ...uploadingPost('p').publication, phase: 'submitted' } },
+        credentials: { account_id: 'open-id-1', access_token: 'token' },
+        persist: () => undefined,
+      });
+      assert.equal(next.privacy, expected, level);
+    } finally {
+      await graph.close();
+    }
+  }
+});

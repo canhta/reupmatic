@@ -32,11 +32,13 @@ function contentType(filename: string): string {
   return CONTENT_TYPES[extension] ?? 'application/octet-stream';
 }
 
-// The privacy TikTok actually granted, mapped to the shared vocabulary for the UI.
-function grantedPrivacy(privacyLevel: string): PublicationPrivacy {
+// The privacy TikTok actually granted, mapped to the shared vocabulary for the UI. TikTok's
+// friends/followers levels have no fitting shared value, so they are reported as unknown (null)
+// rather than mislabelled as unlisted; the owner will decide whether to add a value.
+function grantedPrivacy(privacyLevel: string): PublicationPrivacy | null {
   if (privacyLevel === 'SELF_ONLY') return 'private';
   if (privacyLevel === 'PUBLIC_TO_EVERYONE') return 'public';
-  return 'unlisted';
+  return null;
 }
 
 function uploadRefusal(response: Response, sent: boolean): Promise<Error> {
