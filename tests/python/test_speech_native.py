@@ -33,16 +33,20 @@ class WhisperModel:
         self.model = SimpleNamespace(is_multilingual=os.environ.get('CONTROLLED_SPEECH_EN_ONLY') != '1')
     def transcribe(self, audio, **kwargs):
         assert kwargs == dict(language='vi', task='transcribe', beam_size=5, temperature=0,
-                             condition_on_previous_text=False, word_timestamps=False, vad_filter=False)
+                             condition_on_previous_text=False, word_timestamps=True, vad_filter=False)
         if os.environ.get('CONTROLLED_SPEECH_NETWORK') == '1':
             socket.getaddrinfo('example.invalid', 443)
+        def words(*pairs):
+            return [SimpleNamespace(start=s, end=e, word=w) for s, e, w in pairs]
         def segments():
             if os.environ.get('CONTROLLED_SPEECH_EMPTY') == '1': return
-            yield SimpleNamespace(start=0.1, end=0.3, text=' Xin chào Việt Nam ')
+            yield SimpleNamespace(start=0.1, end=0.3, text=' Xin chào Việt Nam ',
+                words=words((0.1, 0.15, ' Xin'), (0.15, 0.2, ' chào'), (0.2, 0.25, ' Việt'), (0.25, 0.3, ' Nam')))
             if os.environ.get('CONTROLLED_SPEECH_SLOW') == '1':
                 Path(os.environ['CONTROLLED_SPEECH_PID']).write_text(str(os.getpid()))
                 time.sleep(30)
-            yield SimpleNamespace(start=0.5, end=0.9, text='Nội dung thử nghiệm')
+            yield SimpleNamespace(start=0.5, end=0.9, text='Nội dung thử nghiệm',
+                words=words((0.5, 0.6, 'Nội'), (0.6, 0.7, ' dung'), (0.7, 0.8, ' thử'), (0.8, 0.9, ' nghiệm')))
         return segments(), SimpleNamespace(language='vi')
 """
 
