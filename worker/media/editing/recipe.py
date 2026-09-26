@@ -124,17 +124,15 @@ def parse_editing(value):
     return result
 
 
-def resolve_window(editing, duration, sample=None):
+def resolve_window(editing, duration):
     if type(duration) is not int or not 1 <= duration <= 86400000:
         raise WorkerError("EDIT_SOURCE_RANGE")
     edit = parse_editing(editing) if editing is not None else {}
     trim = edit.get("trim", {"start_ms": 0, "end_ms": duration})
-    if trim["end_ms"] > duration or (
-        sample is not None and time_range(sample)["end_ms"] > duration
-    ):
+    if trim["end_ms"] > duration:
         raise WorkerError("EDIT_SOURCE_RANGE")
-    start = max(trim["start_ms"], sample["start_ms"] if sample else 0)
-    end = min(trim["end_ms"], sample["end_ms"] if sample else duration)
+    start = trim["start_ms"]
+    end = trim["end_ms"]
     if end <= start:
         raise WorkerError("EDIT_EMPTY_RANGE")
     speed = edit.get("speed", 1)
@@ -144,35 +142,3 @@ def resolve_window(editing, duration, sample=None):
         "speed": speed,
         "duration_ms": max(1, math.floor((end - start) / speed + 0.5)),
     }
-
-
-def resolve_fade_window(editing, duration, sample):
-    """Resolve a render window, widening it when a head/tail fade overlaps a sample."""
-    edit = parse_editing(editing) if editing is not None else {}
-    window = resolve_window(editing, duration, sample)
-    trim = edit.get("trim", {"start_ms": 0, "end_ms": duration})
-    speed = window["speed"]
-    full_ms = max(1, math.floor((trim["end_ms"] - trim["start_ms"]) / speed + 0.5))
-    fade = edit.get("fade")
-    if sample is None or not fade:
-        return window, None, full_ms
-    output_start = max(0, math.floor((window["start_ms"] - trim["start_ms"]) / speed + 0.5))
-    output_end = min(full_ms, output_start + window["duration_ms"])
-    head = fade["in_ms"] and output_start < fade["in_ms"]
-    tail = fade["out_ms"] and output_end > full_ms - fade["out_ms"]
-    if not head and not tail:
-        return window, None, full_ms
-    render_start = trim["start_ms"] if head else window["start_ms"]
-    render_end = trim["end_ms"] if tail else window["end_ms"]
-    if render_end <= render_start:
-        return window, None, full_ms
-    return (
-        {
-            "start_ms": render_start,
-            "end_ms": render_end,
-            "speed": speed,
-            "duration_ms": max(1, math.floor((render_end - render_start) / speed + 0.5)),
-        },
-        (output_start, output_end),
-        full_ms,
-    )

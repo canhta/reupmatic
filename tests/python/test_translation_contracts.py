@@ -101,7 +101,6 @@ class TranslationContracts(unittest.TestCase):
             "format": "reupmatic.project",
             "source": {"path": "/source.mp4", "sha256": "a" * 64},
             "cues": [],
-            "sample": {"start_ms": 0, "end_ms": 1000},
             "text_layers": layers,
         }
         schema = self.validator(self.read("project.schema.json"))

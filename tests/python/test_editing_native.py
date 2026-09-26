@@ -59,7 +59,6 @@ class EditingNativeTests(unittest.TestCase):
             "media.process",
             {
                 "asset_id": self.asset,
-                "mode": "full",
                 "encoding": "review",
                 "processing": processing,
                 "model_fingerprints": {},
@@ -92,20 +91,15 @@ class EditingNativeTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(self.source.read_bytes()).hexdigest(), self.original)
         self.assertFalse(list((self.root / "workspace").glob("processing-*")))
 
-    def test_audio_gain_and_sample_intersection_share_source_timing(self):
+    def test_audio_gain_uses_source_timing(self):
         editing = {
             "trim": {"start_ms": 500, "end_ms": 2500},
             "speed": 0.5,
             "audio": {"muted": False, "gain_db": 0},
         }
-        result = self.render(editing, mode="sample", start_ms=1000, end_ms=3000)
-        quieter = self.render(
-            {**editing, "audio": {"muted": False, "gain_db": -6}},
-            mode="sample",
-            start_ms=1000,
-            end_ms=3000,
-        )
-        self.assertEqual(result["duration_ms"], 3000)
+        result = self.render(editing)
+        quieter = self.render({**editing, "audio": {"muted": False, "gain_db": -6}})
+        self.assertEqual(result["duration_ms"], 4000)
         self.assertTrue(result["has_audio"])
 
         def rms(filename):
@@ -136,10 +130,6 @@ class EditingNativeTests(unittest.TestCase):
         self.assertNotEqual(result["sha256"], quieter["sha256"])
 
     def test_invalid_edit_does_not_publish_or_poison_following_jobs(self):
-        with self.assertRaisesRegex(RuntimeError, "EDIT_EMPTY_RANGE"):
-            self.render(
-                {"trim": {"start_ms": 2000, "end_ms": 3000}}, mode="sample", start_ms=0, end_ms=1000
-            )
         with self.assertRaisesRegex(RuntimeError, "EDIT_SOURCE_RANGE"):
             self.render({"trim": {"start_ms": 0, "end_ms": 8000}})
         self.assertFalse(list((self.root / "workspace" / "renders").glob("*/output.mp4")))
@@ -271,95 +261,6 @@ class EditingNativeTests(unittest.TestCase):
         faded = self.render({"fade": {"in_ms": 500, "out_ms": 0, "audio": False}})
         self.assertTrue(faded["has_audio"])
         self.assertEqual(faded["duration_ms"], 4000)
-
-    def mean_luma(self, filename, time):
-        data = subprocess.check_output(
-            [
-                "ffmpeg",
-                "-v",
-                "error",
-                "-i",
-                filename,
-                "-ss",
-                str(time),
-                "-frames:v",
-                "1",
-                "-vf",
-                "scale=8:8,format=gray",
-                "-f",
-                "rawvideo",
-                "-",
-            ]
-        )
-        return sum(data) / len(data)
-
-    def window_rms(self, filename, time, span=0.1):
-        data = array.array(
-            "f",
-            subprocess.check_output(
-                [
-                    "ffmpeg",
-                    "-v",
-                    "error",
-                    "-ss",
-                    str(time),
-                    "-t",
-                    str(span),
-                    "-i",
-                    filename,
-                    "-map",
-                    "0:a:0",
-                    "-ac",
-                    "1",
-                    "-f",
-                    "f32le",
-                    "-",
-                ]
-            ),
-        )
-        return math.sqrt(sum(value * value for value in data) / len(data))
-
-    def assert_sample_matches_full(self, editing, sample_start, sample_end, probe_times, label):
-        # Worker decodes from the fade start, applies the fade on the output clock, then trims.
-        full = self.render(editing)
-        sample = self.render(editing, mode="sample", start_ms=sample_start, end_ms=sample_end)
-        self.assertEqual(sample["duration_ms"], sample_end - sample_start)
-        for local in probe_times:
-            expected = self.mean_luma(full["path"], (sample_start / 1000) + local)
-            actual = self.mean_luma(sample["path"], local)
-            self.assertLess(
-                abs(actual - expected),
-                6,
-                f"{label}: frame at output {sample_start / 1000 + local:.2f}s is {actual:.1f}, "
-                f"the full render is {expected:.1f}",
-            )
-        return full, sample
-
-    def test_sample_inside_head_fade_matches_the_full_render(self):
-        editing = {"fade": {"in_ms": 1000, "out_ms": 1000, "audio": True}}
-        full, sample = self.assert_sample_matches_full(
-            editing, 200, 800, (0.05, 0.3, 0.55), "head fade"
-        )
-        quiet = self.window_rms(sample["path"], 0.05)
-        louder = self.window_rms(sample["path"], 0.55)
-        self.assertLess(quiet, louder, "the sample's head audio is quieter than its louder tail")
-        reference = self.window_rms(full["path"], 0.25)
-        self.assertLess(
-            abs(quiet - reference) / reference,
-            0.15,
-            "the sample's head audio matches the full render's same window",
-        )
-
-    def test_sample_inside_tail_fade_matches_the_full_render(self):
-        editing = {"fade": {"in_ms": 1000, "out_ms": 1000, "audio": True}}
-        self.assert_sample_matches_full(editing, 3200, 3800, (0.05, 0.3, 0.55), "tail fade")
-
-    def test_sample_away_from_the_fades_is_unfaded(self):
-        editing = {"fade": {"in_ms": 500, "out_ms": 500, "audio": True}}
-        sample = self.render(editing, mode="sample", start_ms=1500, end_ms=2500)
-        self.assertEqual(sample["duration_ms"], 1000)
-        self.assertGreater(self.mean_luma(sample["path"], 0.05), 40)
-        self.assertGreater(self.mean_luma(sample["path"], 0.95), 40)
 
     def test_subtitles_follow_source_time_before_speed_change(self):
         subtitles = self.root / "captions.srt"

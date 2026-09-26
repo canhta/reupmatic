@@ -17,18 +17,16 @@ from media.render_source import resolve_render_source, verify_render_sources
 def render(host: WorkerContext, req: dict) -> dict:
     p = exact(
         req["params"],
-        {"asset_id", "mode", "encoding"},
-        {"subtitle_id", "start_ms", "end_ms", "soundtrack", "voice", "composition"},
+        {"asset_id", "encoding"},
+        {"subtitle_id", "soundtrack", "voice", "composition"},
     )
-    if p["mode"] not in {"sample", "full"} or p["encoding"] not in {"review", "lossless"}:
+    if p["encoding"] not in {"review", "lossless"}:
         raise WorkerError("INVALID_REQUEST")
 
     def check():
         return host.cancelled(req)
 
-    source, info, window, source_offset, _output_sample, _full_output_ms = resolve_render_source(
-        host, req, p
-    )
+    source, info, window, source_offset = resolve_render_source(host, req, p)
     subtitle = (
         host.assets.verify(p["subtitle_id"], "subtitle", check) if p.get("subtitle_id") else None
     )

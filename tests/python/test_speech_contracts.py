@@ -135,7 +135,6 @@ class SpeechContracts(unittest.TestCase):
             "format": "reupmatic.project",
             "source": {"path": "/source.mp4", "sha256": "a" * 64},
             "cues": [],
-            "sample": {"start_ms": 0, "end_ms": 1000},
             "text_layers": layers,
         }
         validator = self.validator(json.loads((ROOT / "contracts/project.schema.json").read_text()))

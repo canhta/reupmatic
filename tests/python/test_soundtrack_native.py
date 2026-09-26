@@ -80,7 +80,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             "media.process",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "processing": {"editing": {"speed": 1}},
                 "soundtrack": self.track,
@@ -131,16 +130,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             delta=0.04,
         )
         self.assertEqual(hashlib.sha256(self.audio.read_bytes()).hexdigest(), original)
-
-    def test_sample_uses_output_clock_after_trim_and_speed(self):
-        processing = {
-            "editing": {"trim": {"start_ms": 1000, "end_ms": 4000}, "speed": 2},
-        }
-        full = self.render(processing=processing)
-        sample = self.render(processing=processing, mode="sample", start_ms=3000, end_ms=4000)
-        self.assertEqual(sample["duration_ms"], 500)
-        self.assertLess(self.level(full["path"], 0.2), 0.001)
-        self.assertGreater(self.level(sample["path"], 0.2, 0.2), 0.04)
 
     def test_same_size_mtime_audio_changes_cannot_reuse_cached_output(self):
         self.render()
@@ -202,7 +191,7 @@ class SoundtrackNativeTests(unittest.TestCase):
         track = {**self.track, "offset_ms": 0, "fade_in_ms": 700, "fade_out_ms": 700}
         result = self.session.call(
             "media.render",
-            {"asset_id": self.source, "mode": "full", "encoding": "review", "soundtrack": track},
+            {"asset_id": self.source, "encoding": "review", "soundtrack": track},
         )
         self.assertLess(
             self.level(result["path"], 0.01, 0.1), self.level(result["path"], 0.8, 0.1) * 0.2
@@ -266,7 +255,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             "media.render",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "voice": voice,
             },
@@ -284,7 +272,7 @@ class SoundtrackNativeTests(unittest.TestCase):
         for voice in (short, long):
             result = self.session.call(
                 "media.render",
-                {"asset_id": self.source, "mode": "full", "encoding": "review", "voice": voice},
+                {"asset_id": self.source, "encoding": "review", "voice": voice},
             )
             self.assertGreater(self.level(result["path"], 2.5, 0.3), 0.04)
             self.assertLess(self.level(result["path"], 1.7, 0.3), 0.001)
@@ -296,7 +284,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             "media.render",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "voice": voice,
                 "soundtrack": track,
@@ -319,17 +306,16 @@ class SoundtrackNativeTests(unittest.TestCase):
         ducked = {**track, "duck": {**track["duck"], "enabled": True}}
         music_only = self.session.call(
             "media.render",
-            {"asset_id": self.source, "mode": "full", "encoding": "review", "soundtrack": track},
+            {"asset_id": self.source, "encoding": "review", "soundtrack": track},
         )
         voice_only = self.session.call(
             "media.render",
-            {"asset_id": self.source, "mode": "full", "encoding": "review", "voice": voice},
+            {"asset_id": self.source, "encoding": "review", "voice": voice},
         )
         plain = self.session.call(
             "media.render",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "soundtrack": track,
                 "voice": voice,
@@ -339,7 +325,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             "media.render",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "soundtrack": ducked,
                 "voice": voice,
@@ -373,7 +358,6 @@ class SoundtrackNativeTests(unittest.TestCase):
                 "media.render",
                 {
                     "asset_id": self.source,
-                    "mode": "full",
                     "encoding": "review",
                     "voice": {**voice, "sha256": "c" * 64},
                 },
@@ -390,7 +374,6 @@ class SoundtrackNativeTests(unittest.TestCase):
             "media.render",
             {
                 "asset_id": self.source,
-                "mode": "full",
                 "encoding": "review",
                 "voice": voice,
             },

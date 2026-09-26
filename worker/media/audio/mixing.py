@@ -112,21 +112,6 @@ def voice_filters(voice_index, voice, output_start_ms, duration_ms):
     return graph
 
 
-def audio_output_filters(edit, output_start_ms, sample, full_output_ms, apply_fades):
-    """Fades on the full output clock, then trim to a fade-corrected sample."""
-    if not sample:
-        return audio_fade_filters(edit, full_output_ms) if apply_fades else []
-    filters = []
-    if output_start_ms:
-        filters.append(f"asetpts=PTS+{output_start_ms / 1000:.6f}/TB")
-    filters += audio_fade_filters(edit, full_output_ms)
-    filters += [
-        f"atrim=start={sample[0] / 1000:.3f}:end={sample[1] / 1000:.3f}",
-        "asetpts=PTS-STARTPTS",
-    ]
-    return filters
-
-
 def audio_filter_graph(
     source_index,
     track_index,
@@ -140,16 +125,11 @@ def audio_filter_graph(
     voice=None,
     voice_index=None,
     output_start_ms=0,
-    sample=None,
-    full_output_ms=None,
-    apply_fades=True,
 ):
     """The mixed audio as one of three shapes for a video `filter_complex` to merge."""
     speed = edit.get("speed", 1)
     original = has_source and not edit.get("audio", {}).get("muted", False)
-    tail = audio_output_filters(
-        edit, output_start_ms, sample, full_output_ms or duration, apply_fades
-    )
+    tail = audio_fade_filters(edit, duration)
     if not track and not voice:
         if not original:
             return {"kind": "silent"}
@@ -245,9 +225,6 @@ def audio_arguments(
     voice=None,
     voice_index=None,
     output_start_ms=0,
-    sample=None,
-    full_output_ms=None,
-    apply_fades=True,
 ):
     result = audio_filter_graph(
         source_index,
@@ -262,8 +239,5 @@ def audio_arguments(
         voice,
         voice_index,
         output_start_ms,
-        sample,
-        full_output_ms,
-        apply_fades,
     )
     return audio_arguments_from(result, source_index)

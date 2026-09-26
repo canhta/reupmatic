@@ -124,7 +124,6 @@ class CompositionNativeTests(unittest.TestCase):
     def render(self, **kwargs):
         params = {
             "asset_id": self.sources[0]["asset_id"],
-            "mode": "full",
             "encoding": "review",
             "composition": self.document,
             **kwargs,
@@ -236,44 +235,24 @@ class CompositionNativeTests(unittest.TestCase):
         self.assertNotEqual(result["artifact_id"], reversed_result["artifact_id"])
         self.assertGreater(self.pixel(reversed_result["path"], 0.5)[2], 200)
 
-    def test_sample_straddles_cut_and_materializes_only_its_interval(self):
-        result = self.render(mode="sample", start_ms=1500, end_ms=2500)
-        self.assertAlmostEqual(result["duration_ms"], 1000, delta=40)
-        self.assertGreater(self.pixel(result["path"], 0.2)[0], 200)
-        self.assertGreater(self.pixel(result["path"], 0.8)[2], 200)
-        self.assertGreater(self.rms(result["path"], 0.1), 0.03)
-        self.assertLess(self.rms(result["path"], 0.7), 0.001)
-        intermediates = list((self.workspace / "renders").glob("*/output.mkv"))
-        self.assertEqual(len(intermediates), 1)
-        asset = self.session.call(
-            "asset.register", {"path": str(intermediates[0]), "kind": "video"}
-        )
-        info = self.session.call("media.probe", {"asset_id": asset["asset_id"]})
-        self.assertAlmostEqual(info["duration_ms"], 1000, delta=40)
-
     def test_global_trim_speed_and_source_audio_use_the_composition_clock(self):
         result = self.render(
-            mode="sample",
-            start_ms=1000,
-            end_ms=3000,
             processing={
                 "editing": {"trim": {"start_ms": 500, "end_ms": 2500}, "speed": 0.5},
             },
         )
-        self.assertAlmostEqual(result["duration_ms"], 3000, delta=80)
+        self.assertAlmostEqual(result["duration_ms"], 4000, delta=80)
         self.assertGreater(self.pixel(result["path"], 0.5)[0], 200)
-        self.assertGreater(self.pixel(result["path"], 2.5)[2], 200)
+        self.assertGreater(self.pixel(result["path"], 3.2)[2], 200)
         self.assertGreater(self.rms(result["path"], 0.5), 0.03)
-        self.assertLess(self.rms(result["path"], 2.5), 0.001)
+        self.assertLess(self.rms(result["path"], 3.2), 0.001)
 
-    def test_captions_burn_on_composition_time_for_late_sample(self):
-        subtitle = self.workspace / "sample.srt"
+    def test_captions_burn_on_composition_time(self):
+        subtitle = self.workspace / "captions.srt"
         subtitle.write_text("1\n00:00:02,100 --> 00:00:02,700\nCaption on blue\n", encoding="utf-8")
         asset = self.session.call("asset.register", {"path": str(subtitle), "kind": "subtitle"})
-        plain = self.render(mode="sample", start_ms=2000, end_ms=3000)
-        captioned = self.render(
-            mode="sample", start_ms=2000, end_ms=3000, subtitle_id=asset["asset_id"]
-        )
+        plain = self.render()
+        captioned = self.render(subtitle_id=asset["asset_id"])
 
         def frame(path):
             return subprocess.check_output(
@@ -282,7 +261,7 @@ class CompositionNativeTests(unittest.TestCase):
                     "-v",
                     "error",
                     "-ss",
-                    "0.4",
+                    "2.4",
                     "-i",
                     path,
                     "-frames:v",
@@ -297,7 +276,7 @@ class CompositionNativeTests(unittest.TestCase):
 
         self.assertNotEqual(frame(plain["path"]), frame(captioned["path"]))
 
-    def test_replacement_audio_sample_uses_global_output_offset_and_fades(self):
+    def test_replacement_audio_uses_global_output_offset_and_fades(self):
         soundtrack = self.root / "music.wav"
         if not soundtrack.exists():
             subprocess.run(
@@ -331,18 +310,9 @@ class CompositionNativeTests(unittest.TestCase):
         processing = {
             "editing": {"trim": {"start_ms": 500, "end_ms": 3000}, "speed": 0.5},
         }
-        full = self.render(processing=processing, soundtrack=track)
-        sample = self.render(
-            mode="sample", start_ms=1000, end_ms=2500, processing=processing, soundtrack=track
-        )
-        self.assertAlmostEqual(sample["duration_ms"], 3000, delta=80)
-        self.assertAlmostEqual(
-            self.rms(full["path"], 1.2), self.rms(sample["path"], 0.2), delta=0.003
-        )
-        self.assertAlmostEqual(
-            self.rms(full["path"], 3.2), self.rms(sample["path"], 2.2), delta=0.003
-        )
-        self.assertGreater(self.rms(sample["path"], 2.2), 0.03)
+        result = self.render(processing=processing, soundtrack=track)
+        self.assertAlmostEqual(result["duration_ms"], 5000, delta=80)
+        self.assertGreater(self.rms(result["path"], 1.5), 0.03)
 
     def test_fractional_clip_durations_share_one_frame_grid(self):
         self.document["clips"] = [
@@ -369,12 +339,11 @@ class CompositionNativeTests(unittest.TestCase):
         invalid = copy.deepcopy(self.document)
         invalid["clips"][1]["source"]["duration_ms"] = 10000
         with self.assertRaisesRegex(RuntimeError, "SOURCE_CHANGED"):
-            self.render(composition=invalid, mode="sample", start_ms=0, end_ms=500)
+            self.render(composition=invalid)
         request = self.session.send(
             "media.render",
             {
                 "asset_id": self.sources[0]["asset_id"],
-                "mode": "full",
                 "encoding": "review",
                 "composition": self.document,
             },

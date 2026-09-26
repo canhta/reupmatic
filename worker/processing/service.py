@@ -21,11 +21,9 @@ from processing.recipe import parse_fingerprints, parse_recipe, resolve_models
 def process_video(host, req):
     p = exact(
         req["params"],
-        {"asset_id", "mode", "encoding", "processing"},
+        {"asset_id", "encoding", "processing"},
         {
             "subtitle_id",
-            "start_ms",
-            "end_ms",
             "model_fingerprints",
             "soundtrack",
             "voice",
@@ -33,7 +31,7 @@ def process_video(host, req):
             "logo",
         },
     )
-    if p["mode"] not in ("sample", "full") or p["encoding"] != "review":
+    if p["encoding"] != "review":
         raise WorkerError("INVALID_PROCESSING")
     processing = parse_recipe(p["processing"], "subtitle_id" in p)
     if "ocr" in processing:
@@ -42,7 +40,7 @@ def process_video(host, req):
     def check():
         return host.cancelled(req)
 
-    source, info, window, source_offset, output_sample, full_output_ms = resolve_render_source(
+    source, info, window, source_offset = resolve_render_source(
         host, req, p, processing.get("editing")
     )
     subtitle = (
@@ -72,7 +70,6 @@ def process_video(host, req):
         "start_ms": start,
         "end_ms": end,
         "source_offset_ms": source_offset,
-        "sample": list(output_sample) if output_sample else None,
         "encoding": "review",
         "runtime": host.runtime_identity,
     }
@@ -120,9 +117,6 @@ def process_video(host, req):
             logo=logo["path"] if logo else None,
             subtitle_style=processing.get("subtitle_style"),
             source_offset_ms=source_offset,
-            apply_fades=p["mode"] == "full" or output_sample is not None,
-            sample=output_sample,
-            full_output_ms=full_output_ms,
         )
         media = probe_file(host, req, output)
         expected_audio = (
@@ -133,9 +127,7 @@ def process_video(host, req):
                 and not processing.get("editing", {}).get("audio", {}).get("muted", False)
             )
         )
-        output_duration_ms = (
-            output_sample[1] - output_sample[0] if output_sample else window["duration_ms"]
-        )
+        output_duration_ms = window["duration_ms"]
         if (
             abs(media["duration_ms"] - output_duration_ms) > 200
             or media["has_audio"] != expected_audio

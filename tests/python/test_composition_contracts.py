@@ -45,7 +45,6 @@ class CompositionContracts(unittest.TestCase):
             "format": "reupmatic.project",
             "source": {"path": "/video.mp4", "sha256": "a" * 64},
             "cues": [],
-            "sample": {"start_ms": 0, "end_ms": 1000},
             "composition": self.composition,
         }
         self.validator(json.loads((ROOT / "contracts/project.schema.json").read_text())).validate(
@@ -67,7 +66,6 @@ class CompositionContracts(unittest.TestCase):
             "method": "media.render",
             "params": {
                 "asset_id": "registered-a",
-                "mode": "full",
                 "encoding": "review",
                 "composition": document,
             },

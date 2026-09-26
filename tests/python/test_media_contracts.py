@@ -58,7 +58,6 @@ class MediaContracts(unittest.TestCase):
             "cues": [
                 {"id": "1", "start_ms": 0, "end_ms": 1000, "text": "Việt", "style": DEFAULT_STYLE}
             ],
-            "sample": {"start_ms": 0, "end_ms": 1000},
             "soundtrack": self.soundtrack,
             "processing": {"subtitle_style": DEFAULT_STYLE},
         }
@@ -96,7 +95,7 @@ class MediaContracts(unittest.TestCase):
     def test_worker_audio_uses_registration_not_renderer_paths(self):
         track = {key: value for key, value in self.soundtrack.items() if key != "source"}
         track.update(asset_id="audio", sha256="a" * 64)
-        params = {"asset_id": "video", "mode": "full", "encoding": "review", "soundtrack": track}
+        params = {"asset_id": "video", "encoding": "review", "soundtrack": track}
         self.worker.validate(self.request("media.render", params))
         self.worker.validate(
             self.request(
@@ -128,7 +127,6 @@ class MediaContracts(unittest.TestCase):
         ):
             params = {
                 "asset_id": "video",
-                "mode": "full",
                 "encoding": "review",
                 "soundtrack": track,
                 "voice": self.voice(),

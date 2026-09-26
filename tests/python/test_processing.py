@@ -186,7 +186,6 @@ class ProcessingSchemaTests(unittest.TestCase):
             "method": "media.process",
             "params": {
                 "asset_id": "source",
-                "mode": "full",
                 "encoding": "review",
                 "processing": recipe,
             },

@@ -163,15 +163,12 @@ class NativeWorkerTests(unittest.TestCase):
     def tearDown(self):
         self.s.close()
 
-    def render(self, mode="sample", **kwargs):
+    def render(self, **kwargs):
         params = {
             "asset_id": self.video,
             "subtitle_id": self.subtitle,
-            "mode": mode,
             "encoding": "lossless",
         }
-        if mode == "sample":
-            params.update(start_ms=1000, end_ms=3000)
         params.update(kwargs)
         return self.s.call("media.render", params, revision=7)
 
@@ -181,25 +178,22 @@ class NativeWorkerTests(unittest.TestCase):
         self.assertEqual(info["duration_ms"], 4000)
         self.assertTrue(info["has_audio"])
 
-    def test_sample_equals_full_interval(self):
-        full = self.render("full")
-        sample = self.render()
+    def test_full_render_produces_the_whole_source_clock(self):
+        result = self.render()
 
-        def hashes(path, start=None, duration=None):
-            command = ["ffmpeg", "-v", "error", "-i", path]
-            if start is not None:
-                command += ["-ss", str(start), "-t", str(duration)]
-            data = subprocess.check_output(command + ["-map", "0:v:0", "-f", "framemd5", "-"])
+        def hashes(path):
+            data = subprocess.check_output(
+                ["ffmpeg", "-v", "error", "-i", path, "-map", "0:v:0", "-f", "framemd5", "-"]
+            )
             return [
                 line.rsplit(b",", 1)[-1].strip()
                 for line in data.splitlines()
                 if line and not line.startswith(b"#")
             ]
 
-        self.assertEqual(hashes(full["path"], 1, 2), hashes(sample["path"]))
-        self.assertEqual(len(hashes(sample["path"])), 60)
-        self.assertTrue(sample["has_audio"])
-        self.assertEqual(sample["duration_ms"], 2000)
+        self.assertEqual(len(hashes(result["path"])), 120)
+        self.assertTrue(result["has_audio"])
+        self.assertEqual(result["duration_ms"], 4000)
 
     def test_cache_and_revision_echo(self):
         first = self.render()
@@ -228,23 +222,21 @@ class NativeWorkerTests(unittest.TestCase):
         Path(a["path"]).write_bytes(b"broken cache")
         b = self.render()
         self.assertFalse(b["cache_hit"])
-        self.assertEqual(b["duration_ms"], 2000)
+        self.assertEqual(b["duration_ms"], 4000)
         self.assertEqual(sha(b["path"]), b["sha256"])
 
     def test_input_never_overwritten(self):
         self.render()
         self.assertEqual(self.before, hashlib.sha256(self.source.read_bytes()).hexdigest())
 
-    def test_invalid_range_does_not_kill_worker(self):
+    def test_unknown_render_field_does_not_kill_worker(self):
         msg = self.s.wait(
             self.s.send(
                 "media.render",
                 {
                     "asset_id": self.video,
-                    "mode": "sample",
                     "encoding": "lossless",
                     "start_ms": 3000,
-                    "end_ms": 1000,
                 },
             )
         )
@@ -263,7 +255,6 @@ class NativeWorkerTests(unittest.TestCase):
                 "media.render",
                 {
                     "asset_id": self.video,
-                    "mode": "full",
                     "encoding": "lossless",
                     "ffmpeg_args": ["-y"],
                 },
@@ -282,12 +273,8 @@ class NativeWorkerTests(unittest.TestCase):
         bad = self.work / "bad.mp4"
         bad.write_text("not a video")
         aid = self.s.call("asset.register", {"path": str(bad), "kind": "video"})["asset_id"]
-        bad_id = self.s.send(
-            "media.render", {"asset_id": aid, "mode": "full", "encoding": "lossless"}
-        )
-        good_id = self.s.send(
-            "media.render", {"asset_id": self.video, "mode": "full", "encoding": "lossless"}
-        )
+        bad_id = self.s.send("media.render", {"asset_id": aid, "encoding": "lossless"})
+        good_id = self.s.send("media.render", {"asset_id": self.video, "encoding": "lossless"})
         self.assertEqual(self.s.wait(bad_id)["event"], "error")
         self.assertEqual(self.s.wait(good_id)["event"], "result")
 
@@ -297,7 +284,6 @@ class NativeWorkerTests(unittest.TestCase):
             {
                 "asset_id": self.video,
                 "subtitle_id": self.subtitle,
-                "mode": "full",
                 "encoding": "lossless",
             },
         )

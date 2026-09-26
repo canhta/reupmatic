@@ -59,24 +59,38 @@ class Contracts(unittest.TestCase):
             "format": "reupmatic.project",
             "source": {"path": "/videos/test.mp4", "sha256": "a" * 64},
             "cues": [],
-            "sample": {"start_ms": 0, "end_ms": 1000},
         }
         self.assertTrue(v.is_valid(example))
         example["token"] = "secret"
         self.assertFalse(v.is_valid(example))
 
-    def test_sample_request(self):
-        self.validator(self.schemas["worker-request.schema.json"]).validate(
-            json.loads((ROOT / "contracts/examples/render-sample.json").read_text())
+    def test_full_render_request(self):
+        v = self.validator(self.schemas["worker-request.schema.json"])
+        v.validate(
+            {
+                "v": 1,
+                "id": "full-example",
+                "revision": 3,
+                "method": "media.render",
+                "params": {"asset_id": "registered-source", "encoding": "review"},
+            }
         )
 
-    def test_rejects_unknown_fields_and_negative_time(self):
+    def test_rejects_unknown_fields_and_sample_window(self):
         v = self.validator(self.schemas["worker-request.schema.json"])
-        example = json.loads((ROOT / "contracts/examples/render-sample.json").read_text())
+        example = {
+            "v": 1,
+            "id": "full-example",
+            "revision": 3,
+            "method": "media.render",
+            "params": {"asset_id": "registered-source", "encoding": "review"},
+        }
         example["params"]["shell"] = "anything"
         self.assertFalse(v.is_valid(example))
         del example["params"]["shell"]
-        example["params"]["start_ms"] = -1
+        # A render window is no longer part of the current request shape.
+        example["params"]["start_ms"] = 0
+        example["params"]["end_ms"] = 1000
         self.assertFalse(v.is_valid(example))
 
     def test_cue_shape_and_semantics(self):

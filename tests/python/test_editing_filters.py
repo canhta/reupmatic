@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
-from media.audio.mixing import audio_output_filters  # noqa: E402
 from media.editing.filters import (  # noqa: E402
     audio_fade_filters,
     audio_filters,
@@ -11,7 +10,7 @@ from media.editing.filters import (  # noqa: E402
     logo_overlay,
     video_fade_filters,
 )
-from media.editing.recipe import parse_editing, resolve_fade_window  # noqa: E402
+from media.editing.recipe import parse_editing, resolve_window  # noqa: E402
 from runtime.errors import WorkerError  # noqa: E402
 
 INFO = {"width": 1920, "height": 1080, "has_audio": True, "frame_rate": "30"}
@@ -87,36 +86,24 @@ class FadeFilterTests(unittest.TestCase):
         self.assertEqual(filters[-1], "atrim=duration=2.000")
         self.assertFalse(any("afade" in value for value in filters))
         self.assertEqual(
-            audio_output_filters(edit, 0, None, 2000, True),
+            audio_fade_filters(edit, 2000),
             ["afade=t=in:st=0:d=0.200"],
         )
 
-    def test_fade_corrected_sample_shifts_fades_then_trims(self):
+    def test_fade_geometry_rides_the_full_output_clock(self):
         edit = parse_editing({"fade": {"in_ms": 1000, "out_ms": 1000, "audio": True}})
         self.assertEqual(
-            audio_output_filters(edit, 3200, (3200, 3800), 4000, True),
-            [
-                "asetpts=PTS+3.200000/TB",
-                "afade=t=in:st=0:d=1.000",
-                "afade=t=out:st=3.000:d=1.000",
-                "atrim=start=3.200:end=3.800",
-                "asetpts=PTS-STARTPTS",
-            ],
+            audio_fade_filters(edit, 4000),
+            ["afade=t=in:st=0:d=1.000", "afade=t=out:st=3.000:d=1.000"],
         )
 
-    def test_fade_window_widens_only_when_a_fade_touches_the_sample(self):
-        editing = {"fade": {"in_ms": 1000, "out_ms": 1000, "audio": False}}
-        window, sample, full = resolve_fade_window(editing, 4000, {"start_ms": 200, "end_ms": 800})
-        self.assertEqual((window["start_ms"], window["end_ms"]), (0, 800))
-        self.assertEqual(sample, (200, 800))
-        self.assertEqual(full, 4000)
-        window, sample, _ = resolve_fade_window(editing, 4000, {"start_ms": 3200, "end_ms": 3800})
-        self.assertEqual((window["start_ms"], window["end_ms"]), (3200, 4000))
-        self.assertEqual(sample, (3200, 3800))
-        window, sample, _ = resolve_fade_window(editing, 4000, {"start_ms": 1500, "end_ms": 2500})
-        self.assertIsNone(sample)
-        self.assertEqual((window["start_ms"], window["end_ms"]), (1500, 2500))
-        self.assertIsNone(resolve_fade_window(editing, 4000, None)[1])
+    def test_resolve_window_uses_trim_and_speed(self):
+        window = resolve_window({"trim": {"start_ms": 200, "end_ms": 3800}, "speed": 2}, 4000)
+        self.assertEqual((window["start_ms"], window["end_ms"]), (200, 3800))
+        self.assertEqual(window["speed"], 2)
+        self.assertEqual(window["duration_ms"], 1800)
+        with self.assertRaisesRegex(WorkerError, "EDIT_SOURCE_RANGE"):
+            resolve_window({"trim": {"start_ms": 0, "end_ms": 4001}}, 4000)
 
     def test_no_fade_emits_nothing(self):
         edit = parse_editing({"speed": 1})

@@ -26,15 +26,11 @@ def encode_video(
     logo: Path | None = None,
     subtitle_style: dict | None = None,
     source_offset_ms: int = 0,
-    apply_fades: bool = True,
-    sample: tuple[int, int] | None = None,
-    full_output_ms: int | None = None,
 ):
     edit = parse_editing(editing) if editing is not None else {}
     speed = edit.get("speed", 1)
     render_ms = max(1, int((end_ms - start_ms) / speed + 0.5))
-    output_ms = (sample[1] - sample[0]) if sample else render_ms
-    full_ms = full_output_ms or render_ms
+    output_ms = render_ms
     trim_start = edit["trim"]["start_ms"] if "trim" in edit else 0
     output_start = max(0, int((start_ms - trim_start) / speed + 0.5))
     source_info = probe_file(host, req, source)
@@ -82,15 +78,7 @@ def encode_video(
         filters += [f"subtitles={track.name}"]
     # Subtitle times belong to the source. Burn before changing the playback clock.
     filters += [f"setpts=(PTS-STARTPTS)/{speed:.9f}"]
-    if sample:
-        filters += [f"setpts=PTS+{output_start / 1000:.6f}/TB"]
-        filters += video_fade_filters(edit, full_ms)
-        filters += [
-            f"trim=start={sample[0] / 1000:.3f}:end={sample[1] / 1000:.3f}",
-            "setpts=PTS-STARTPTS",
-        ]
-    elif apply_fades:
-        filters += video_fade_filters(edit, render_ms)
+    filters += video_fade_filters(edit, render_ms)
     audio = audio_filter_graph(
         source_index,
         track_index,
@@ -104,9 +92,6 @@ def encode_video(
         voice,
         voice_index,
         output_start_ms=output_start,
-        sample=sample,
-        full_output_ms=full_ms,
-        apply_fades=apply_fades,
     )
     if logo_index is not None:
         # One filter_complex carries both overlay and audio: FFmpeg accepts only one.

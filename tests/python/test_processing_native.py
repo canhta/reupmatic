@@ -26,7 +26,6 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
     def request(self, aid, **extra):
         return {
             "asset_id": aid,
-            "mode": "full",
             "encoding": "review",
             "processing": self.recipe(),
             **extra,
@@ -90,17 +89,17 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
         )
         self.assertEqual(json.loads(count)["streams"][0]["nb_read_frames"], "252")
 
-    def test_sample_combines_original_timed_subtitles_with_processed_video(self):
+    def test_processing_combines_original_timed_subtitles_with_processed_video(self):
         session, aid = self.session()
         subtitle = self.root / "track.srt"
         subtitle.write_text("1\n00:00:00,650 --> 00:00:00,950\nCAPTION\n", encoding="utf-8")
         sid = session.call("asset.register", {"path": str(subtitle), "kind": "subtitle"})[
             "asset_id"
         ]
-        params = self.request(aid, mode="sample", start_ms=500, end_ms=1000)
+        params = self.request(aid)
         plain = session.call("media.process", params)
         rendered = session.call("media.process", {**params, "subtitle_id": sid})
-        self.assertEqual(rendered["duration_ms"], 500)
+        self.assertEqual(rendered["duration_ms"], 1000)
         self.assertTrue(rendered["has_audio"])
         self.assertNotEqual(plain["sha256"], rendered["sha256"])
 
@@ -128,8 +127,8 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
 
         import numpy as np
 
-        early = np.frombuffer(frame(rendered["path"], 0), dtype=np.uint8).reshape(90, 160, 3)
-        late = np.frombuffer(frame(rendered["path"], 0.25), dtype=np.uint8).reshape(90, 160, 3)
+        early = np.frombuffer(frame(rendered["path"], 0.55), dtype=np.uint8).reshape(90, 160, 3)
+        late = np.frombuffer(frame(rendered["path"], 0.8), dtype=np.uint8).reshape(90, 160, 3)
         self.assertLess(float(early[65:].mean()), 3)
         self.assertGreater(float(late[65:].mean()), float(early[65:].mean()) + 0.2)
 
@@ -141,9 +140,7 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
             session.call("media.process", self.request(aid, model_fingerprints=pins))
         self.assertFalse(list((self.workspace / "renders").glob("*/output.mp4")))
         self.assertTrue(
-            session.call("media.render", {"asset_id": aid, "mode": "full", "encoding": "review"})[
-                "has_audio"
-            ]
+            session.call("media.render", {"asset_id": aid, "encoding": "review"})["has_audio"]
         )
 
     def test_cancel_covers_child_inference_and_removes_owned_temporary_chunks(self):
@@ -169,18 +166,18 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
 
     def test_original_changed_with_same_size_and_mtime_is_rejected_before_cache_hit(self):
         session, aid = self.session()
-        session.call("media.render", {"asset_id": aid, "mode": "full", "encoding": "review"})
+        session.call("media.render", {"asset_id": aid, "encoding": "review"})
         stat = self.source.stat()
         contents = bytearray(self.source.read_bytes())
         contents[-1] ^= 1
         self.source.write_bytes(contents)
         os.utime(self.source, ns=(stat.st_atime_ns, stat.st_mtime_ns))
         with self.assertRaisesRegex(RuntimeError, "SOURCE_CHANGED"):
-            session.call("media.render", {"asset_id": aid, "mode": "full", "encoding": "review"})
+            session.call("media.render", {"asset_id": aid, "encoding": "review"})
 
     def test_cache_manifest_recipe_must_match_not_only_its_output_hash(self):
         session, aid = self.session()
-        args = {"asset_id": aid, "mode": "full", "encoding": "review"}
+        args = {"asset_id": aid, "encoding": "review"}
         first = session.call("media.render", args)
         manifest_path = Path(first["path"]).parent / "manifest.json"
         manifest = json.loads(manifest_path.read_text())
