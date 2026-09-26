@@ -58,7 +58,7 @@ def main() -> None:
     except WorkerError as error:
         result = {"ok": False, "code": error.code}
     except (ImportError, ModuleNotFoundError, importlib.metadata.PackageNotFoundError):
-        result = {"ok": False, "code": "MODEL_RUNTIME_MISSING"}
+        result = {"ok": False, "code": "RUNTIME_PACK_MISSING"}
     except Exception:
         result = {"ok": False, "code": "MODEL_INFERENCE_FAILED"}
     atomic_json(path.parent / "result.json", result)

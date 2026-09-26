@@ -105,7 +105,7 @@ class ModelRegistry:
         else:
             raise WorkerError("INVALID_REQUEST")
         if runtime and any(importlib.util.find_spec(name) is None for name in packages):
-            raise WorkerError("MODEL_RUNTIME_MISSING")
+            raise WorkerError("RUNTIME_PACK_MISSING")
         # Paths are NOT included in identity or public status.
         identity = {
             key: value["sha256"] if isinstance(value, dict) else value

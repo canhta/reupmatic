@@ -1,6 +1,10 @@
 import { installSynthesis } from './features/speech/synthesis/ipc.js';
 import { installTranslation } from './features/speech/translation/ipc.js';
 import { installSpeech } from './features/speech/ipc.js';
+import {
+  createRuntimePackSupport,
+  loadRuntimePackManifest,
+} from './features/speech/runtime-packs.js';
 import { SpeechProviderStore } from './features/speech/provider-store.js';
 import { ChannelCredentialStore } from './features/publishing/credential-store.js';
 import { installPublishing } from './features/publishing/ipc.js';
@@ -143,7 +147,17 @@ if (app.isPackaged) {
 // Set before the worker spawns so the bundled FFmpeg is the only one used.
 if (!process.env.FFMPEG_PATH) process.env.FFMPEG_PATH = runtimePaths.ffmpeg;
 if (!process.env.FFPROBE_PATH) process.env.FFPROBE_PATH = runtimePaths.ffprobe;
-const client = new WorkerClient(runtimePaths.python, runtimePaths.worker, workspace, diagnostics);
+const runtimePackSupport = createRuntimePackSupport(
+  { repo, userData: app.getPath('userData'), platform: process.platform, arch: process.arch },
+  await loadRuntimePackManifest(repo),
+);
+const client = new WorkerClient(
+  runtimePaths.python,
+  runtimePaths.worker,
+  workspace,
+  diagnostics,
+  runtimePackSupport.searchDirectories(),
+);
 const media = new MediaRegistry(client);
 // Installed before Douyin sources so downloads reuse its default download folder.
 const settings = await installSettings({
@@ -180,6 +194,7 @@ const speech = installSpeech({
     path.join(repo, 'app', 'core', 'speech', 'catalogue.json'),
     path.join(workspace, 'model-catalogue.json'),
   ],
+  runtimePacks: runtimePackSupport,
 });
 library = await installLibrary({
   wire, getWindow: () => win, getLanguage, workspace, media, worker: client, diagnostics,

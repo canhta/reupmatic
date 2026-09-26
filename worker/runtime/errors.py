@@ -60,6 +60,7 @@ KNOWN_CODES: frozenset[str] = frozenset(
         "PROCESSING_SUBTITLE_CONFLICT",
         "PROTOCOL_VERSION",
         "QUEUE_FULL",
+        "RUNTIME_PACK_MISSING",
         "SESSION_LIMIT",
         "SOURCE_CHANGED",
         "SOURCE_MISSING",

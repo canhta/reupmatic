@@ -19,6 +19,7 @@ import {
 import type { OperationName } from '../../../core/worker/operations.js';
 import { RemoteError } from '../../../core/worker/remote-error.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
+import type { RuntimePackSupport } from './runtime-packs.js';
 
 interface Host {
   worker: WorkerClient;
@@ -29,6 +30,8 @@ interface Host {
   errorCode: (error: unknown) => string;
   /** Injectable so tests can drive an install without moving real bytes. */
   install?: (options: InstallOptions) => Promise<InstallResult>;
+  /** Absent when no pack manifest exists; base-only engines then install as before. */
+  runtimePacks?: RuntimePackSupport;
 }
 
 type InstallEventBody =
@@ -92,13 +95,27 @@ export function installOfferedModels(host: Host) {
     ]);
   }
 
+  async function packState(model: CatalogueModel) {
+    const entry = host.runtimePacks?.entryFor(model.engine) ?? null;
+    if (!entry || !host.runtimePacks) return null;
+    return {
+      name: entry.name,
+      version: entry.version,
+      size: entry.size,
+      installed: await host.runtimePacks.isInstalled(entry),
+    };
+  }
+
   async function list(): Promise<OfferedCatalogue> {
     const { models, refused } = await readCatalogue(host.cataloguePaths);
     return {
-      models: models.map((model) => ({
-        ...model,
-        installed: existsSync(manifestPath(bundleRoot, model.id)),
-      })),
+      models: await Promise.all(
+        models.map(async (model) => ({
+          ...model,
+          installed: existsSync(manifestPath(bundleRoot, model.id)),
+          runtime_pack: await packState(model),
+        })),
+      ),
       refused,
       active: running,
     };
@@ -106,6 +123,17 @@ export function installOfferedModels(host: Host) {
 
   async function run(id: string, model: CatalogueModel, signal: AbortSignal): Promise<void> {
     try {
+      // An engine whose runtime lives in a pack installs it first; its size was shown in the list.
+      const pack = host.runtimePacks?.entryFor(model.engine) ?? null;
+      if (pack && host.runtimePacks && !(await host.runtimePacks.isInstalled(pack))) {
+        emit(id, { event: 'progress', data: { phase: 'runtime-pack', fraction: 0 } });
+        await host.runtimePacks.install(pack, signal, (progress) =>
+          emit(id, {
+            event: 'progress',
+            data: { phase: 'runtime-pack', fraction: progress.fraction },
+          }),
+        );
+      }
       const installed = await install({
         model,
         bundleRoot,
@@ -189,6 +217,18 @@ export function installOfferedModels(host: Host) {
       rm(directory, { recursive: true, force: true }),
       rm(manifest, { force: true }),
     ]);
+    // Drop the opt-in runtime once no other installed model needs it.
+    const pack = host.runtimePacks?.entryFor(model.engine) ?? null;
+    if (pack && host.runtimePacks) {
+      const { models: offered } = await readCatalogue(host.cataloguePaths);
+      const stillUsed = offered.some(
+        (other) =>
+          other.id !== model.id &&
+          host.runtimePacks?.entryFor(other.engine)?.name === pack.name &&
+          existsSync(manifestPath(bundleRoot, other.id)),
+      );
+      if (!stillUsed) await host.runtimePacks.uninstall(pack).catch(() => undefined);
+    }
     host.modelsChanged(model.task);
     return { removed: true };
   }

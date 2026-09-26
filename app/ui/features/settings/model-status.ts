@@ -11,6 +11,8 @@ export function modelStatusKey(available: boolean, code: string | null): Message
       return 'settingsModelLanguageUnavailable';
     case 'MODEL_RUNTIME_MISSING':
       return 'settingsModelRuntimeMissing';
+    case 'RUNTIME_PACK_MISSING':
+      return 'settingsModelRuntimePackMissing';
     case 'MODEL_NETWORK_DISABLED':
       return 'settingsModelNetworkBlocked';
     case 'MODEL_MISSING':

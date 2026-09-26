@@ -3,6 +3,7 @@ import type { MessageKey } from '../../../locales/message-key';
 export function synthesisErrorKey(code: string): MessageKey {
   if (code === 'CANCELLED') return 'cancelled';
   if (code === 'MODEL_MISSING') return 'synthesisMissing';
+  if (code === 'RUNTIME_PACK_MISSING') return 'settingsModelRuntimePackMissing';
   if (['MODEL_RUNTIME_MISSING', 'SYNTHESIS_RUNTIME_VERSION'].includes(code))
     return 'synthesisRuntime';
   if (['MODEL_HASH_MISMATCH', 'SYNTHESIS_MODEL_CHANGED'].includes(code))

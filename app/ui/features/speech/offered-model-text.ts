@@ -19,6 +19,7 @@ export function taskKey(task: ModelTask): MessageKey {
 }
 
 export function phaseKey(phase: string): MessageKey {
+  if (phase === 'runtime-pack') return 'settingsOfferedPreparingRuntime';
   if (phase === 'verifying') return 'settingsOfferedVerifying';
   if (phase === 'installing') return 'settingsOfferedInstalling';
   return 'settingsOfferedDownloading';

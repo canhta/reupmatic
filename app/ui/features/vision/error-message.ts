@@ -3,6 +3,7 @@ import type { MessageKey } from '../../locales/message-key';
 export function visionErrorKey(code: string): MessageKey {
   if (code === 'MODEL_MISSING') return 'visionModelMissing';
   if (code === 'MODEL_RUNTIME_MISSING') return 'visionRuntimeMissing';
+  if (code === 'RUNTIME_PACK_MISSING') return 'settingsModelRuntimePackMissing';
   if (code === 'MODEL_MANIFEST_INVALID') return 'visionManifestInvalid';
   if (code === 'MODEL_HASH_MISMATCH') return 'visionHashMismatch';
   if (code === 'MODEL_LANGUAGE_UNAVAILABLE') return 'visionLanguageMissing';

@@ -88,4 +88,14 @@ export const settingsEn = {
   settingsOfferedVoicesUnavailable:
     'The model needs its voice presets, which are missing. Nothing was installed.',
   settingsOfferedWorkerUnavailable: 'The local processor stopped. Reopen the app, then try again.',
+  settingsOfferedRuntimePack: 'Includes the {{name}} runtime · {{size}}',
+  settingsOfferedRuntimePackInstalled: 'Runtime {{name}} is installed',
+  settingsOfferedPreparingRuntime: 'Preparing the runtime…',
+  settingsOfferedPackDownloadFailed: 'The runtime download failed. Nothing was installed.',
+  settingsOfferedPackHashMismatch:
+    'The runtime download did not match its checksum. Nothing was installed.',
+  settingsOfferedPackUnavailable: 'This build has no runtime for your platform.',
+  settingsOfferedPackExtractFailed: 'The runtime could not be unpacked. Nothing was installed.',
+  settingsOfferedPackDiskLow: 'Not enough disk space for the runtime.',
+  settingsModelRuntimePackMissing: 'Runtime not installed',
 } as const;

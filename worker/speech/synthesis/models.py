@@ -74,9 +74,9 @@ def turbo_runtime_code() -> str | None:
             importlib.util.find_spec(name)
             for name in ("vieneu", "numpy", "onnxruntime", "tokenizers")
         ):
-            return "MODEL_RUNTIME_MISSING"
+            return "RUNTIME_PACK_MISSING"
     except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
-        return "MODEL_RUNTIME_MISSING"
+        return "RUNTIME_PACK_MISSING"
     return None
 
 
@@ -106,9 +106,9 @@ def nano_runtime_code() -> str | None:
         if importlib.metadata.version("vieneu") != SDK_VERSION:
             return "SYNTHESIS_RUNTIME_VERSION"
         if not all(importlib.util.find_spec(name) for name in ("vieneu", "numpy", "onnxruntime")):
-            return "MODEL_RUNTIME_MISSING"
+            return "RUNTIME_PACK_MISSING"
     except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
-        return "MODEL_RUNTIME_MISSING"
+        return "RUNTIME_PACK_MISSING"
     return None
 
 

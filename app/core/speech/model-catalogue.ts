@@ -115,7 +115,18 @@ export interface Catalogue {
   readonly refused: CatalogueRefusal[];
 }
 
-export type OfferedModel = CatalogueModel & { readonly installed: boolean };
+export interface OfferedRuntimePack {
+  readonly name: string;
+  readonly version: string;
+  readonly size: number;
+  readonly installed: boolean;
+}
+
+export type OfferedModel = CatalogueModel & {
+  readonly installed: boolean;
+  /** The opt-in runtime this engine needs; null when the base bundle already runs it. */
+  readonly runtime_pack: OfferedRuntimePack | null;
+};
 
 export interface ActiveInstall {
   readonly request_id: string;

@@ -1,6 +1,7 @@
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { parseDiagnosticLine } from '../diagnostics/diagnostic-record.js';
 import { type DiagnosticRecorder, silentRecorder } from '../diagnostics/recorder.js';
@@ -41,14 +42,20 @@ export class WorkerClient extends EventEmitter {
     workerPath: string,
     workspace: string,
     diagnostics: DiagnosticRecorder = silentRecorder,
+    pythonPath: readonly string[] = [],
   ) {
     super();
     this.diagnostics = diagnostics;
+    const searchPath = [...pythonPath, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter);
     this.launch = () =>
       spawn(python, ['-u', workerPath, '--workspace', workspace], {
         stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
-        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+          ...(searchPath ? { PYTHONPATH: searchPath } : {}),
+        },
       });
     this.child = this.attach(this.launch());
   }

@@ -232,6 +232,7 @@ class VisionService:
                 known = {
                     "MODEL_HASH_MISMATCH",
                     "MODEL_RUNTIME_MISSING",
+                    "RUNTIME_PACK_MISSING",
                     "MODEL_INFERENCE_FAILED",
                     "MODEL_NETWORK_DISABLED",
                     "MODEL_SHAPE_UNSUPPORTED",

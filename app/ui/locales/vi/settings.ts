@@ -90,4 +90,14 @@ export const settingsVi = {
   settingsOfferedVoicesUnavailable:
     'Mô hình cần các giọng đọc sẵn có nhưng chúng bị thiếu. Không có gì được cài đặt.',
   settingsOfferedWorkerUnavailable: 'Bộ xử lý cục bộ đã dừng. Hãy mở lại ứng dụng rồi thử lại.',
+  settingsOfferedRuntimePack: 'Kèm runtime {{name}} · {{size}}',
+  settingsOfferedRuntimePackInstalled: 'Đã cài runtime {{name}}',
+  settingsOfferedPreparingRuntime: 'Đang chuẩn bị runtime…',
+  settingsOfferedPackDownloadFailed: 'Tải runtime thất bại. Không có gì được cài đặt.',
+  settingsOfferedPackHashMismatch:
+    'Tệp runtime tải về không khớp mã băm. Không có gì được cài đặt.',
+  settingsOfferedPackUnavailable: 'Bản dựng này không có runtime cho nền tảng của bạn.',
+  settingsOfferedPackExtractFailed: 'Không giải nén được runtime. Không có gì được cài đặt.',
+  settingsOfferedPackDiskLow: 'Không đủ dung lượng cho runtime.',
+  settingsModelRuntimePackMissing: 'Chưa cài runtime',
 } satisfies Record<keyof typeof settingsEn, string>;

@@ -277,7 +277,23 @@ export function OfferedModels() {
       header: t('settingsOfferedColumnSize'),
       width: proportional(1),
       sortable: true,
-      renderCell: (row) => formatBytes(row.model.download_size, i18n.language),
+      renderCell: (row) => (
+        <VStack gap={1}>
+          <Text as="span" type="body">
+            {formatBytes(row.model.download_size, i18n.language)}
+          </Text>
+          {row.model.runtime_pack && (
+            <Text as="span" type="supporting">
+              {row.model.runtime_pack.installed
+                ? t('settingsOfferedRuntimePackInstalled', { name: row.model.runtime_pack.name })
+                : t('settingsOfferedRuntimePack', {
+                    name: row.model.runtime_pack.name,
+                    size: formatBytes(row.model.runtime_pack.size, i18n.language),
+                  })}
+            </Text>
+          )}
+        </VStack>
+      ),
     },
     {
       key: 'source',

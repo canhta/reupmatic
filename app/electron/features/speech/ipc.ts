@@ -7,6 +7,7 @@ import { errorCode, type IpcWire } from '../../runtime/ipc.js';
 import type { MediaRegistry } from '../media/registry.js';
 import { installOfferedModels } from './offered-models.js';
 import type { SpeechProviderStore } from './provider-store.js';
+import type { RuntimePackSupport } from './runtime-packs.js';
 
 interface Host {
   wire: IpcWire;
@@ -18,6 +19,7 @@ interface Host {
   getLanguage: () => string;
   workspace: string;
   cataloguePaths: readonly string[];
+  runtimePacks?: RuntimePackSupport;
 }
 
 export function installSpeech(host: Host) {

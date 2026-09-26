@@ -25,6 +25,7 @@ from speech.synthesis.models import verify_bundle
 ERRORS = {
     "MODEL_HASH_MISMATCH",
     "MODEL_RUNTIME_MISSING",
+    "RUNTIME_PACK_MISSING",
     "MODEL_INFERENCE_FAILED",
     "MODEL_NETWORK_DISABLED",
     "MODEL_OUTPUT_INVALID",
