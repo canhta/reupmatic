@@ -305,6 +305,28 @@ class SpeechServiceTests(unittest.TestCase):
         cues = timed_segments([segment], 0, 4800, lambda _: None)
         self.assertEqual([cue["text"] for cue in cues], ["Hello and welcome"])
 
+    def test_overlapping_and_zero_length_words_are_clamped_not_rejected(self):
+        from speech.recognition.timestamps import timed_segments
+
+        segment = SimpleNamespace(
+            start=0.0,
+            end=1.0,
+            text=" one two! three",
+            words=[
+                SimpleNamespace(start=0.0, end=0.4, word=" one"),
+                SimpleNamespace(start=0.3, end=0.4, word=" two"),  # overlaps the previous word
+                SimpleNamespace(start=0.4, end=0.4, word="!"),  # zero length
+                SimpleNamespace(start=0.5, end=0.9, word=" three"),
+                SimpleNamespace(start=1.0, end=1.0, word=" tail"),  # no room left
+            ],
+        )
+        cues = timed_segments([segment], 0, 1000, lambda _: None)
+        self.assertEqual([cue["text"] for cue in cues], ["one two! three"])
+        for cue in cues:
+            self.assertLess(cue["start_ms"], cue["end_ms"])
+            self.assertGreaterEqual(cue["start_ms"], 0)
+            self.assertLessEqual(cue["end_ms"], 1000)
+
     def test_numpy_float_timings_from_the_adapter_are_accepted(self):
         from speech.recognition.timestamps import timed_segments
 

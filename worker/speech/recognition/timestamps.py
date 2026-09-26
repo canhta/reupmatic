@@ -43,10 +43,12 @@ def _word_spans(segment, offset_ms: int, end_ms: int) -> list[tuple[str, int, in
             or "\x00" in text
         ):
             raise WorkerError("SPEECH_TIMING_INVALID")
-        begin = offset_ms + round(start * 1000)
-        last = min(end_ms, offset_ms + round(finish * 1000))
-        if begin < previous or last <= begin:
-            raise WorkerError("SPEECH_TIMING_INVALID")
+        # Real faster-whisper words overlap and carry zero-length tokens around punctuation;
+        # clamp to a positive, monotonic span instead of discarding the whole transcript.
+        begin = max(offset_ms + round(start * 1000), previous)
+        last = min(end_ms, max(offset_ms + round(finish * 1000), begin + 1))
+        if begin >= end_ms or last <= begin:
+            continue
         previous = last
         if text.strip():
             spans.append((text, begin, last))
