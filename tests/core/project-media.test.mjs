@@ -23,7 +23,6 @@ const subtitle = {
 test('Project media round-trips through the project contract', () => {
   const project = createProject(source, {
     cues: [],
-    sample: { start_ms: 0, end_ms: 1000 },
     media: [video, { ...subtitle, imported_layer: 'displayed' }],
   });
   assert.deepEqual(parseProject(project).media, [
@@ -33,7 +32,7 @@ test('Project media round-trips through the project contract', () => {
 });
 
 test('a project with no added media is still valid (the rows are derived)', () => {
-  const project = createProject(source, { cues: [], sample: { start_ms: 0, end_ms: 1000 } });
+  const project = createProject(source, { cues: [] });
   assert.equal('media' in project, false);
 });
 
@@ -60,7 +59,6 @@ test('a project rejects a media path that is a remote URL', () => {
     () =>
       createProject(source, {
         cues: [],
-        sample: { start_ms: 0, end_ms: 1000 },
         media: [{ ...video, path: 'https://example.org/video.mp4' }],
       }),
     /INVALID_PROJECT/,

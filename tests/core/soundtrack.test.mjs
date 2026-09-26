@@ -25,7 +25,6 @@ const track = {
 test('soundtrack remains a per-document asset, with strict current project and undo support', () => {
   const snapshot = {
     cues: [],
-    sample: { start_ms: 0, end_ms: 4000 },
     soundtrack: parseSoundtrack(track),
   };
   const project = createProject({ path: '/video.mp4', sha256: 'a'.repeat(64) }, snapshot);

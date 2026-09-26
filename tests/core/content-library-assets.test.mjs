@@ -85,10 +85,7 @@ test('asset views filter type, content, literal search, pagination and hidden co
     if (kind === 'project') {
       await saveProject(
         filename,
-        createProject(
-          { path: source.path, sha256: source.sha256 },
-          { cues: [], sample: { start_ms: 0, end_ms: 1000 } },
-        ),
+        createProject({ path: source.path, sha256: source.sha256 }, { cues: [] }),
       );
     } else {
       await writeFile(filename, String(index).repeat(index + 1));
@@ -123,7 +120,7 @@ test('asset views filter type, content, literal search, pagination and hidden co
 test('project association verifies the source content before it is recorded', async (t) => {
   const { root, item, source, library } = await fixture(t);
   const file = path.join(root, 'project.reupmatic.json');
-  const snapshot = { cues: [], sample: { start_ms: 0, end_ms: 1000 } };
+  const snapshot = { cues: [] };
   await saveProject(
     file,
     createProject({ path: source.path, sha256: 'f'.repeat(64) }, snapshot),
@@ -156,7 +153,6 @@ test('a composition project may belong to a member source, but not unrelated con
     { path: path.join(root, 'anchor.mp4'), sha256: 'e'.repeat(64) },
     {
       cues: [],
-      sample: { start_ms: 0, end_ms: 1000 },
       composition,
     },
   );

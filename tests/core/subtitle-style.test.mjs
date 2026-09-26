@@ -25,7 +25,6 @@ test('global and cue-specific subtitle styles survive project, processing and sp
     { path: '/video.mp4', sha256: 'a'.repeat(64) },
     {
       cues,
-      sample: { start_ms: 0, end_ms: 2000 },
       processing,
     },
   );

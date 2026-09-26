@@ -186,16 +186,14 @@ export function parseEditing(value: unknown): EditingRecipe {
 export function resolveEditWindow(
   editing: EditingRecipe | undefined,
   duration: number,
-  sample?: TimeRange,
 ): EditWindow {
   if (!Number.isInteger(duration) || duration < 1 || duration > 86400000)
     throw new Error('EDIT_SOURCE_RANGE');
   const edit = editing ? parseEditing(editing) : {};
   const trim = edit.trim ?? { start_ms: 0, end_ms: duration };
   if (trim.end_ms > duration) throw new Error('EDIT_SOURCE_RANGE');
-  if (sample && timeRange(sample).end_ms > duration) throw new Error('EDIT_SOURCE_RANGE');
-  const start_ms = Math.max(trim.start_ms, sample?.start_ms ?? 0);
-  const end_ms = Math.min(trim.end_ms, sample?.end_ms ?? duration);
+  const start_ms = trim.start_ms;
+  const end_ms = trim.end_ms;
   if (end_ms <= start_ms) throw new Error('EDIT_EMPTY_RANGE');
   const speed = edit.speed ?? 1;
   return {

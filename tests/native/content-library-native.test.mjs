@@ -89,17 +89,9 @@ test('real Library -> relink -> saved project -> SQLite batch -> FFmpeg with aud
     assert.equal(item.video.has_audio, true);
     assert.equal(await hashFile(copied.item.path), before);
     const projectPath = path.join(directory, 'edit.reupmatic.json');
-    await saveProject(
-      projectPath,
-      createProject(
-        { path: source, sha256: before },
-        {
-          cues: [],
-          sample: { start_ms: 0, end_ms: 500 },
-        },
-      ),
-      [source],
-    );
+    await saveProject(projectPath, createProject({ path: source, sha256: before }, { cues: [] }), [
+      source,
+    ]);
     await library.registerAsset(item.id, 'project', projectPath);
     const moved = path.join(directory, 'moved.mp4');
     await rename(source, moved);

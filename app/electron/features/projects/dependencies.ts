@@ -82,7 +82,6 @@ export async function restoreProjectSnapshot(
   const snapshot: EditorSnapshot = {
     name: project.name,
     cues: project.cues,
-    sample: project.sample,
     ...(project.text_layers ? { text_layers: structuredClone(project.text_layers) } : {}),
     ...(composition ? { composition } : {}),
     ...(soundtrack ? { soundtrack } : {}),

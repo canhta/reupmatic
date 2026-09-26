@@ -9,15 +9,13 @@ import {
 
 const initial = {
   cues: [{ id: 'cue', start_ms: 0, end_ms: 1000, text: 'Tiếng Việt' }],
-  sample: { start_ms: 0, end_ms: 1000 },
 };
-test('editor undo restores video/audio, sample and subtitle changes as whole snapshots', () => {
+test('editor undo restores video/audio and subtitle changes as whole snapshots', () => {
   const opened = openEditorHistory(initial);
   let state = changeEditor(opened, {
     processing: { editing: { speed: 2, audio: { muted: true, gain_db: 0 } } },
   });
   state = changeEditor(state, {
-    sample: { start_ms: 500, end_ms: 1000 },
     cues: [{ ...initial.cues[0], text: 'Changed' }],
   });
   const previous = undoEditor(state);
@@ -32,7 +30,7 @@ test('no-op changes retain identity, history is bounded and branch edits invalid
   assert.equal(changeEditor(opened, { cues: structuredClone(initial.cues) }), opened);
   let state = opened;
   for (let n = 1; n < 80; n++)
-    state = changeEditor(state, { sample: { start_ms: n, end_ms: 1000 } });
+    state = changeEditor(state, { cues: [{ ...initial.cues[0], text: String(n) }] });
   assert.equal(state.past.length, 60);
   const branch = changeEditor(undoEditor(state), {
     processing: { editing: { speed: 2 } },

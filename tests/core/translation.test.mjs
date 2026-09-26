@@ -27,7 +27,6 @@ const cue = (id, text, start = 0) => ({ id, text, start_ms: start, end_ms: start
 function document() {
   let doc = {
     cues: [cue('display-1', 'Displayed unchanged')],
-    sample: { start_ms: 0, end_ms: 3000 },
   };
   doc = editTextLayer(doc, 'transcript', [cue('one', 'Hello'), cue('two', 'World', 1000)], {
     language: 'en',

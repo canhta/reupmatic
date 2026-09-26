@@ -15,7 +15,7 @@ test('editing-only recipes need no model and isolate the caller snapshot', () =>
   copy.editing.trim.start_ms = 2000;
   assert.equal(input.editing.trim.start_ms, 1000);
 });
-test('sample range intersects trim in source time and output duration respects speed', () => {
+test('trim resolves in source time and output duration respects speed', () => {
   const edit = parseEditing({ trim, speed: 2 });
   assert.deepEqual(resolveEditWindow(edit, 10000), {
     start_ms: 1000,
@@ -23,16 +23,6 @@ test('sample range intersects trim in source time and output duration respects s
     speed: 2,
     duration_ms: 3000,
   });
-  assert.deepEqual(resolveEditWindow(edit, 10000, { start_ms: 5000, end_ms: 9000 }), {
-    start_ms: 5000,
-    end_ms: 7000,
-    speed: 2,
-    duration_ms: 1000,
-  });
-  assert.throws(
-    () => resolveEditWindow(edit, 10000, { start_ms: 8000, end_ms: 9000 }),
-    /EDIT_EMPTY_RANGE/,
-  );
   assert.throws(() => resolveEditWindow(edit, 6000), /EDIT_SOURCE_RANGE/);
 });
 test('editing rejects unknown keys, non-finite values and unbounded geometry', () => {

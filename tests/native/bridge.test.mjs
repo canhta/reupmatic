@@ -45,14 +45,11 @@ test('real TypeScript -> Python -> FFmpeg bridge and one failed batch item', asy
       {
         asset_id: source.asset_id,
         subtitle_id: subtitle.asset_id,
-        mode: 'sample',
         encoding: 'lossless',
-        start_ms: 500,
-        end_ms: 1500,
       },
       12,
     ).result;
-    assert.equal(outcome.duration_ms, 1000);
+    assert.equal(outcome.duration_ms, 2000);
     assert.equal(outcome.cache_hit, false);
     await assert.rejects(
       client.request('media.probe', { asset_id: 'missing' }).result,
@@ -63,10 +60,7 @@ test('real TypeScript -> Python -> FFmpeg bridge and one failed batch item', asy
       {
         asset_id: source.asset_id,
         subtitle_id: subtitle.asset_id,
-        mode: 'sample',
         encoding: 'lossless',
-        start_ms: 500,
-        end_ms: 1500,
       },
       13,
     ).result;

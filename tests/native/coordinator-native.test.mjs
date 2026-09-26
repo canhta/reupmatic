@@ -48,14 +48,11 @@ test('real shared coordinator: no-subtitle render, imported SRT, cache and faile
       request_id: randomUUID(),
       asset_id: source.asset_id,
       revision: 3,
-      mode: 'sample',
-      start_ms: 500,
-      end_ms: 1500,
       encoding: 'lossless',
       cues: [],
     });
     const first = await coordinator.start(request()).result;
-    assert.equal(first.duration_ms, 1000);
+    assert.equal(first.duration_ms, 2000);
     assert.equal(first.cache_hit, false);
     assert.equal((await coordinator.start(request()).result).cache_hit, true);
     const withText = await coordinator.start(request(), subs.asset_id).result;
@@ -122,9 +119,6 @@ test('real shared coordinator registers composition clips and preserves captured
       request_id: randomUUID(),
       asset_id: asset.asset_id,
       revision: 12,
-      mode: 'sample',
-      start_ms: 500,
-      end_ms: 1250,
       encoding: 'review',
       cues: [],
       composition,
@@ -132,7 +126,7 @@ test('real shared coordinator registers composition clips and preserves captured
     const ticket = coordinator.start(request);
     composition.clips.reverse(); // An in-flight edit must not change this accepted job.
     const result = await ticket.result;
-    assert.ok(Math.abs(result.duration_ms - 750) <= 40);
+    assert.ok(Math.abs(result.duration_ms - 1500) <= 40);
     const event = events.find((value) => value.event === 'result');
     assert.equal(event.data.source_asset_id, asset.asset_id);
     assert.deepEqual(

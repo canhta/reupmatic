@@ -25,7 +25,7 @@ async function workspace(t) {
 test('one current project schema round-trips both plain and processing snapshots', async (t) => {
   const directory = await workspace(t);
   const source = { path: path.join(directory, 'video.mp4'), sha256: 'a'.repeat(64) };
-  const snapshot = { cues: [], sample: { start_ms: 0, end_ms: 1000 } };
+  const snapshot = { cues: [] };
   const plain = createProject(source, snapshot);
   assert.deepEqual(parseProject(plain), plain);
   const processing = recipe();

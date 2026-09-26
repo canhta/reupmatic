@@ -27,10 +27,7 @@ export interface RenderInput {
   asset_id: string;
   revision: number;
   cues: Cue[];
-  mode: 'sample' | 'full';
   encoding?: 'review' | 'lossless';
-  start_ms?: number;
-  end_ms?: number;
   processing?: ProcessingRecipe;
   soundtrack?: Soundtrack;
   voice?: VoiceTrack;
@@ -63,10 +60,7 @@ function parseInput(value: unknown): RenderInput {
     'asset_id',
     'revision',
     'cues',
-    'mode',
     'encoding',
-    'start_ms',
-    'end_ms',
     'processing',
     'soundtrack',
     'voice',
@@ -83,30 +77,11 @@ function parseInput(value: unknown): RenderInput {
     !Number.isInteger(input.revision) ||
     input.revision < 0 ||
     input.revision > 2 ** 31 - 1 ||
-    !['sample', 'full'].includes(input.mode) ||
     (input.encoding !== undefined && !['review', 'lossless'].includes(input.encoding))
   ) {
     throw new RemoteError('INVALID_REQUEST');
   }
   assertCues(input.cues);
-  let window: { start_ms: number; end_ms: number } | undefined;
-  if (input.mode === 'sample') {
-    const { start_ms, end_ms } = input;
-    if (
-      typeof start_ms !== 'number' ||
-      !Number.isInteger(start_ms) ||
-      typeof end_ms !== 'number' ||
-      !Number.isInteger(end_ms) ||
-      start_ms < 0 ||
-      end_ms <= start_ms ||
-      end_ms > 86400000
-    ) {
-      throw new RemoteError('INVALID_REQUEST');
-    }
-    window = { start_ms, end_ms };
-  } else if (input.start_ms !== undefined || input.end_ms !== undefined) {
-    throw new RemoteError('INVALID_REQUEST');
-  }
   const copy = structuredClone(input);
   if (copy.logo !== undefined) {
     const [logo] = parseProjectMedia([copy.logo]);
@@ -128,7 +103,7 @@ function parseInput(value: unknown): RenderInput {
     if (copy.processing?.ocr || copy.processing?.inpaint)
       throw new RemoteError('COMPOSITION_PROCESSING_UNAVAILABLE');
     const duration = compositionDuration(copy.composition);
-    resolveEditWindow(copy.processing?.editing, duration, window);
+    resolveEditWindow(copy.processing?.editing, duration);
     if (copy.cues.some((cue) => cue.end_ms > duration)) throw new RemoteError('INVALID_CUES');
   }
   return copy;
@@ -263,7 +238,6 @@ export class RenderCoordinator extends EventEmitter {
       }
       const params: Record<string, unknown> = {
         asset_id: input.asset_id,
-        mode: input.mode,
         encoding: input.encoding ?? 'review',
         ...(composition ? { composition } : {}),
       };
@@ -293,10 +267,6 @@ export class RenderCoordinator extends EventEmitter {
         });
         if (asset.sha256 !== input.logo.sha256) throw new RemoteError('SOURCE_CHANGED');
         params.logo = { asset_id: asset.asset_id, sha256: asset.sha256 };
-      }
-      if (input.mode === 'sample') {
-        params.start_ms = input.start_ms;
-        params.end_ms = input.end_ms;
       }
       if (input.processing) {
         params.processing = input.processing;

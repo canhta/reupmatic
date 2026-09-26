@@ -268,7 +268,9 @@ def compose():
         ["asset_id", "sha256", "duration_ms"],
     )
     for method in ["media.render", "media.process"]:
-        for variant in by_method[method]["oneOf"]:
+        params = by_method[method]
+        variants = params["oneOf"] if "oneOf" in params else [params]
+        for variant in variants:
             variant["properties"].update({"soundtrack": audio, "composition": montage})
     return outputs
 

@@ -12,7 +12,6 @@ const project = () =>
     { path: '/video/nguồn.mp4', sha256: 'a'.repeat(64) },
     {
       cues: [{ id: 'cue1', start_ms: 0, end_ms: 1000, text: 'Cà phê ☕' }],
-      sample: { start_ms: 0, end_ms: 1000 },
       processing: { editing: { speed: 2 } },
     },
   );

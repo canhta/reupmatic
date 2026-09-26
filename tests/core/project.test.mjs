@@ -21,7 +21,6 @@ import { editTextLayer } from '../../dist-core/subtitles/layers/commands.js';
 const source = { path: '/videos/tự quay.mp4', sha256: 'a'.repeat(64) };
 const state = () => ({
   cues: [{ id: 'cue-1', start_ms: 120, end_ms: 1500, text: 'Cà phê Việt Nam\nEnglish ☕' }],
-  sample: { start_ms: 0, end_ms: 2000 },
 });
 const soundtrack = () => ({
   source: {
@@ -73,7 +72,7 @@ const voiceTrack = () => ({
   stale: false,
 });
 
-test('project round-trip retains Unicode cues and sample interval without media copies', async () => {
+test('project round-trip retains Unicode cues without media copies', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'reupmatic-project-'));
   try {
     const file = path.join(dir, 'Bản dựng.reupmatic.json');
@@ -118,9 +117,7 @@ test('project snapshots are independent from subsequent editor changes', () => {
   const edits = state();
   const project = createProject(source, edits);
   edits.cues[0].text = 'changed';
-  edits.sample.end_ms = 5000;
   assert.equal(project.cues[0].text, 'Cà phê Việt Nam\nEnglish ☕');
-  assert.equal(project.sample.end_ms, 2000);
 });
 
 test('external instructions, URL sources and malformed cue data are rejected', () => {
@@ -133,7 +130,7 @@ test('external instructions, URL sources and malformed cue data are rejected', (
     { ...good, source: { ...source, sha256: '' } },
     { ...good, cues: [null] },
     { ...good, cues: [{ ...good.cues[0], script: 'publish' }] },
-    { ...good, sample: { start_ms: 2000, end_ms: 1000 } },
+    { ...good, sample: { start_ms: 0, end_ms: 1000 } },
     { ...good, cues: [good.cues[0], good.cues[0]] },
   ]) {
     assert.throws(() => parseProject(invalid));

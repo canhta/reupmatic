@@ -38,7 +38,7 @@ test('replace scope leaves unselected content intact', () => {
   assert.equal(out[1].text, 'English');
 });
 test('history snapshots are independent', () => {
-  const initial = openEditorHistory({ cues, sample: { start_ms: 0, end_ms: 1000 } });
+  const initial = openEditorHistory({ cues });
   const out = changeEditor(initial, { cues: [{ ...cues[0], text: 'edited' }] });
   out.present.cues[0].text = 'again';
   assert.equal(out.past[0].cues[0].text, 'Tiếng Việt');

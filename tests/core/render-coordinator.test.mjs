@@ -29,9 +29,6 @@ const input = (cues = [], id = 'request-0001') => ({
   request_id: id,
   asset_id: 'video-1',
   revision: 2,
-  mode: 'sample',
-  start_ms: 0,
-  end_ms: 2000,
   cues,
 });
 const output = {
@@ -142,9 +139,7 @@ test('validation and duplicate public IDs cannot launch native work', async () =
   for (const invalid of [
     null,
     { ...input(), cues: null },
-    { ...input(), end_ms: 0 },
     { ...input(), ffmpeg_args: ['-y'] },
-    { ...input(), mode: 'full' },
     { ...input(), revision: -1 },
   ]) {
     assert.throws(() => coordinator.start(invalid));
@@ -458,9 +453,6 @@ test('a lossless voice render is refused before any work starts', async () => {
       coordinator.start({
         ...input(),
         encoding: 'lossless',
-        mode: 'full',
-        start_ms: undefined,
-        end_ms: undefined,
         voice: voiceTrack,
       }),
     { code: 'INVALID_VOICE' },

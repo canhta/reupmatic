@@ -6,7 +6,6 @@ export function validateProjectTimeline(snapshot: EditorSnapshot, sourceDuration
   const duration = snapshot.composition
     ? compositionDuration(snapshot.composition)
     : sourceDuration;
-  if (snapshot.sample.end_ms > duration) throw new Error('INVALID_PROJECT');
   resolveEditWindow(snapshot.processing?.editing, duration);
   if (
     snapshot.composition &&

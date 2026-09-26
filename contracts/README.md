@@ -14,7 +14,6 @@ The same `RenderCoordinator` and `WorkerClient` are used by the desktop and batc
 | [worker-event.schema.json](worker-event.schema.json) | Correlation, revision, progress/result/error envelope. Method-specific result fields follow §3. |
 | [processing.schema.json](processing.schema.json) | Optional current local OCR/removal/editing/global-appearance recipe, version 1. |
 | [cues.schema.json](cues.schema.json) | Edited display cues; not OCR evidence, translation, or spoken text. |
-| [examples/render-sample.json](examples/render-sample.json) | Valid structural example; asset IDs are illustrative, not live paths. |
 
 `worker-request.schema.json`, `processing.schema.json`, `cues.schema.json`, `project.schema.json`,
 `batch-submit.schema.json`, `folder-create.schema.json` and `subtitles/text-layers.schema.json`
@@ -37,9 +36,9 @@ Electron's native file picker authorizes a local input. Only the trusted host ca
 
 The native output path is returned only to the trusted host. The renderer receives an artifact ID and registered media URL; saving uses a native save dialog. Generated work stays below the private workspace. No original is overwritten by rendering.
 
-All cue and sample times are **integer milliseconds**, not rounded UI seconds. Intervals are `start_ms, end_ms)`; end must exceed start. Source FPS, VFR mapping, frame-snapping and multi-clip time mapping are not defined by this exercise. Cues use stable edit IDs; duplicates are rejected, overlapping cues are not silently deleted. A subtitle document is display text only. Editing it never requests TTS, OCR or a paid service.
+All cue times are **integer milliseconds**, not rounded UI seconds. Intervals are `start_ms, end_ms)`; end must exceed start. Source FPS, VFR mapping, frame-snapping and multi-clip time mapping are not defined by this exercise. Cues use stable edit IDs; duplicates are rejected, overlapping cues are not silently deleted. A subtitle document is display text only. Editing it never requests TTS, OCR or a paid service.
 
-`revision` is an opaque caller edit generation echoed by the worker. It is not a checksum. The UI accepts a sample only if both revision and latest request ID match. Changing locale does not advance an edit generation. Cache identity depends on input hashes, range, renderer revision, encoder settings and FFmpeg build identity—not on UI locale or request ID.
+`revision` is an opaque caller edit generation echoed by the worker. It is not a checksum. The UI accepts a render only if both revision and latest request ID match. Changing locale does not advance an edit generation. Cache identity depends on input hashes, range, renderer revision, encoder settings and FFmpeg build identity—not on UI locale or request ID.
 
 ## Operations and minimal results
 
@@ -52,7 +51,7 @@ All cue and sample times are **integer milliseconds**, not rounded UI seconds. I
 | `subtitles.load` | Registered SRT ID | Cue array, using pysubs2; no handwritten SRT parser fallback. |
 | `subtitles.preview` | Cue array | ASS text serialized by pysubs2; no disk output, media render or inference. |
 | `subtitles.save` | Cue array | Generated SRT asset ID, internal path, SHA-256 and ASS serialization. Does not modify the imported SRT. |
-| `media.render` | Registered video and optional subtitle ID; mode and encoding; sample range when applicable | Verified artifact ID/internal path/hash, duration/dimensions/audio, range and `cache_hit`. Full mode rejects a sample range. |
+| `media.render` | Registered video and optional subtitle ID; encoding | Verified artifact ID/internal path/hash, duration/dimensions/audio and `cache_hit`. |
 | `cancel` | Target `request_id` | `requested` boolean. Not a promise to undo an already committed output. |
 
 `review` uses an MP4 integration preset; `lossless` uses FFV1/FLAC for correctness tests. They are not approved shipping codec choices or the complete export UI. Fonts and target-platform FFmpeg builds still need validation. Output-side trimming preserves subtitle timing but may decode earlier source frames; it is not a demonstrated low-latency seek strategy.
@@ -77,7 +76,7 @@ The renderer preallocates a unique `request_id` before invoking `reupmatic:rende
 
 Empty display cues skip `subtitles.save`. A trusted batch caller may pass a previously registered SRT ID as a separate coordinator argument, mutually exclusive with edited cues; the renderer cannot inject that argument. Actual output/input limits remain in the worker. The public desktop render request still has the same fields and version.
 
-[project.schema.json](project.schema.json) defines the bounded project file: `format`, `version`, original source path/hash, edited display cues, and sample interval. `.reupmatic.json` is UTF-8 JSON with a 2 MiB exercise safety limit. Reject unsupported versions and unknown fields; parse and validate completely before replacing UI state. Cross-field validation uses the shared cue validator and explicit time checks. Loading a file is never permission to execute instructions, download models, upload media or publish.
+[project.schema.json](project.schema.json) defines the bounded project file: `format`, `version`, original source path/hash and edited display cues. `.reupmatic.json` is UTF-8 JSON with a 2 MiB exercise safety limit. Reject unsupported versions and unknown fields; parse and validate completely before replacing UI state. Cross-field validation uses the shared cue validator and explicit time checks. Loading a file is never permission to execute instructions, download models, upload media or publish.
 
 A native file picker authorizes the project, then a second native choice identifies the original video (the stored path is only a hint). Worker registration checks its hash against the project; a moved file with the same contents works. Invalid/mismatched input leaves the existing editor untouched. Project save takes an immutable snapshot and the caller revision. A successful save only clears dirty state if that edit revision is still current; edits made during the dialog remain unsaved.
 
@@ -122,8 +121,8 @@ existing queue. It verifies required local model artifacts and returns exact
 fingerprints keyed by `inpainting` and/or `ocr_<language>`. It is neither inference
 nor a download and is not an arbitrary renderer command.
 
-`media.process` takes registered source and optional subtitle IDs, explicit
-sample/full mode, `encoding: review`, recipe and optional expected model pins.
+`media.process` takes registered source and optional subtitle IDs,
+`encoding: review`, recipe and optional expected model pins.
 Editor supplies no pins and resolves current configuration at explicit execution;
 batch/folder supply their saved pins. Unmatched pins fail
 `PROCESSING_MODELS_CHANGED`; existing subtitles plus OCR fail

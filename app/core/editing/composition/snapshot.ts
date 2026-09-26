@@ -127,16 +127,6 @@ export function compositionSnapshot(
   cues: Cue[],
 ): EditorSnapshot {
   assertCues(cues);
-  for (const range of [snapshot.sample, snapshot.processing?.editing?.trim].filter(Boolean)) {
-    if (
-      !range ||
-      !Number.isInteger(range.start_ms) ||
-      !Number.isInteger(range.end_ms) ||
-      range.start_ms < 0 ||
-      range.end_ms <= range.start_ms
-    )
-      throw new Error('INVALID_PROJECT');
-  }
   const composition = parseComposition(value),
     duration = compositionDuration(composition);
   const next = structuredClone({ ...snapshot, composition, cues });
@@ -144,7 +134,6 @@ export function compositionSnapshot(
     start_ms: Math.max(0, Math.min(range.start_ms, duration - 1)),
     end_ms: Math.max(1, Math.min(range.end_ms, duration)),
   });
-  next.sample = clamp(next.sample);
   if (next.processing?.editing?.trim)
     next.processing.editing.trim = clamp(next.processing.editing.trim);
   validateProjectTimeline(next, duration);

@@ -22,7 +22,7 @@ import {
 } from '../../dist-core/subtitles/layers/document.js';
 
 const cue = (text = 'Xin chào') => ({ id: 'cue-1', start_ms: 0, end_ms: 1000, text });
-const empty = () => ({ cues: [cue()], sample: { start_ms: 0, end_ms: 2000 } });
+const empty = () => ({ cues: [cue()] });
 const copy = (snapshot, from, to) => applyLayerCopy(snapshot, previewLayerCopy(snapshot, from, to));
 const voiceTrack = (token) => ({
   artifact: {
@@ -170,7 +170,6 @@ test('composition rebases every text clock without replacing independent words o
   };
   let s = {
     cues: [{ ...cue('Displayed'), start_ms: 1000, end_ms: 3000 }],
-    sample: { start_ms: 0, end_ms: 4000 },
     composition,
   };
   s = editTextLayer(s, 'transcript', [{ ...cue('Transcript'), start_ms: 1000, end_ms: 3000 }]);

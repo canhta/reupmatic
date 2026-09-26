@@ -196,10 +196,9 @@ test('placing past MAX_CLIPS is refused by its own limit code, never truncated',
   assert.equal(full.clips.length, MAX_CLIPS);
 });
 
-test('composition, captions and sample window are one undo/recovery-compatible project snapshot', () => {
+test('composition and captions are one undo/recovery-compatible project snapshot', () => {
   const snapshot = {
     cues: [cue],
-    sample: { start_ms: 0, end_ms: 3000 },
     composition: composition(),
   };
   const project = createProject({ path: '/a.mp4', sha256: 'a'.repeat(64) }, snapshot);
@@ -235,16 +234,14 @@ test('composition snapshot clamps dependent ranges atomically without discarding
   const doc = composition();
   const snapshot = {
     cues: [],
-    sample: { start_ms: 3500, end_ms: 4000 },
     processing: {
       editing: { trim: { start_ms: 3500, end_ms: 4000 }, speed: 2 },
     },
   };
   const next = compositionSnapshot(snapshot, doc, []);
-  assert.deepEqual(next.sample, { start_ms: 2999, end_ms: 3000 });
-  assert.deepEqual(next.processing.editing.trim, next.sample);
+  assert.deepEqual(next.processing.editing.trim, { start_ms: 2999, end_ms: 3000 });
   assert.equal(next.processing.editing.speed, 2);
-  assert.equal(snapshot.sample.end_ms, 4000);
+  assert.equal(snapshot.processing.editing.trim.end_ms, 4000);
 });
 
 test('saved compositions protect every member source and recovery retains all dependencies', async (t) => {
@@ -264,7 +261,6 @@ test('saved compositions protect every member source and recovery retains all de
     {
       composition: doc,
       cues: [cue],
-      sample: { start_ms: 0, end_ms: 3000 },
     },
   );
   await assert.rejects(saveProject(original, project), /SOURCE/);
@@ -372,7 +368,6 @@ function voiceTrack(lines) {
 }
 const voiced = (lines, cues = [cue]) => ({
   cues,
-  sample: { start_ms: 0, end_ms: 3000 },
   composition: composition(),
   voice_track: voiceTrack(lines),
 });
@@ -462,11 +457,7 @@ test('a composition edit repoints the voice origin at the remapped spoken layer 
     '../../dist-core/editing/composition/snapshot.js'
   );
   const { editTextLayer } = await import('../../dist-core/subtitles/layers/commands.js');
-  let snapshot = editTextLayer(
-    { cues: [cue], sample: { start_ms: 0, end_ms: 3000 }, composition: composition() },
-    'spoken',
-    [cue],
-  );
+  let snapshot = editTextLayer({ cues: [cue], composition: composition() }, 'spoken', [cue]);
   const track = voiceTrack([voiceLine('cue-a', 500, 1000, 800)]);
   track.origin = { kind: 'copy', layer: 'spoken', token: snapshot.text_layers.spoken.token };
   snapshot = { ...snapshot, voice_track: track };
@@ -561,7 +552,6 @@ test('disabling a clip keeps its placement and trims and is one undo step', () =
   assert.deepEqual(restored.composition, parseComposition(doc));
   let history = openEditorHistory({
     cues: [cue],
-    sample: { start_ms: 0, end_ms: 3000 },
     composition: doc,
   });
   history = changeEditor(history, {

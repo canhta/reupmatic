@@ -22,7 +22,6 @@ export interface EditorSnapshot {
   processing?: ProcessingRecipe;
   media?: ProjectMedia[];
   cues: Cue[];
-  sample: { start_ms: number; end_ms: number };
 }
 export interface ProjectFile extends EditorSnapshot {
   format: 'reupmatic.project';
@@ -57,7 +56,6 @@ export function assertEditorSnapshot(value: unknown): asserts value is EditorSna
     !object(value) ||
     !onlyKeys(value, [
       'cues',
-      'sample',
       ...('name' in value ? ['name'] : []),
       ...('processing' in value ? ['processing'] : []),
       ...('soundtrack' in value ? ['soundtrack'] : []),
@@ -82,17 +80,6 @@ export function assertEditorSnapshot(value: unknown): asserts value is EditorSna
       throw new Error('INVALID_PROJECT');
     }
   }
-  const sample = value.sample;
-  if (
-    !object(sample) ||
-    !onlyKeys(sample, ['start_ms', 'end_ms']) ||
-    !Number.isInteger(sample.start_ms) ||
-    !Number.isInteger(sample.end_ms) ||
-    Number(sample.start_ms) < 0 ||
-    Number(sample.end_ms) <= Number(sample.start_ms) ||
-    Number(sample.end_ms) > 86400000
-  )
-    throw new Error('INVALID_PROJECT');
   if ('composition' in value) validateProjectTimeline(value as unknown as EditorSnapshot, 0);
 }
 
@@ -104,7 +91,6 @@ export function parseProject(value: unknown): ProjectFile {
       'source',
       'name',
       'cues',
-      'sample',
       ...('processing' in value ? ['processing'] : []),
       ...('soundtrack' in value ? ['soundtrack'] : []),
       ...('composition' in value ? ['composition'] : []),
@@ -133,7 +119,6 @@ export function parseProject(value: unknown): ProjectFile {
   assertEditorSnapshot({
     name,
     cues: value.cues,
-    sample: value.sample,
     ...('processing' in value ? { processing: value.processing } : {}),
     ...('soundtrack' in value ? { soundtrack: value.soundtrack } : {}),
     ...('composition' in value ? { composition: value.composition } : {}),
