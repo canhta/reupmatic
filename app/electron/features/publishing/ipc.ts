@@ -42,6 +42,8 @@ function namedCode(error: unknown): string {
 
 export function installPublishing(host: PublishingHost) {
   const pending = new Map<string, { pages: ConnectedPage[] }>();
+  // One publish per post at the IPC boundary; the runner enforces the same lock underneath.
+  const inFlight = new Set<string>();
   const runner = new PublishRunner({
     graphBaseUrl: host.graphBaseUrl ?? DEFAULT_GRAPH_BASE_URL,
     uploadBaseUrl: host.uploadBaseUrl ?? DEFAULT_UPLOAD_BASE_URL,
@@ -109,42 +111,48 @@ export function installPublishing(host: PublishingHost) {
   });
 
   host.wire('post-publish', async (input) => {
-    const post = facebookPost(input.id);
-    const credentials = await host.credentials.credentials(post.channel.id);
-    if (!credentials) throw new Error('CHANNEL_NOT_CONNECTED');
-    const media = await host.probeMedia(post.export.path);
-    const blocking = facebookPreflight(post, media, Date.now()).filter(
-      (problem) => problem.severity === 'blocking',
-    );
-    if (blocking.length) throw new Error('PUBLISH_PREFLIGHT_FAILED');
-    const attempt_id = randomUUID();
+    if (inFlight.has(input.id)) throw new Error('PUBLISH_IN_PROGRESS');
+    inFlight.add(input.id);
     try {
-      await runner.publish({
-        post,
-        attempt_id,
-        credentials,
-        media,
-        persist: (publication) => {
-          host.setPublication(input.id, publication);
-        },
-        onProgress: (fraction) =>
-          send('publish-progress', {
-            post_id: input.id,
-            attempt_id,
-            phase: 'uploading',
-            fraction,
-          }),
-      });
-    } catch (error) {
-      const code = namedCode(error);
-      await markReauthorizeIfNeeded(post, code);
+      const post = facebookPost(input.id);
+      const credentials = await host.credentials.credentials(post.channel.id);
+      if (!credentials) throw new Error('CHANNEL_NOT_CONNECTED');
+      const media = await host.probeMedia(post.export.path);
+      const blocking = facebookPreflight(post, media, Date.now()).filter(
+        (problem) => problem.severity === 'blocking',
+      );
+      if (blocking.length) throw new Error('PUBLISH_PREFLIGHT_FAILED');
+      const attempt_id = randomUUID();
+      try {
+        await runner.publish({
+          post,
+          attempt_id,
+          credentials,
+          media,
+          persist: (publication) => {
+            host.setPublication(input.id, publication);
+          },
+          onProgress: (fraction) =>
+            send('publish-progress', {
+              post_id: input.id,
+              attempt_id,
+              phase: 'uploading',
+              fraction,
+            }),
+        });
+      } catch (error) {
+        const code = namedCode(error);
+        await markReauthorizeIfNeeded(post, code);
+        host.changed();
+        throw new Error(code);
+      }
+      const updated = host.getPost(input.id);
+      await markReauthorizeIfNeeded(post, updated.publication?.error ?? '');
       host.changed();
-      throw new Error(code);
+      return updated;
+    } finally {
+      inFlight.delete(input.id);
     }
-    const updated = host.getPost(input.id);
-    await markReauthorizeIfNeeded(post, updated.publication?.error ?? '');
-    host.changed();
-    return updated;
   });
 
   host.wire('post-reconcile', async (input) => {

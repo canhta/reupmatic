@@ -7,6 +7,7 @@ import type {
   SubmitOutcome,
 } from '../../../core/distribution/publishing/contracts.js';
 import {
+  canStartAttempt,
   markFailed,
   markPublished,
   markScheduled,
@@ -49,6 +50,8 @@ export class PublishRunner {
   #uploadBaseUrl: string;
   #fetch: typeof fetch;
   #now: () => number;
+  // One in-flight publish per post; a concurrent second call must never reach begin().
+  #inFlight = new Set<string>();
 
   constructor(options: PublishRunnerOptions) {
     this.#graphBaseUrl = options.graphBaseUrl;
@@ -68,39 +71,48 @@ export class PublishRunner {
   }
 
   async publish(input: PublishInput): Promise<Publication> {
-    const adapter = this.#adapter(input.credentials);
-    const { remote_ref } = await adapter.begin(input.post, input.credentials);
-    let publication = startAttempt(input.post.publication, {
-      attempt_id: input.attempt_id,
-      remote_ref,
-      now: this.#now(),
-    });
-    // The platform reference is durable before any byte is uploaded.
-    input.persist(publication);
+    const postId = input.post.id;
+    if (this.#inFlight.has(postId)) throw new Error('PUBLISH_IN_PROGRESS');
+    this.#inFlight.add(postId);
     try {
-      await adapter.upload(
+      if (!canStartAttempt(input.post.publication))
+        throw new Error('PUBLICATION_ALREADY_ATTEMPTED');
+      const adapter = this.#adapter(input.credentials);
+      const { remote_ref } = await adapter.begin(input.post, input.credentials);
+      let publication = startAttempt(input.post.publication, {
+        attempt_id: input.attempt_id,
         remote_ref,
-        { path: input.post.export.path, size_bytes: input.media.size_bytes },
-        input.onProgress,
-      );
-    } catch (error) {
-      const code = errorCode(error);
-      publication = markFailed(publication, { error: code }, this.#now());
+        now: this.#now(),
+      });
+      // The platform reference is durable before any byte is uploaded.
       input.persist(publication);
-      throw new Error(code);
+      try {
+        await adapter.upload(
+          remote_ref,
+          { path: input.post.export.path, size_bytes: input.media.size_bytes },
+          input.onProgress,
+        );
+      } catch (error) {
+        const code = errorCode(error);
+        publication = markFailed(publication, { error: code }, this.#now());
+        input.persist(publication);
+        throw new Error(code);
+      }
+      // Persist submitted before the one call that can create a post; an interrupted finish is only
+      // ever reconciled.
+      publication = markSubmitted(publication, this.#now());
+      input.persist(publication);
+      try {
+        const outcome = await adapter.submit(remote_ref, input.post, input.post.planned);
+        publication = this.#applySubmit(publication, outcome);
+      } catch (error) {
+        publication = markUnknown(publication, { error: errorCode(error) }, this.#now());
+      }
+      input.persist(publication);
+      return publication;
+    } finally {
+      this.#inFlight.delete(postId);
     }
-    // Persist submitted before the one call that can create a post; an interrupted finish is only
-    // ever reconciled.
-    publication = markSubmitted(publication, this.#now());
-    input.persist(publication);
-    try {
-      const outcome = await adapter.submit(remote_ref, input.post, input.post.planned);
-      publication = this.#applySubmit(publication, outcome);
-    } catch (error) {
-      publication = markUnknown(publication, { error: errorCode(error) }, this.#now());
-    }
-    input.persist(publication);
-    return publication;
   }
 
   async reconcile(input: ReconcileInput): Promise<Publication> {

@@ -405,3 +405,89 @@ test('publishing config falls back to the environment when no build config is ba
     { metaAppId: '1', brokerUrl: 'https://x.example/api/facebook/token' },
   );
 });
+
+test('a publish refuses a new attempt before begin touches the platform', async () => {
+  const graph = await fakeGraph([
+    {
+      match: (r) => r.path.endsWith('/video_reels'),
+      reply: () => ({ body: { video_id: 'should-not-happen' } }),
+    },
+  ]);
+  try {
+    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const submitted = {
+      ...POST,
+      export: { ...POST.export, path: '/nonexistent' },
+      publication: {
+        attempt_id: 'attempt_0009',
+        phase: 'submitted',
+        remote_ref: 'v',
+        remote_post_id: null,
+        remote_url: null,
+        scheduled_for: null,
+        error: null,
+        updated_at: 1,
+      },
+    };
+    await assert.rejects(
+      runner.publish({
+        post: submitted,
+        attempt_id: 'attempt_0010',
+        credentials: { account_id: '1', access_token: 't' },
+        media: { duration_ms: 1_000, width: 540, height: 960, size_bytes: 1 },
+        persist: () => undefined,
+        onProgress: () => undefined,
+      }),
+      /PUBLICATION_ALREADY_ATTEMPTED/,
+    );
+    assert.equal(graph.seen.length, 0, 'no request reaches the platform');
+  } finally {
+    await graph.close();
+  }
+});
+
+test('two concurrent publishes of one post create exactly one Reel', async () => {
+  const directory = await tempDir();
+  const file = path.join(directory, 'video.mp4');
+  const bytes = Buffer.from('race-video-bytes');
+  await writeFile(file, bytes);
+  const graph = await fakeGraph([
+    {
+      match: (r) =>
+        r.method === 'POST' &&
+        r.path.endsWith('/video_reels') &&
+        r.params.get('upload_phase') === 'start',
+      reply: () => ({ body: { video_id: 'vid-race' } }),
+    },
+    { match: (r) => r.method === 'POST' && r.path === '/upload/v25.0/vid-race' },
+    {
+      match: (r) =>
+        r.method === 'POST' &&
+        r.path.endsWith('/video_reels') &&
+        r.params.get('upload_phase') === 'finish',
+      reply: () => ({ body: { success: true } }),
+    },
+  ]);
+  try {
+    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const base = {
+      post: { ...POST, export: { ...POST.export, path: file } },
+      credentials: { account_id: '1', access_token: 't' },
+      media: { duration_ms: 30_000, width: 1080, height: 1920, size_bytes: bytes.length },
+      persist: () => undefined,
+      onProgress: () => undefined,
+    };
+    const results = await Promise.allSettled([
+      runner.publish({ ...base, attempt_id: 'race_0001' }),
+      runner.publish({ ...base, attempt_id: 'race_0002' }),
+    ]);
+    const rejected = results.filter((result) => result.status === 'rejected');
+    assert.equal(rejected.length, 1);
+    assert.match(String(rejected[0].reason?.message), /PUBLISH_IN_PROGRESS/);
+    assert.equal(graph.seen.filter((r) => r.params.get('upload_phase') === 'start').length, 1);
+    assert.equal(graph.seen.filter((r) => r.params.get('upload_phase') === 'finish').length, 1);
+  } finally {
+    await graph.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});

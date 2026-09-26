@@ -107,6 +107,7 @@ export const distributionVi = {
   publishProblem_PUBLISH_CAPTION_CLIPPED: 'Mô tả sẽ được rút ngắn cho vừa.',
   publishError_CHANNEL_NOT_CONNECTED: 'Hãy kết nối Trang này trước khi đăng.',
   publishError_CHANNEL_REAUTHORIZE: 'Phiên đăng nhập Trang đã hết hạn. Kết nối lại rồi thử lại.',
+  publishError_PUBLISH_IN_PROGRESS: 'Bài này đang được đăng.',
   publishError_PUBLISH_RATE_LIMITED: 'Trang đã đạt giới hạn đăng bài. Thử lại sau.',
   publishError_PUBLISH_PERMISSION_DENIED: 'Tài khoản không có quyền đăng lên Trang này.',
   publishError_PUBLISH_INVALID_REQUEST:

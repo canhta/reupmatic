@@ -105,6 +105,7 @@ export const distributionEn = {
   publishProblem_PUBLISH_CAPTION_CLIPPED: 'The caption will be shortened to fit.',
   publishError_CHANNEL_NOT_CONNECTED: 'Connect this Page before publishing.',
   publishError_CHANNEL_REAUTHORIZE: 'The Page session expired. Reconnect and try again.',
+  publishError_PUBLISH_IN_PROGRESS: 'This post is already publishing.',
   publishError_PUBLISH_RATE_LIMITED: 'The Page reached its publishing limit. Try again later.',
   publishError_PUBLISH_PERMISSION_DENIED: 'The account lacks permission to publish to this Page.',
   publishError_PUBLISH_INVALID_REQUEST:
