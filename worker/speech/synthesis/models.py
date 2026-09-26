@@ -42,6 +42,17 @@ _TURBO_FILES = (
 )
 _TURBO_DIRECTORIES = ("onnx", "codec")
 
+# The optional clone add-on for Turbo: kept out of the base bundle so preset users stay small.
+CLONE_ENGINE = "vieneu-v3-turbo-clone-onnx"
+_CLONE_FILES = {
+    "speaker_encoder.onnx",
+    "denoiser.onnx",
+    "codec/moss_audio_tokenizer_encode.onnx",
+    "codec/moss_audio_tokenizer_encode.data",
+}
+_CLONE_DIRECTORIES = ("codec",)
+CLONE_MANIFEST_NAME = "local-synthesis-clone.json"
+
 NANO_ENGINE = "vieneu-v3-nano-onnx"
 _NANO_GRAPHS = {
     "text_encoder.onnx",
@@ -62,6 +73,27 @@ def turbo_runtime_code() -> str | None:
         if not all(
             importlib.util.find_spec(name)
             for name in ("vieneu", "numpy", "onnxruntime", "tokenizers")
+        ):
+            return "MODEL_RUNTIME_MISSING"
+    except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
+        return "MODEL_RUNTIME_MISSING"
+    return None
+
+
+def clone_runtime_code() -> str | None:
+    try:
+        if importlib.metadata.version("vieneu") != SDK_VERSION:
+            return "SYNTHESIS_RUNTIME_VERSION"
+        if not all(
+            importlib.util.find_spec(name)
+            for name in (
+                "vieneu",
+                "numpy",
+                "onnxruntime",
+                "soxr",
+                "kaldi_native_fbank",
+                "soundfile",
+            )
         ):
             return "MODEL_RUNTIME_MISSING"
     except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
@@ -244,6 +276,18 @@ def nano_import_presets() -> list[dict]:
         raise WorkerError("SYNTHESIS_VOICES_UNAVAILABLE") from None
 
 
+def _no_voices(_root: Path) -> list[dict]:
+    return []
+
+
+def _no_presets() -> list[dict]:
+    return []
+
+
+def _clone_adapter(_params, _model, _voice, _directory) -> dict:
+    raise WorkerError("SYNTHESIS_CLONE_UNAVAILABLE")
+
+
 @dataclass(frozen=True)
 class SynthesisEngine:
     """One local synthesis architecture this build can run."""
@@ -290,6 +334,19 @@ ENGINES: dict[str, SynthesisEngine] = {
             "precision": "fp32",
             "targets_duration": 1,
         },
+    ),
+    # A companion descriptor only: it has no adapter and is never a synthesis engine itself.
+    CLONE_ENGINE: SynthesisEngine(
+        name=CLONE_ENGINE,
+        directories=_CLONE_DIRECTORIES,
+        files=frozenset(_CLONE_FILES),
+        languages=("en", "vi"),
+        targets_duration=False,
+        runtime_code=clone_runtime_code,
+        read_voices=_no_voices,
+        import_presets=_no_presets,
+        adapter=_clone_adapter,
+        identity_fields={"adapter": 1, "sdk": SDK_VERSION, "device": "cpu", "precision": "fp32"},
     ),
 }
 
@@ -535,3 +592,53 @@ def unconfigure_synthesis(host, req: dict) -> dict:
             target.unlink(missing_ok=True)
             host.synthesis_models = SynthesisRegistry(target)
     return host.synthesis_models.status()
+
+
+def read_clone_bundle(manifest: Path) -> dict:
+    """A verified companion bundle; the wrong engine or a tampered file reads as unavailable."""
+    bundle = SynthesisRegistry(manifest).read()
+    if bundle["engine"] != CLONE_ENGINE:
+        raise WorkerError("SYNTHESIS_CLONE_UNAVAILABLE")
+    verify_bundle(bundle)
+    return bundle
+
+
+def configure_clone(host, req: dict) -> dict:
+    p = exact(req["params"], {"path"})
+    manifest = Path(string(p["path"]))
+    bundle = read_clone_bundle(manifest)
+
+    def check():
+        return host.cancelled(req)
+
+    check()
+    target = host.workspace / CLONE_MANIFEST_NAME
+    temporary = target.with_name(f".{CLONE_MANIFEST_NAME}.{uuid.uuid4()}.tmp")
+    try:
+        with temporary.open("x", encoding="utf-8") as stream:
+            json.dump({key: bundle[key] for key in FIELDS}, stream, ensure_ascii=False, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        check()
+        temporary.replace(target)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return {"available": True}
+
+
+def unconfigure_clone(host, req: dict) -> dict:
+    p = exact(req["params"], {"directory"})
+    directory = Path(string(p["directory"])).resolve()
+    target = host.workspace / CLONE_MANIFEST_NAME
+    try:
+        raw = target.read_text(encoding="utf-8")
+    except OSError:
+        return {"available": False}
+    try:
+        stored = json.loads(raw).get("directory")
+    except (ValueError, AttributeError):
+        return {"available": False}
+    if isinstance(stored, str) and Path(stored).resolve() == directory:
+        target.unlink(missing_ok=True)
+        return {"available": False}
+    return {"available": True}

@@ -21,7 +21,13 @@ from speech.recognition.models import SpeechEngines, configure_speech, unconfigu
 from speech.recognition.service import transcribe
 from speech.synthesis.cloning import clone_voice
 from speech.synthesis.cloud import list_voices
-from speech.synthesis.models import SynthesisRegistry, configure_synthesis, unconfigure_synthesis
+from speech.synthesis.models import (
+    SynthesisRegistry,
+    configure_clone,
+    configure_synthesis,
+    unconfigure_clone,
+    unconfigure_synthesis,
+)
 from speech.synthesis.service import synthesize
 from speech.translation.models import (
     TranslationRegistry,
@@ -198,6 +204,8 @@ class Worker:
                 handler = {
                     "synthesis.configure": partial(configure_synthesis, self),
                     "synthesis.unconfigure": partial(unconfigure_synthesis, self),
+                    "synthesis.configure-clone": partial(configure_clone, self),
+                    "synthesis.unconfigure-clone": partial(unconfigure_clone, self),
                     "speech.synthesize": partial(synthesize, self),
                     "synthesis.clone": partial(clone_voice, self),
                     "synthesis.cloud-voices": partial(list_voices, self),

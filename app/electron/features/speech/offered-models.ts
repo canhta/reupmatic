@@ -16,6 +16,7 @@ import {
   installOfferedModel,
   manifestPath,
 } from '../../../core/speech/model-installer.js';
+import type { OperationName } from '../../../core/worker/operations.js';
 import { RemoteError } from '../../../core/worker/remote-error.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 
@@ -49,6 +50,21 @@ const UNCONFIGURE_BY_TASK = {
   translation: 'translation.unconfigure',
   vision: 'models.unconfigure',
 } as const satisfies Record<ModelTask, string>;
+
+// The Turbo clone add-on shares the `synthesis` task but configures a companion descriptor.
+const CLONE_ENGINE = 'vieneu-v3-turbo-clone-onnx';
+
+function configureMethod(model: CatalogueModel): OperationName {
+  return model.engine === CLONE_ENGINE
+    ? 'synthesis.configure-clone'
+    : CONFIGURE_BY_TASK[model.task];
+}
+
+function unconfigureMethod(model: CatalogueModel): OperationName {
+  return model.engine === CLONE_ENGINE
+    ? 'synthesis.unconfigure-clone'
+    : UNCONFIGURE_BY_TASK[model.task];
+}
 
 /** The offered-model catalogue and its explicit install lifecycle. */
 export function installOfferedModels(host: Host) {
@@ -101,7 +117,7 @@ export function installOfferedModels(host: Host) {
         throw new RemoteError('APP_CLOSING');
       }
       try {
-        await host.worker.request(CONFIGURE_BY_TASK[model.task], {
+        await host.worker.request(configureMethod(model), {
           path: installed.manifest_path,
         }).result;
       } catch (error) {
@@ -153,7 +169,7 @@ export function installOfferedModels(host: Host) {
     if (!model) throw new RemoteError('MODEL_NOT_OFFERED');
     const manifest = manifestPath(bundleRoot, model.id);
     if (!existsSync(manifest)) throw new RemoteError('MODEL_MISSING');
-    await host.worker.request(CONFIGURE_BY_TASK[model.task], { path: manifest }).result;
+    await host.worker.request(configureMethod(model), { path: manifest }).result;
     host.modelsChanged(model.task);
     return { activated: true };
   }
@@ -168,7 +184,7 @@ export function installOfferedModels(host: Host) {
     const directory = path.join(bundleRoot, model.id);
     const hasManifest = existsSync(manifest);
     if (!hasManifest && !existsSync(directory)) return { removed: false };
-    await host.worker.request(UNCONFIGURE_BY_TASK[model.task], { directory }).result;
+    await host.worker.request(unconfigureMethod(model), { directory }).result;
     await Promise.all([
       rm(directory, { recursive: true, force: true }),
       rm(manifest, { force: true }),

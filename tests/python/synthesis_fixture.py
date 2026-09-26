@@ -30,6 +30,13 @@ NANO_FILES = [
     "constants.npz",
 ]
 
+CLONE_FILES = [
+    "speaker_encoder.onnx",
+    "denoiser.onnx",
+    "codec/moss_audio_tokenizer_encode.onnx",
+    "codec/moss_audio_tokenizer_encode.data",
+]
+
 NANO_SDK = """from types import SimpleNamespace
 from pathlib import Path
 import os, time, socket
@@ -72,10 +79,16 @@ import numpy as np
 class OnnxV3LiteEngine:
     SAMPLE_RATE = int(os.environ.get('SYNTH_TEST_RATE', '48000'))
     def __init__(self, **kwargs):
-        self.root = Path(kwargs['checkpoint_path'])
-        assert kwargs == dict(checkpoint_path=str(self.root), onnx_dir=str(self.root/'onnx'),
-            codec_dir=str(self.root/'codec'), onnx_subfolder='onnx_update', threads=2)
+        assert set(kwargs) == {'checkpoint_path','onnx_dir','codec_dir','onnx_subfolder','threads'}
+        assert kwargs['onnx_subfolder'] == 'onnx_update' and kwargs['threads'] == 2
+        self.checkpoint_path = Path(kwargs['checkpoint_path'])
+        self.onnx_dir = Path(kwargs['onnx_dir'])
+        self.codec_dir = Path(kwargs['codec_dir'])
+        self.root = self.checkpoint_path
+        assert (self.onnx_dir/'vieneu_prefill.onnx').is_file()
+        assert (self.codec_dir/'moss_audio_tokenizer_decode_full.onnx').is_file()
         assert os.environ['HF_HUB_OFFLINE'] == '1'
+        self._codec_enc_path = str(self.codec_dir/'moss_audio_tokenizer_encode.onnx')
         self.device = SimpleNamespace(type='cpu')
         self.n_vq = 8
         self.tokenizer = SimpleNamespace(encode=lambda text, **kw: SimpleNamespace(ids=list(range(513))
@@ -85,6 +98,9 @@ class OnnxV3LiteEngine:
         # Mirrors OnnxV3LiteEngine.prepare_reference: same parameters, same (emb, codes) tuple.
         assert sr is None and denoise is True and use_ref_codes is True and max_seconds == 8.0
         assert Path(ref_audio).is_file()
+        assert (self.checkpoint_path/'speaker_encoder.onnx').is_file()
+        assert (self.checkpoint_path/'denoiser.onnx').is_file()
+        assert Path(self._codec_enc_path).is_file()
         if os.environ.get('SYNTH_TEST_NETWORK'): socket.getaddrinfo('example.invalid', 443)
         if os.environ.get('SYNTH_TEST_CHILD'):
             import subprocess
@@ -185,6 +201,30 @@ def nano_bundle(root: Path) -> tuple[Path, Path]:
                 "files": {
                     name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
                     for name in NANO_FILES + ["voices.json"]
+                },
+            }
+        )
+    )
+    return manifest, directory
+
+
+def clone_bundle(root: Path) -> tuple[Path, Path]:
+    directory = root / "mô hình clone"
+    directory.mkdir()
+    for name in CLONE_FILES:
+        path = directory / name
+        path.parent.mkdir(exist_ok=True)
+        path.write_bytes(b"CONTROLLED CLONE WEIGHTS - NOT A REAL MODEL")
+    manifest = root / "clone-manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "engine": "vieneu-v3-turbo-clone-onnx",
+                "directory": str(directory),
+                "languages": ["en", "vi"],
+                "files": {
+                    name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
+                    for name in CLONE_FILES
                 },
             }
         )

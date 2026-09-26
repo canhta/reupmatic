@@ -494,6 +494,46 @@
           "size": 74012
         }
       ]
+    },
+    {
+      "id": "vieneu-v3-turbo-clone",
+      "task": "synthesis",
+      "engine": "vieneu-v3-turbo-clone-onnx",
+      "purpose": {
+        "en": "Add voice cloning to the VieNeu Turbo voice model",
+        "vi": "Thêm tính năng nhân bản giọng cho mô hình VieNeu Turbo"
+      },
+      "licence": "Apache-2.0",
+      "source_host": "huggingface.co",
+      "languages": ["en", "vi"],
+      "download_size": 116287748,
+      "on_disk_size": 116287748,
+      "files": [
+        {
+          "name": "speaker_encoder.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/speaker_encoder.onnx",
+          "sha256": "a6ac6a63997761ae2997373e2ee1c47040854b4b759ea41ec48e4e42df0f4d73",
+          "size": 28303423
+        },
+        {
+          "name": "denoiser.onnx",
+          "path": "pnnbao-ump/VieNeu-TTS-v3-Turbo/resolve/main/denoiser.onnx",
+          "sha256": "b7621953291cfe05e695a9c0ff4255aa2f93239fc17c26627e18b7b6b8f72f0b",
+          "size": 42661414
+        },
+        {
+          "name": "codec/moss_audio_tokenizer_encode.onnx",
+          "path": "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX/resolve/main/moss_audio_tokenizer_encode.onnx",
+          "sha256": "eadea4a645abdcf98714c7aead122ee2ce7da6e080f9f80b977cd1ca8e19473a",
+          "size": 815775
+        },
+        {
+          "name": "codec/moss_audio_tokenizer_encode.data",
+          "path": "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX/resolve/main/moss_audio_tokenizer_encode.data",
+          "sha256": "aa751265b2bab2887eac224484546b194875aa7494b607115439b3dc6b228a2c",
+          "size": 44507136
+        }
+      ]
     }
   ]
 }

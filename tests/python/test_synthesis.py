@@ -256,9 +256,14 @@ class NanoSynthesisModelTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_the_registry_offers_both_architectures_and_the_nano_one_targets_duration(self):
-        self.assertEqual(set(ENGINES), {"vieneu-v3-turbo-onnx", "vieneu-v3-nano-onnx"})
+        self.assertEqual(
+            set(ENGINES),
+            {"vieneu-v3-turbo-onnx", "vieneu-v3-nano-onnx", "vieneu-v3-turbo-clone-onnx"},
+        )
         self.assertFalse(ENGINES["vieneu-v3-turbo-onnx"].targets_duration)
         self.assertTrue(ENGINES["vieneu-v3-nano-onnx"].targets_duration)
+        # The clone add-on is a companion descriptor, never a synthesis engine of its own.
+        self.assertEqual(ENGINES["vieneu-v3-turbo-clone-onnx"].adapter.__name__, "_clone_adapter")
 
     def test_a_nano_bundle_reads_with_its_own_layout_voices_and_engine(self):
         bundle = self.registry.read()

@@ -126,6 +126,38 @@ test('activating a downloaded model re-runs its own configure against the manife
   ]);
 });
 
+test('the Turbo clone add-on activates and forgets through its own companion methods', async (t) => {
+  const calls = [];
+  const { offered, workspace } = await harness({
+    worker: {
+      request: (operation, args) => {
+        calls.push([operation, args]);
+        return { result: Promise.resolve({}) };
+      },
+    },
+  });
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+
+  const { models } = await offered.list();
+  const clone = models.find((model) => model.id === 'vieneu-v3-turbo-clone');
+  assert.ok(clone, 'the clone add-on is offered');
+  assert.equal(clone.engine, 'vieneu-v3-turbo-clone-onnx');
+
+  const directory = path.join(workspace, 'speech-models');
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, `${clone.id}.json`), '{}');
+  assert.deepEqual(await offered.activate(clone.id), { activated: true });
+
+  const bundle = path.join(directory, clone.id);
+  await mkdir(bundle, { recursive: true });
+  assert.deepEqual(await offered.remove(clone.id), { removed: true });
+
+  assert.deepEqual(calls, [
+    ['synthesis.configure-clone', { path: path.join(directory, `${clone.id}.json`) }],
+    ['synthesis.unconfigure-clone', { directory: bundle }],
+  ]);
+});
+
 test('removing a downloaded entry forgets its engine store, then deletes the bundle', async (t) => {
   const calls = [];
   const { offered, workspace } = await harness({

@@ -19,7 +19,15 @@ const TRANSLATION_VOCABULARIES: readonly (readonly string[])[] = [
 
 export const ARCHITECTURES_BY_TASK: ReadonlyMap<ModelTask, ReadonlySet<string>> = new Map([
   ['recognition', new Set<string>(['faster-whisper'])],
-  ['synthesis', new Set<string>(['vieneu-v3-nano-onnx', 'vieneu-v3-turbo-onnx'])],
+  [
+    'synthesis',
+    new Set<string>([
+      'vieneu-v3-nano-onnx',
+      'vieneu-v3-turbo-onnx',
+      // The optional clone add-on for Turbo; installed beside the Turbo bundle, never inside it.
+      'vieneu-v3-turbo-clone-onnx',
+    ]),
+  ],
   ['translation', new Set<string>(['ctranslate2-sentencepiece'])],
   ['vision', new Set<string>(['rapidocr-lama'])],
 ]);

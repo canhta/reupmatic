@@ -64,6 +64,8 @@ export const synthesisEn = {
   synthesisCloudRateLimited: 'VieNeu is rate limiting this key. Wait and try again.',
   synthesisCloudUnavailable: 'VieNeu Cloud is unavailable right now. Try again later.',
   synthesisCloneInvalid: 'Could not read the reference clip. Try another 3–8 second clip.',
+  synthesisCloneUnavailable:
+    'Voice cloning is not installed yet. Install it from Settings, then retry.',
   synthesisCloneEngine: 'This engine cannot clone voices. Switch to the Turbo model.',
   synthesisCloneAudio: 'Choose a clip that is 3–8 seconds long.',
   synthesisCloudCharacters:

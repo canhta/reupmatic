@@ -12,7 +12,13 @@ from media.audio.soundtrack import probe_audio
 from runtime.errors import WorkerError
 from runtime.protocol import exact, string
 from speech.synthesis.contracts import parse_voice
-from speech.synthesis.models import TURBO_ENGINE, get_engine, verify_bundle
+from speech.synthesis.models import (
+    CLONE_MANIFEST_NAME,
+    TURBO_ENGINE,
+    get_engine,
+    read_clone_bundle,
+    verify_bundle,
+)
 
 CLONE_MIN_MS = 3000
 CLONE_MAX_MS = 8000
@@ -25,6 +31,7 @@ CLONE_ERRORS = {
     "MODEL_OUTPUT_INVALID",
     "SYNTHESIS_RUNTIME_VERSION",
     "SYNTHESIS_CLONE_INVALID",
+    "SYNTHESIS_CLONE_UNAVAILABLE",
 }
 
 
@@ -63,6 +70,11 @@ def clone_voice(host, req: dict) -> dict:
     code = engine.runtime_code()
     if code:
         raise WorkerError(code)
+    # The clone add-on is an explicit separate install; absent or tampered means unavailable.
+    clone_manifest = host.workspace / CLONE_MANIFEST_NAME
+    if not clone_manifest.is_file():
+        raise WorkerError("SYNTHESIS_CLONE_UNAVAILABLE")
+    clone = read_clone_bundle(clone_manifest)
     source = host.assets.verify(asset_id, "audio", check)
     info = probe_audio(host, req, source["path"])
     if not CLONE_MIN_MS <= info["duration_ms"] <= CLONE_MAX_MS:
@@ -79,7 +91,12 @@ def clone_voice(host, req: dict) -> dict:
         path = tmp / "request.json"
         path.write_text(
             json.dumps(
-                {"audio": str(source["path"]), "root": bundle["directory"], "denoise": True},
+                {
+                    "audio": str(source["path"]),
+                    "base": bundle["directory"],
+                    "clone": clone["directory"],
+                    "denoise": True,
+                },
                 ensure_ascii=False,
             ),
             encoding="utf-8",

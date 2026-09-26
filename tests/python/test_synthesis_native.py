@@ -7,7 +7,7 @@ import unittest
 import wave
 from pathlib import Path
 
-from synthesis_fixture import bundle, nano_bundle, nano_params, params, sdk
+from synthesis_fixture import bundle, clone_bundle, nano_bundle, nano_params, params, sdk
 from test_worker import Session
 
 
@@ -19,6 +19,7 @@ class SynthesisNativeTests(unittest.TestCase):
         self.workspace.mkdir()
         self.manifest, self.model = bundle(self.root)
         self.nano_manifest, self.nano_model = nano_bundle(self.root)
+        self.clone_manifest, self.clone_model = clone_bundle(self.root)
         self.sdk = sdk(self.root)
         self.sessions = []
         self.original = self.root / "original.srt"
@@ -111,8 +112,22 @@ class SynthesisNativeTests(unittest.TestCase):
     def register_audio(self, s, path):
         return s.call("asset.register", {"path": str(path), "kind": "audio"})["asset_id"]
 
+    def configure_clone(self, s):
+        self.assertEqual(
+            s.call("synthesis.configure-clone", {"path": str(self.clone_manifest)}),
+            {"available": True},
+        )
+
+    def test_cloning_is_unavailable_until_the_add_on_is_installed(self):
+        s, _ = self.session()
+        asset = self.register_audio(s, self.reference())
+        with self.assertRaisesRegex(RuntimeError, "SYNTHESIS_CLONE_UNAVAILABLE"):
+            s.call("synthesis.clone", {"asset_id": asset})
+        self.assertFalse((self.workspace / "local-synthesis-clone.json").exists())
+
     def test_a_reference_clip_encodes_to_the_adapter_voice_shape_and_never_promotes_scratch(self):
         s, _ = self.session()
+        self.configure_clone(s)
         asset = self.register_audio(s, self.reference())
         voice = s.call("synthesis.clone", {"asset_id": asset})
         self.assertEqual(
@@ -122,6 +137,7 @@ class SynthesisNativeTests(unittest.TestCase):
 
     def test_a_cloned_voice_synthesizes_without_entering_the_receipt_or_artifact(self):
         s, p = self.session()
+        self.configure_clone(s)
         asset = self.register_audio(s, self.reference())
         voice = s.call("synthesis.clone", {"asset_id": asset})
         result = s.call(
@@ -142,18 +158,21 @@ class SynthesisNativeTests(unittest.TestCase):
 
     def test_a_clip_outside_three_to_eight_seconds_is_refused(self):
         s, _ = self.session()
+        self.configure_clone(s)
         asset = self.register_audio(s, self.reference(seconds=12))
         with self.assertRaisesRegex(RuntimeError, "SYNTHESIS_CLONE_AUDIO_INVALID"):
             s.call("synthesis.clone", {"asset_id": asset})
 
     def test_a_malformed_sdk_encoding_is_refused_not_stored(self):
         s, _ = self.session(SYNTH_TEST_CLONE_BAD="1")
+        self.configure_clone(s)
         asset = self.register_audio(s, self.reference())
         with self.assertRaisesRegex(RuntimeError, "MODEL_OUTPUT_INVALID"):
             s.call("synthesis.clone", {"asset_id": asset})
 
     def test_a_clone_child_may_not_reach_the_network(self):
         s, _ = self.session(SYNTH_TEST_NETWORK="1")
+        self.configure_clone(s)
         asset = self.register_audio(s, self.reference())
         with self.assertRaisesRegex(RuntimeError, "MODEL_NETWORK_DISABLED"):
             s.call("synthesis.clone", {"asset_id": asset})

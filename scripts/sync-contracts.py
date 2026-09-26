@@ -196,6 +196,12 @@ def compose():
         "synthesis.configure": object_schema(
             {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
         ),
+        "synthesis.configure-clone": object_schema(
+            {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
+        ),
+        "synthesis.unconfigure-clone": object_schema(
+            {"directory": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["directory"]
+        ),
         "synthesis.clone": object_schema({"asset_id": asset_id}, ["asset_id"]),
         "synthesis.cloud-voices": object_schema(
             {

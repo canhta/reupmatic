@@ -21,10 +21,12 @@ import { unwrap } from '../../bridge/client';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
 import { useNotifications } from '../../shell/NotificationsProvider';
 import { synthesisErrorKey } from '../speech/synthesis/error-message';
+import { offeredModelErrorKey } from './offered-model-error-message';
 
 type CloudVoices = { model_id: string; voices: { id: string; label: string }[] } | null;
 
 const ENGINE_LABELS: Record<string, string> = { 'vieneu-v3-turbo-onnx': 'Turbo' };
+const CLONE_CATALOGUE_ID = 'vieneu-v3-turbo-clone';
 
 export function VoicesPanel() {
   const { t } = useTranslation();
@@ -38,6 +40,9 @@ export function VoicesPanel() {
   const [error, setError] = useState('');
   const [cloning, setCloning] = useState(false);
   const [renaming, setRenaming] = useState<ClonedVoiceMeta | null>(null);
+  const [cloneReady, setCloneReady] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const installRequest = useRef<string | null>(null);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -48,20 +53,41 @@ export function VoicesPanel() {
 
   const reload = useCallback(async () => {
     try {
-      const [voices, cloudVoices, status] = await Promise.all([
+      const [voices, cloudVoices, status, offered] = await Promise.all([
         unwrap(window.reupmatic.synthesisVoiceList()),
         unwrap(window.reupmatic.synthesisCloudVoices()),
         unwrap(window.reupmatic.synthesisStatus()),
+        unwrap(window.reupmatic.speechOfferedModels()),
       ]);
       if (alive.current) {
         setCloned(voices);
         setCloud(cloudVoices);
         setLocalModelId(status.model_id);
+        setCloneReady(
+          Boolean(offered.models.find((model) => model.id === CLONE_CATALOGUE_ID)?.installed),
+        );
       }
     } catch (reason) {
       if (alive.current) setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
     }
   }, []);
+
+  async function installClone() {
+    if (installing) return;
+    setInstalling(true);
+    setError('');
+    try {
+      const { request_id } = await unwrap(
+        window.reupmatic.speechModelInstallStart(CLONE_CATALOGUE_ID),
+      );
+      installRequest.current = request_id;
+    } catch (reason) {
+      setInstalling(false);
+      raiseError(
+        t(offeredModelErrorKey(reason instanceof Error ? reason.message : 'WORKER_FAILURE')),
+      );
+    }
+  }
 
   async function previewVoice(voiceId: string, modelId: string | null, language: 'en' | 'vi') {
     if (!modelId || previewBusy) return;
@@ -81,7 +107,21 @@ export function VoicesPanel() {
 
   useEffect(() => {
     void reload();
-    return window.reupmatic.onSynthesisVoicesChanged(() => void reload());
+    const offVoices = window.reupmatic.onSynthesisVoicesChanged(() => void reload());
+    const offModels = window.reupmatic.onSynthesisModelsChanged(() => void reload());
+    const offInstall = window.reupmatic.onSpeechModelInstall((message) => {
+      if (message.id !== installRequest.current) return;
+      if (message.event === 'progress') return;
+      installRequest.current = null;
+      setInstalling(false);
+      if (message.event === 'error') setError(message.data.code);
+      void reload();
+    });
+    return () => {
+      offVoices();
+      offModels();
+      offInstall();
+    };
   }, [reload]);
 
   async function remove(voice: ClonedVoiceMeta) {
@@ -223,6 +263,9 @@ export function VoicesPanel() {
       {preview && <audio controls autoPlay src={preview.url} aria-label={t('synthesisPlayer')} />}
       {cloning && (
         <CloneVoiceDialog
+          cloneReady={cloneReady}
+          installing={installing}
+          onInstall={() => void installClone()}
           onClose={() => setCloning(false)}
           onCloned={() => {
             setCloning(false);
@@ -244,7 +287,19 @@ export function VoicesPanel() {
   );
 }
 
-function CloneVoiceDialog({ onClose, onCloned }: { onClose: () => void; onCloned: () => void }) {
+function CloneVoiceDialog({
+  cloneReady,
+  installing,
+  onInstall,
+  onClose,
+  onCloned,
+}: {
+  cloneReady: boolean;
+  installing: boolean;
+  onInstall: () => void;
+  onClose: () => void;
+  onCloned: () => void;
+}) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [engine, setEngine] = useState(CLONING_ENGINES[0]);
@@ -268,7 +323,7 @@ function CloneVoiceDialog({ onClose, onCloned }: { onClose: () => void; onCloned
     }
   }
 
-  const canClone = name.trim().length > 0 && attested && !busy;
+  const canClone = cloneReady && name.trim().length > 0 && attested && !busy && !installing;
 
   return (
     <Dialog isOpen onOpenChange={(open) => !open && onClose()} purpose="form" width={480}>
@@ -277,6 +332,23 @@ function CloneVoiceDialog({ onClose, onCloned }: { onClose: () => void; onCloned
         onOpenChange={(open) => !open && onClose()}
       />
       <FormLayout>
+        {!cloneReady && (
+          <Banner
+            status="warning"
+            title={t('settingsVoicesCloneInstallTitle')}
+            description={t('settingsVoicesCloneInstallHelp')}
+            endContent={
+              <Button
+                size="sm"
+                label={
+                  installing ? t('settingsVoicesCloneInstalling') : t('settingsVoicesCloneInstall')
+                }
+                isDisabled={installing}
+                onClick={onInstall}
+              />
+            }
+          />
+        )}
         <TextInput
           label={t('settingsVoicesName')}
           value={name}

@@ -65,6 +65,9 @@ API) — core policy is not an adapter.
 - **Cloned voices are user data, not model data.** A local clone's speaker payload lives in the
   app's user-data voice store, never inside a hash-verified model bundle; cloud voices stay with the
   provider. A clone is only created from a user-picked clip behind a persisted rights attestation.
+  The Turbo clone encoder graphs are a separate optional catalogue entry installed through the
+  explicit, hash-verified install flow; cloning is unavailable, never a silent download, until it is
+  installed.
 - **Localization is exact.** Vietnamese catalogues satisfy the exact English key surface by
   capability; duplicate keys are rejected at composition.
 

@@ -18,7 +18,8 @@ MAX_RESULT = 16 * 1024**2
 
 def run(job: dict, directory: Path) -> dict:
     data = vieneu_v3_turbo_clone.encode(
-        Path(job["root"]),
+        Path(job["base"]),
+        Path(job["clone"]),
         Path(job["audio"]),
         bool(job.get("denoise", True)),
     )

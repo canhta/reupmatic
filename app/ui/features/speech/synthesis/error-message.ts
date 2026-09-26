@@ -34,6 +34,7 @@ export function synthesisErrorKey(code: string): MessageKey {
   if (code === 'VIENEU_RATE_LIMITED') return 'synthesisCloudRateLimited';
   if (code === 'VIENEU_UNAVAILABLE' || code === 'VIENEU_CLONE_WEB_ONLY')
     return 'synthesisCloudUnavailable';
+  if (code === 'SYNTHESIS_CLONE_UNAVAILABLE') return 'synthesisCloneUnavailable';
   if (code === 'SYNTHESIS_CLONE_UNSUPPORTED_ENGINE') return 'synthesisCloneEngine';
   if (code === 'SYNTHESIS_CLONE_AUDIO_INVALID') return 'synthesisCloneAudio';
   if (code === 'SYNTHESIS_CLONE_INVALID') return 'synthesisCloneInvalid';

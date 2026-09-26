@@ -12,6 +12,11 @@ export const speechVoicesVi = {
   settingsVoicesLanguage: 'Ngôn ngữ',
   settingsVoicesReferenceHelp: '3–8 giây, một người nói, không có nhạc.',
   settingsVoicesAttest: 'Đây là giọng của tôi, hoặc tôi có quyền sử dụng nó.',
+  settingsVoicesCloneInstallTitle: 'Nhân bản giọng cần tải một lần',
+  settingsVoicesCloneInstallHelp:
+    'Tải một lần bộ mã hoá giọng nói và codec, sau đó nhân bản từ đoạn âm thanh ngắn.',
+  settingsVoicesCloneInstall: 'Cài nhân bản giọng',
+  settingsVoicesCloneInstalling: 'Đang cài nhân bản giọng',
   settingsVoicesChooseFile: 'Chọn đoạn âm thanh và nhân bản',
   settingsVoicesCloning: 'Đang nhân bản giọng',
   settingsVoicesPreview: 'Nghe thử',

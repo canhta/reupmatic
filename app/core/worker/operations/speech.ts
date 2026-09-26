@@ -44,6 +44,16 @@ export const speechOperations = {
     kind: 'queued',
     validate: validateSynthesisStatus,
   },
+  'synthesis.configure-clone': {
+    method: 'synthesis.configure-clone',
+    kind: 'queued',
+    validate: resultRecord,
+  },
+  'synthesis.unconfigure-clone': {
+    method: 'synthesis.unconfigure-clone',
+    kind: 'queued',
+    validate: resultRecord,
+  },
   'synthesis.clone': {
     method: 'synthesis.clone',
     kind: 'queued',

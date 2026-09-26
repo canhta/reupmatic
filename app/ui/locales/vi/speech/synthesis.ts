@@ -63,6 +63,7 @@ export const synthesisVi = {
   synthesisCloudRateLimited: 'VieNeu đang giới hạn tốc độ với khoá này. Chờ rồi thử lại.',
   synthesisCloudUnavailable: 'VieNeu Cloud tạm thời không khả dụng. Thử lại sau.',
   synthesisCloneInvalid: 'Không đọc được đoạn âm thanh. Thử đoạn khác dài 3–8 giây.',
+  synthesisCloneUnavailable: 'Chưa cài nhân bản giọng. Cài trong Cài đặt rồi thử lại.',
   synthesisCloneEngine: 'Bộ máy này không nhân bản được giọng. Chuyển sang mô hình Turbo.',
   synthesisCloneAudio: 'Chọn đoạn âm thanh dài 3–8 giây.',
   synthesisCloudCharacters:

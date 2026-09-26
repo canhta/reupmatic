@@ -80,6 +80,25 @@ test('the shipped catalogue offers both text-to-speech engines before any bytes 
   assert.ok(turbo.files.every((file) => file.path.includes('/resolve/main/')));
 });
 
+test('the shipped catalogue offers the Turbo clone add-on as its own explicit install', async () => {
+  const filename = new URL('../../app/core/speech/catalogue.json', import.meta.url);
+  const { models } = await readCatalogue([filename.pathname]);
+  const clone = models.find((model) => model.id === 'vieneu-v3-turbo-clone');
+  assert.ok(clone, 'the clone add-on must be offered');
+  assert.equal(clone.engine, 'vieneu-v3-turbo-clone-onnx');
+  assert.equal(clone.task, 'synthesis');
+  assert.deepEqual(clone.languages, ['en', 'vi']);
+  assert.equal(clone.files.length, 4);
+  assert.ok(clone.files.some((file) => file.name === 'speaker_encoder.onnx'));
+  assert.ok(clone.files.some((file) => file.name === 'denoiser.onnx'));
+  assert.ok(clone.files.some((file) => file.name === 'codec/moss_audio_tokenizer_encode.onnx'));
+  assert.ok(clone.files.some((file) => file.name === 'codec/moss_audio_tokenizer_encode.data'));
+  assert.equal(
+    clone.download_size,
+    clone.files.reduce((sum, file) => sum + file.size, 0),
+  );
+});
+
 test('an entry naming an architecture the app does not implement is refused at configuration time', () => {
   assert.throws(
     () => parseCatalogueModel(entry({ engine: 'not-an-architecture' })),
