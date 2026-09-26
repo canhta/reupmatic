@@ -23,6 +23,7 @@ import {
   createPkcePair,
   exchangeCodeForTokens,
   readAuthorizationCode as readTikTokAuthorizationCode,
+  refreshTikTokAccessToken,
   refreshTokens,
 } from '../../dist-node/electron/features/publishing/tiktok-oauth.js';
 
@@ -1159,5 +1160,67 @@ test('B1: only a definite platform failure after upload is retryable, with the p
     assert.equal(canStartAttempt(next), true);
   } finally {
     await graph.close();
+  }
+});
+
+test('M1: a TikTok refresh marks reauthorize only for a definite invalid_grant refusal', async () => {
+  const marks = [];
+  const markReauthorize = () => {
+    marks.push(1);
+    return Promise.resolve();
+  };
+
+  // Offline / network failure: the error surfaces and the channel is left connected.
+  const offline = () => Promise.reject(new TypeError('fetch failed'));
+  await assert.rejects(
+    refreshTikTokAccessToken({
+      refreshToken: 'refresh',
+      brokerUrl: 'https://broker.example/api/tiktok/token',
+      markReauthorize,
+      fetchImpl: offline,
+    }),
+  );
+  assert.equal(marks.length, 0, 'a network error must not force a re-login');
+
+  // A broker 5xx is not a definite refusal either.
+  const flaky = await fakeTikTok([
+    {
+      match: (r) => r.path === '/api/tiktok/token',
+      reply: () => ({ status: 502, body: { error: 'TIKTOK_REFRESH_FAILED' } }),
+    },
+  ]);
+  try {
+    await assert.rejects(
+      refreshTikTokAccessToken({
+        refreshToken: 'refresh',
+        brokerUrl: `${flaky.base}/api/tiktok/token`,
+        markReauthorize,
+      }),
+      /CHANNEL_AUTHORIZE_FAILED/,
+    );
+    assert.equal(marks.length, 0);
+  } finally {
+    await flaky.close();
+  }
+
+  // invalid_grant proves the refresh token is dead: reauthorize.
+  const refused = await fakeTikTok([
+    {
+      match: (r) => r.path === '/api/tiktok/token',
+      reply: () => ({ status: 400, body: { error: 'invalid_grant' } }),
+    },
+  ]);
+  try {
+    await assert.rejects(
+      refreshTikTokAccessToken({
+        refreshToken: 'refresh',
+        brokerUrl: `${refused.base}/api/tiktok/token`,
+        markReauthorize,
+      }),
+      /CHANNEL_REAUTHORIZE/,
+    );
+    assert.equal(marks.length, 1);
+  } finally {
+    await refused.close();
   }
 });

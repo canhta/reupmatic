@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { errorCodeOf, publishError } from './publishing-error.js';
 
 export const TIKTOK_AUTHORIZE_BASE_URL = 'https://www.tiktok.com';
 export const TIKTOK_AUTHORIZE_PATH = '/v2/auth/authorize/';
@@ -96,10 +97,37 @@ async function callBroker(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!response.ok) throw new Error('CHANNEL_AUTHORIZE_FAILED');
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+    const code = payload?.error;
+    // invalid_grant means the refresh token is dead: a definite refusal, so the user re-logs in.
+    // Everything else (broker 5xx, malformed body) is a transient failure, not a re-login.
+    if (code === 'invalid_grant') throw publishError('CHANNEL_REAUTHORIZE', { definite: true });
+    throw publishError('CHANNEL_AUTHORIZE_FAILED');
+  }
   const payload = (await response.json().catch(() => null)) as { tokens?: unknown } | null;
-  if (!validPayload(payload?.tokens)) throw new Error('CHANNEL_AUTHORIZE_FAILED');
+  if (!validPayload(payload?.tokens)) throw publishError('CHANNEL_AUTHORIZE_FAILED');
   return payload.tokens;
+}
+
+/**
+ * Refreshes an expiring TikTok access token through the broker. Only a definite refusal (a dead
+ * refresh token) marks the channel for reauthorization; offline, timeouts and broker 5xx surface
+ * unchanged and leave the channel connected.
+ */
+export async function refreshTikTokAccessToken(input: {
+  refreshToken: string;
+  brokerUrl: string;
+  markReauthorize?: () => Promise<void>;
+  fetchImpl?: typeof fetch;
+}): Promise<TikTokTokenPayload> {
+  try {
+    return await refreshTokens(input.refreshToken, input.brokerUrl, input.fetchImpl);
+  } catch (error) {
+    if (input.markReauthorize && errorCodeOf(error) === 'CHANNEL_REAUTHORIZE')
+      await input.markReauthorize();
+    throw error;
+  }
 }
 
 // The broker is the only place the client secret exists; it returns the token set once.

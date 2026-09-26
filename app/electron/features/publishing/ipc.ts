@@ -33,7 +33,11 @@ import { PublishingService } from './publish-service.js';
 import { errorCodeOf } from './publishing-error.js';
 import { DEFAULT_TIKTOK_BASE_URL, TikTokDestination } from './tiktok-adapter.js';
 import { TikTokApi, type TikTokCreatorInfo } from './tiktok-api.js';
-import { exchangeCodeForTokens, refreshTokens, TIKTOK_AUTHORIZE_BASE_URL } from './tiktok-oauth.js';
+import {
+  exchangeCodeForTokens,
+  refreshTikTokAccessToken,
+  TIKTOK_AUTHORIZE_BASE_URL,
+} from './tiktok-oauth.js';
 import { YOUTUBE_UPLOAD_ENDPOINT, YouTubeDestination } from './youtube-adapter.js';
 import { connectYouTubeChannel } from './youtube-connect.js';
 
@@ -140,23 +144,19 @@ export function installPublishing(host: PublishingHost) {
         await host.credentials.markReauthorize(channelId);
         throw new Error('CHANNEL_REAUTHORIZE');
       }
-      try {
-        const tokens = await refreshTokens(
-          stored.refresh_token,
-          requireTikTok(host.config).brokerUrl,
-          host.fetch,
-        );
-        await host.credentials.updateTokens(channelId, {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: Date.now() + tokens.expires_in * 1000,
-        });
-        return { account_id: stored.account_id, access_token: tokens.access_token };
-      } catch (error) {
-        // Any failed refresh needs a new login.
-        await host.credentials.markReauthorize(channelId);
-        throw error;
-      }
+      const tokens = await refreshTikTokAccessToken({
+        refreshToken: stored.refresh_token,
+        brokerUrl: requireTikTok(host.config).brokerUrl,
+        // Only a definite refusal marks the channel; offline and broker 5xx surface unchanged.
+        markReauthorize: () => host.credentials.markReauthorize(channelId),
+        fetchImpl: host.fetch,
+      });
+      await host.credentials.updateTokens(channelId, {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: Date.now() + tokens.expires_in * 1000,
+      });
+      return { account_id: stored.account_id, access_token: tokens.access_token };
     }
     if (!stored.refresh_token) {
       await host.credentials.markReauthorize(channelId);

@@ -61,15 +61,20 @@ async function requestTokens(
   fetchImpl: typeof fetch,
   url: string,
   params: Record<string, string>,
-): Promise<TikTokTokenSet | null> {
+): Promise<{ tokens: TikTokTokenSet | null; error: string | null }> {
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(params).toString(),
   });
-  if (!response.ok) return null;
   const payload = (await response.json().catch(() => null)) as unknown;
-  if (!isRecord(payload)) return null;
+  if (!response.ok) {
+    // Surface TikTok's own error code (notably invalid_grant) so the desktop can tell a dead
+    // refresh token from a transient failure.
+    const error = isRecord(payload) && typeof payload.error === 'string' ? payload.error : null;
+    return { tokens: null, error };
+  }
+  if (!isRecord(payload)) return { tokens: null, error: null };
   const access_token = requiredString(payload, 'access_token');
   const refresh_token = requiredString(payload, 'refresh_token');
   const open_id = requiredString(payload, 'open_id');
@@ -82,8 +87,11 @@ async function requestTokens(
     expires_in === null ||
     refresh_expires_in === null
   )
-    return null;
-  return { access_token, refresh_token, expires_in, refresh_expires_in, open_id };
+    return { tokens: null, error: null };
+  return {
+    tokens: { access_token, refresh_token, expires_in, refresh_expires_in, open_id },
+    error: null,
+  };
 }
 
 // PKCE code verifier: 43–128 unreserved characters (RFC 7636).
@@ -105,7 +113,7 @@ export async function exchangeTikTokCode(
   if (!validVerifier(codeVerifier))
     return { ok: false, status: 400, error: 'INVALID_CODE_VERIFIER' };
 
-  const tokens = await requestTokens(fetchImpl, `${config.baseUrl}${TIKTOK_TOKEN_PATH}`, {
+  const result = await requestTokens(fetchImpl, `${config.baseUrl}${TIKTOK_TOKEN_PATH}`, {
     client_key: config.clientKey,
     client_secret: config.clientSecret,
     code,
@@ -113,8 +121,8 @@ export async function exchangeTikTokCode(
     redirect_uri: config.redirectUri,
     code_verifier: codeVerifier,
   });
-  if (!tokens) return { ok: false, status: 502, error: 'TIKTOK_EXCHANGE_FAILED' };
-  return { ok: true, tokens };
+  if (!result.tokens) return { ok: false, status: 502, error: 'TIKTOK_EXCHANGE_FAILED' };
+  return { ok: true, tokens: result.tokens };
 }
 
 export async function refreshTikTokToken(
@@ -127,12 +135,16 @@ export async function refreshTikTokToken(
   if (typeof refreshToken !== 'string' || !refreshToken || refreshToken.length > 4096)
     return { ok: false, status: 400, error: 'INVALID_REFRESH_TOKEN' };
 
-  const tokens = await requestTokens(fetchImpl, `${config.baseUrl}${TIKTOK_TOKEN_PATH}`, {
+  const result = await requestTokens(fetchImpl, `${config.baseUrl}${TIKTOK_TOKEN_PATH}`, {
     client_key: config.clientKey,
     client_secret: config.clientSecret,
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
   });
-  if (!tokens) return { ok: false, status: 502, error: 'TIKTOK_REFRESH_FAILED' };
-  return { ok: true, tokens };
+  if (!result.tokens) {
+    // A dead refresh token is a definite refusal the desktop must map to CHANNEL_REAUTHORIZE.
+    if (result.error === 'invalid_grant') return { ok: false, status: 401, error: 'invalid_grant' };
+    return { ok: false, status: 502, error: 'TIKTOK_REFRESH_FAILED' };
+  }
+  return { ok: true, tokens: result.tokens };
 }

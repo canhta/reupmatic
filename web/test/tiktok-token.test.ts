@@ -209,3 +209,29 @@ test('the broker never logs a token and needs the client credentials and redirec
     await server.close();
   }
 });
+
+test('a dead refresh token is reported as invalid_grant for a re-login', async () => {
+  const server = await fakeTokenEndpoint(() => ({ status: 400, body: { error: 'invalid_grant' } }));
+  try {
+    assert.deepEqual(await refreshTikTokToken({ refresh_token: REFRESH }, config(server.base)), {
+      ok: false,
+      status: 401,
+      error: 'invalid_grant',
+    });
+  } finally {
+    await server.close();
+  }
+});
+
+test('a transient refresh failure is not reported as a re-login', async () => {
+  const server = await fakeTokenEndpoint(() => ({ status: 503, body: {} }));
+  try {
+    assert.deepEqual(await refreshTikTokToken({ refresh_token: REFRESH }, config(server.base)), {
+      ok: false,
+      status: 502,
+      error: 'TIKTOK_REFRESH_FAILED',
+    });
+  } finally {
+    await server.close();
+  }
+});
