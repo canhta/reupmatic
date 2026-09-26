@@ -101,6 +101,63 @@ class SynthesisNativeTests(unittest.TestCase):
             [7200, 7200],
         )
 
+    def reference(self, seconds=4):
+        path = self.root / f"reference-{seconds}.wav"
+        with wave.open(str(path), "wb") as audio:
+            audio.setparams((1, 2, 44100, 44100 * seconds, "NONE", "not compressed"))
+            audio.writeframes(bytes(44100 * seconds * 2))
+        return path
+
+    def register_audio(self, s, path):
+        return s.call("asset.register", {"path": str(path), "kind": "audio"})["asset_id"]
+
+    def test_a_reference_clip_encodes_to_the_adapter_voice_shape_and_never_promotes_scratch(self):
+        s, _ = self.session()
+        asset = self.register_audio(s, self.reference())
+        voice = s.call("synthesis.clone", {"asset_id": asset})
+        self.assertEqual(
+            voice, {"speaker_emb": [0.25] * 192, "ref_codes": [[1, 2, 3, 4, 5, 6, 7, 8]] * 2}
+        )
+        self.assertFalse(list((self.workspace / "speech").iterdir()))
+
+    def test_a_cloned_voice_synthesizes_without_entering_the_receipt_or_artifact(self):
+        s, p = self.session()
+        asset = self.register_audio(s, self.reference())
+        voice = s.call("synthesis.clone", {"asset_id": asset})
+        result = s.call(
+            "speech.synthesize", {**p, "voice_id": "cloned_aaaaaaaaaaaaaaaa", "voice": voice}
+        )
+        output = self.workspace / "speech" / result["artifact_id"]
+        self.assertEqual({name.name for name in output.iterdir()}, {"speech.wav", "receipt.json"})
+        receipt = json.loads((output / "receipt.json").read_text())
+        self.assertNotIn("voice", receipt)
+        self.assertEqual(receipt["voice_id"], "cloned_aaaaaaaaaaaaaaaa")
+        self.assertEqual(result["frames"], 21600)
+
+    def test_cloning_is_refused_on_an_engine_with_no_local_encode_graph(self):
+        s, _ = self.nano_session()
+        asset = self.register_audio(s, self.reference())
+        with self.assertRaisesRegex(RuntimeError, "SYNTHESIS_CLONE_UNSUPPORTED_ENGINE"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
+    def test_a_clip_outside_three_to_eight_seconds_is_refused(self):
+        s, _ = self.session()
+        asset = self.register_audio(s, self.reference(seconds=12))
+        with self.assertRaisesRegex(RuntimeError, "SYNTHESIS_CLONE_AUDIO_INVALID"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
+    def test_a_malformed_sdk_encoding_is_refused_not_stored(self):
+        s, _ = self.session(SYNTH_TEST_CLONE_BAD="1")
+        asset = self.register_audio(s, self.reference())
+        with self.assertRaisesRegex(RuntimeError, "MODEL_OUTPUT_INVALID"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
+    def test_a_clone_child_may_not_reach_the_network(self):
+        s, _ = self.session(SYNTH_TEST_NETWORK="1")
+        asset = self.register_audio(s, self.reference())
+        with self.assertRaisesRegex(RuntimeError, "MODEL_NETWORK_DISABLED"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
     def test_a_nano_job_for_a_language_the_engine_does_not_serve_is_refused(self):
         s, p = self.nano_session()
         with self.assertRaisesRegex(RuntimeError, "MODEL_LANGUAGE_UNAVAILABLE"):

@@ -140,6 +140,17 @@ export class ClonedVoiceStore {
     return this.#readData(parseClonedVoiceId(id));
   }
 
+  /** Undefined for a preset or cloud id, or a cloned id this device no longer stores. */
+  async resolve(id: string): Promise<ClonedVoiceData | undefined> {
+    if (!/^cloned_[a-f0-9]{16}$/.test(id)) return undefined;
+    try {
+      return await this.#readData(id);
+    } catch (error) {
+      if (error instanceof RemoteError && error.code === 'SPEECH_VOICE_NOT_FOUND') return undefined;
+      throw error;
+    }
+  }
+
   /** Every stored voice file, so a caller can assert nothing stray was left behind. */
   async entries(): Promise<string[]> {
     return readdir(this.#directory).catch(() => []);

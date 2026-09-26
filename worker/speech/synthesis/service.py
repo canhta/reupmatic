@@ -36,6 +36,8 @@ ERRORS = {
     "SYNTHESIS_TOKEN_LIMIT",
     "SYNTHESIS_LIMIT",
     "SYNTHESIS_VOICE_UNAVAILABLE",
+    "SYNTHESIS_CLONE_INVALID",
+    "SYNTHESIS_CLONE_UNSUPPORTED_ENGINE",
 }
 
 
@@ -79,12 +81,14 @@ def read_audio(directory: Path, params: dict) -> dict:
 
 def synthesize(host, req: dict) -> dict:
     params = parse_options(req["params"])
+    # A cloned payload is used in-process only; it never reaches the result, receipt or job params.
+    voice_data = params.pop("voice", None)
 
     def check():
         return host.cancelled(req)
 
     model = host.synthesis_models.require(
-        params["language"], params["voice_id"], params["model_id"], check
+        params["language"], params["voice_id"], params["model_id"], check, voice_data
     )
     if shutil.disk_usage(host.workspace).free < 128 * 1024**2:
         raise WorkerError("SYNTHESIS_DISK_LOW")
@@ -99,9 +103,10 @@ def synthesize(host, req: dict) -> dict:
     with tempfile.TemporaryDirectory(dir=root, prefix=".synthesis-") as directory:
         tmp = Path(directory)
         path = tmp / "request.json"
-        path.write_text(
-            json.dumps({"params": params, "model": model}, ensure_ascii=False), encoding="utf-8"
-        )
+        job = {"params": params, "model": model}
+        if voice_data is not None:
+            job["voice"] = voice_data
+        path.write_text(json.dumps(job, ensure_ascii=False), encoding="utf-8")
         emit(None)
         last = -1
 

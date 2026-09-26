@@ -196,6 +196,7 @@ def compose():
         "synthesis.configure": object_schema(
             {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
         ),
+        "synthesis.clone": object_schema({"asset_id": asset_id}, ["asset_id"]),
         "speech.synthesize": copy.deepcopy(synthesis["worker_params"]),
         "translation.status": object_schema({}, []),
         "translation.configure": object_schema(

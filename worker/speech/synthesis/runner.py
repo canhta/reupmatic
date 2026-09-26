@@ -12,7 +12,7 @@ from runtime.errors import WorkerError
 from runtime.model_result import atomic_json
 from runtime.offline import deny_network_and_children
 from speech.synthesis.contracts import parse_options, validate_audio
-from speech.synthesis.models import ENGINES, SDK_VERSION, verify_bundle
+from speech.synthesis.models import ENGINES, SDK_VERSION, TURBO_ENGINE, verify_bundle
 
 
 def run(job: dict, directory: Path) -> dict:
@@ -23,11 +23,16 @@ def run(job: dict, directory: Path) -> dict:
     verify_bundle(model)
     if importlib.metadata.version("vieneu") != SDK_VERSION:
         raise WorkerError("SYNTHESIS_RUNTIME_VERSION")
-    root = Path(model["directory"])
-    voices = engine.read_voices(root)
-    voice = next((v for v in voices if v["id"] == params["voice_id"]), None)
-    if not voice or params["language"] not in model["languages"]:
-        raise WorkerError("SYNTHESIS_VOICE_UNAVAILABLE")
+    if params["language"] not in model["languages"]:
+        raise WorkerError("MODEL_LANGUAGE_UNAVAILABLE")
+    voice = job.get("voice")
+    if voice is None:
+        root = Path(model["directory"])
+        voice = next((v for v in engine.read_voices(root) if v["id"] == params["voice_id"]), None)
+        if not voice:
+            raise WorkerError("SYNTHESIS_VOICE_UNAVAILABLE")
+    elif engine.name != TURBO_ENGINE:
+        raise WorkerError("SYNTHESIS_CLONE_UNSUPPORTED_ENGINE")
     data = engine.adapter(params, model, voice, directory)
     return validate_audio(data, params)
 

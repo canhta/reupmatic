@@ -3,6 +3,13 @@ import {
   type SynthesisInput,
   type SynthesisStatus,
 } from '../../speech/synthesis/contracts.js';
+import {
+  type ClonedVoiceMeta,
+  parseClonedVoiceId,
+  parseVoiceCloneRequest,
+  parseVoiceName,
+  type VoiceCloneRequest,
+} from '../../speech/voices.js';
 import { operation } from '../operation-contract.js';
 import { requestId, requestRecord } from '../validators.js';
 
@@ -68,5 +75,29 @@ export const synthesisOperations = {
     rendererMethod: 'synthesisCancelExport',
     validate: () => undefined,
     toRequest: () => undefined,
+  }),
+  'synthesis-voice-list': operation<undefined, ClonedVoiceMeta[]>()({
+    rendererMethod: 'synthesisVoiceList',
+    validate: () => undefined,
+    toRequest: () => undefined,
+  }),
+  // The native picker and attestation both gate creation; a cancelled picker returns null.
+  'synthesis-voice-clone': operation<{ draft: VoiceCloneRequest }, ClonedVoiceMeta | null>()({
+    rendererMethod: 'synthesisVoiceClone',
+    validate: (input) => ({ draft: parseVoiceCloneRequest(requestRecord(input, ['draft']).draft) }),
+    toRequest: (draft: VoiceCloneRequest) => ({ draft }),
+  }),
+  'synthesis-voice-rename': operation<{ id: string; name: string }, ClonedVoiceMeta>()({
+    rendererMethod: 'synthesisVoiceRename',
+    validate: (input) => {
+      const value = requestRecord(input, ['id', 'name']);
+      return { id: parseClonedVoiceId(value.id), name: parseVoiceName(value.name) };
+    },
+    toRequest: (id: string, name: string) => ({ id, name }),
+  }),
+  'synthesis-voice-remove': operation<{ id: string }, { removed: boolean }>()({
+    rendererMethod: 'synthesisVoiceRemove',
+    validate: (input) => ({ id: parseClonedVoiceId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
   }),
 } as const;

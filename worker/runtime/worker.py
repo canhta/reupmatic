@@ -19,6 +19,7 @@ from processing.recipe import model_snapshot
 from processing.service import process_video
 from speech.recognition.models import SpeechEngines, configure_speech, unconfigure_speech
 from speech.recognition.service import transcribe
+from speech.synthesis.cloning import clone_voice
 from speech.synthesis.models import SynthesisRegistry, configure_synthesis, unconfigure_synthesis
 from speech.synthesis.service import synthesize
 from speech.translation.models import (
@@ -197,6 +198,7 @@ class Worker:
                     "synthesis.configure": partial(configure_synthesis, self),
                     "synthesis.unconfigure": partial(unconfigure_synthesis, self),
                     "speech.synthesize": partial(synthesize, self),
+                    "synthesis.clone": partial(clone_voice, self),
                     "translation.configure": partial(configure_translation, self),
                     "translation.unconfigure": partial(unconfigure_translation, self),
                     "speech.translate": partial(translate, self),

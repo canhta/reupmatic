@@ -67,6 +67,7 @@ export const events = {
   }),
   'synthesis-job': event<SynthesisEvent>()({ rendererMethod: 'onSynthesisJob' }),
   'synthesis-models-changed': event<void>()({ rendererMethod: 'onSynthesisModelsChanged' }),
+  'synthesis-voices-changed': event<void>()({ rendererMethod: 'onSynthesisVoicesChanged' }),
 } as const;
 
 export type EventName = keyof typeof events;

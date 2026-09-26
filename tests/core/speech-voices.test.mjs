@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildClonedVoiceMeta,
+  buildSynthesisVoices,
   newClonedVoiceId,
   parseClonedVoiceData,
   parseClonedVoiceId,
@@ -89,6 +90,52 @@ test('building metadata stamps the attestation and creation at the same explicit
   assert.equal(meta.attested_at, '2026-09-26T00:00:00.000Z');
   assert.equal(meta.created_at, meta.attested_at);
   assert.deepEqual(parseClonedVoiceMeta(meta), meta);
+});
+
+test('the selector union lists presets, this engine clones, and cloud voices with their identity', () => {
+  const model = 'a'.repeat(64);
+  const clone = buildClonedVoiceMeta(
+    parseVoiceCloneRequest({
+      name: 'Clone',
+      engine: 'vieneu-v3-turbo-onnx',
+      language: 'vi',
+      attested: true,
+    }),
+    newClonedVoiceId(),
+  );
+  const nanoClone = buildClonedVoiceMeta(
+    parseVoiceCloneRequest({
+      name: 'Nano',
+      engine: 'vieneu-v3-turbo-onnx',
+      language: 'vi',
+      attested: true,
+    }),
+    newClonedVoiceId(),
+  );
+  for (const voice of [clone, nanoClone]) voice.engine = 'vieneu-v3-turbo-onnx';
+  const options = buildSynthesisVoices(
+    {
+      engine: 'vieneu-v3-turbo-onnx',
+      model_id: model,
+      languages: ['en', 'vi'],
+      voices: [{ id: 'preset-1', label: 'Preset' }],
+    },
+    [clone, { ...nanoClone, engine: 'vieneu-v3-nano-onnx' }],
+    [{ id: 'clone_remote', label: 'Cloud clone' }],
+    'b'.repeat(64),
+  );
+  assert.deepEqual(
+    options.map((option) => [option.id, option.source, option.engine, option.model_id]),
+    [
+      ['preset-1', 'preset', 'vieneu-v3-turbo-onnx', model],
+      [clone.id, 'cloned', 'vieneu-v3-turbo-onnx', model],
+      ['clone_remote', 'cloud', 'vieneu-v4', 'b'.repeat(64)],
+    ],
+  );
+});
+
+test('with no local engine and no cloud model the selector is empty, never a placeholder', () => {
+  assert.deepEqual(buildSynthesisVoices(null, [], [], null), []);
 });
 
 test('stored metadata with a broken timestamp, source or engine is refused loudly', () => {

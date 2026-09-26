@@ -1,8 +1,14 @@
 import { EventEmitter } from 'node:events';
 import { RemoteError } from '../../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../../worker/worker-client.js';
+import type { ClonedVoiceData } from '../voices.js';
 import type { SynthesisArtifacts } from './artifacts.js';
 import { parseSynthesisInput, type SynthesisInput, type SynthesisResult } from './contracts.js';
+
+// Resolves a stored clone's numeric payload; presets and cloud voices resolve to undefined.
+export interface VoiceDataLookup {
+  voiceData(voiceId: string): Promise<ClonedVoiceData | undefined>;
+}
 
 interface Operation {
   input: SynthesisInput;
@@ -20,6 +26,7 @@ export class SynthesisCoordinator extends EventEmitter {
   constructor(
     private readonly worker: WorkerPort,
     private readonly artifacts: SynthesisArtifacts,
+    private readonly voices?: VoiceDataLookup,
   ) {
     super();
     worker.on('message', this.onMessage);
@@ -93,7 +100,13 @@ export class SynthesisCoordinator extends EventEmitter {
   private async execute(operation: Operation): Promise<SynthesisResult> {
     const { input } = operation;
     try {
-      const ticket = this.worker.request('speech.synthesize', input.params, input.revision);
+      const voice = this.voices ? await this.voices.voiceData(input.params.voice_id) : undefined;
+      if (operation.cancelled || this.closing) throw new RemoteError('CANCELLED');
+      const ticket = this.worker.request(
+        'speech.synthesize',
+        voice ? { ...input.params, voice } : input.params,
+        input.revision,
+      );
       operation.ticket = ticket;
       this.workerIds.set(ticket.id, input.request_id);
       const data = await ticket.result;

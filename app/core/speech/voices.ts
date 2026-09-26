@@ -177,6 +177,66 @@ export function parseClonedVoiceData(value: unknown): ClonedVoiceData {
   return { speaker_emb: value.speaker_emb, ref_codes: value.ref_codes };
 }
 
+/** The local engine view the status carries, without the wire's stricter shape. */
+export interface LocalVoiceStatusView {
+  engine: string | null;
+  model_id: string | null;
+  languages: readonly VoiceLanguage[];
+  voices: readonly { id: string; label: string }[];
+}
+
+/**
+ * The Editor selector's union: bundle presets, this device's clones, and cloud voices for the
+ * selected engine. A clone only appears for the engine and language its bundle already serves.
+ */
+export function buildSynthesisVoices(
+  local: LocalVoiceStatusView | null,
+  cloned: readonly ClonedVoiceMeta[],
+  cloud: readonly { id: string; label: string }[],
+  cloudModelId: string | null,
+): SynthesisVoiceOption[] {
+  const options: SynthesisVoiceOption[] = [];
+  const seen = new Set<string>();
+  const push = (option: SynthesisVoiceOption): void => {
+    if (seen.has(option.id)) return;
+    seen.add(option.id);
+    options.push(option);
+  };
+  if (local?.engine && local.model_id) {
+    for (const voice of local.voices) {
+      push({
+        id: voice.id,
+        label: voice.label,
+        source: 'preset',
+        engine: local.engine,
+        model_id: local.model_id,
+      });
+    }
+    for (const voice of cloned) {
+      if (voice.engine !== local.engine || !local.languages.includes(voice.language)) continue;
+      push({
+        id: voice.id,
+        label: voice.name,
+        source: 'cloned',
+        engine: voice.engine,
+        model_id: local.model_id,
+      });
+    }
+  }
+  if (cloudModelId) {
+    for (const voice of cloud) {
+      push({
+        id: voice.id,
+        label: voice.label,
+        source: 'cloud',
+        engine: CLOUD_SYNTHESIS_ENGINE,
+        model_id: cloudModelId,
+      });
+    }
+  }
+  return options;
+}
+
 export function buildClonedVoiceMeta(
   request: VoiceCloneRequest,
   id: string,

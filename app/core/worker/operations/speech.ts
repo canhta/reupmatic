@@ -1,6 +1,7 @@
 import type { SpeechStatus } from '../../speech/recognition.js';
 import type { SynthesisStatus } from '../../speech/synthesis/contracts.js';
 import type { TranslationStatus } from '../../speech/translation/contracts.js';
+import { parseClonedVoiceData } from '../../speech/voices.js';
 import type { OperationEntry } from '../operation-contract.js';
 import { resultObject, resultRecord } from '../result-validation.js';
 
@@ -42,6 +43,11 @@ export const speechOperations = {
     method: 'synthesis.unconfigure',
     kind: 'queued',
     validate: validateSynthesisStatus,
+  },
+  'synthesis.clone': {
+    method: 'synthesis.clone',
+    kind: 'queued',
+    validate: (data) => parseClonedVoiceData(data),
   },
   'speech.unconfigure': {
     method: 'speech.unconfigure',

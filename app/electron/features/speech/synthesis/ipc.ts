@@ -10,9 +10,11 @@ import { SynthesisArtifacts } from '../../../../core/speech/synthesis/artifacts.
 import { parseSynthesisStatus } from '../../../../core/speech/synthesis/contracts.js';
 import { SynthesisCoordinator } from '../../../../core/speech/synthesis/coordinator.js';
 import type { VoiceTrack } from '../../../../core/speech/synthesis/voice-track.js';
+import { parseVoiceCloneRequest } from '../../../../core/speech/voices.js';
 import type { Ticket, WorkerClient } from '../../../../core/worker/worker-client.js';
 import type { IpcWire } from '../../../runtime/ipc.js';
 import type { MediaRegistry } from '../../media/registry.js';
+import type { ClonedVoiceStore } from '../voice-store.js';
 import { installSynthesisExports } from './exports.js';
 
 interface Host {
@@ -23,14 +25,18 @@ interface Host {
   worker: WorkerClient;
   getWindow: () => BrowserWindow | undefined;
   getLanguage: () => string;
+  voices: ClonedVoiceStore;
 }
 
 export function installSynthesis(host: Host) {
   const artifacts = new SynthesisArtifacts(host.workspace);
-  const coordinator = new SynthesisCoordinator(host.worker, artifacts);
+  const coordinator = new SynthesisCoordinator(host.worker, artifacts, {
+    voiceData: (voiceId) => host.voices.resolve(voiceId),
+  });
   const exports = installSynthesisExports({ ...host, artifacts });
   let setup: Ticket<unknown> | undefined;
   let choosing = false,
+    cloning = false,
     cancelled = false,
     closing = false;
   const send = (channel: string, message?: unknown) => {
@@ -88,9 +94,50 @@ export function installSynthesis(host: Host) {
     await setup?.cancel();
     return { requested: choosing };
   });
+  host.wire('synthesis-voice-list', () => host.voices.list());
+  // A cloned voice comes only from a user-picked file plus the attestation the request carries.
+  host.wire('synthesis-voice-clone', async (input) => {
+    const draft = parseVoiceCloneRequest(input.draft);
+    if (closing) throw new Error('APP_CLOSING');
+    if (choosing || cloning) throw new Error('EDITOR_BUSY');
+    const window = host.getWindow();
+    if (!window) throw new Error('EDITOR_BUSY');
+    cloning = true;
+    cancelled = false;
+    try {
+      const selected = await dialog.showOpenDialog(window, {
+        title:
+          host.getLanguage() === 'vi'
+            ? 'Chọn tệp âm thanh để nhân bản giọng'
+            : 'Choose a voice reference audio file',
+        properties: ['openFile'],
+        filters: [{ name: 'Audio', extensions: ['wav', 'mp3', 'flac', 'm4a', 'ogg'] }],
+      });
+      if (selected.canceled || !selected.filePaths[0]) return null;
+      if (cancelled || closing) throw new Error('CANCELLED');
+      const asset = await host.worker.request('asset.register', {
+        path: selected.filePaths[0],
+        kind: 'audio',
+      }).result;
+      if (cancelled || closing) throw new Error('CANCELLED');
+      const data = await host.worker.request('synthesis.clone', {
+        asset_id: asset.asset_id,
+      }).result;
+      if (cancelled || closing) throw new Error('CANCELLED');
+      return await host.voices.create(draft, data);
+    } finally {
+      cloning = false;
+      send('synthesis-voices-changed');
+    }
+  });
+  host.wire('synthesis-voice-rename', (input) => host.voices.rename(input.id, input.name));
+  host.wire('synthesis-voice-remove', async (input) => {
+    await host.voices.remove(input.id);
+    return { removed: true };
+  });
   return {
     get activeCount() {
-      return coordinator.activeCount + Number(choosing) + exports.activeCount;
+      return coordinator.activeCount + Number(choosing) + Number(cloning) + exports.activeCount;
     },
     /** Re-verifies the saved voice artifact; a caller-supplied path is never admitted. */
     async verifyVoice(track: VoiceTrack) {

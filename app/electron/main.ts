@@ -5,6 +5,7 @@ import { SpeechProviderStore } from './features/speech/provider-store.js';
 import { ChannelCredentialStore } from './features/publishing/credential-store.js';
 import { installPublishing } from './features/publishing/ipc.js';
 import { readPublishingConfig } from './features/publishing/config.js';
+import { ClonedVoiceStore } from './features/speech/voice-store.js';
 import { installRecovery } from './features/projects/recovery.js';
 import { installCatalog } from './features/catalog/ipc.js';
 import { app, BrowserWindow, dialog, nativeTheme, safeStorage } from 'electron';
@@ -155,7 +156,9 @@ const douyin = installDouyinSources({
   getLanguage,
 });
 const recovery = installRecovery({ wire, workspace, media, getWindow: () => win, getLanguage });
-const synthesis = installSynthesis({ wire, getWindow: () => win, getLanguage, worker: client, media, workspace, savePath: settings.savePath });
+// App-owned cloned voices; never inside a hash-verified model bundle or the worker workspace.
+const speechVoices = new ClonedVoiceStore(path.join(app.getPath('userData'), 'speech-voices'));
+const synthesis = installSynthesis({ wire, getWindow: () => win, getLanguage, worker: client, media, workspace, savePath: settings.savePath, voices: speechVoices });
 // Gate the render path's voice audio through the same verification the save dialog uses.
 const renderer = new RenderCoordinator(client, (track) => synthesis.verifyVoice(track));
 const translation = installTranslation({ wire, getWindow: () => win, getLanguage, worker: client });

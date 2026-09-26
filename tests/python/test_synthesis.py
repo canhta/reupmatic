@@ -9,7 +9,7 @@ from unittest.mock import patch as mock_patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from runtime.errors import WorkerError
-from speech.synthesis.contracts import parse_options, validate_audio
+from speech.synthesis.contracts import parse_options, parse_voice, validate_audio
 from speech.synthesis.models import (
     ENGINES,
     SynthesisRegistry,
@@ -40,6 +40,29 @@ class SynthesisContractTests(unittest.TestCase):
         ):
             with self.subTest(patch=patch), self.assertRaises(WorkerError):
                 parse_options({**p, **patch})
+
+    def test_a_cloned_voice_payload_rides_optional_and_is_bounded_like_the_bundle_format(self):
+        p = params("a" * 64)
+        voice = {"speaker_emb": [0.5] * 192, "ref_codes": [[1] * 8] * 2}
+        self.assertEqual(parse_voice(voice), voice)
+        self.assertEqual(parse_options({**p, "voice": voice})["voice"], voice)
+        # The payload is excluded from the 63000-byte text bound a 500x32 reference would exceed.
+        large = {"speaker_emb": [0.5] * 192, "ref_codes": [[65535] * 32] * 500}
+        self.assertEqual(parse_options({**p, "voice": large})["voice"], large)
+        for patch in (
+            {"speaker_emb": [0.5] * 191},
+            {"speaker_emb": [0] * 192},
+            {"ref_codes": []},
+            {"ref_codes": [[-1]]},
+            {"ref_codes": [[1], [1, 2]]},
+            "not-a-dict",
+        ):
+            bad = patch if isinstance(patch, str) else {**voice, **patch}
+            with (
+                self.subTest(patch=patch),
+                self.assertRaisesRegex(WorkerError, "SYNTHESIS_CLONE_INVALID"),
+            ):
+                parse_options({**p, "voice": bad})
 
     def test_frame_spans_must_exactly_cover_all_cues_and_reported_spacing(self):
         p = params("a" * 64)

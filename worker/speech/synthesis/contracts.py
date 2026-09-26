@@ -12,11 +12,14 @@ from runtime.protocol import exact
 from subtitles.validation import validate_cues
 
 PARAMS = {"source_layer", "source_token", "language", "model_id", "voice_id", "cues"}
+# A cloned voice's numeric payload rides beside the params, never into the result or receipt.
+OPTIONAL_PARAMS = {"voice"}
 SAMPLE_RATES = frozenset({16000, 22050, 24000, 32000, 44100, 48000})
 MAX_SECONDS = 600
 MAX_CUE_SECONDS = 60
 GAP_MS = 250
 MAX_RESULT = 100000
+CLONE_VOICE_KEYS = {"speaker_emb", "ref_codes"}
 
 
 def clean(value: object, limit: int) -> bool:
@@ -31,8 +34,33 @@ def clean(value: object, limit: int) -> bool:
         return False
 
 
+def parse_voice(value: object) -> dict:
+    """The v3 Turbo clone payload: a 192-d speaker embedding plus integer reference codes."""
+    if not isinstance(value, dict) or set(value) != CLONE_VOICE_KEYS:
+        raise WorkerError("SYNTHESIS_CLONE_INVALID")
+    emb, codes = value["speaker_emb"], value["ref_codes"]
+    if (
+        not isinstance(emb, list)
+        or len(emb) != 192
+        or not any(emb)
+        or any(type(n) not in (float, int) or not math.isfinite(n) or abs(n) > 1000 for n in emb)
+        or not isinstance(codes, list)
+        or not 1 <= len(codes) <= 500
+    ):
+        raise WorkerError("SYNTHESIS_CLONE_INVALID")
+    width = len(codes[0]) if isinstance(codes[0], list) else 0
+    if not 1 <= width <= 32 or any(
+        not isinstance(row, list)
+        or len(row) != width
+        or any(type(n) is not int or not 0 <= n < 65536 for n in row)
+        for row in codes
+    ):
+        raise WorkerError("SYNTHESIS_CLONE_INVALID")
+    return copy.deepcopy(value)
+
+
 def parse_options(value: object) -> dict:
-    p = exact(value, PARAMS)
+    p = exact(value, PARAMS, OPTIONAL_PARAMS)
     if (
         p["source_layer"] != "spoken"
         or p["language"] not in ("en", "vi")
@@ -45,6 +73,8 @@ def parse_options(value: object) -> dict:
         raise WorkerError("INVALID_REQUEST")
     validate_cues(p["cues"])
     try:
+        # The cloned payload is excluded from the text-size bound; it carries no user text.
+        measured = {key: entry for key, entry in p.items() if key not in OPTIONAL_PARAMS}
         if (
             not 1 <= len(p["cues"]) <= 100
             or any(
@@ -54,11 +84,13 @@ def parse_options(value: object) -> dict:
                 for c in p["cues"]
             )
             or sum(len(c["text"].encode("utf-8")) for c in p["cues"]) > 20000
-            or len(json.dumps(p, ensure_ascii=False, separators=(",", ":")).encode()) > 63000
+            or len(json.dumps(measured, ensure_ascii=False, separators=(",", ":")).encode()) > 63000
         ):
             raise WorkerError("SYNTHESIS_LIMIT")
     except UnicodeError:
         raise WorkerError("INVALID_REQUEST") from None
+    if "voice" in p:
+        p["voice"] = parse_voice(p["voice"])
     return copy.deepcopy(p)
 
 

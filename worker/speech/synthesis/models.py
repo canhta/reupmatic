@@ -433,7 +433,14 @@ class SynthesisRegistry:
         except (OSError, ValueError, TypeError):
             raise WorkerError("SYNTHESIS_MANIFEST_INVALID") from None
 
-    def require(self, language: str, voice: str, expected_id: str, check=lambda: None) -> dict:
+    def require(
+        self,
+        language: str,
+        voice: str,
+        expected_id: str,
+        check=lambda: None,
+        voice_data: dict | None = None,
+    ) -> dict:
         check()
         bundle = self.read()
         engine = get_engine(bundle["engine"])
@@ -441,9 +448,13 @@ class SynthesisRegistry:
             raise WorkerError("SYNTHESIS_MODEL_CHANGED")
         if language not in bundle["languages"]:
             raise WorkerError("MODEL_LANGUAGE_UNAVAILABLE")
-        verify_bundle(bundle, check)
-        if voice not in {v["id"] for v in engine.read_voices(Path(bundle["directory"]))}:
+        # A stored clone is Turbo-only; presets keep resolving from the bundle.
+        if voice_data is not None:
+            if engine.name != TURBO_ENGINE:
+                raise WorkerError("SYNTHESIS_CLONE_UNSUPPORTED_ENGINE")
+        elif voice not in {v["id"] for v in engine.read_voices(Path(bundle["directory"]))}:
             raise WorkerError("SYNTHESIS_VOICE_UNAVAILABLE")
+        verify_bundle(bundle, check)
         code = engine.runtime_code()
         if code:
             raise WorkerError(code)
