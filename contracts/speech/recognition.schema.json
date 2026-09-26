@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:reupmatic:speech-recognition:1",
   "title": "Local speech recognition boundaries",
-  "$comment": "Runtime additionally enforces end > start, at most 7,200,000 ms, matching source/model/request identity, nonempty nonoverlapping result segments within range and a 1,000,000-byte response. `words` (always present, possibly empty) carries ordered, per-cue-bounded word timings; `aligner_model_id` is non-null exactly when `words` is nonempty. An engine that returns its own segments keeps them exactly; only an engine that returns none has cues derived from word timings, and `cues` is never required to be a single cue.",
+  "$comment": "Runtime additionally enforces end > start, at most 7,200,000 ms, matching source/model/request identity, nonempty nonoverlapping result segments within range and a 1,000,000-byte response. An engine keeps its own segments exactly; `cues` is never required to be a single cue.",
   "$defs": {
     "input": {
       "type": "object",
@@ -158,49 +158,6 @@
             "required": ["id", "start_ms", "end_ms", "text"],
             "additionalProperties": false
           }
-        },
-        "words": {
-          "type": "array",
-          "maxItems": 100000,
-          "items": {
-            "type": "object",
-            "properties": {
-              "cue_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
-              },
-              "start_ms": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 86400000
-              },
-              "end_ms": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 86400000
-              },
-              "text": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 1000,
-                "pattern": "^[^\\u0000]+$"
-              }
-            },
-            "required": ["cue_id", "start_ms", "end_ms", "text"],
-            "additionalProperties": false
-          }
-        },
-        "aligner_model_id": {
-          "oneOf": [
-            {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       },
       "required": [
@@ -214,9 +171,7 @@
         "runtime",
         "clock",
         "timing",
-        "cues",
-        "words",
-        "aligner_model_id"
+        "cues"
       ],
       "additionalProperties": false
     },

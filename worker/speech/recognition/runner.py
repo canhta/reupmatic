@@ -20,23 +20,16 @@ def run(job: dict, progress: Path) -> dict:
     descriptor = get_descriptor(job["model"]["engine"])
     outcome = descriptor.adapter(job)
     duration = job["end_ms"] - job["start_ms"]
-    cues, words = timed_segments(
+    cues = timed_segments(
         outcome["segments"],
         job["start_ms"],
         job["end_ms"],
         lambda completed: atomic_json(
             progress, {"completed_ms": completed, "duration_ms": duration}
         ),
-        language=job["language"],
-        engine_segments=descriptor.provides_segments,
     )
     verify_bundle(job["model"])
-    return {
-        "cues": cues,
-        "words": words,
-        "runtime": outcome["runtime"],
-        "aligner_model_id": outcome.get("aligner_model_id"),
-    }
+    return {"cues": cues, "runtime": outcome["runtime"]}
 
 
 def main() -> None:

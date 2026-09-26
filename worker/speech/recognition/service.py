@@ -142,7 +142,7 @@ def read_result(filename: Path, start_ms: int, end_ms: int) -> dict:
             code if isinstance(code, str) and code in known else "MODEL_INFERENCE_FAILED"
         )
     data = response.get("data")
-    if not isinstance(data, dict) or set(data) != {"cues", "runtime", "words", "aligner_model_id"}:
+    if not isinstance(data, dict) or set(data) != {"cues", "runtime"}:
         raise WorkerError("MODEL_OUTPUT_INVALID")
     validate_cues(data["cues"])
     if (
@@ -151,12 +151,6 @@ def read_result(filename: Path, start_ms: int, end_ms: int) -> dict:
         or "\x00" in data["runtime"]
     ):
         raise WorkerError("MODEL_OUTPUT_INVALID")
-    aligner_model_id = data["aligner_model_id"]
-    if aligner_model_id is not None and (
-        not isinstance(aligner_model_id, str) or not re.fullmatch("[a-f0-9]{64}", aligner_model_id)
-    ):
-        raise WorkerError("MODEL_OUTPUT_INVALID")
-    cue_bounds: dict[str, tuple[int, int]] = {}
     previous = start_ms
     for cue in data["cues"]:
         if (
@@ -166,32 +160,7 @@ def read_result(filename: Path, start_ms: int, end_ms: int) -> dict:
             or cue["end_ms"] > end_ms
         ):
             raise WorkerError("SPEECH_TIMING_INVALID")
-        cue_bounds[cue["id"]] = (cue["start_ms"], cue["end_ms"])
         previous = cue["end_ms"]
-    words = data["words"]
-    if not isinstance(words, list) or len(words) > 100000:
-        raise WorkerError("MODEL_OUTPUT_INVALID")
-    word_previous: dict[str, int] = {}
-    for word in words:
-        if (
-            not isinstance(word, dict)
-            or set(word) != {"cue_id", "start_ms", "end_ms", "text"}
-            or word["cue_id"] not in cue_bounds
-            or type(word["start_ms"]) is not int
-            or type(word["end_ms"]) is not int
-            or not isinstance(word["text"], str)
-            or not word["text"]
-            or len(word["text"]) > 1000
-            or "\x00" in word["text"]
-        ):
-            raise WorkerError("MODEL_OUTPUT_INVALID")
-        cue_start, cue_end = cue_bounds[word["cue_id"]]
-        low = word_previous.get(word["cue_id"], cue_start)
-        if word["start_ms"] < low or word["end_ms"] <= word["start_ms"] or word["end_ms"] > cue_end:
-            raise WorkerError("SPEECH_TIMING_INVALID")
-        word_previous[word["cue_id"]] = word["end_ms"]
-    if words and aligner_model_id is None:
-        raise WorkerError("MODEL_OUTPUT_INVALID")
     return data
 
 

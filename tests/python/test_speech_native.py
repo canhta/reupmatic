@@ -210,8 +210,6 @@ class SpeechNativeTests(unittest.TestCase):
             (result["clock"], result["timing"], result["language"]), ("source", "segment", "vi")
         )
         self.assertEqual(result["runtime"], "faster-whisper@0.0.0;ctranslate2@0.0.0")
-        self.assertEqual(result["words"], [])
-        self.assertIsNone(result["aligner_model_id"])
         terminals = [
             event for event in session.events if event.get("data", {}).get("kind") == "stt"
         ]

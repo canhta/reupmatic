@@ -24,18 +24,16 @@ def run(job: dict, progress: Path) -> dict:
     adapter = get_protocol(job["provider"]["protocol"])
     outcome = adapter(job, credential)
     duration_ms = job["end_ms"] - job["start_ms"]
-    segments = [SimpleNamespace(start=0.0, end=duration_ms / 1000, text=outcome["text"], words=[])]
-    cues, words = timed_segments(
+    segments = [SimpleNamespace(start=0.0, end=duration_ms / 1000, text=outcome["text"])]
+    cues = timed_segments(
         segments,
         job["start_ms"],
         job["end_ms"],
         lambda completed: atomic_json(
             progress, {"completed_ms": completed, "duration_ms": duration_ms}
         ),
-        language=job["language"],
-        engine_segments=False,
     )
-    return {"cues": cues, "words": words, "runtime": outcome["runtime"], "aligner_model_id": None}
+    return {"cues": cues, "runtime": outcome["runtime"]}
 
 
 def main() -> None:

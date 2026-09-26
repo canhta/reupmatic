@@ -23,10 +23,7 @@ const result = () => ({
   clock: 'source',
   timing: 'segment',
   cues: [{ id: 'stt-1', start_ms: 1200, end_ms: 1800, text: 'Xin chào' }],
-  words: [],
-  aligner_model_id: null,
 });
-const aligner = 'c'.repeat(64);
 
 class Port extends EventEmitter {
   request(method, params, revision) {
@@ -81,88 +78,32 @@ test('results correlate source, language, model, time range and bounded plain cu
   assert.deepEqual(validateSpeechResult({ ...result(), cues: [] }, input(), hash).cues, []);
 });
 
-test('word timings never touch cue shape and stay ordered, bounded and provenanced', () => {
-  const withWords = {
-    ...result(),
-    words: [
-      { cue_id: 'stt-1', start_ms: 1200, end_ms: 1400, text: 'Xin' },
-      { cue_id: 'stt-1', start_ms: 1400, end_ms: 1800, text: 'chào' },
-    ],
-    aligner_model_id: aligner,
-  };
-  const validated = validateSpeechResult(withWords, input(), hash);
-  assert.deepEqual(validated.words, withWords.words);
-  assert.deepEqual(validated.cues, result().cues);
-  assert.deepEqual(validateSpeechResult(result(), input(), hash).words, []);
-  for (const patch of [
-    { words: withWords.words, aligner_model_id: null },
-    {
-      words: [{ cue_id: 'stt-1', start_ms: 1700, end_ms: 1900, text: 'chào' }],
-      aligner_model_id: aligner,
-    },
-    {
-      words: [
-        { cue_id: 'stt-1', start_ms: 1400, end_ms: 1600, text: 'chào' },
-        { cue_id: 'stt-1', start_ms: 1200, end_ms: 1400, text: 'Xin' },
-      ],
-      aligner_model_id: aligner,
-    },
-    {
-      words: [{ cue_id: 'stt-2', start_ms: 1200, end_ms: 1400, text: 'Xin' }],
-      aligner_model_id: aligner,
-    },
-    {
-      words: [{ ...withWords.words[0], style: {} }],
-      aligner_model_id: aligner,
-    },
-    { aligner_model_id: 'not-a-hash' },
-    { words: 'not-an-array' },
-  ]) {
-    assert.throws(
-      () => validateSpeechResult({ ...result(), ...patch }, input(), hash),
-      /INVALID_WORKER_RESPONSE/,
-    );
-  }
-});
-
-test('an unsegmented engine validates multiple ordered cues that rebuild its transcript', () => {
+test('an engine with several ordered cues validates them within range', () => {
   const derived = {
     ...result(),
     cues: [
       { id: 'stt-1', start_ms: 1000, end_ms: 1900, text: 'Xin chào ' },
       { id: 'stt-2', start_ms: 2000, end_ms: 3000, text: 'Việt Nam' },
     ],
-    words: [
-      { cue_id: 'stt-1', start_ms: 1000, end_ms: 1400, text: 'Xin' },
-      { cue_id: 'stt-1', start_ms: 1400, end_ms: 1900, text: 'chào' },
-      { cue_id: 'stt-2', start_ms: 2000, end_ms: 2400, text: 'Việt' },
-      { cue_id: 'stt-2', start_ms: 2400, end_ms: 2800, text: 'Nam' },
-    ],
-    aligner_model_id: aligner,
   };
   const validated = validateSpeechResult(derived, input(), hash);
   assert.deepEqual(validated.cues, derived.cues);
   assert.equal(validated.cues.map((cue) => cue.text).join(''), 'Xin chào Việt Nam');
-  for (const patch of [
-    {
-      cues: [
-        { id: 'stt-1', start_ms: 1000, end_ms: 2500, text: 'Xin chào ' },
-        { id: 'stt-2', start_ms: 2000, end_ms: 3000, text: 'Việt Nam' },
-      ],
-      words: derived.words,
-      aligner_model_id: aligner,
-    },
-    {
-      cues: derived.cues,
-      words: [{ cue_id: 'stt-9', start_ms: 1000, end_ms: 1400, text: 'Xin' }],
-      aligner_model_id: aligner,
-    },
-  ]) {
-    assert.throws(
-      () => validateSpeechResult({ ...result(), ...patch }, input(), hash),
-      /INVALID_WORKER_RESPONSE/,
-    );
-  }
+  assert.throws(
+    () =>
+      validateSpeechResult(
+        {
+          ...result(),
+          cues: [
+            { id: 'stt-1', start_ms: 1000, end_ms: 2500, text: 'Xin chào ' },
+            { id: 'stt-2', start_ms: 2000, end_ms: 3000, text: 'Việt Nam' },
+          ],
+        },
+        input(),
+        hash,
+      ),
+    /INVALID_WORKER_RESPONSE/,
+  );
 });
 
 test('speech admission uses existing worker queue and maps early terminal results to public IDs', async () => {

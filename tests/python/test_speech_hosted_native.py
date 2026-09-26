@@ -172,8 +172,6 @@ class SpeechHostedNativeTests(unittest.TestCase):
         self.assertEqual(len(result["cues"]), 1)
         self.assertEqual(result["cues"][0]["text"], "Xin chào từ DashScope")
         self.assertIn("dashscope", result["runtime"])
-        self.assertIsNone(result["aligner_model_id"])
-        self.assertEqual(result["words"], [])
         received = self.server.received
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]["authorization"], f"Bearer {CREDENTIAL}")

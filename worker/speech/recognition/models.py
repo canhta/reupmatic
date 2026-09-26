@@ -32,7 +32,6 @@ class EngineDescriptor:
     identity_fields: Mapping[str, object]
     runtime_probe: Callable[[], bool]
     adapter: Callable[[dict], dict]
-    provides_segments: bool
 
     @property
     def allowed(self) -> frozenset[str]:
@@ -76,7 +75,6 @@ ENGINES: dict[str, EngineDescriptor] = {
         identity_fields={"adapter": 1, "device": "cpu", "compute_type": "int8"},
         runtime_probe=lambda: runtime_available(),
         adapter=faster_whisper.transcribe,
-        provides_segments=True,
     ),
 }
 

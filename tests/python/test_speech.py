@@ -251,19 +251,18 @@ class SpeechServiceTests(unittest.TestCase):
             SimpleNamespace(start=0.1, end=0.8, text="  Xin chào thế giới  "),
             SimpleNamespace(start=0.9, end=1.3, text="你好"),
         ]
-        cues, words = timed_segments(segments, 5000, 7000, lambda _: None)
+        cues = timed_segments(segments, 5000, 7000, lambda _: None)
         self.assertEqual(
             cues[0],
             {"id": "stt-1", "start_ms": 5100, "end_ms": 5800, "text": "Xin chào thế giới"},
         )
         self.assertEqual(cues[1]["text"], "你好")
-        self.assertEqual(words, [])
 
     def test_empty_speech_is_a_valid_empty_result(self):
-        self.assertEqual(timed_segments([], 0, 1000, lambda _: None), ([], []))
+        self.assertEqual(timed_segments([], 0, 1000, lambda _: None), [])
         self.assertEqual(
             timed_segments([SimpleNamespace(start=0, end=1, text="  ")], 0, 1000, lambda _: None),
-            ([], []),
+            [],
         )
 
     def test_segment_validation_rejects_invalid_or_overlapping_timing(self):
@@ -288,56 +287,6 @@ class SpeechServiceTests(unittest.TestCase):
                 lambda _: None,
             )
 
-    def test_word_timings_are_ordered_and_bounded_within_their_cue(self):
-        segment = SimpleNamespace(
-            start=0.0,
-            end=2.0,
-            text="Xin chào",
-            words=[
-                {"text": "Xin", "start": 0.1, "end": 0.4},
-                {"text": "chào", "start": 0.5, "end": 0.9},
-            ],
-        )
-        cues, words = timed_segments([segment], 5000, 7000, lambda _: None)
-        self.assertEqual(
-            words,
-            [
-                {"cue_id": "stt-1", "start_ms": 5100, "end_ms": 5400, "text": "Xin"},
-                {"cue_id": "stt-1", "start_ms": 5500, "end_ms": 5900, "text": "chào"},
-            ],
-        )
-        self.assertEqual(cues[0]["id"], "stt-1")
-
-    def test_a_segment_with_no_words_attribute_produces_no_word_timings(self):
-        # faster-whisper segments never carry `.words`; behaviour is unchanged.
-        cues, words = timed_segments(
-            [SimpleNamespace(start=0, end=1, text="hello")], 0, 2000, lambda _: None
-        )
-        self.assertEqual(len(cues), 1)
-        self.assertEqual(words, [])
-
-    def test_word_timing_validation_rejects_out_of_order_or_out_of_bounds_words(self):
-        cases = [
-            [{"text": "a", "start": -0.1, "end": 0.2}],
-            [
-                {"text": "a", "start": 0.5, "end": 0.9},
-                {"text": "b", "start": 0.4, "end": 0.6},
-            ],
-            [{"text": "a", "start": 0.5, "end": 0.5}],
-            [{"text": "", "start": 0.1, "end": 0.2}],
-            [{"text": "a", "start": float("nan"), "end": 0.2}],
-        ]
-        for words in cases:
-            segment = SimpleNamespace(start=0.0, end=1.0, text="a", words=words)
-            with self.assertRaises(WorkerError):
-                timed_segments([segment], 0, 2000, lambda _: None)
-
-    def test_word_timings_fail_fast_on_size_before_the_outer_result_limit(self):
-        words = [{"text": "w" * 900, "start": i * 1.0, "end": i * 1.0 + 0.5} for i in range(2000)]
-        segment = SimpleNamespace(start=0.0, end=2000.0, text="a", words=words)
-        with self.assertRaisesRegex(WorkerError, "SPEECH_RESULT_TOO_LARGE"):
-            timed_segments([segment], 0, 3600000, lambda _: None)
-
     def test_request_bounds_and_unknown_fields(self):
         params = {
             "asset_id": "source",
@@ -357,190 +306,6 @@ class SpeechServiceTests(unittest.TestCase):
         ):
             with self.assertRaises(WorkerError):
                 parse_options({**params, **changes})
-
-
-class CueSegmentationTests(unittest.TestCase):
-    def test_an_engine_that_provides_its_own_segments_is_never_re_segmented(self):
-        segment = SimpleNamespace(
-            start=0.0,
-            end=3.0,
-            text=" A B ",
-            words=[
-                {"text": "A", "start": 0.1, "end": 0.6},
-                {"text": "B", "start": 2.4, "end": 2.9},
-            ],
-        )
-        cues, words = timed_segments(
-            [segment], 0, 3000, lambda _: None, language="en", engine_segments=True
-        )
-        self.assertEqual(cues, [{"id": "stt-1", "start_ms": 0, "end_ms": 3000, "text": "A B"}])
-        self.assertEqual(len(words), 2)
-
-    def test_english_unsegmented_engine_derives_ordered_cues_that_rebuild_the_transcript(self):
-        segment = self.segment(
-            " Hello there general Kenobi ",
-            [
-                ("Hello", 0.1, 0.5),
-                ("there", 0.5, 0.9),
-                ("general", 0.9, 1.3),
-                ("Kenobi", 2.1, 2.5),
-            ],
-        )
-        cues, words = timed_segments(
-            [segment], 0, 3000, lambda _: None, language="en", engine_segments=False
-        )
-        self.assertEqual(
-            cues,
-            [
-                {"id": "stt-1", "start_ms": 0, "end_ms": 1300, "text": "Hello there general "},
-                {"id": "stt-2", "start_ms": 2100, "end_ms": 3000, "text": "Kenobi"},
-            ],
-        )
-        self.assertEqual("".join(cue["text"] for cue in cues), "Hello there general Kenobi")
-        self.assertEqual(
-            words,
-            [
-                {"cue_id": "stt-1", "start_ms": 100, "end_ms": 500, "text": "Hello"},
-                {"cue_id": "stt-1", "start_ms": 500, "end_ms": 900, "text": "there"},
-                {"cue_id": "stt-1", "start_ms": 900, "end_ms": 1300, "text": "general"},
-                {"cue_id": "stt-2", "start_ms": 2100, "end_ms": 2500, "text": "Kenobi"},
-            ],
-        )
-        self.assert_ordered_within_range(cues, words, 0, 3000)
-
-    def test_chinese_derives_without_whitespace_and_rebuilds_the_transcript(self):
-        first, second = "我们今天天气很热", "所以出去玩"
-        words = [
-            (text, 0.1 + index * 0.20, 0.15 + index * 0.20) for index, text in enumerate(first)
-        ]
-        words += [
-            (text, 2.6 + index * 0.20, 2.65 + index * 0.20) for index, text in enumerate(second)
-        ]
-        segment = self.segment(first + second, words, end=4.0)
-        cues, words_out = timed_segments(
-            [segment], 0, 4000, lambda _: None, language="zh", engine_segments=False
-        )
-        self.assertEqual(
-            cues,
-            [
-                {"id": "stt-1", "start_ms": 0, "end_ms": 1550, "text": first},
-                {"id": "stt-2", "start_ms": 2600, "end_ms": 4000, "text": second},
-            ],
-        )
-        self.assertEqual("".join(cue["text"] for cue in cues), segment.text)
-        self.assertEqual(
-            [word["cue_id"] for word in words_out], ["stt-1"] * len(first) + ["stt-2"] * len(second)
-        )
-
-    def test_vietnamese_syllables_are_kept_whole_at_an_aligner_word_boundary(self):
-        segment = self.segment(
-            "Việt Nam học sinh",
-            [
-                ("Việt", 0.1, 0.6),
-                ("Nam", 0.6, 1.1),
-                ("học", 1.9, 2.4),
-                ("sinh", 2.4, 2.9),
-            ],
-        )
-        cues, words = timed_segments(
-            [segment], 0, 3000, lambda _: None, language="vi", engine_segments=False
-        )
-        self.assertEqual(
-            cues,
-            [
-                {"id": "stt-1", "start_ms": 0, "end_ms": 1100, "text": "Việt Nam "},
-                {"id": "stt-2", "start_ms": 1900, "end_ms": 3000, "text": "học sinh"},
-            ],
-        )
-        self.assertEqual("".join(cue["text"] for cue in cues), "Việt Nam học sinh")
-
-    def test_unsegmented_engine_without_an_aligner_still_returns_one_valid_cue(self):
-        cues, words = timed_segments(
-            [SimpleNamespace(start=0.0, end=2.0, text=" Xin chào Việt Nam ")],
-            5000,
-            7000,
-            lambda _: None,
-            language="vi",
-            engine_segments=False,
-        )
-        self.assertEqual(
-            cues, [{"id": "stt-1", "start_ms": 5000, "end_ms": 7000, "text": "Xin chào Việt Nam"}]
-        )
-        self.assertEqual(words, [])
-
-    def test_unmappable_word_texts_fall_back_to_the_single_engine_cue(self):
-        segment = self.segment(
-            "Hello world",
-            [
-                ("hello", 0.1, 0.5),
-                ("world", 0.6, 1.0),
-            ],
-            end=1.0,
-        )
-        cues, words = timed_segments(
-            [segment], 0, 2000, lambda _: None, language="en", engine_segments=False
-        )
-        self.assertEqual(
-            cues, [{"id": "stt-1", "start_ms": 0, "end_ms": 1000, "text": "Hello world"}]
-        )
-        self.assertEqual([word["text"] for word in words], ["hello", "world"])
-
-    def test_derived_cues_stay_within_the_character_budget(self):
-        words = [(f"word{index:04d}", index * 0.4, index * 0.4 + 0.4) for index in range(20)]
-        transcript = " " + " ".join(text for text, _, _ in words) + " "
-        cues, _ = timed_segments(
-            [self.segment(transcript, words, end=9.0)],
-            0,
-            9000,
-            lambda _: None,
-            language="en",
-            engine_segments=False,
-        )
-        self.assertGreater(len(cues), 1)
-        self.assertEqual("".join(cue["text"] for cue in cues), transcript.strip())
-        for cue in cues:
-            self.assertLessEqual(len(cue["text"].rstrip()), 42 * 2)
-
-    def test_adjacent_limit_break_never_overlaps_the_next_cue(self):
-        words = [(f"w{index:02d}", index * 0.09, index * 0.09 + 0.09) for index in range(24)]
-        transcript = " " + " ".join(text for text, _, _ in words) + " "
-        cues, _ = timed_segments(
-            [self.segment(transcript, words, end=2.5)],
-            0,
-            2500,
-            lambda _: None,
-            language="en",
-            engine_segments=False,
-        )
-        self.assertGreater(len(cues), 1)
-        previous = 0
-        for cue in cues:
-            self.assertGreater(cue["end_ms"], cue["start_ms"])
-            self.assertGreaterEqual(cue["start_ms"], previous)
-            previous = cue["end_ms"]
-        self.assertEqual("".join(cue["text"] for cue in cues), transcript.strip())
-
-    def segment(self, text, words, end=3.0):
-        return SimpleNamespace(
-            start=0.0,
-            end=end,
-            text=text,
-            words=[{"text": item, "start": start, "end": stop} for item, start, stop in words],
-        )
-
-    def assert_ordered_within_range(self, cues, words, start_ms, end_ms):
-        previous = start_ms
-        for cue in cues:
-            self.assertGreaterEqual(cue["start_ms"], previous)
-            self.assertLess(cue["end_ms"], end_ms + 1)
-            previous = cue["end_ms"]
-        bounds = {cue["id"]: (cue["start_ms"], cue["end_ms"]) for cue in cues}
-        previous = {}
-        for word in words:
-            low = previous.get(word["cue_id"], bounds[word["cue_id"]][0])
-            self.assertGreaterEqual(word["start_ms"], low)
-            self.assertLessEqual(word["end_ms"], bounds[word["cue_id"]][1])
-            previous[word["cue_id"]] = word["end_ms"]
 
 
 if __name__ == "__main__":

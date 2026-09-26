@@ -14,12 +14,6 @@ export interface SpeechInput {
   revision: number;
   params: SpeechParams;
 }
-export interface WordTiming {
-  cue_id: string;
-  start_ms: number;
-  end_ms: number;
-  text: string;
-}
 export interface SpeechResult extends Record<string, unknown> {
   kind: 'stt';
   asset_id: string;
@@ -32,8 +26,6 @@ export interface SpeechResult extends Record<string, unknown> {
   clock: 'source';
   timing: 'segment';
   cues: Cue[];
-  words: WordTiming[];
-  aligner_model_id: string | null;
 }
 export interface SpeechEngineStatus {
   engine: string;
@@ -119,8 +111,6 @@ export function validateSpeechResult(
       'clock',
       'timing',
       'cues',
-      'words',
-      'aligner_model_id',
     ]) ||
     value.kind !== 'stt' ||
     value.clock !== 'source' ||
@@ -135,10 +125,7 @@ export function validateSpeechResult(
     typeof value.runtime !== 'string' ||
     !value.runtime ||
     value.runtime.length > 128 ||
-    value.runtime.includes('\0') ||
-    !(value.aligner_model_id === null || hash(value.aligner_model_id)) ||
-    !Array.isArray(value.words) ||
-    value.words.length > 100000
+    value.runtime.includes('\0')
   ) {
     throw new RemoteError('INVALID_WORKER_RESPONSE');
   }
@@ -147,7 +134,6 @@ export function validateSpeechResult(
   } catch {
     throw new RemoteError('INVALID_WORKER_RESPONSE');
   }
-  const cueBounds = new Map<string, { start_ms: number; end_ms: number }>();
   let previous = input.params.start_ms;
   for (const cue of value.cues) {
     if (
@@ -158,32 +144,7 @@ export function validateSpeechResult(
     ) {
       throw new RemoteError('INVALID_WORKER_RESPONSE');
     }
-    cueBounds.set(cue.id, cue);
     previous = cue.end_ms;
-  }
-  const wordPrevious = new Map<string, number>();
-  for (const word of value.words) {
-    const bounds = object(word) ? cueBounds.get(word.cue_id as string) : undefined;
-    if (
-      !object(word) ||
-      !exact(word, ['cue_id', 'start_ms', 'end_ms', 'text']) ||
-      !bounds ||
-      !integer(word.start_ms, 0, 86400000) ||
-      !integer(word.end_ms, 1, 86400000) ||
-      typeof word.text !== 'string' ||
-      !word.text ||
-      word.text.length > 1000 ||
-      word.text.includes('\0') ||
-      Number(word.start_ms) < (wordPrevious.get(word.cue_id as string) ?? bounds.start_ms) ||
-      Number(word.end_ms) <= Number(word.start_ms) ||
-      Number(word.end_ms) > bounds.end_ms
-    ) {
-      throw new RemoteError('INVALID_WORKER_RESPONSE');
-    }
-    wordPrevious.set(word.cue_id as string, Number(word.end_ms));
-  }
-  if (value.words.length > 0 && value.aligner_model_id === null) {
-    throw new RemoteError('INVALID_WORKER_RESPONSE');
   }
   if (new TextEncoder().encode(JSON.stringify(value)).byteLength > 1000000) {
     throw new RemoteError('INVALID_WORKER_RESPONSE');

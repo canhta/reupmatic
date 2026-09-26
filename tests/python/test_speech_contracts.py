@@ -67,41 +67,11 @@ class SpeechContracts(unittest.TestCase):
             "clock": "source",
             "timing": "segment",
             "cues": [{"id": "stt-1", "start_ms": 1000, "end_ms": 2000, "text": "Việt Nam"}],
-            "words": [],
-            "aligner_model_id": None,
         }
         validator = self.validator(self.speech["result"])
         validator.validate(result)
         result["cues"][0]["style"] = {}
         self.assertFalse(validator.is_valid(result))
-
-    def test_result_word_timings_require_aligner_provenance_and_stay_a_flat_side_list(self):
-        result = {
-            "kind": "stt",
-            **self.params,
-            "runtime": "controlled@1",
-            "clock": "source",
-            "timing": "segment",
-            "cues": [{"id": "stt-1", "start_ms": 1000, "end_ms": 2000, "text": "Việt Nam"}],
-            "words": [
-                {"cue_id": "stt-1", "start_ms": 1000, "end_ms": 1400, "text": "Việt"},
-                {"cue_id": "stt-1", "start_ms": 1400, "end_ms": 2000, "text": "Nam"},
-            ],
-            "aligner_model_id": "a" * 64,
-        }
-        validator = self.validator(self.speech["result"])
-        validator.validate(result)
-        self.assertFalse(
-            validator.is_valid(
-                {
-                    **result,
-                    "cues": [{**result["cues"][0], "words": result["words"]}],
-                    "words": [],
-                }
-            )
-        )
-        without_words = {k: v for k, v in result.items() if k != "words"}
-        self.assertFalse(validator.is_valid(without_words))
 
     def test_status_is_a_list_of_engines_and_rejects_the_previous_single_engine_shape(self):
         status_validator = self.validator(self.speech["status"])
