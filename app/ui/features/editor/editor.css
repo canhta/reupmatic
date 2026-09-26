@@ -158,20 +158,20 @@
 .editor-start-frame {
   width: 100%;
   height: 100%;
-  min-height: 240px;
+  min-height: calc(var(--spacing-12) * 5);
 }
 .video-placeholder {
   width: 100%;
   height: 100%;
-  min-height: 240px;
+  min-height: calc(var(--spacing-12) * 5);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 }
 .editor-start-frame--drag-over .video-placeholder {
-  outline: 2px dashed var(--accent);
-  outline-offset: -2px;
+  outline: var(--focus-outline-width) dashed var(--accent);
+  outline-offset: calc(-1 * var(--focus-outline-width));
 }
 .monitor-header-badge {
   max-width: 40%;
