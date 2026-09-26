@@ -52,13 +52,15 @@ test('channel credentials stay encrypted and only display data leaves the store'
     account_name: 'My Page',
     connected_at: account.connected_at,
   });
-  assert.deepEqual(store.connections(), { channel_001: 'connected' });
+  assert.deepEqual(store.accounts(), {
+    channel_001: { connection: 'connected', account_name: 'My Page' },
+  });
   assert.deepEqual(await store.credentials('channel_001'), {
     account_id: '111222333',
     access_token: secret,
   });
   assert.ok(!JSON.stringify(account).includes(secret));
-  assert.ok(!JSON.stringify(store.connections()).includes(secret));
+  assert.ok(!JSON.stringify(store.accounts()).includes(secret));
   const index = await readFile(path.join(directory, 'channels.json'), 'utf-8');
   assert.ok(!index.includes(secret));
   const tokenFile = (await readdir(directory)).find((name) => name.endsWith('.token'));
@@ -66,12 +68,16 @@ test('channel credentials stay encrypted and only display data leaves the store'
   assert.ok(!(await readFile(path.join(directory, tokenFile))).toString('latin1').includes(secret));
 
   await store.markReauthorize('channel_001');
-  assert.deepEqual(store.connections(), { channel_001: 'reauthorize' });
+  assert.deepEqual(store.accounts(), {
+    channel_001: { connection: 'reauthorize', account_name: 'My Page' },
+  });
   const reloaded = new ChannelCredentialStore(directory, fakeEncryption());
   await reloaded.load();
-  assert.deepEqual(reloaded.connections(), { channel_001: 'reauthorize' });
+  assert.deepEqual(reloaded.accounts(), {
+    channel_001: { connection: 'reauthorize', account_name: 'My Page' },
+  });
   await reloaded.remove('channel_001');
-  assert.deepEqual(reloaded.connections(), {});
+  assert.deepEqual(reloaded.accounts(), {});
   assert.equal(await reloaded.credentials('channel_001'), undefined);
   await rm(directory, { recursive: true, force: true });
 });

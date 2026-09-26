@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { BrowserWindow } from 'electron';
+import { type BrowserWindow, shell } from 'electron';
 import type { Post } from '../../../core/distribution/distribution-contracts.js';
 import type {
   Publication,
@@ -169,6 +169,14 @@ export function installPublishing(host: PublishingHost) {
     await markReauthorizeIfNeeded(post, updated.publication?.error ?? '');
     host.changed();
     return updated;
+  });
+
+  host.wire('post-open-remote', async (input) => {
+    const url = facebookPost(input.id).publication?.remote_url;
+    if (!url || !/^https:\/\/www\.facebook\.com\/reel\/[A-Za-z0-9_-]+$/.test(url))
+      throw new Error('PUBLICATION_MISSING');
+    await shell.openExternal(url);
+    return { opened: true } as const;
   });
 
   return {

@@ -21,8 +21,11 @@ test('channel records never grant publishing capability and reject stale writes'
   try {
     const saved = catalog.saveChannel(channel);
     assert.equal(saved.revision, 1);
-    assert.equal(saved.connection, 'not_connected');
-    assert.equal(saved.can_publish, false);
+    // The stored record carries no connection or capability; only the snapshot decorates it.
+    assert.equal(saved.connection, undefined);
+    assert.equal(saved.can_publish, undefined);
+    assert.equal(catalog.listChannels()[0].connection, 'not_connected');
+    assert.equal(catalog.listChannels()[0].can_publish, false);
     assert.throws(() => catalog.saveChannel({ ...channel, name: 'Stale' }), /REVISION_CONFLICT/);
     assert.equal(catalog.listChannels()[0].name, 'Main channel');
   } finally {

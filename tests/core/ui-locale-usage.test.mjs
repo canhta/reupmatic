@@ -48,6 +48,7 @@ const ALLOWED_DYNAMIC_KEYS = [
   'visionLanguage_',
   'postState_',
   'postView_',
+  'publishPhase_',
   'platform_',
   'connection_',
   'libraryAvailability_',

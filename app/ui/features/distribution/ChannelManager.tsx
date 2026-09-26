@@ -105,8 +105,13 @@ export function ChannelManager({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState('');
+  const [pages, setPages] = useState<{ id: string; name: string }[] | null>(null);
+  const [pageId, setPageId] = useState('');
   const disabled = catalog.busy || !catalog.snapshot;
   const all = (catalog.snapshot?.channels ?? []) as ChannelRow[];
+  const savedChannel = all.find((channel) => channel.id === draft.id);
   const searched = search
     ? all.filter((channel) => channel.name.toLowerCase().includes(search.toLowerCase()))
     : all;
@@ -124,6 +129,57 @@ export function ChannelManager({
   function openChannel(channel: Channel) {
     setEditing(true);
     void form.choose(draftOf(channel));
+  }
+  function connectMessage(reason: unknown, fallback: string): string {
+    const code = reason instanceof Error ? reason.message : '';
+    if (code === 'PUBLISHING_NOT_CONFIGURED') return t('channelNotConfigured');
+    if (code === 'CHANNEL_NO_PAGES') return t('channelNoPages');
+    return t(fallback);
+  }
+  async function savePage(id: string) {
+    await unwrap(window.reupmatic.channelConnectPage({ id: draft.id, page_id: id }));
+    setPages(null);
+    setPageId('');
+    await catalog.reload();
+  }
+  async function connect() {
+    setConnecting(true);
+    setConnectError('');
+    try {
+      const result = await unwrap(window.reupmatic.channelConnectStart(draft.id));
+      if (result.pages.length === 1) await savePage(result.pages[0].id);
+      else {
+        setPages(result.pages);
+        setPageId(result.pages[0]?.id ?? '');
+      }
+    } catch (reason) {
+      setConnectError(connectMessage(reason, 'channelConnectFailed'));
+    } finally {
+      setConnecting(false);
+    }
+  }
+  async function completeConnect() {
+    setConnecting(true);
+    setConnectError('');
+    try {
+      await savePage(pageId);
+    } catch (reason) {
+      setConnectError(connectMessage(reason, 'channelConnectFailed'));
+    } finally {
+      setConnecting(false);
+    }
+  }
+  async function disconnect() {
+    setConnecting(true);
+    setConnectError('');
+    try {
+      await unwrap(window.reupmatic.channelDisconnect(draft.id));
+      await catalog.reload();
+    } catch (reason) {
+      setConnectError(connectMessage(reason, 'channelDisconnectFailed'));
+    } finally {
+      setConnecting(false);
+    }
   }
 
   const platformFields = useMemo(
@@ -326,6 +382,64 @@ export function ChannelManager({
                 onChange={(url) => setDraft({ ...draft, url })}
               />
             </FormLayout>
+            {draft.expected_revision !== null && draft.platform === 'facebook_page' && (
+              <VStack gap={2}>
+                <Text type="body">
+                  {t('channelConnection')}:{' '}
+                  {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
+                </Text>
+                {savedChannel?.account_name && (
+                  <Text type="supporting">
+                    {t('channelConnectedAs', { name: savedChannel.account_name })}
+                  </Text>
+                )}
+                {pages ? (
+                  <VStack gap={2}>
+                    <Selector
+                      label={t('channelChoosePage')}
+                      value={pageId}
+                      isDisabled={disabled || connecting}
+                      options={pages.map((entry) => ({ value: entry.id, label: entry.name }))}
+                      onChange={setPageId}
+                    />
+                    <HStack gap={2} vAlign="center" wrap="wrap">
+                      <Button
+                        label={t('channelConnectPage')}
+                        variant="primary"
+                        isDisabled={disabled || connecting || !pageId}
+                        onClick={() => void completeConnect()}
+                      />
+                    </HStack>
+                  </VStack>
+                ) : (
+                  <>
+                    <HStack gap={2} vAlign="center" wrap="wrap">
+                      <Button
+                        label={
+                          savedChannel?.connection === 'connected'
+                            ? t('channelDisconnect')
+                            : savedChannel?.connection === 'reauthorize'
+                              ? t('channelReconnect')
+                              : t('channelConnect')
+                        }
+                        isDisabled={disabled || connecting}
+                        onClick={() =>
+                          void (savedChannel?.connection === 'connected' ? disconnect() : connect())
+                        }
+                      />
+                    </HStack>
+                    {savedChannel?.connection !== 'connected' && (
+                      <Text type="supporting">{t('channelConnectHelp')}</Text>
+                    )}
+                  </>
+                )}
+                {connectError && (
+                  <Text as="p" type="body" className="inline-error" role="alert">
+                    {connectError}
+                  </Text>
+                )}
+              </VStack>
+            )}
             <LabelPicker
               value={draft.label_ids}
               onChange={(label_ids) => setDraft({ ...draft, label_ids })}

@@ -3,6 +3,10 @@ import type { Platform, Publication } from './publishing/contracts.js';
 
 export type { Platform };
 export type ChannelConnection = 'not_connected' | 'connected' | 'reauthorize';
+export interface ChannelConnectionState {
+  connection: ChannelConnection;
+  account_name: string | null;
+}
 export interface ChannelData {
   name: string;
   platform: Platform;
@@ -11,7 +15,7 @@ export interface ChannelData {
   archived: boolean;
 }
 export type ChannelRecord = ChannelData & RecordMeta;
-export type Channel = ChannelRecord & { connection: ChannelConnection; can_publish: boolean };
+export type Channel = ChannelRecord & ChannelConnectionState & { can_publish: boolean };
 export type SaveChannel = ChannelData & MutationIdentity;
 export interface AffiliateData {
   name: string;

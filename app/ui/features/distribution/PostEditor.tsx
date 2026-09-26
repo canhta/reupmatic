@@ -17,6 +17,7 @@ import { unwrap } from '../../bridge/client';
 import { useCatalog } from '../catalog/CatalogProvider';
 import type { useRecordDraft } from '../catalog/useRecordDraft';
 import { PostPlanFields } from './PostPlanFields';
+import { PostPublication } from './PostPublication';
 import { type PostDraft, postDraft } from './post-draft';
 
 export function PostEditor({
@@ -169,6 +170,11 @@ export function PostEditor({
             isDisabled={disabled}
             onClick={() => void catalog.mutate(() => window.reupmatic.postReveal(draft.id))}
           />
+          <PostPublication
+            post={draft.saved}
+            disabled={disabled}
+            onUpdated={(updated) => form.replace(postDraft(updated))}
+          />
         </>
       )}
       <TextInput
@@ -203,7 +209,7 @@ export function PostEditor({
       <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('catalogSave')}
-          variant="primary"
+          variant={draft.saved ? 'secondary' : 'primary'}
           isDisabled={
             disabled ||
             !draft.title.trim() ||

@@ -207,17 +207,25 @@ test('catalog exposes real connection state and publishability per channel', () 
   try {
     catalog.saveChannel(channel);
     assert.equal(catalog.listChannels()[0].connection, 'not_connected');
-    const disconnected = catalog.listChannels({ channel_001: 'not_connected' })[0];
+    const disconnected = catalog.listChannels({
+      channel_001: { connection: 'not_connected', account_name: null },
+    })[0];
     assert.equal(disconnected.connection, 'not_connected');
     assert.equal(disconnected.can_publish, false);
-    const connected = catalog.listChannels({ channel_001: 'connected' })[0];
+    const connected = catalog.listChannels({
+      channel_001: { connection: 'connected', account_name: 'My Page' },
+    })[0];
     assert.equal(connected.connection, 'connected');
+    assert.equal(connected.account_name, 'My Page');
     assert.equal(connected.can_publish, true);
-    const stale = catalog.listChannels({ channel_001: 'reauthorize' })[0];
+    const stale = catalog.listChannels({
+      channel_001: { connection: 'reauthorize', account_name: 'My Page' },
+    })[0];
     assert.equal(stale.connection, 'reauthorize');
     assert.equal(stale.can_publish, false);
     assert.equal(
-      catalog.snapshot(true, { channel_001: 'connected' }).channels[0].can_publish,
+      catalog.snapshot(true, { channel_001: { connection: 'connected', account_name: null } })
+        .channels[0].can_publish,
       true,
     );
   } finally {

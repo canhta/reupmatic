@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { ChannelConnection } from '../../../core/distribution/distribution-contracts.js';
+import type { ChannelConnectionState } from '../../../core/distribution/distribution-contracts.js';
 import type { DestinationCredentials } from '../../../core/distribution/publishing/contracts.js';
 
 /** The safeStorage surface needed; declared locally so tests never load Electron. */
@@ -41,7 +41,7 @@ export class ChannelCredentialStore {
   #directory: string;
   #file: string;
   #encryption: CredentialEncryption;
-  #connections: Record<string, ChannelConnection> = {};
+  #states: Record<string, ChannelConnectionState> = {};
 
   constructor(directory: string, encryption: CredentialEncryption) {
     this.#directory = directory;
@@ -83,10 +83,13 @@ export class ChannelCredentialStore {
   }
 
   #refresh(stored: StoredFile): void {
-    const connections: Record<string, ChannelConnection> = {};
+    const states: Record<string, ChannelConnectionState> = {};
     for (const account of stored.accounts)
-      connections[account.channel_id] = account.reauthorize ? 'reauthorize' : 'connected';
-    this.#connections = connections;
+      states[account.channel_id] = {
+        connection: account.reauthorize ? 'reauthorize' : 'connected',
+        account_name: account.account_name,
+      };
+    this.#states = states;
   }
 
   /** Loads the connection index at startup so the sync snapshot path can read it. */
@@ -94,9 +97,9 @@ export class ChannelCredentialStore {
     this.#refresh(await this.#read());
   }
 
-  /** Connection state for the renderer: no token ever crosses this method. */
-  connections(): Readonly<Record<string, ChannelConnection>> {
-    return this.#connections;
+  /** Connection state and display name for the renderer: no token ever crosses this method. */
+  accounts(): Readonly<Record<string, ChannelConnectionState>> {
+    return this.#states;
   }
 
   async account(channelId: string): Promise<ChannelAccount | undefined> {

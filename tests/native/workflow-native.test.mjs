@@ -166,7 +166,7 @@ test('real saved workflow -> shared SQLite queue -> FFmpeg -> Library export -> 
       planned: { instant: Date.parse('2026-09-16T03:30:00Z'), timezone: 'Asia/Bangkok' },
     });
     assert.equal(post.state, 'draft');
-    assert.equal(channel.can_publish, false);
+    assert.equal(catalog.listChannels()[0].can_publish, false);
     assert.equal(catalog.snapshot(true).link_usage[link.id], 1);
     assert.equal(await hashFile(source), sourceHash);
     const probe = JSON.parse(

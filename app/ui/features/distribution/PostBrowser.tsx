@@ -131,6 +131,13 @@ export function PostBrowser({
       renderCell: (post) => t(`postState_${post.state}`),
     },
     {
+      key: 'publication',
+      header: t('postPublication'),
+      width: proportional(1),
+      renderCell: (post) =>
+        post.publication ? t(`publishPhase_${post.publication.phase}`) : t('postNotPublished'),
+    },
+    {
       key: 'planned',
       header: t('postPlanTime'),
       width: proportional(2),

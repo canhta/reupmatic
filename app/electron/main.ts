@@ -226,7 +226,7 @@ const folders = await installFolders({ wire, getWindow: () => win, getLanguage, 
   workspace, queue: batch, worker: client, originalPaths: media.originalPaths });
 catalog = await installCatalog({ wire, workspace, getWindow: () => win, worker: client, queue: batch, diagnostics,
   originalPaths: media.originalPaths, library: () => libraryApi.contentLibrary, resolveLibrary: libraryApi.resolve,
-  connections: () => channelCredentials.connections() });
+  connections: () => channelCredentials.accounts() });
 const catalogApi = catalog as NonNullable<typeof catalog>;
 const notifyCatalogChanged = () => {
   if (win && !win.isDestroyed()) win.webContents.send('reupmatic:catalog-changed');

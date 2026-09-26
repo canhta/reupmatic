@@ -4,7 +4,7 @@ import type { BatchJobInput } from '../batch/batch-contracts.js';
 import type {
   AffiliateLink,
   Channel,
-  ChannelConnection,
+  ChannelConnectionState,
   ChannelRecord,
   Post,
   PostQuery,
@@ -62,10 +62,10 @@ export class WorkspaceCatalog {
     return assignDouyinTags(this.#taxonomy, contentId, tags);
   }
 
-  listChannels(connections: Readonly<Record<string, ChannelConnection>> = {}): Channel[] {
+  listChannels(states: Readonly<Record<string, ChannelConnectionState>> = {}): Channel[] {
     return this.#distribution
       .channels()
-      .map((record) => channelWithConnection(record, connections[record.id] ?? 'not_connected'));
+      .map((record) => channelWithConnection(record, states[record.id]));
   }
 
   saveChannel(input: unknown): ChannelRecord {
@@ -162,11 +162,11 @@ export class WorkspaceCatalog {
 
   snapshot(
     executionAvailable: boolean,
-    connections: Readonly<Record<string, ChannelConnection>> = {},
+    states: Readonly<Record<string, ChannelConnectionState>> = {},
   ): CatalogSnapshot {
     return {
       revision: this.#db.version,
-      channels: this.listChannels(connections),
+      channels: this.listChannels(states),
       links: this.listLinks(),
       labels: this.#taxonomy.list(),
       content_labels: this.listContentLabels(),

@@ -8,7 +8,7 @@ export function installDistribution(host: CatalogHost): void {
   host.wire('channel-save', (input) => {
     const record = host.catalog().saveChannel(input);
     host.changed();
-    return channelWithConnection(record, host.connections()[record.id] ?? 'not_connected');
+    return channelWithConnection(record, host.connections()[record.id]);
   });
   host.wire('affiliate-save', (input) => {
     const value = host.catalog().saveLink(input);

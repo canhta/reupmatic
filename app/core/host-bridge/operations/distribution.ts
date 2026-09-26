@@ -77,4 +77,9 @@ export const distributionOperations = {
     validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
     toRequest: (id: string) => ({ id }),
   }),
+  'post-open-remote': operation<{ id: string }, { opened: true }>()({
+    rendererMethod: 'postOpenRemote',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
 } as const;
