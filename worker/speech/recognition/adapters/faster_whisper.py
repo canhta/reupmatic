@@ -27,7 +27,7 @@ def transcribe(job: dict) -> dict:
         beam_size=5,
         temperature=0,
         condition_on_previous_text=False,
-        word_timestamps=False,
+        word_timestamps=True,
         vad_filter=False,
     )
     if info.language != job["language"]:

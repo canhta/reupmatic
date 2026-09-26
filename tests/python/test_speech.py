@@ -258,6 +258,83 @@ class SpeechServiceTests(unittest.TestCase):
         )
         self.assertEqual(cues[1]["text"], "你好")
 
+    def test_word_timestamps_split_a_segment_on_the_source_clock(self):
+        from speech.recognition.timestamps import MAX_CUE_CHARS, timed_segments
+
+        words = [
+            SimpleNamespace(start=index * 0.25, end=(index + 1) * 0.25, word=f" {name}")
+            for index, name in enumerate(
+                ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+            )
+        ]
+        segment = SimpleNamespace(
+            start=0.0,
+            end=2.5,
+            text=" one two three four five six seven eight nine ten",
+            words=words,
+        )
+        cues = timed_segments([segment], 5000, 8000, lambda _: None)
+        self.assertEqual(
+            [cue["text"] for cue in cues],
+            ["one two three four five six seven eight", "nine ten"],
+        )
+        self.assertEqual(
+            [(cue["start_ms"], cue["end_ms"]) for cue in cues], [(5000, 7000), (7000, 7500)]
+        )
+        self.assertTrue(all(len(cue["text"]) <= MAX_CUE_CHARS for cue in cues))
+        self.assertEqual([cue["id"] for cue in cues], ["stt-1", "stt-2"])
+
+    def test_word_timestamps_split_a_cue_that_runs_too_long(self):
+        from speech.recognition.timestamps import MAX_CUE_MS, timed_segments
+
+        words = [
+            SimpleNamespace(start=0.0, end=1.0, word=" one"),
+            SimpleNamespace(start=1.0, end=2.0, word=" two"),
+            SimpleNamespace(start=2.0, end=3.0, word=" three"),
+            SimpleNamespace(start=3.0, end=4.5, word=" four"),
+        ]
+        segment = SimpleNamespace(start=0.0, end=4.5, text=" one two three four", words=words)
+        cues = timed_segments([segment], 0, 5000, lambda _: None)
+        self.assertEqual([cue["text"] for cue in cues], ["one two three", "four"])
+        self.assertTrue(all(cue["end_ms"] - cue["start_ms"] <= MAX_CUE_MS for cue in cues))
+
+    def test_a_segment_without_words_stays_one_cue(self):
+        from speech.recognition.timestamps import timed_segments
+
+        segment = SimpleNamespace(start=0.0, end=4.8, text="Hello and welcome")
+        cues = timed_segments([segment], 0, 4800, lambda _: None)
+        self.assertEqual([cue["text"] for cue in cues], ["Hello and welcome"])
+
+    def test_numpy_float_timings_from_the_adapter_are_accepted(self):
+        from speech.recognition.timestamps import timed_segments
+
+        class NumpyFloat(float):
+            pass
+
+        segment = SimpleNamespace(
+            start=NumpyFloat(0.0),
+            end=NumpyFloat(0.8),
+            text=" xin chào",
+            words=[
+                SimpleNamespace(start=NumpyFloat(0.0), end=NumpyFloat(0.4), word=" xin"),
+                SimpleNamespace(start=NumpyFloat(0.4), end=NumpyFloat(0.8), word=" chào"),
+            ],
+        )
+        cues = timed_segments([segment], 0, 1000, lambda _: None)
+        self.assertEqual([cue["text"] for cue in cues], ["xin chào"])
+
+    def test_invalid_word_timing_is_rejected(self):
+        from speech.recognition.timestamps import timed_segments
+
+        segment = SimpleNamespace(
+            start=0.0,
+            end=1.0,
+            text=" hi",
+            words=[SimpleNamespace(start=0.5, end=0.4, word=" hi")],
+        )
+        with self.assertRaises(WorkerError):
+            timed_segments([segment], 0, 1000, lambda _: None)
+
     def test_empty_speech_is_a_valid_empty_result(self):
         self.assertEqual(timed_segments([], 0, 1000, lambda _: None), [])
         self.assertEqual(
