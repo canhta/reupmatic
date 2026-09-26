@@ -347,7 +347,7 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
         'the monitor has no source/preview switch',
       );
       assert.equal(
-        await page.getByRole('spinbutton', { name: 'Start (s)' }).count(),
+        await page.getByRole('spinbutton', { name: 'Start (s)', exact: true }).count(),
         0,
         'the monitor has no sample range',
       );

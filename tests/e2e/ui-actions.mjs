@@ -36,7 +36,8 @@ export async function addCue(page) {
 }
 
 export function notificationBell(page) {
-  return page.getByRole('button', { name: /Notifications/ }).first();
+  // Locale-agnostic: the bell's accessible name is the notifications title.
+  return page.getByRole('button', { name: /Notifications|Thông báo/ }).first();
 }
 
 export async function openNotifications(page, title) {
