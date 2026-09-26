@@ -10,6 +10,7 @@ import type {
   SaveAffiliate,
   SaveChannel,
 } from '../../distribution/distribution-contracts.js';
+import type { NamedProblem } from '../../distribution/publishing/contracts.js';
 import { operation } from '../operation-contract.js';
 import { requestId, requestRecord } from '../validators.js';
 
@@ -17,6 +18,23 @@ export const distributionOperations = {
   'channel-save': operation<SaveChannel, Channel>()({
     rendererMethod: 'channelSave',
     validate: (input) => input as SaveChannel,
+  }),
+  'channel-connect-start': operation<{ id: string }, { pages: { id: string; name: string }[] }>()({
+    rendererMethod: 'channelConnectStart',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'channel-connect-page': operation<{ id: string; page_id: string }, { account_name: string }>()({
+    rendererMethod: 'channelConnectPage',
+    validate: (input) => {
+      const value = requestRecord(input, ['id', 'page_id']);
+      return { id: requestId(value.id), page_id: requestId(value.page_id) };
+    },
+  }),
+  'channel-disconnect': operation<{ id: string }, { disconnected: true }>()({
+    rendererMethod: 'channelDisconnect',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
   }),
   'affiliate-save': operation<SaveAffiliate, AffiliateLink>()({
     rendererMethod: 'affiliateSave',
@@ -41,6 +59,21 @@ export const distributionOperations = {
   }),
   'post-reveal': operation<{ id: string }, { revealed: boolean }>()({
     rendererMethod: 'postReveal',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'post-preflight': operation<{ id: string }, NamedProblem[]>()({
+    rendererMethod: 'postPreflight',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'post-publish': operation<{ id: string }, Post>()({
+    rendererMethod: 'postPublish',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'post-reconcile': operation<{ id: string }, Post>()({
+    rendererMethod: 'postReconcile',
     validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
     toRequest: (id: string) => ({ id }),
   }),

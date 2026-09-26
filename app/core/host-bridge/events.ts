@@ -1,4 +1,5 @@
 import type { BatchSnapshot } from '../batch/batch-contracts.js';
+import type { PublicationPhase } from '../distribution/publishing/contracts.js';
 import type { FolderSnapshot } from '../folders/folder-contracts.js';
 import type { OriginalImportProgress } from '../library/library-contracts.js';
 import type { DouyinDownloadSnapshot } from '../sources/douyin-download.js';
@@ -33,6 +34,13 @@ export type RenderJobEvent = { id: string; revision: number } & (
 
 export type MenuCommandEvent = { command: string; area?: string; data?: unknown };
 
+export interface PublishProgressEvent {
+  post_id: string;
+  attempt_id: string;
+  phase: PublicationPhase;
+  fraction: number;
+}
+
 export const events = {
   batch: event<BatchSnapshot>()({ rendererMethod: 'onBatch' }),
   'catalog-changed': event<void>()({ rendererMethod: 'onCatalogChanged' }),
@@ -46,6 +54,7 @@ export const events = {
   'models-changed': event<void>()({ rendererMethod: 'onModelsChanged' }),
   'recent-changed': event<void>()({ rendererMethod: 'onRecentChanged' }),
   'recovery-flush': event<{ request_id: string }>()({ rendererMethod: 'onRecoveryFlush' }),
+  'publish-progress': event<PublishProgressEvent>()({ rendererMethod: 'onPublishProgress' }),
   'vision-job': event<VisionJobEvent>()({ rendererMethod: 'onVisionJob' }),
   'speech-job': event<SpeechEvent>()({ rendererMethod: 'onSpeechJob' }),
   'speech-model-install': event<ModelInstallEvent>()({

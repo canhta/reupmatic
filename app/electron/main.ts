@@ -2,6 +2,9 @@ import { installSynthesis } from './features/speech/synthesis/ipc.js';
 import { installTranslation } from './features/speech/translation/ipc.js';
 import { installSpeech } from './features/speech/ipc.js';
 import { SpeechProviderStore } from './features/speech/provider-store.js';
+import { ChannelCredentialStore } from './features/publishing/credential-store.js';
+import { installPublishing } from './features/publishing/ipc.js';
+import { readPublishingConfig } from './features/publishing/config.js';
 import { installRecovery } from './features/projects/recovery.js';
 import { installCatalog } from './features/catalog/ipc.js';
 import { app, BrowserWindow, dialog, nativeTheme, safeStorage } from 'electron';
@@ -161,6 +164,12 @@ const providers = new SpeechProviderStore(
   path.join(app.getPath('userData'), 'speech-providers'),
   safeStorage,
 );
+// Outside the workspace: page tokens are encrypted and never cross IPC.
+const channelCredentials = new ChannelCredentialStore(
+  path.join(app.getPath('userData'), 'publishing-channels'),
+  safeStorage,
+);
+await channelCredentials.load();
 const speech = installSpeech({
   wire, getWindow: () => win, getWindows: () => [win], getLanguage,
   worker: client, media, providers, workspace,
@@ -216,7 +225,26 @@ batch = await installBatch({ wire, getWindow: () => win, getLanguage, diagnostic
 const folders = await installFolders({ wire, getWindow: () => win, getLanguage, diagnostics,
   workspace, queue: batch, worker: client, originalPaths: media.originalPaths });
 catalog = await installCatalog({ wire, workspace, getWindow: () => win, worker: client, queue: batch, diagnostics,
-  originalPaths: media.originalPaths, library: () => libraryApi.contentLibrary, resolveLibrary: libraryApi.resolve });
+  originalPaths: media.originalPaths, library: () => libraryApi.contentLibrary, resolveLibrary: libraryApi.resolve,
+  connections: () => channelCredentials.connections() });
+const catalogApi = catalog as NonNullable<typeof catalog>;
+const notifyCatalogChanged = () => {
+  if (win && !win.isDestroyed()) win.webContents.send('reupmatic:catalog-changed');
+};
+const publishing = installPublishing({
+  wire,
+  credentials: channelCredentials,
+  getPost: (id) => catalogApi.getPost(id),
+  setPublication: (id, publication) => catalogApi.setPublication(id, publication),
+  getWindow: () => win,
+  probeMedia: (filename) => media.probeVideoFile(filename),
+  changed: notifyCatalogChanged,
+  config: readPublishingConfig(),
+  // Dev/test only: point the adapter at a local fake Graph. A packaged build always uses defaults.
+  graphBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_GRAPH_BASE_URL,
+  uploadBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_UPLOAD_BASE_URL,
+  oauthBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_OAUTH_BASE_URL,
+});
 
 // macOS stacks 3+ buttons top-to-bottom and always moves cancelId's button to the end.
 async function confirmDialog(
@@ -275,7 +303,7 @@ lifecycle = createWorkspaceLifecycle({
       kind: 'participants',
       participants: [folders, settings, douyin.session, douyin.channels].filter(defined),
     },
-    { kind: 'participants', participants: [renderer, vision, speech, translation, synthesis] },
+    { kind: 'participants', participants: [renderer, vision, speech, translation, synthesis, publishing] },
     { kind: 'action', run: () => wire.drain() },
     // Finalise the sink before the recovery flush so a thrown step still leaves a log.
     { kind: 'action', run: () => { diagnostics.close(); } },

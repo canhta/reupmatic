@@ -63,6 +63,7 @@ export interface PublicationMedia {
 export interface UploadSource {
   path: string;
   size_bytes: number;
+  offset?: number;
 }
 
 export interface DestinationCredentials {
@@ -80,7 +81,16 @@ export type SubmitOutcome =
   | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
   | { kind: 'failed'; error: string };
 
-export type ReconcileOutcome = SubmitOutcome | { kind: 'unknown'; error: string | null };
+export type ReconcileOutcome =
+  | {
+      kind: 'scheduled';
+      remote_post_id: string | null;
+      remote_url: string | null;
+      scheduled_for: number | null;
+    }
+  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
+  | { kind: 'failed'; error: string }
+  | { kind: 'unknown'; error: string | null };
 
 // Adapters return platform outcomes; the host applies the core transition functions so an adapter
 // cannot skip the never-publish-twice policy.
