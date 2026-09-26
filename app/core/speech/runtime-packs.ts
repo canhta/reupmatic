@@ -105,6 +105,7 @@ export function packForEngine(engine: string): RuntimePackName | null {
   switch (engine) {
     case 'vieneu-v3-nano-onnx':
     case 'vieneu-v3-turbo-onnx':
+    case 'vieneu-v3-turbo-clone-onnx':
       return 'synthesis';
     case 'rapidocr-lama':
       return 'vision';

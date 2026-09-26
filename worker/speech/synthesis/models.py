@@ -95,9 +95,9 @@ def clone_runtime_code() -> str | None:
                 "soundfile",
             )
         ):
-            return "MODEL_RUNTIME_MISSING"
+            return "RUNTIME_PACK_MISSING"
     except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
-        return "MODEL_RUNTIME_MISSING"
+        return "RUNTIME_PACK_MISSING"
     return None
 
 
