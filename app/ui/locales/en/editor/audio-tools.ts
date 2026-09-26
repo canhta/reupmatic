@@ -32,4 +32,6 @@ export const soundtrackEn = {
   voiceTrackFadeOut: 'Fade out (s)',
   voiceTrackKeep: 'Keep audio',
   voiceTrackRemove: 'Remove narration',
+  voiceTrackPitchNote:
+    'Preview shifts pitch for re-timed lines; the export keeps the original pitch.',
 } as const;

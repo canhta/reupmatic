@@ -92,6 +92,11 @@ export function VoiceTrackPanel() {
             onChange={(value) => change({ fade_out_ms: Math.round(value * 1000) })}
           />
         </FormLayout>
+        {track.plan.lines.some((line) => line.rate !== 1) && (
+          <Text as="p" type="supporting">
+            {t('voiceTrackPitchNote')}
+          </Text>
+        )}
         <HStack gap={2} vAlign="center" wrap="wrap">
           {track.stale && (
             <Button

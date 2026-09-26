@@ -34,4 +34,6 @@ export const soundtrackVi = {
   voiceTrackFadeOut: 'Mờ ra (s)',
   voiceTrackKeep: 'Giữ âm thanh',
   voiceTrackRemove: 'Bỏ giọng đọc',
+  voiceTrackPitchNote:
+    'Bản xem trước đổi cao độ ở các câu được chỉnh tốc độ; bản xuất giữ nguyên cao độ.',
 } satisfies Record<keyof typeof soundtrackEn, string>;
