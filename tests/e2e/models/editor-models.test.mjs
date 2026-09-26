@@ -126,24 +126,30 @@ async function waitForOutcome(page, panel, result, timeoutMs, label) {
   throw new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`);
 }
 
-async function waitForExport(page, dialog, filePath, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const code = await dialog
-      .locator('[role="alert"] code')
+// The monitor owns the export; wait for the result view or the render error, and return the id.
+async function waitForExport(page, timeoutMs) {
+  const renderError = page.locator('.editor-workspace > .error[role="alert"]');
+  const result = page.locator('video[data-monitor-video="result"]');
+  await result.or(renderError).first().waitFor({ state: 'visible', timeout: timeoutMs });
+  if (await renderError.isVisible().catch(() => false)) {
+    const code = await renderError
+      .locator('code')
       .first()
       .innerText()
       .catch(() => null);
-    if (code?.trim()) throw new Error(`Export failed: ${code.trim()}`);
-    try {
-      const info = await stat(filePath);
-      if (info.size > 1000) return info;
-    } catch {
-      // not written yet
-    }
-    await page.waitForTimeout(1000);
+    throw new Error(`Export failed: ${code?.trim() || (await renderError.innerText())}`);
   }
-  throw new Error(`Export timed out after ${Math.round(timeoutMs / 1000)}s`);
+  await page.waitForFunction(
+    () => {
+      const element = document.querySelector('video[data-monitor-video="result"]');
+      return element instanceof HTMLVideoElement && element.readyState >= 1 && element.duration > 0;
+    },
+    undefined,
+    { timeout: timeoutMs },
+  );
+  const src = await result.getAttribute('src');
+  assert.ok(src?.startsWith('media://local/'), 'the result loads through media://');
+  return src.slice('media://local/'.length);
 }
 
 test('Editor with real models: recognise, apply, translate and export with object removal', {
@@ -162,7 +168,6 @@ test('Editor with real models: recognise, apply, translate and export with objec
   for (const name of CONFIGS) {
     await copyFile(path.join(realWorkspace(), name), path.join(workspace, name));
   }
-  const exportPath = path.join(temp, 'export-with-object-removal.mp4');
 
   await runElectronTest(
     {
@@ -173,13 +178,9 @@ test('Editor with real models: recognise, apply, translate and export with objec
     },
     async ({ application, page }) => {
       await waitForEditorReady(page);
-      await application.evaluate(
-        ({ dialog }, files) => {
-          dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [files.video] });
-          dialog.showSaveDialog = async () => ({ canceled: false, filePath: files.exportPath });
-        },
-        { video, exportPath },
-      );
+      await application.evaluate(({ dialog }, filePath) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
+      }, video);
       await addMediaToProject(page);
       await page.locator('.viewers video').first().waitFor({ timeout: 30000 });
 
@@ -242,7 +243,8 @@ test('Editor with real models: recognise, apply, translate and export with objec
       const dialog = page.getByRole('dialog');
       await dialog.getByText('Remove on-screen text', { exact: true }).waitFor();
       await dialog.getByRole('button', { name: 'Export', exact: true }).click();
-      const exported = await waitForExport(page, dialog, exportPath, 600000);
+      const artifactId = await waitForExport(page, 600000);
+      const exported = await stat(path.join(workspace, 'renders', artifactId, 'output.mp4'));
       assert.ok(exported.size > 1000, 'the export is a real file, never published anywhere');
     },
   );
