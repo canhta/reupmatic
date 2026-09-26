@@ -59,7 +59,12 @@ API) — core policy is not an adapter.
 - **Errors are explicit.** Failures surface as error codes with user-facing copy from the locale
   catalogues; a caught error maps to at least one diagnostic record.
 - **Secrets stay out of files.** Credentials reach a child only through its environment, are stored
-  with OS-backed encryption, and are scrubbed at one redaction choke point before any log line.
+  with OS-backed encryption, and are scrubbed at one redaction choke point before any log line. The
+  hosted synthesis credential is the same OS-encrypted BYOK store and child-env delivery as
+  recognition.
+- **Cloned voices are user data, not model data.** A local clone's speaker payload lives in the
+  app's user-data voice store, never inside a hash-verified model bundle; cloud voices stay with the
+  provider. A clone is only created from a user-picked clip behind a persisted rights attestation.
 - **Localization is exact.** Vietnamese catalogues satisfy the exact English key surface by
   capability; duplicate keys are rejected at composition.
 

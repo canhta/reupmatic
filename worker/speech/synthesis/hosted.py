@@ -18,21 +18,24 @@ MODEL = "vieneu-v4"
 SAMPLE_RATE = 48000
 _TIMEOUT = 120
 _MAX_RESPONSE = 64 * 1024**2
-# 401 bad key, 403 no credits/plan, 410 cloning is web-only, 422 text refused, 429 rate limited.
-_STATUS_CODES = {
-    401: "VIENEU_KEY_INVALID",
-    403: "VIENEU_OUT_OF_CREDITS",
-    410: "VIENEU_CLONE_WEB_ONLY",
-    422: "VIENEU_TEXT_REFUSED",
-    429: "VIENEU_RATE_LIMITED",
-    503: "VIENEU_UNAVAILABLE",
-}
 
 
-def _code_for(status: int) -> str:
-    if status in _STATUS_CODES:
-        return _STATUS_CODES[status]
-    return "VIENEU_UNAVAILABLE" if status >= 500 else "MODEL_INFERENCE_FAILED"
+def _raise_for(error: urllib.error.HTTPError) -> None:
+    """401 bad key, 403 no credits/plan, 410 cloning is web-only, 422 refused, 429 limited."""
+    status = error.code
+    if status == 401:
+        raise WorkerError("VIENEU_KEY_INVALID") from None
+    if status == 403:
+        raise WorkerError("VIENEU_OUT_OF_CREDITS") from None
+    if status == 410:
+        raise WorkerError("VIENEU_CLONE_WEB_ONLY") from None
+    if status == 422:
+        raise WorkerError("VIENEU_TEXT_REFUSED") from None
+    if status == 429:
+        raise WorkerError("VIENEU_RATE_LIMITED") from None
+    if status >= 500:
+        raise WorkerError("VIENEU_UNAVAILABLE") from None
+    raise WorkerError("MODEL_INFERENCE_FAILED") from None
 
 
 def _post(url: str, headers: dict[str, str], body: dict) -> tuple[int, bytes]:
@@ -44,7 +47,7 @@ def _post(url: str, headers: dict[str, str], body: dict) -> tuple[int, bytes]:
             return response.status, raw
     except urllib.error.HTTPError as error:
         # Never echo the remote body: it is untrusted content.
-        raise WorkerError(_code_for(error.code)) from None
+        _raise_for(error)
     except (urllib.error.URLError, OSError, TimeoutError):
         raise WorkerError("MODEL_NETWORK_DISABLED") from None
 
@@ -55,7 +58,7 @@ def _get(url: str, headers: dict[str, str]) -> tuple[int, bytes]:
         with urllib.request.urlopen(request, timeout=_TIMEOUT, context=https_context()) as response:  # noqa: S310
             return response.status, response.read(_MAX_RESPONSE + 1)
     except urllib.error.HTTPError as error:
-        raise WorkerError(_code_for(error.code)) from None
+        _raise_for(error)
     except (urllib.error.URLError, OSError, TimeoutError):
         raise WorkerError("MODEL_NETWORK_DISABLED") from None
 

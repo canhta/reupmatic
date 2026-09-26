@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:reupmatic:synthesis:1",
   "title": "Local spoken-text synthesis and verified natural-audio artifacts",
-  "$comment": "Runtime additionally checks UTF-16 units, nonblank words, ordered unique cue IDs, end > start, no lone surrogates, 20000 text UTF-8 bytes, 63000 parameter / 64000 envelope JSON bytes. Exact input correlation; one segment per requested cue in order, each cue's audio span under 60 s with the measured leading silence it was given, total at most 600 s. The result reports the sample rate it produced, which must be one this build supports; WAV is canonical mono PCM16 at that reported rate. Hashes, confined native files and matching receipts must be independently verified. This contract does not imply linguistic completeness or source-time alignment. Language is a declaration for the SDK bilingual normalizer, not an accent lock.",
+  "$comment": "Runtime additionally checks UTF-16 units, nonblank words, ordered unique cue IDs, end > start, no lone surrogates, 20000 text UTF-8 bytes, 63000 parameter / 64000 envelope JSON bytes. Exact input correlation; one segment per requested cue in order, each cue's audio span under 60 s with the measured leading silence it was given, total at most 600 s. The result reports the sample rate it produced, which must be one this build supports; WAV is canonical mono PCM16 at that reported rate. Hashes, confined native files and matching receipts must be independently verified. This contract does not imply linguistic completeness or source-time alignment. Language is a declaration for the SDK bilingual normalizer, not an accent lock. The worker request may additionally carry a `voice` (cloned local speaker payload, Turbo only) or a `provider` plus `credential` pair (hosted synthesis); none of the three enters the result or receipt, and the credential never reaches the on-disk job file.",
   "$defs": {
     "worker_params": {
       "type": "object",
@@ -60,7 +60,41 @@
             "required": ["id", "text", "start_ms", "end_ms"],
             "additionalProperties": false
           }
-        }
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "speaker_emb": {
+              "type": "array",
+              "minItems": 192,
+              "maxItems": 192,
+              "items": { "type": "number" }
+            },
+            "ref_codes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 500,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": { "type": "integer", "minimum": 0, "maximum": 65535 }
+              }
+            }
+          },
+          "required": ["speaker_emb", "ref_codes"],
+          "additionalProperties": false
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "protocol": { "const": "vieneu" },
+            "endpoint_host": { "type": "string", "minLength": 1, "maxLength": 255 }
+          },
+          "required": ["protocol", "endpoint_host"],
+          "additionalProperties": false
+        },
+        "credential": { "type": "string", "minLength": 1, "maxLength": 4096 }
       },
       "required": ["source_layer", "source_token", "language", "model_id", "voice_id", "cues"],
       "additionalProperties": false
