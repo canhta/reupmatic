@@ -38,7 +38,8 @@ export const translationEn = {
   translationSourceChanged: 'Source changed — your text is retained. Create a new draft.',
   translationCycle: 'Choose an independent source to avoid a circular reference.',
   translationLimit: 'Limit exceeded. Shorten the source text and retry.',
-  translationTruncated: 'Segment too long — rejected. Shorten it and retry.',
+  translationTruncated:
+    "This line didn't translate cleanly. Check the source language, then retry.",
   translationInvalid: 'Invalid request — your text is retained. Check the selection.',
   translationDiskLow: 'Not enough disk space. Free space and retry.',
   translationFailed: 'Translation failed. Check the setup, then try again.',

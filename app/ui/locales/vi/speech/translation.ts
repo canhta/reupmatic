@@ -39,7 +39,7 @@ export const translationVi = {
   translationSourceChanged: 'Nguồn đã đổi — văn bản vẫn được giữ. Tạo bản nháp mới.',
   translationCycle: 'Chọn nguồn độc lập để tránh tham chiếu vòng.',
   translationLimit: 'Vượt giới hạn. Rút ngắn văn bản nguồn rồi thử lại.',
-  translationTruncated: 'Đoạn quá dài — bị từ chối. Rút ngắn rồi thử lại.',
+  translationTruncated: 'Câu này chưa dịch được. Kiểm tra ngôn ngữ nguồn rồi thử lại.',
   translationInvalid: 'Yêu cầu không hợp lệ — văn bản vẫn được giữ. Kiểm tra lựa chọn.',
   translationDiskLow: 'Không đủ dung lượng. Giải phóng rồi thử lại.',
   translationFailed: 'Dịch thất bại. Kiểm tra phần thiết lập rồi thử lại.',
