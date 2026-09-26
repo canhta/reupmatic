@@ -101,6 +101,10 @@ Done means: meets its acceptance criteria, follows its contracts, has executed t
 stated limitations, protects secrets, and updates the owning documents. Report the commands actually
 run and what they returned — a syntax check is not a typecheck, a mock is not a live integration.
 
+Verify with `check`, `typecheck` and the core, bridge and Python suites. The Electron UI suites
+(`test:e2e`, `test:e2e:visual`, anything under `tests/e2e/`) saturate the machine: run them only
+when the owner asks, and otherwise report them as not run.
+
 ## Astryx CLI
 
 Run every command as `pnpm exec astryx <cmd>`. Discover, don't guess.
