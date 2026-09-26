@@ -38,12 +38,12 @@ renderer code and filesystem access.
 
 | Location | Owns |
 | --- | --- |
-| `app/core/` | Browser-safe business logic and contracts: library, projects, subtitles, batch, folders, automation, distribution, speech, processing, vision, media, diagnostics |
-| `app/electron/` | Host adapters: typed IPC, native pickers and grants, the `persist:douyin` session, media protocols, CSP, window chrome, the diagnostic log sink |
+| `app/core/` | Browser-safe business logic and contracts: library, projects, subtitles, batch, folders, automation, distribution (including the publishing destination seam), speech, processing, vision, media, diagnostics |
+| `app/electron/` | Host adapters: typed IPC, native pickers and grants, the `persist:douyin` session, media protocols, CSP, window chrome, the diagnostic log sink, the publishing OAuth window and safeStorage credential store |
 | `app/ui/` | Renderer features by capability, the shell (navigation, status, notification centre), locale catalogues and the Astryx design system |
 | `worker/` | The Python worker: protocol/runtime, FFmpeg media operations, subtitle serialization, processing orchestration, vision and speech adapters |
 | `contracts/` | One current cross-runtime schema per boundary, composed from tracked `*.source.schema.json` files |
-| `web/` | The Next.js marketing site, a separate workspace package |
+| `web/` | The Next.js marketing site and the stateless publishing token broker, a separate workspace package |
 
 Each public capability exposes one small interface and keeps its store private. `app/core` must not
 import React, React DOM or Electron. Host modules translate a seam (IPC, NDJSON, SQLite, a native
