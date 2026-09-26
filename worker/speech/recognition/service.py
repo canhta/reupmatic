@@ -214,14 +214,8 @@ def transcribe(host, req: dict) -> dict:
         raise WorkerError("NO_AUDIO")
     if provider is None:
         model = host.speech_models.require(p["model_id"], p["language"], check=check)
-        aligner = (
-            host.speech_models.optional("qwen3-forced-aligner", p["language"], check=check)
-            if model["engine"] == "qwen3-asr"
-            else None
-        )
     else:
         model = None
-        aligner = None
     duration = p["end_ms"] - p["start_ms"]
     if shutil.disk_usage(host.workspace).free < duration * 32 + 64 * 1024**2:
         raise WorkerError("SPEECH_DISK_LOW")
@@ -236,7 +230,7 @@ def transcribe(host, req: dict) -> dict:
         decode_audio(host, req, source["path"], p["start_ms"], p["end_ms"], audio)
         check()
         if provider is None:
-            job = {**p, "model": model, "aligner": aligner, "audio": str(audio)}
+            job = {**p, "model": model, "audio": str(audio)}
             module = "speech.recognition.runner"
             child_env = None
             child_timeout = 7200

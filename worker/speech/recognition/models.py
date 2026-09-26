@@ -15,7 +15,7 @@ from typing import Callable, Mapping
 from assets.registry import sha256 as file_hash
 from runtime.errors import WorkerError
 from runtime.protocol import exact, string
-from speech.recognition.adapters import faster_whisper, qwen3_asr, qwen3_forced_aligner
+from speech.recognition.adapters import faster_whisper
 
 LANGUAGES = {"en", "vi", "zh"}
 
@@ -61,16 +61,6 @@ def runtime_available() -> bool:
         return False
 
 
-def qwen3_asr_runtime_available() -> bool:
-    try:
-        return all(
-            importlib.util.find_spec(name) is not None
-            for name in ("qwen_asr", "torch", "transformers", "librosa", "soundfile")
-        )
-    except (ImportError, ValueError):
-        return False
-
-
 ENGINES: dict[str, EngineDescriptor] = {
     "faster-whisper": EngineDescriptor(
         name="faster-whisper",
@@ -88,55 +78,6 @@ ENGINES: dict[str, EngineDescriptor] = {
         adapter=faster_whisper.transcribe,
         provides_segments=True,
     ),
-    "qwen3-asr": EngineDescriptor(
-        name="qwen3-asr",
-        required_groups=(
-            frozenset({"config.json"}),
-            frozenset({"tokenizer_config.json"}),
-            frozenset({"vocab.json"}),
-            frozenset({"merges.txt"}),
-            frozenset({"model.safetensors", "model-00001-of-00002.safetensors"}),
-        ),
-        tolerated=frozenset(
-            {
-                "generation_config.json",
-                "chat_template.json",
-                "preprocessor_config.json",
-                "model-00002-of-00002.safetensors",
-                "model.safetensors.index.json",
-            }
-        ),
-        size_ceiling={
-            "model.safetensors": 4 * 1024**3,
-            "model-00001-of-00002.safetensors": 4 * 1024**3,
-            "model-00002-of-00002.safetensors": 4 * 1024**3,
-        },
-        default_size_ceiling=16 * 1024**2,
-        identity_fields={"adapter": 1, "device": "cpu", "dtype": "float32"},
-        runtime_probe=lambda: qwen3_asr_runtime_available(),
-        adapter=qwen3_asr.transcribe,
-        provides_segments=False,
-    ),
-    # Companion aligner for qwen3-asr; its adapter refuses direct dispatch.
-    "qwen3-forced-aligner": EngineDescriptor(
-        name="qwen3-forced-aligner",
-        required_groups=(
-            frozenset({"config.json"}),
-            frozenset({"tokenizer_config.json"}),
-            frozenset({"vocab.json"}),
-            frozenset({"merges.txt"}),
-            frozenset({"model.safetensors"}),
-        ),
-        tolerated=frozenset(
-            {"generation_config.json", "chat_template.json", "preprocessor_config.json"}
-        ),
-        size_ceiling={"model.safetensors": 4 * 1024**3},
-        default_size_ceiling=16 * 1024**2,
-        identity_fields={"adapter": 1, "device": "cpu", "dtype": "float32"},
-        runtime_probe=lambda: qwen3_asr_runtime_available(),
-        adapter=qwen3_forced_aligner.transcribe,
-        provides_segments=False,
-    ),
 }
 
 
@@ -145,10 +86,6 @@ def get_descriptor(engine: str) -> EngineDescriptor:
         return ENGINES[engine]
     except KeyError:
         raise WorkerError("MODEL_RUNTIME_MISSING") from None
-
-
-def get_adapter(engine: str) -> Callable[[dict], dict]:
-    return get_descriptor(engine).adapter
 
 
 def verify_bundle(bundle: dict, check: Callable[[], None] = lambda: None) -> None:
@@ -296,22 +233,6 @@ class SpeechEngines:
                 raise WorkerError("MODEL_RUNTIME_MISSING")
             return {**bundle, "engine": name}
         raise WorkerError("SPEECH_MODEL_CHANGED")
-
-    def optional(
-        self, engine: str, language: str, *, check: Callable[[], None] = lambda: None
-    ) -> dict | None:
-        """A configured companion engine for `language`, or `None` when absent."""
-        check()
-        configured = self._read()
-        bundle = configured.get(engine)
-        if (
-            bundle is None
-            or language not in bundle["languages"]
-            or not ENGINES[engine].runtime_probe()
-        ):
-            return None
-        verify_bundle(bundle, check)
-        return {**bundle, "engine": engine}
 
     def status(self) -> dict:
         try:

@@ -116,14 +116,6 @@ class SpeechContracts(unittest.TestCase):
                         "languages": ["vi"],
                         "verified": False,
                     },
-                    {
-                        "engine": "qwen3-asr",
-                        "available": False,
-                        "code": "MODEL_MISSING",
-                        "model_id": None,
-                        "languages": [],
-                        "verified": False,
-                    },
                 ]
             }
         )

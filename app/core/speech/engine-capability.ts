@@ -1,6 +1,6 @@
 import type { SpeechEngineStatus, SpeechLanguage, SpeechStatus } from './recognition.js';
 
-const LOCAL_SPEECH_ENGINES = new Set<string>(['faster-whisper', 'qwen3-asr']);
+const LOCAL_SPEECH_ENGINES = new Set<string>(['faster-whisper']);
 
 export function presentableSpeechEngines(
   status: SpeechStatus,

@@ -61,78 +61,6 @@ class ManifestTests(unittest.TestCase):
             with self.assertRaises(WorkerError):
                 read_manifest(self.manifest)
 
-    def test_qwen3_asr_manifest_validates_and_its_digest_differs_from_faster_whisper(self):
-        directory = self.root / "qwen-model"
-        directory.mkdir()
-        files = {}
-        for name in (
-            "config.json",
-            "tokenizer_config.json",
-            "vocab.json",
-            "merges.txt",
-            "model.safetensors",
-        ):
-            data = b"controlled-test-model-file-" + name.encode()
-            (directory / name).write_bytes(data)
-            files[name] = hashlib.sha256(data).hexdigest()
-        manifest = self.root / "qwen-manifest.json"
-        manifest.write_text(
-            json.dumps(
-                {
-                    "engine": "qwen3-asr",
-                    "directory": "qwen-model",
-                    "languages": ["en", "vi", "zh"],
-                    "files": files,
-                }
-            )
-        )
-        bundle = read_manifest(manifest)
-        self.assertEqual(len(bundle["model_id"]), 64)
-        whisper_bundle = read_manifest(self.manifest)
-        self.assertNotEqual(bundle["model_id"], whisper_bundle["model_id"])
-
-    def test_qwen3_forced_aligner_manifest_validates_with_the_same_file_set_as_qwen3_asr(self):
-        # Matches the HF Qwen3-ForcedAligner-0.6B file listing; distinct engine digest.
-        directory = self.root / "aligner-model"
-        directory.mkdir()
-        files = {}
-        for name in (
-            "config.json",
-            "tokenizer_config.json",
-            "vocab.json",
-            "merges.txt",
-            "model.safetensors",
-        ):
-            data = b"controlled-test-aligner-file-" + name.encode()
-            (directory / name).write_bytes(data)
-            files[name] = hashlib.sha256(data).hexdigest()
-        manifest = self.root / "aligner-manifest.json"
-        manifest.write_text(
-            json.dumps(
-                {
-                    "engine": "qwen3-forced-aligner",
-                    "directory": "aligner-model",
-                    "languages": ["vi"],
-                    "files": files,
-                }
-            )
-        )
-        bundle = read_manifest(manifest)
-        self.assertEqual(len(bundle["model_id"]), 64)
-        same_files_as_asr = self.root / "as-asr-manifest.json"
-        same_files_as_asr.write_text(
-            json.dumps(
-                {
-                    "engine": "qwen3-asr",
-                    "directory": "aligner-model",
-                    "languages": ["vi"],
-                    "files": files,
-                }
-            )
-        )
-        as_asr = read_manifest(same_files_as_asr)
-        self.assertNotEqual(bundle["model_id"], as_asr["model_id"])
-
     def test_changed_or_unlisted_runtime_files_are_not_trusted(self):
         (self.directory / "model.bin").write_bytes(b"changed")
         bundle = read_manifest(self.manifest)
@@ -186,56 +114,6 @@ class SpeechEnginesTests(unittest.TestCase):
             )
         )
 
-        self.qwen_dir = self.root / "qwen-model"
-        self.qwen_dir.mkdir()
-        self.qwen_files = {}
-        for name in (
-            "config.json",
-            "tokenizer_config.json",
-            "vocab.json",
-            "merges.txt",
-            "model.safetensors",
-        ):
-            data = b"controlled-test-model-file-" + name.encode()
-            (self.qwen_dir / name).write_bytes(data)
-            self.qwen_files[name] = hashlib.sha256(data).hexdigest()
-        self.qwen_manifest = self.root / "qwen-manifest.json"
-        self.qwen_manifest.write_text(
-            json.dumps(
-                {
-                    "engine": "qwen3-asr",
-                    "directory": str(self.qwen_dir),
-                    "languages": ["en", "vi", "zh"],
-                    "files": self.qwen_files,
-                }
-            )
-        )
-
-        self.aligner_dir = self.root / "aligner-model"
-        self.aligner_dir.mkdir()
-        self.aligner_files = {}
-        for name in (
-            "config.json",
-            "tokenizer_config.json",
-            "vocab.json",
-            "merges.txt",
-            "model.safetensors",
-        ):
-            data = b"controlled-test-aligner-file-" + name.encode()
-            (self.aligner_dir / name).write_bytes(data)
-            self.aligner_files[name] = hashlib.sha256(data).hexdigest()
-        self.aligner_manifest = self.root / "aligner-manifest.json"
-        self.aligner_manifest.write_text(
-            json.dumps(
-                {
-                    "engine": "qwen3-forced-aligner",
-                    "directory": str(self.aligner_dir),
-                    "languages": ["vi"],
-                    "files": self.aligner_files,
-                }
-            )
-        )
-
         self.host = SimpleNamespace(
             workspace=self.workspace,
             speech_models=SpeechEngines(self.target),
@@ -248,57 +126,34 @@ class SpeechEnginesTests(unittest.TestCase):
     def test_status_of_an_unconfigured_store_lists_every_known_engine_as_missing(self):
         status = SpeechEngines(self.target).status()
         names = {entry["engine"] for entry in status["engines"]}
-        self.assertEqual(names, {"faster-whisper", "qwen3-asr", "qwen3-forced-aligner"})
+        self.assertEqual(names, {"faster-whisper"})
         for entry in status["engines"]:
             self.assertFalse(entry["available"])
             self.assertEqual(entry["code"], "MODEL_MISSING")
             self.assertIsNone(entry["model_id"])
             self.assertEqual(entry["languages"], [])
 
-    def test_configuring_a_second_engine_keeps_the_first_intact(self):
-        with (
-            patch("speech.recognition.models.runtime_available", return_value=True),
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-        ):
+    def test_reconfiguring_an_engine_updates_only_its_own_model_id(self):
+        with patch("speech.recognition.models.runtime_available", return_value=True):
             self.configure(self.whisper_manifest)
-            status = self.configure(self.qwen_manifest)
-        by_engine = {entry["engine"]: entry for entry in status["engines"]}
-        self.assertTrue(by_engine["faster-whisper"]["available"])
-        self.assertTrue(by_engine["qwen3-asr"]["available"])
-        self.assertIsNotNone(by_engine["faster-whisper"]["model_id"])
-        self.assertNotEqual(
-            by_engine["faster-whisper"]["model_id"], by_engine["qwen3-asr"]["model_id"]
+        first = SpeechEngines(self.target).status()["engines"][0]["model_id"]
+        (self.whisper_dir / "model.bin").write_bytes(b"a different weight file")
+        self.whisper_files["model.bin"] = hashlib.sha256(b"a different weight file").hexdigest()
+        self.whisper_manifest.write_text(
+            json.dumps(
+                {
+                    "engine": "faster-whisper",
+                    "directory": str(self.whisper_dir),
+                    "languages": ["en", "vi", "zh"],
+                    "files": self.whisper_files,
+                }
+            )
         )
-
-    def test_reconfiguring_one_engine_does_not_change_the_others_model_id(self):
-        with (
-            patch("speech.recognition.models.runtime_available", return_value=True),
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-        ):
-            self.configure(self.whisper_manifest)
-            status = self.configure(self.qwen_manifest)
-            first_whisper_id = next(
-                e["model_id"] for e in status["engines"] if e["engine"] == "faster-whisper"
-            )
-            (self.whisper_dir / "model.bin").write_bytes(b"a different weight file")
-            self.whisper_files["model.bin"] = hashlib.sha256(b"a different weight file").hexdigest()
-            self.whisper_manifest.write_text(
-                json.dumps(
-                    {
-                        "engine": "faster-whisper",
-                        "directory": str(self.whisper_dir),
-                        "languages": ["en", "vi", "zh"],
-                        "files": self.whisper_files,
-                    }
-                )
-            )
+        with patch("speech.recognition.models.runtime_available", return_value=True):
             status = self.configure(self.whisper_manifest)
         by_engine = {entry["engine"]: entry for entry in status["engines"]}
-        self.assertNotEqual(by_engine["faster-whisper"]["model_id"], first_whisper_id)
-        self.assertEqual(
-            by_engine["qwen3-asr"]["model_id"],
-            SpeechEngines(self.target).status()["engines"][1]["model_id"],
-        )
+        self.assertNotEqual(by_engine["faster-whisper"]["model_id"], first)
+        self.assertEqual(set(by_engine), {"faster-whisper"})
 
     def test_old_single_engine_store_shape_fails_loudly_never_migrated(self):
         self.target.write_text(
@@ -317,25 +172,16 @@ class SpeechEnginesTests(unittest.TestCase):
             self.assertFalse(entry["available"])
         self.host.speech_models = SpeechEngines(self.target)
         with self.assertRaisesRegex(WorkerError, "SPEECH_MANIFEST_INVALID"):
-            self.configure(self.qwen_manifest)
+            self.configure(self.whisper_manifest)
 
     def test_require_resolves_the_engine_owning_the_requested_model_id_and_refuses_others(self):
-        with (
-            patch("speech.recognition.models.runtime_available", return_value=True),
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-        ):
-            self.configure(self.whisper_manifest)
-            status = self.configure(self.qwen_manifest)
+        with patch("speech.recognition.models.runtime_available", return_value=True):
+            status = self.configure(self.whisper_manifest)
         engines = SpeechEngines(self.target)
-        by_engine = {entry["engine"]: entry for entry in status["engines"]}
-        with (
-            patch("speech.recognition.models.runtime_available", return_value=True),
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-        ):
-            whisper_bundle = engines.require(by_engine["faster-whisper"]["model_id"], "vi")
-            qwen_bundle = engines.require(by_engine["qwen3-asr"]["model_id"], "vi")
-        self.assertEqual(whisper_bundle["engine"], "faster-whisper")
-        self.assertEqual(qwen_bundle["engine"], "qwen3-asr")
+        model_id = status["engines"][0]["model_id"]
+        with patch("speech.recognition.models.runtime_available", return_value=True):
+            bundle = engines.require(model_id, "vi")
+        self.assertEqual(bundle["engine"], "faster-whisper")
         with self.assertRaisesRegex(WorkerError, "SPEECH_MODEL_CHANGED"):
             engines.require("a" * 64, "vi")
 
@@ -374,34 +220,6 @@ class SpeechEnginesTests(unittest.TestCase):
         with self.assertRaisesRegex(WorkerError, "CANCELLED"):
             engines.require("a" * 64, "vi", check=cancel)
 
-    def test_optional_is_none_when_a_companion_engine_is_simply_not_there_to_help(self):
-        engines = SpeechEngines(self.target)
-        self.assertIsNone(engines.optional("qwen3-forced-aligner", "vi"))
-        with patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True):
-            self.configure(self.aligner_manifest)
-        self.assertIsNone(engines.optional("qwen3-forced-aligner", "en"))
-        with patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=False):
-            self.assertIsNone(engines.optional("qwen3-forced-aligner", "vi"))
-
-    def test_optional_returns_the_companion_bundle_once_it_is_actually_usable(self):
-        engines = SpeechEngines(self.target)
-        with patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True):
-            self.configure(self.aligner_manifest)
-            bundle = engines.optional("qwen3-forced-aligner", "vi")
-        self.assertEqual(bundle["engine"], "qwen3-forced-aligner")
-        self.assertEqual(len(bundle["model_id"]), 64)
-
-    def test_optional_still_fails_hard_on_a_tampered_companion_bundle(self):
-        engines = SpeechEngines(self.target)
-        with patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True):
-            self.configure(self.aligner_manifest)
-        (self.aligner_dir / "model.safetensors").write_bytes(b"tampered")
-        with (
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-            self.assertRaisesRegex(WorkerError, "MODEL_HASH_MISMATCH"),
-        ):
-            engines.optional("qwen3-forced-aligner", "vi")
-
     def test_configuration_is_explicit_atomic_and_does_not_install_anything(self):
         self.target.write_text(json.dumps({"engines": {}}), encoding="utf-8")
         (self.whisper_dir / "model.bin").write_bytes(b"bad")
@@ -418,29 +236,13 @@ class SpeechEnginesTests(unittest.TestCase):
         self.assertEqual(list(self.workspace.glob("*.tmp")), [])
 
     def test_unconfigure_forgets_only_the_engine_at_that_directory(self):
-        with (
-            patch("speech.recognition.models.runtime_available", return_value=True),
-            patch("speech.recognition.models.qwen3_asr_runtime_available", return_value=True),
-        ):
+        with patch("speech.recognition.models.runtime_available", return_value=True):
             self.configure(self.whisper_manifest)
-            self.configure(self.qwen_manifest)
-        unconfigure_speech(self.host, {"params": {"directory": str(self.whisper_dir)}})
-        stored = json.loads(self.target.read_text())
-        self.assertEqual(set(stored["engines"]), {"qwen3-asr"})
         unconfigure_speech(self.host, {"params": {"directory": str(self.root / "elsewhere")}})
-        self.assertEqual(set(json.loads(self.target.read_text())["engines"]), {"qwen3-asr"})
+        self.assertEqual(set(json.loads(self.target.read_text())["engines"]), {"faster-whisper"})
+        unconfigure_speech(self.host, {"params": {"directory": str(self.whisper_dir)}})
+        self.assertEqual(set(json.loads(self.target.read_text())["engines"]), set())
         self.assertEqual(list(self.workspace.glob("*.tmp")), [])
-
-
-class AdapterDispatchTests(unittest.TestCase):
-    def test_the_forced_aligners_own_adapter_refuses_direct_dispatch(self):
-        from speech.recognition.adapters import qwen3_forced_aligner
-        from speech.recognition.models import get_adapter
-
-        with self.assertRaisesRegex(WorkerError, "MODEL_RUNTIME_MISSING"):
-            get_adapter("qwen3-forced-aligner")({})
-        with self.assertRaisesRegex(WorkerError, "MODEL_RUNTIME_MISSING"):
-            qwen3_forced_aligner.transcribe({})
 
 
 class SpeechServiceTests(unittest.TestCase):

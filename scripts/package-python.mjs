@@ -81,12 +81,11 @@ async function directorySize(directory) {
 const PROBE = `
 import importlib.util as u, json, sys
 sys.path.insert(0, 'worker')
-from speech.recognition.models import runtime_available as whisper, qwen3_asr_runtime_available as qwen
+from speech.recognition.models import runtime_available as whisper
 from speech.synthesis.models import turbo_runtime_code, nano_runtime_code
 from speech.translation.models import runtime_available as translation
 result = {
   'speech.faster-whisper': bool(whisper()),
-  'speech.qwen3-asr': bool(qwen()),
   'synthesis.vieneu': turbo_runtime_code() is None and nano_runtime_code() is None,
   'translation.ctranslate2': bool(translation()),
   'vision': all(u.find_spec(n) is not None for n in ('numpy', 'cv2', 'onnxruntime', 'rapidocr')),

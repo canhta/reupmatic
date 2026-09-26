@@ -16,10 +16,7 @@ from speech.recognition.timestamps import timed_segments
 
 
 def run(job: dict, progress: Path) -> dict:
-    aligner = job.get("aligner")
     verify_bundle(job["model"])
-    if aligner is not None:
-        verify_bundle(aligner)
     descriptor = get_descriptor(job["model"]["engine"])
     outcome = descriptor.adapter(job)
     duration = job["end_ms"] - job["start_ms"]
@@ -34,8 +31,6 @@ def run(job: dict, progress: Path) -> dict:
         engine_segments=descriptor.provides_segments,
     )
     verify_bundle(job["model"])
-    if aligner is not None:
-        verify_bundle(aligner)
     return {
         "cues": cues,
         "words": words,

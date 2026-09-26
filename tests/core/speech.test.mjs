@@ -360,8 +360,10 @@ test('the capability seam offers local engines whenever available, never a worke
     verified: false,
   });
   assert.deepEqual(
-    presentableSpeechEngines({ engines: [available('faster-whisper'), available('qwen3-asr')] }),
-    [available('faster-whisper'), available('qwen3-asr')],
+    presentableSpeechEngines({
+      engines: [available('faster-whisper'), available('dashscope-flash')],
+    }),
+    [available('faster-whisper')],
   );
   assert.deepEqual(presentableSpeechEngines({ engines: [unavailable('faster-whisper')] }), []);
   const hosted = { engines: [available('dashscope-flash')] };
@@ -398,7 +400,7 @@ test('offered engines for a job narrow the capability seam by language, never wi
   const status = {
     engines: [
       available('faster-whisper', { languages: ['en', 'vi'] }),
-      available('qwen3-asr', { languages: ['vi'] }),
+      available('dashscope-flash', { languages: ['vi'] }),
     ],
   };
   assert.deepEqual(offeredSpeechEngines(status, 'en'), [
@@ -473,7 +475,7 @@ test('the failure a job reports names the language when engines work but none se
             model_id: null,
             languages: [],
           }),
-          engine({ engine: 'qwen3-asr', available: false, code: 'MODEL_RUNTIME_MISSING' }),
+          engine({ engine: 'dashscope-flash', available: false, code: 'MODEL_RUNTIME_MISSING' }),
         ],
       },
       'en',
