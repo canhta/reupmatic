@@ -9,14 +9,14 @@ const LOCAL_DURATION_CEILING_MS = 7200000;
 export const IMPLEMENTED_PROTOCOLS: ReadonlySet<string> = new Set<string>(['dashscope', 'vieneu']);
 
 // The hosted synthesis engine shares the provider store with recognition, BYOK and never proxied.
-export const VIEU_CLOUD_PROTOCOL = 'vieneu';
-export const VIEU_CLOUD_MODEL = 'vieneu-v4';
-export const VIEU_CLOUD_HOST = 'api.vieneu.io';
+export const VIENEU_CLOUD_PROTOCOL = 'vieneu';
+export const VIENEU_CLOUD_MODEL = 'vieneu-v4';
+export const VIENEU_CLOUD_HOST = 'api.vieneu.io';
 
-export function vieuCloudModelId(endpointHost: string = VIEU_CLOUD_HOST): string {
+export function vieuCloudModelId(endpointHost: string = VIENEU_CLOUD_HOST): string {
   return hostedModelIdentity({
-    protocol: VIEU_CLOUD_PROTOCOL,
-    remote_model_name: VIEU_CLOUD_MODEL,
+    protocol: VIENEU_CLOUD_PROTOCOL,
+    remote_model_name: VIENEU_CLOUD_MODEL,
     endpoint_host: endpointHost,
   });
 }

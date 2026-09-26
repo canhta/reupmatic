@@ -9,8 +9,8 @@ import {
 import {
   HOSTED_CREDENTIAL_ENV_VAR,
   hostedModelIdentity,
-  VIEU_CLOUD_MODEL,
-  VIEU_CLOUD_PROTOCOL,
+  VIENEU_CLOUD_MODEL,
+  VIENEU_CLOUD_PROTOCOL,
 } from '../../../../core/speech/providers.js';
 import { verifyVoiceTrack } from '../../../../core/speech/synthesis/admission.js';
 import { SynthesisArtifacts } from '../../../../core/speech/synthesis/artifacts.js';
@@ -157,7 +157,7 @@ export function installSynthesis(host: Host) {
   });
   host.wire('synthesis-cloud-voices', async () => {
     const provider = (await host.providers.list()).find(
-      (candidate) => candidate.protocol === VIEU_CLOUD_PROTOCOL && candidate.has_credential,
+      (candidate) => candidate.protocol === VIENEU_CLOUD_PROTOCOL && candidate.has_credential,
     );
     if (!provider) return null;
     const env = await host.providers.credentialEnv(provider.id);
@@ -169,7 +169,7 @@ export function installSynthesis(host: Host) {
     return {
       model_id: hostedModelIdentity({
         protocol: provider.protocol,
-        remote_model_name: VIEU_CLOUD_MODEL,
+        remote_model_name: VIENEU_CLOUD_MODEL,
         endpoint_host: provider.endpoint_host,
       }),
       voices: data.voices.map((voice) => ({ id: voice.id, label: voice.label })),

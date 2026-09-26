@@ -9,7 +9,7 @@ import {
   parseModelDraft,
   parseProviderDraft,
   resolveHostedModel,
-  VIEU_CLOUD_HOST,
+  VIENEU_CLOUD_HOST,
   vieuCloudModelId,
 } from '../../dist-core/speech/providers.js';
 import { parseSpeechStatus } from '../../dist-core/speech/recognition.js';
@@ -62,7 +62,7 @@ test('an unimplemented protocol is refused at configuration time, plainly; an im
 test('the VieNeu cloud synthesis identity is a stable 64-hex digest tied to its endpoint', () => {
   const digest = vieuCloudModelId();
   assert.match(digest, /^[a-f0-9]{64}$/);
-  assert.equal(vieuCloudModelId(VIEU_CLOUD_HOST), digest);
+  assert.equal(vieuCloudModelId(VIENEU_CLOUD_HOST), digest);
   assert.notEqual(vieuCloudModelId('other.example.com'), digest);
 });
 

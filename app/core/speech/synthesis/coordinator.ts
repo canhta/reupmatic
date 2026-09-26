@@ -5,8 +5,8 @@ import {
   HOSTED_CREDENTIAL_ENV_VAR,
   hostedModelIdentity,
   type SpeechProvider,
-  VIEU_CLOUD_MODEL,
-  VIEU_CLOUD_PROTOCOL,
+  VIENEU_CLOUD_MODEL,
+  VIENEU_CLOUD_PROTOCOL,
 } from '../providers.js';
 import type { ClonedVoiceData } from '../voices.js';
 import type { SynthesisArtifacts } from './artifacts.js';
@@ -118,10 +118,10 @@ export class SynthesisCoordinator extends EventEmitter {
     const providers = await this.providers.listProviders();
     const match = providers.find(
       (provider) =>
-        provider.protocol === VIEU_CLOUD_PROTOCOL &&
+        provider.protocol === VIENEU_CLOUD_PROTOCOL &&
         hostedModelIdentity({
           protocol: provider.protocol,
-          remote_model_name: VIEU_CLOUD_MODEL,
+          remote_model_name: VIENEU_CLOUD_MODEL,
           endpoint_host: provider.endpoint_host,
         }) === model_id,
     );

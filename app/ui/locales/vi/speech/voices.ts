@@ -14,7 +14,7 @@ export const speechVoicesVi = {
   settingsVoicesAttest: 'Đây là giọng của tôi, hoặc tôi có quyền sử dụng nó.',
   settingsVoicesCloneInstallTitle: 'Nhân bản giọng cần tải một lần',
   settingsVoicesCloneInstallHelp:
-    'Tải một lần bộ mã hoá giọng nói và codec, sau đó nhân bản từ đoạn âm thanh ngắn.',
+    'Tải gói nhân bản giọng một lần, sau đó nhân bản từ đoạn âm thanh ngắn.',
   settingsVoicesCloneInstall: 'Cài nhân bản giọng',
   settingsVoicesCloneInstalling: 'Đang cài nhân bản giọng',
   settingsVoicesChooseFile: 'Chọn đoạn âm thanh và nhân bản',

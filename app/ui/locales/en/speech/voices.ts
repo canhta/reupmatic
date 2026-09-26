@@ -11,8 +11,7 @@ export const speechVoicesEn = {
   settingsVoicesReferenceHelp: '3–8 seconds of one speaker, without music.',
   settingsVoicesAttest: 'This is my voice, or I have the right to use it.',
   settingsVoicesCloneInstallTitle: 'Voice cloning needs a one-time download',
-  settingsVoicesCloneInstallHelp:
-    'Download the gender-free speaker and codec encoders once, then clone from a short clip.',
+  settingsVoicesCloneInstallHelp: 'Download the cloning add-on once, then clone from a short clip.',
   settingsVoicesCloneInstall: 'Install voice cloning',
   settingsVoicesCloneInstalling: 'Installing voice cloning',
   settingsVoicesChooseFile: 'Choose clip and clone',
