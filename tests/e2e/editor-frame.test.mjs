@@ -324,16 +324,20 @@ test('the Style panel scrolls its last control into view', {
       await page.setViewportSize({ width: 1420, height: 900 });
 
       await page.getByRole('tab', { name: 'Style', exact: true }).click();
-      const applyButton = page.getByRole('button', { name: 'Apply appearance', exact: true });
-      await applyButton.waitFor();
-      await applyButton.scrollIntoViewIfNeeded();
-      const applyBox = await applyButton.boundingBox();
+      // Style applies live (no Apply action), so the last control is whatever the panel ends on.
+      const lastControl = page
+        .locator('#panel-style')
+        .locator('button, input, [role="checkbox"], [role="combobox"]')
+        .last();
+      await lastControl.waitFor();
+      await lastControl.scrollIntoViewIfNeeded();
+      const lastBox = await lastControl.boundingBox();
       const panelBox = await page.locator('.editor-tool-panel').boundingBox();
-      assert.ok(applyBox && panelBox);
+      assert.ok(lastBox && panelBox);
       assert.ok(
-        applyBox.y >= panelBox.y - 1 &&
-          applyBox.y + applyBox.height <= panelBox.y + panelBox.height + 1,
-        "the Style panel's Apply button must scroll fully into view within the tool panel",
+        lastBox.y >= panelBox.y - 1 &&
+          lastBox.y + lastBox.height <= panelBox.y + panelBox.height + 1,
+        "the Style panel's last control must scroll fully into view within the tool panel",
       );
     },
   );
