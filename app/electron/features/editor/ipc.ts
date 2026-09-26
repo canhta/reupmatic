@@ -300,16 +300,14 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       source_path: source.path,
       opened_at: Date.now(),
     });
-    let linked = await host.library.recordLink(source, 'project', filePath);
+    let linked = Boolean(await host.library.recordLink(source, 'project', filePath));
     if (project.composition)
       linked =
         (await host.library.recordCompositionLinks(project.composition, 'project', filePath)) &&
         linked;
     if (project.soundtrack) {
-      const audioLinked = await host.library.recordLink(
-        source,
-        'audio',
-        project.soundtrack.source.path,
+      const audioLinked = Boolean(
+        await host.library.recordLink(source, 'audio', project.soundtrack.source.path),
       );
       linked = linked && audioLinked;
     }
@@ -426,7 +424,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     await saveChosenExport(generated.path, chosen.filePath, media.originalPaths);
     return {
       saved: true,
-      library_linked: await host.library.recordLink(source, 'subtitle', chosen.filePath),
+      library_linked: Boolean(await host.library.recordLink(source, 'subtitle', chosen.filePath)),
     };
   });
   function outputArtifactPath(artifactId: string): string {
@@ -454,17 +452,19 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     });
     if (chosen.canceled || !chosen.filePath) return null;
     await saveChosenExport(artifactPath, chosen.filePath, media.originalPaths);
-    let linked = await host.library.recordLink(
+    const exportId = await host.library.recordLink(
       media.artifactSource(artifactId),
       'export',
       chosen.filePath,
     );
     const composition = media.artifactComposition(artifactId);
     if (composition)
-      linked =
-        (await host.library.recordCompositionLinks(composition, 'export', chosen.filePath)) &&
-        linked;
-    return { saved: true, library_linked: linked };
+      await host.library.recordCompositionLinks(composition, 'export', chosen.filePath);
+    return {
+      saved: true,
+      library_linked: Boolean(exportId),
+      ...(exportId ? { export_id: exportId } : {}),
+    };
   });
   return { recentList: () => recent.list() };
 }

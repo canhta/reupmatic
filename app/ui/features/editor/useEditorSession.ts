@@ -75,13 +75,19 @@ import {
 import type { OcrResult } from '../../../core/vision/vision';
 import { type Capabilities, unwrap } from '../../bridge/client';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
+import { requestPost } from '../distribution/post-intent';
 import { useAutosave } from '../projects/recovery/useAutosave';
 import type { SettingsCategory } from '../settings/SettingsPanel';
 import { type SourceSelection, useSourcePreview } from './composition/useSourcePreview';
 import { useEditorDocument } from './useEditorDocument';
 import { type Preview, useRenderJob } from './useRenderJob';
 
-type SaveResult = { saved: boolean; library_linked?: boolean; path?: string };
+type SaveResult = {
+  saved: boolean;
+  library_linked?: boolean;
+  path?: string;
+  export_id?: string;
+};
 
 type Snapshot = EditorSnapshot;
 
@@ -182,7 +188,8 @@ export interface EditorSession {
   saveCurrentProject: () => Promise<void>;
   saveProjectAs: () => Promise<void>;
   saveSubtitles: (timing?: 'source' | 'output', format?: 'srt' | 'ass') => Promise<void>;
-  saveVideo: (artifactId: string) => Promise<void>;
+  saveVideo: (artifactId: string) => Promise<SaveResult | null | undefined>;
+  postExport: (artifactId: string) => Promise<void>;
   undo: () => void;
   redo: () => void;
   render: () => Promise<void> | undefined;
@@ -216,6 +223,8 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   const timeline = useRef<TimelineState>(null);
   const titleRef = useRef<HTMLElement>(null);
   const rev = useRef(0);
+  // Render artifact id -> Library export link id, filled when an export is saved.
+  const exportLinks = useRef(new Map<string, string>());
   const getRevision = useCallback(() => rev.current, []);
   const document = useEditorDocument(bump);
   const { history, snapshot } = document;
@@ -896,16 +905,33 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     }
   }
 
-  async function saveVideo(artifactId: string) {
+  async function saveVideo(artifactId: string): Promise<SaveResult | null | undefined> {
     try {
       const value = await unwrap<SaveResult | null>(window.reupmatic.saveVideo(artifactId));
-      if (value?.saved)
+      if (value?.saved) {
+        if (value.export_id) exportLinks.current.set(artifactId, value.export_id);
         setStatus(
           media?.library_id && value.library_linked === false ? 'savedWithoutLibraryLink' : 'saved',
         );
+      }
+      return value;
     } catch (reason) {
       report(reason);
+      return undefined;
     }
+  }
+
+  // Post needs the Library export link id, not the render artifact id. A result that
+  // was never saved runs the same save flow first.
+  async function postExport(artifactId: string) {
+    const saved = exportLinks.current.get(artifactId);
+    if (saved) {
+      requestPost(saved);
+      return;
+    }
+    const value = await saveVideo(artifactId);
+    if (value?.export_id) requestPost(value.export_id);
+    else if (value?.saved) setError('POST_REQUIRES_LIBRARY');
   }
 
   function render() {
@@ -1007,6 +1033,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     saveProjectAs,
     saveSubtitles,
     saveVideo,
+    postExport,
     undo: document.undo,
     redo: document.redo,
     render,

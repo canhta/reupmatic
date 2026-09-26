@@ -20,7 +20,13 @@ function requestPath(input: unknown): string {
   return value.path;
 }
 
-type SaveResult = { saved: boolean; revision?: number; library_linked?: boolean; path?: string };
+type SaveResult = {
+  saved: boolean;
+  revision?: number;
+  library_linked?: boolean;
+  path?: string;
+  export_id?: string;
+};
 
 export interface OpenedProject {
   media: PublicVideo;

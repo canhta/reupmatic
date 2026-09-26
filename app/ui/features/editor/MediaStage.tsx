@@ -18,7 +18,6 @@ import { fadePreviewOpacity } from '../../../core/editing/fade-preview';
 import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
 import { unwrap } from '../../bridge/client';
-import { requestPost } from '../distribution/post-intent';
 import { useEditor } from './EditorContext';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
@@ -342,7 +341,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             label={t('resultPost')}
             size="sm"
             variant="primary"
-            onClick={() => requestPost(result.artifact_id)}
+            onClick={() => void editor.postExport(result.artifact_id)}
           />
         </HStack>
       )}

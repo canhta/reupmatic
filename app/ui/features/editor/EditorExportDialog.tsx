@@ -6,7 +6,7 @@ import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../core/editing/edit-recipe';
 import { registerMenuCommand } from '../../shell/menuCommands';
@@ -25,8 +25,6 @@ export function EditorExportDialog() {
   const [format, setFormat] = useState<'srt' | 'ass'>('srt');
   const [timing, setTiming] = useState<'source' | 'output'>('source');
   const [running, setRunning] = useState(false);
-  const [message, setMessage] = useState('');
-  const baselineArtifact = useRef<string | null>(null);
 
   useEffect(() => registerMenuCommand('editor.export', () => setIsOpen(true)), []);
   useEffect(
@@ -37,13 +35,6 @@ export function EditorExportDialog() {
       }),
     [],
   );
-
-  useEffect(() => {
-    if (!running || !editor.preview) return;
-    if (editor.preview.artifact_id === baselineArtifact.current) return;
-    setMessage(t('exportComplete'));
-    setIsOpen(false);
-  }, [running, editor.preview, t]);
 
   const output = editor.processing?.editing?.output ?? DEFAULT_OUTPUT;
   function changeOutput(patch: Partial<Output>) {
@@ -67,17 +58,11 @@ export function EditorExportDialog() {
 
   async function run() {
     setRunning(true);
-    setMessage('');
     try {
       if (kind !== 'video') await editor.saveSubtitles(timing, format);
-      if (kind !== 'subtitle') {
-        baselineArtifact.current = editor.preview?.artifact_id ?? null;
-        await editor.render();
-        setMessage(t('exportRendering'));
-      } else {
-        setMessage(t('exportComplete'));
-        setIsOpen(false);
-      }
+      if (kind !== 'subtitle') await editor.render();
+      // The monitor owns the progress and the result; the dialog only starts the job.
+      setIsOpen(false);
     } finally {
       setRunning(false);
     }
@@ -198,11 +183,6 @@ export function EditorExportDialog() {
           {(running || editor.job) && (
             <Text as="p" type="body" role="status">
               {editor.job ? t(editor.job.phase) : t('exportRendering')}
-            </Text>
-          )}
-          {!running && !editor.job && message && (
-            <Text as="p" type="body" role="status">
-              {message}
             </Text>
           )}
           <Button

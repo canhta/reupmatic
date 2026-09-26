@@ -318,17 +318,17 @@ export async function installLibrary(host: Host) {
       source: RegisteredVideo | undefined,
       kind: ContentAssetKind,
       filename: string,
-    ): Promise<boolean> {
+    ): Promise<string | null> {
       return trackLink(async () => {
-        if (!source?.library_id || !contentLibrary) return false;
+        if (!source?.library_id || !contentLibrary) return null;
         try {
-          await contentLibrary.registerAsset(source.library_id, kind, filename);
+          const asset = await contentLibrary.registerAsset(source.library_id, kind, filename);
           changed();
-          return true;
+          return asset.id;
         } catch {
-          return false;
+          return null;
         }
-      }).catch(() => false);
+      }).catch(() => null);
     },
     beginClose() {
       closing = true;

@@ -61,6 +61,16 @@ test('asset association is immutable by content and repeated registration is ide
   assert.equal(library.getContent(item.id).links.length, 2);
 });
 
+test('the export link id a save records is exactly what exportChoices offers to Post', async (t) => {
+  const { root, library, item } = await fixture(t);
+  const file = path.join(root, 'output.mp4');
+  await writeFile(file, 'rendered output');
+  const link = await library.registerAsset(item.id, 'export', file);
+  const choice = library.exportChoices().find((entry) => entry.export_id === link.id);
+  assert.ok(choice, 'the export link id must appear in exportChoices');
+  assert.equal(choice.library_id, item.id);
+});
+
 test('derived audio and export remain accessible without the original and detect same-size timestamp changes', async (t) => {
   const { root, source, item, library } = await fixture(t);
   const file = path.join(root, 'music.wav');

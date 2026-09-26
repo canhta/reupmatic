@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { colorPreviewMatrix } from '../../dist-core/editing/color-preview.js';
 import { createTempWorkspace, root, runElectronTest } from './helpers/electron-harness.mjs';
-import { addMediaToProject, waitForEditorReady } from './ui-actions.mjs';
+import { waitForEditorReady } from './ui-actions.mjs';
 
 const COLOR = { brightness: 0.2, contrast: 1.4, saturation: 1.8 };
 
@@ -14,6 +14,7 @@ test('Source monitor applies the eq colour preview and the export agrees', {
 }, async () => {
   const { temp, userData } = await createTempWorkspace('reupmatic-colour-preview-');
   const video = path.join(temp, 'colour-preview.mp4');
+  const exported = path.join(temp, 'post-export.mp4');
   execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
     '-v',
     'error',
@@ -33,10 +34,19 @@ test('Source monitor applies the eq colour preview and the export agrees', {
     async ({ application, page }) => {
       await page.setViewportSize({ width: 1420, height: 900 });
       await waitForEditorReady(page);
+      // Import into the Library first: only a linked export can be posted.
+      await page.getByRole('button', { name: 'Sources & Library', exact: true }).click();
       await application.evaluate(({ dialog }, filename) => {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
       }, video);
-      await addMediaToProject(page);
+      await page.getByRole('button', { name: 'Import local files', exact: true }).click();
+      const row = page.getByRole('cell', { name: 'colour-preview.mp4', exact: true });
+      await row.waitFor();
+      await row.click();
+      await page
+        .getByRole('complementary')
+        .getByRole('button', { name: 'Open in Editor', exact: true })
+        .click();
       await page.locator('video[data-monitor-video="source"]').waitFor();
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
@@ -108,6 +118,18 @@ test('Source monitor applies the eq colour preview and the export agrees', {
       await page
         .locator('video[data-monitor-video="result"]')
         .screenshot({ path: path.join(artifacts, 'colour-preview-rendered.png') });
+
+      // Post saves the export, links it to the Library, then opens Channels with it selected.
+      await application.evaluate(({ dialog }, filePath) => {
+        dialog.showSaveDialog = async () => ({ canceled: false, filePath });
+      }, exported);
+      await page.getByRole('button', { name: 'Post', exact: true }).click();
+      await page.getByRole('combobox', { name: 'Exported video', exact: true }).waitFor();
+      await page
+        .getByText('colour-preview.mp4 — post-export.mp4', { exact: true })
+        .filter({ visible: true })
+        .first()
+        .waitFor();
     },
   );
 });

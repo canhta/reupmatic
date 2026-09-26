@@ -57,6 +57,7 @@ const errorKeys: Record<string, string> = {
   SPLIT_RANGE: 'splitError',
   SOURCE_CHANGED: 'sourceChanged',
   SOURCE_MISSING: 'sourceChanged',
+  POST_REQUIRES_LIBRARY: 'postRequiresLibrary',
   PREVIEW_UNAVAILABLE: 'previewError',
   CANCELLED: 'cancelled',
   UNSUPPORTED_VIDEO_FORMAT: 'unsupportedVideoFormat',
