@@ -9,7 +9,7 @@ import { addMediaToProject, waitForEditorReady } from './ui-actions.mjs';
 
 const COLOR = { brightness: 0.2, contrast: 1.4, saturation: 1.8 };
 
-test('Source monitor applies the eq colour preview and a rendered sample agrees', {
+test('Source monitor applies the eq colour preview and the export agrees', {
   timeout: 180000,
 }, async () => {
   const { temp, userData } = await createTempWorkspace('reupmatic-colour-preview-');
@@ -90,11 +90,11 @@ test('Source monitor applies the eq colour preview and a rendered sample agrees'
         .locator('video[data-monitor-video="source"]')
         .screenshot({ path: path.join(artifacts, 'colour-preview-source.png') });
 
-      await page.getByRole('radio', { name: 'Rendered', exact: true }).click();
-      await page.getByRole('button', { name: 'Sample', exact: true }).click();
+      await page.getByRole('button', { name: 'Export…', exact: true }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Export', exact: true }).click();
       const renderError = page.locator('.editor-workspace > .error[role="alert"]');
       await page
-        .locator('video[data-monitor-video="preview"]')
+        .locator('video[data-monitor-video="result"]')
         .or(renderError)
         .first()
         .waitFor({ state: 'visible', timeout: 60000 });
@@ -102,11 +102,11 @@ test('Source monitor applies the eq colour preview and a rendered sample agrees'
         throw new Error(`Render failed in the installed UI: ${await renderError.innerText()}`);
       }
       await page.waitForFunction(() => {
-        const element = document.querySelector('video[data-monitor-video="preview"]');
+        const element = document.querySelector('video[data-monitor-video="result"]');
         return element instanceof HTMLVideoElement && element.readyState >= 1;
       });
       await page
-        .locator('video[data-monitor-video="preview"]')
+        .locator('video[data-monitor-video="result"]')
         .screenshot({ path: path.join(artifacts, 'colour-preview-rendered.png') });
     },
   );

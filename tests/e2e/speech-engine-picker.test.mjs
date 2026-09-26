@@ -109,11 +109,6 @@ for (const locale of ['en', 'vi']) {
           .getByRole('option', { name: locale === 'vi' ? 'Tiếng Anh' : 'English', exact: true })
           .click();
 
-        const rangeField = speechSection.getByRole('combobox', {
-          name: locale === 'vi' ? 'Phạm vi nhận dạng' : 'Recognition range',
-        });
-        await rangeField.waitFor();
-
         const engineField = speechSection.getByRole('combobox', {
           name: locale === 'vi' ? 'Bộ nhận dạng' : 'Recognition engine',
         });
@@ -131,12 +126,12 @@ for (const locale of ['en', 'vi']) {
         });
         assert.equal(await start.isDisabled(), false);
 
-        await rangeField.focus();
+        await languageField.focus();
         await page.keyboard.press('Tab');
         assert.equal(
           await start.evaluate((element) => element === document.activeElement),
           true,
-          'Tab from the recognition-range field must reach Start next',
+          'Tab from the language field must reach Start next',
         );
 
         const screenshots = path.join(root, '.test-artifacts');

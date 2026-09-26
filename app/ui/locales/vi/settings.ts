@@ -64,7 +64,7 @@ export const settingsVi = {
   settingsOfferedColumnStatus: 'Trạng thái',
   settingsOfferedColumnAction: 'Thao tác',
   settingsOfferedSource: '{{host}} · Giấy phép: {{licence}}',
-  settingsOfferedInpainting: 'Xoá vật thể',
+  settingsOfferedInpainting: 'Tái tạo vùng',
   settingsOfferedCount: '{{count}} mô hình',
   settingsOfferedNoMatches: 'Không có mô hình khớp bộ lọc.',
   settingsOfferedDownload: 'Tải xuống',

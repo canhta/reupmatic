@@ -8,10 +8,7 @@ import { pythonExecutable } from '../../../scripts/python.mjs';
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 /** Seeds through the real core classes; must run before the owning app launches. */
-export async function seedRecoveryDraft(
-  userData,
-  { id, sourcePath, sourceSha256, cues, sampleEndMs = 2000 },
-) {
+export async function seedRecoveryDraft(userData, { id, sourcePath, sourceSha256, cues }) {
   const workspace = path.join(userData, 'integration-workspace');
   await mkdir(workspace, { recursive: true });
   const { ProjectRecovery } = await import(
@@ -20,14 +17,7 @@ export async function seedRecoveryDraft(
   const { createProject } = await import(path.join(root, 'dist-node/core/projects/project.js'));
   const store = new ProjectRecovery(path.join(workspace, 'editor-recovery.sqlite'));
   try {
-    store.save(
-      id,
-      0,
-      createProject(
-        { path: sourcePath, sha256: sourceSha256 },
-        { cues, sample: { start_ms: 0, end_ms: sampleEndMs } },
-      ),
-    );
+    store.save(id, 0, createProject({ path: sourcePath, sha256: sourceSha256 }, { cues }));
   } finally {
     store.close();
   }
@@ -56,10 +46,7 @@ export async function seedSavedProject(
   );
   await saveProject(
     projectPath,
-    createProject(
-      { path: sourcePath, sha256: sourceSha256 },
-      { name, cues, sample: { start_ms: 0, end_ms: 2000 }, ...snapshot },
-    ),
+    createProject({ path: sourcePath, sha256: sourceSha256 }, { name, cues, ...snapshot }),
   );
   const store = new RecentStore(path.join(workspace, 'recent.json'));
   await store.record({

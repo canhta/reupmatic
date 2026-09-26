@@ -115,8 +115,8 @@ for (const locale of ['en', 'vi']) {
           locale === 'vi'
             ? {
                 text: 'Nội dung 1',
-                render: 'Đoạn mẫu',
-                preview: 'Bản render',
+                export: 'Xuất…',
+                exportRun: 'Xuất',
                 discard: 'Huỷ',
                 fileMenu: 'Tệp',
                 saveProject: 'Lưu dự án',
@@ -124,8 +124,8 @@ for (const locale of ['en', 'vi']) {
               }
             : {
                 text: 'Text 1',
-                render: 'Sample',
-                preview: 'Rendered',
+                export: 'Export…',
+                exportRun: 'Export',
                 discard: 'Discard',
                 fileMenu: 'File',
                 saveProject: 'Save Project',
@@ -144,20 +144,23 @@ for (const locale of ['en', 'vi']) {
         const saved = JSON.parse(await readFile(project, 'utf8'));
         assert.equal(saved.cues[0].text, 'Cà phê Việt Nam — changed');
         assert.equal(saved.cues[0].start_ms, 500);
-        await page.getByRole('radio', { name: labels.preview, exact: true }).click();
-        await page.getByRole('button', { name: labels.render, exact: true }).click();
+        await page.getByRole('button', { name: labels.export, exact: true }).click();
+        await page
+          .getByRole('dialog')
+          .getByRole('button', { name: labels.exportRun, exact: true })
+          .click();
         const renderError = page.locator('.editor-workspace > .error[role="alert"]');
         const renderOutcome = page
-          .locator('video[data-monitor-video="preview"]')
+          .locator('video[data-monitor-video="result"]')
           .or(renderError)
           .first();
         await renderOutcome.waitFor({ state: 'visible', timeout: 60000 });
         if (await renderError.isVisible()) {
           throw new Error(`Render failed in the installed UI: ${await renderError.innerText()}`);
         }
-        const rendered = page.locator('video[data-monitor-video="preview"]');
+        const rendered = page.locator('video[data-monitor-video="result"]');
         await page.waitForFunction(() => {
-          const element = document.querySelector('video[data-monitor-video="preview"]');
+          const element = document.querySelector('video[data-monitor-video="result"]');
           return (
             element instanceof HTMLVideoElement && element.readyState >= 1 && element.duration > 0
           );
@@ -178,7 +181,7 @@ for (const locale of ['en', 'vi']) {
           await page.getByRole('textbox', { name: labels.text, exact: true }).inputValue(),
           'Cà phê Việt Nam — changed',
         );
-        assert.equal(await page.locator('video[data-monitor-video="preview"]').count(), 0);
+        assert.equal(await page.locator('video[data-monitor-video="result"]').count(), 0);
         assert.deepEqual(errors, []);
       },
     );
@@ -337,38 +340,21 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
         'the cue Content column must not be clipped at 1420x900',
       );
       assert.equal(await page.locator('.viewers video').count(), 1);
-      await page.getByRole('radio', { name: 'Source', exact: true }).waitFor();
-      const previewModeSwitch = page.getByRole('radio', { name: 'Rendered', exact: true });
-      assert.equal(
-        await page.getByRole('spinbutton', { name: 'Start (s)' }).count(),
-        0,
-        'sample range must not show in Source mode',
-      );
-      await previewModeSwitch.click();
-      await page
-        .locator('video[data-monitor-video="preview"], .video-placeholder')
-        .first()
-        .waitFor();
-      const monitorRenderSample = page.getByRole('button', { name: 'Sample', exact: true });
-      await monitorRenderSample.waitFor();
-      assert.equal(await page.locator('video[data-monitor-video="preview"]').count(), 0);
-      assert.equal(
-        await page.getByRole('spinbutton', { name: 'Start (s)' }).count(),
-        0,
-        'the pre-sample empty state shows only the Render sample action, not the range inputs too',
-      );
-      await page.getByRole('radio', { name: 'Source', exact: true }).click();
       await page.locator('video[data-monitor-video="source"]').waitFor();
+      assert.equal(
+        await page.getByRole('radio', { name: 'Rendered', exact: true }).count(),
+        0,
+        'the monitor has no source/preview switch',
+      );
+      assert.equal(
+        await page.getByRole('spinbutton', { name: 'Start (s)' }).count(),
+        0,
+        'the monitor has no sample range',
+      );
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Export', exact: true }).click();
-      await page.locator('video[data-monitor-video="preview"]').waitFor({ timeout: 60000 });
-      await page.getByRole('radio', { name: 'Rendered', exact: true }).waitFor();
-      assert.equal(
-        await page.getByRole('radio', { name: 'Source', exact: true }).getAttribute('aria-checked'),
-        'false',
-        'the monitor must auto-switch away from Source once a render lands',
-      );
-      await page.getByRole('spinbutton', { name: 'Start (s)' }).waitFor();
+      await page.locator('video[data-monitor-video="result"]').waitFor({ timeout: 60000 });
+      await page.getByRole('button', { name: 'Post', exact: true }).waitFor();
       assert.equal(await page.locator('.viewers video').count(), 1);
 
       const timelineAction = page.locator('.timeline-editor-action').first();
@@ -730,7 +716,6 @@ test('Transcribe panel sets up speech recognition; no setup dialog, no cue-list 
 
     const speechSection = panel.getByLabel('Recognise speech', { exact: true });
     await speechSection.getByRole('combobox', { name: 'Transcript language' }).waitFor();
-    await speechSection.getByRole('combobox', { name: 'Recognition range' }).waitFor();
     const ocrSection = panel.getByLabel('Extract text', { exact: true });
     await ocrSection.getByRole('heading', { name: 'Extract text' }).waitFor();
 
@@ -774,20 +759,12 @@ for (const locale of ['en', 'vi']) {
         await addMediaToProject(page);
         await page.getByRole('alert').last().waitFor();
         const bell = notificationBell(page);
-        await page.waitForFunction(
-          ([selector, expected]) =>
-            document.querySelector(selector)?.getAttribute('aria-label') === expected,
-          ['.workspace-status-notifications button', copy.bellUnread],
-        );
+        await page.getByRole('button', { name: copy.bellUnread, exact: true }).waitFor();
         assert.equal(await bell.getAttribute('aria-label'), copy.bellUnread);
 
         const panel = await openNotifications(page, copy.title);
         await panel.getByRole('listitem').first().waitFor();
-        await page.waitForFunction(
-          ([selector, expected]) =>
-            document.querySelector(selector)?.getAttribute('aria-label') === expected,
-          ['.workspace-status-notifications button', copy.title],
-        );
+        await page.getByRole('button', { name: copy.title, exact: true }).waitFor();
         await page.keyboard.press('Escape');
         await panel.waitFor({ state: 'detached' });
         assert.equal(await page.locator('.viewers video').count(), 0);
@@ -810,11 +787,7 @@ test('A recovered draft is announced with Open and Discard, and Discard confirms
     { temp, userData, screenshotName: 'notifications-recovery-failure.png' },
     async ({ page }) => {
       await waitForEditorReady(page);
-      await page.waitForFunction(
-        ([selector, expected]) =>
-          document.querySelector(selector)?.getAttribute('aria-label') === expected,
-        ['.workspace-status-notifications button', 'Notifications, 1 unread'],
-      );
+      await page.getByRole('button', { name: 'Notifications, 1 unread', exact: true }).waitFor();
       const panel = await openNotifications(page, 'Notifications');
       const row = panel.getByRole('listitem').filter({ hasText: 'bản demo cũ' });
       await row.waitFor();

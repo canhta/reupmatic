@@ -384,17 +384,9 @@ for (const locale of ['en', 'vi']) {
           await page.keyboard.press('Tab');
           panelOrder.push(await focusedDescription(page));
         }
-        assert.deepEqual(panelOrder, [
-          copy.voiceFadeIn,
-          copy.voiceFadeOut,
-          copy.audition,
-          copy.remove,
-        ]);
+        assert.deepEqual(panelOrder, [copy.voiceFadeIn, copy.voiceFadeOut, copy.remove]);
 
         assertNoEngineeringLeak(await page.evaluate(() => document.body.innerText));
-
-        await page.getByRole('button', { name: copy.audition, exact: true }).click();
-        await page.locator('video[data-monitor-video="preview"]').waitFor({ timeout: 90000 });
 
         for (const [width, height] of SIZES) {
           await showVoicePanel(page, copy, width, height);

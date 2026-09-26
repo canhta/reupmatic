@@ -62,7 +62,7 @@ export const settingsEn = {
   settingsOfferedColumnStatus: 'Status',
   settingsOfferedColumnAction: 'Action',
   settingsOfferedSource: '{{host}} · Licence: {{licence}}',
-  settingsOfferedInpainting: 'Object removal',
+  settingsOfferedInpainting: 'Inpainting',
   settingsOfferedCount: '{{count}} models',
   settingsOfferedNoMatches: 'No models match these filters.',
   settingsOfferedDownload: 'Download',

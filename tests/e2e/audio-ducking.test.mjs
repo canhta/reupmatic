@@ -13,10 +13,11 @@ const COPY = {
     duck: 'Duck under voice',
     amount: 'Amount (dB)',
     release: 'Release (s)',
-    help: (sample) => `Hear it with ${sample}.`,
+    help: 'Export to hear the full mix.',
     apply: 'Apply',
     draft: 'Draft not applied — rendering uses the last applied track.',
-    renderSample: 'Sample',
+    export: 'Export…',
+    exportRun: 'Export',
     editorArea: 'Editor',
   },
   vi: {
@@ -25,10 +26,11 @@ const COPY = {
     duck: 'Giảm dưới giọng',
     amount: 'Mức giảm (dB)',
     release: 'Hồi phục (s)',
-    help: (sample) => `Nghe thử bằng ${sample}.`,
+    help: 'Xuất video để nghe toàn bộ bản trộn.',
     apply: 'Áp dụng',
     draft: 'Bản nháp chưa áp dụng — render vẫn dùng nhạc đã áp dụng lần cuối.',
-    renderSample: 'Đoạn mẫu',
+    export: 'Xuất…',
+    exportRun: 'Xuất',
     editorArea: 'Editor',
   },
 };
@@ -158,11 +160,8 @@ for (const locale of ['en', 'vi']) {
         await duck.waitFor();
         assert.equal(await duck.isChecked(), false);
 
-        await page
-          .getByText(copy.help(copy.renderSample), { exact: true })
-          .waitFor({ state: 'hidden' });
         await duck.click();
-        await page.getByText(copy.help(copy.renderSample), { exact: true }).waitFor();
+        await page.getByText(copy.help, { exact: true }).waitFor();
         await commitNumber(page, copy.amount, 12);
         await commitNumber(page, copy.release, 0.35);
         assert.equal(
@@ -185,10 +184,14 @@ for (const locale of ['en', 'vi']) {
         });
 
         await page.setViewportSize({ width: 1420, height: 900 });
-        await page.getByRole('button', { name: copy.renderSample, exact: true }).click();
-        const preview = page.locator('video[data-monitor-video="preview"]');
+        await page.getByRole('button', { name: copy.export, exact: true }).click();
+        await page
+          .getByRole('dialog')
+          .getByRole('button', { name: copy.exportRun, exact: true })
+          .click();
+        const result = page.locator('video[data-monitor-video="result"]');
         const renderError = page.locator('.editor-workspace > .error[role="alert"]');
-        await preview.or(renderError).first().waitFor({ state: 'visible', timeout: 90000 });
+        await result.or(renderError).first().waitFor({ state: 'visible', timeout: 90000 });
         if (await renderError.isVisible()) {
           throw new Error(`Render failed in the installed UI: ${await renderError.innerText()}`);
         }

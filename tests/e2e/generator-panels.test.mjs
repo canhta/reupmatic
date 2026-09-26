@@ -282,11 +282,6 @@ for (const locale of ['en', 'vi']) {
         const languageField = speechSection.getByRole('combobox', { name: copy.language });
         await languageField.click();
         await transcribe.getByRole('option', { name: copy.spokenLanguage, exact: true }).click();
-        await speechSection
-          .getByRole('combobox', {
-            name: locale === 'vi' ? 'Phạm vi nhận dạng' : 'Recognition range',
-          })
-          .waitFor();
 
         for (const [width, height] of SIZES) {
           await page.setViewportSize({ width, height });

@@ -36,7 +36,7 @@ export async function addCue(page) {
 }
 
 export function notificationBell(page) {
-  return page.locator('.workspace-status-notifications button');
+  return page.getByRole('button', { name: /Notifications/ }).first();
 }
 
 export async function openNotifications(page, title) {
