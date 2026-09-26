@@ -80,6 +80,16 @@ jobs:
             exit 1
           fi
           echo "REUPMATIC_MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+      - name: Ensure the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ inputs.version }}"
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              ${{ inputs.prerelease && '--prerelease' || '' }} \
+              --title "Reupmatic ${{ inputs.version }}" \
+              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
       - name: Build and sign runtime packs
         env:
           REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
@@ -114,16 +124,6 @@ jobs:
           else
             echo "No macOS certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Ensure the release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="v${{ inputs.version }}"
-          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              ${{ inputs.prerelease && '--prerelease' || '' }} \
-              --title "Reupmatic ${{ inputs.version }}" \
-              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
       - name: Package, sign, notarize and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -155,6 +155,16 @@ jobs:
           LEFTHOOK: "0"
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
+      - name: Ensure the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ inputs.version }}"
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              ${{ inputs.prerelease && '--prerelease' || '' }} \
+              --title "Reupmatic ${{ inputs.version }}" \
+              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
       - name: Build runtime packs
         env:
           REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
@@ -183,16 +193,6 @@ jobs:
           else
             echo "No Windows certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Ensure the release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="v${{ inputs.version }}"
-          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              ${{ inputs.prerelease && '--prerelease' || '' }} \
-              --title "Reupmatic ${{ inputs.version }}" \
-              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
       - name: Package, sign and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
