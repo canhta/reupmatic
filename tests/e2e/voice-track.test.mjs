@@ -96,6 +96,11 @@ const COPY = {
     keepVoice: 'Keep audio',
     remove: 'Remove narration',
     staleVoice: /The timeline or spoken text changed/,
+    audioTab: 'Audio',
+    monitorPlay: 'Play',
+    monitorPause: 'Pause',
+    export: 'Export…',
+    exportRun: 'Export',
     editorArea: 'Editor',
   },
   vi: {
@@ -139,6 +144,11 @@ const COPY = {
     keepVoice: 'Giữ âm thanh',
     remove: 'Bỏ giọng đọc',
     staleVoice: /Dòng thời gian hoặc nội dung đọc đã đổi/,
+    audioTab: 'Âm thanh',
+    monitorPlay: 'Phát',
+    monitorPause: 'Tạm dừng',
+    export: 'Xuất…',
+    exportRun: 'Xuất',
     editorArea: 'Editor',
   },
 };
@@ -380,7 +390,7 @@ for (const locale of ['en', 'vi']) {
         await gain.waitFor();
         await gain.focus();
         const panelOrder = [];
-        for (let i = 0; i < 4; i += 1) {
+        for (let i = 0; i < 3; i += 1) {
           await page.keyboard.press('Tab');
           panelOrder.push(await focusedDescription(page));
         }
@@ -439,6 +449,38 @@ for (const locale of ['en', 'vi']) {
           path: artifactPath(`voice-track-${locale}-stale-accepted-1420x900.png`),
         });
 
+        // Add music too, then capture the live program monitor mixing voice and music.
+        const music = path.join(temp, `voice-music-${locale}.wav`);
+        await run(process.env.FFMPEG_PATH || 'ffmpeg', [
+          '-v',
+          'error',
+          '-f',
+          'lavfi',
+          '-i',
+          'sine=frequency=660:duration=12',
+          '-c:a',
+          'pcm_s16le',
+          '-n',
+          music,
+        ]);
+        await application.evaluate(({ dialog }, filePath) => {
+          dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
+        }, music);
+        await addMediaToProject(page);
+        await page.getByRole('tab', { name: copy.audioTab, exact: true }).click();
+        await page.locator('#panel-audio').waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: copy.monitorPlay, exact: true }).click();
+        await page.waitForFunction(() => {
+          const video = document.querySelector('video[data-monitor-video="source"]');
+          return video instanceof HTMLVideoElement && !video.paused;
+        });
+        await page.waitForTimeout(800);
+        await page.screenshot({
+          path: artifactPath(`monitor-live-voice-music-${locale}.png`),
+        });
+        await page.getByRole('button', { name: copy.monitorPause, exact: true }).click();
+        await showVoicePanel(page, copy, 1420, 900);
+
         await page.getByRole('button', { name: copy.remove, exact: true }).click();
         await page.getByText(copy.voiceNone, { exact: true }).waitFor();
         for (const [width, height] of SIZES) {
@@ -475,6 +517,17 @@ for (const locale of ['en', 'vi']) {
         await page.screenshot({
           path: artifactPath(`voice-track-${locale}-review-compressed-1050x700.png`),
         });
+
+        // Export, then capture the result view the monitor switches to.
+        await page.getByRole('tab', { name: copy.voiceTab, exact: true }).click();
+        await page.locator('#panel-voice').waitFor({ state: 'detached' });
+        await page.getByRole('button', { name: copy.export, exact: true }).click();
+        await page
+          .getByRole('dialog')
+          .getByRole('button', { name: copy.exportRun, exact: true })
+          .click();
+        await page.locator('video[data-monitor-video="result"]').waitFor({ timeout: 90000 });
+        await page.screenshot({ path: artifactPath(`monitor-result-${locale}.png`) });
       },
     );
   });
