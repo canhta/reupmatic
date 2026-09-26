@@ -42,6 +42,7 @@
     "format:python": "node scripts/python.mjs -m ruff check --fix worker tests scripts && node scripts/python.mjs -m ruff format worker tests scripts",
     "test:e2e": "npm run build && node --env-file-if-exists=.env.local --test --test-concurrency=1 'tests/e2e/*.test.mjs'",
     "test:e2e:visual": "npm run build && node --env-file-if-exists=.env.local --test --test-concurrency=1 'tests/e2e/*.visual.mjs'",
+    "test:e2e:models": "npm run build && node --env-file-if-exists=.env.local --test --test-concurrency=1 'tests/e2e/models/*.test.mjs'",
     "start:automation": "node --env-file-if-exists=.env.local scripts/start-automation.mjs",
     "contracts:generate": "node scripts/python.mjs scripts/sync-contracts.py",
     "stage:python": "node scripts/package-python.mjs",
