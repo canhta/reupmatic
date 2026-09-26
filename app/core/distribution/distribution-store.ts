@@ -4,8 +4,8 @@ import type { TaxonomyStore } from '../taxonomy/taxonomy-store.js';
 import type {
   AffiliateData,
   AffiliateLink,
-  Channel,
   ChannelData,
+  ChannelRecord,
 } from './distribution-contracts.js';
 
 export class DistributionStore {
@@ -14,29 +14,23 @@ export class DistributionStore {
     private readonly taxonomy: TaxonomyStore,
   ) {}
 
-  channels(): Channel[] {
-    return this.db
-      .list<ChannelData>('channel')
-      .map((value) => ({ ...value, connection: 'not_connected', can_publish: false }));
+  channels(): ChannelRecord[] {
+    return this.db.list<ChannelData>('channel');
   }
 
   links(): AffiliateLink[] {
     return this.db.list<AffiliateData>('affiliate');
   }
 
-  channel(id: string): Channel {
-    return {
-      ...this.db.require<ChannelData>('channel', id),
-      connection: 'not_connected',
-      can_publish: false,
-    };
+  channel(id: string): ChannelRecord {
+    return this.db.require<ChannelData>('channel', id);
   }
 
   link(id: string): AffiliateLink {
     return this.db.require<AffiliateData>('affiliate', id);
   }
 
-  saveChannel(input: unknown): Channel {
+  saveChannel(input: unknown): ChannelRecord {
     const value = object(input, [
       'id',
       'expected_revision',
@@ -52,14 +46,13 @@ export class DistributionStore {
     const previous = this.db.find<ChannelData>('channel', id);
     if (previous && previous.platform !== platform) throw new Error('CHANNEL_PLATFORM_LOCKED');
     const label_ids = this.taxonomy.validate(value.label_ids, previous?.label_ids);
-    const saved = this.db.save<ChannelData>('channel', id, revision(value.expected_revision), {
+    return this.db.save<ChannelData>('channel', id, revision(value.expected_revision), {
       name: text(value.name, 160).trim(),
       platform,
       url: httpsUrl(value.url, true),
       label_ids,
       archived: boolean(value.archived),
     });
-    return { ...saved, connection: 'not_connected', can_publish: false };
   }
 
   saveLink(input: unknown): AffiliateLink {

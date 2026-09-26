@@ -12,6 +12,7 @@ import type {
 import { POST_QUERY_SORT_DIRECTIONS, POST_SORT_KEYS } from './distribution-contracts.js';
 import type { DistributionStore } from './distribution-store.js';
 import { parsePostPlan } from './post-schedule.js';
+import type { Publication } from './publishing/contracts.js';
 
 export class PostStore {
   constructor(
@@ -21,6 +22,18 @@ export class PostStore {
 
   get(id: string): Post {
     return this.db.require<PostData>('post', id);
+  }
+
+  setPublication(id: string, publication: Publication): Post {
+    const current = this.get(identifier(id));
+    const {
+      id: postId,
+      revision: _revision,
+      created_at: _created,
+      updated_at: _updated,
+      ...data
+    } = current;
+    return this.db.save<PostData>('post', postId, current.revision, { ...data, publication });
   }
 
   create(input: unknown, exported: ExportReference): Post {
@@ -58,6 +71,7 @@ export class PostStore {
       links,
       planned: parsePostPlan(value.planned),
       state: 'draft',
+      publication: null,
     });
   }
 
@@ -112,6 +126,7 @@ export class PostStore {
         (!value.library_id || post.export.library_id === value.library_id) &&
         (value.view === 'all' ||
           (value.view === 'upcoming' && post.state === 'draft' && post.planned !== null) ||
+          (value.view === 'published' && post.publication !== null) ||
           (value.view === 'cancelled' && post.state === 'cancelled'))
       );
     });

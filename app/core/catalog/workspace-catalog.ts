@@ -4,11 +4,15 @@ import type { BatchJobInput } from '../batch/batch-contracts.js';
 import type {
   AffiliateLink,
   Channel,
+  ChannelConnection,
+  ChannelRecord,
   Post,
   PostQuery,
 } from '../distribution/distribution-contracts.js';
 import { DistributionStore } from '../distribution/distribution-store.js';
 import { PostStore } from '../distribution/post-store.js';
+import { channelWithConnection } from '../distribution/publishing/channels.js';
+import type { Publication } from '../distribution/publishing/contracts.js';
 import type { DouyinTag } from '../library/douyin/intake-contracts.js';
 import { assignDouyinTags } from '../library/douyin/intake-tags.js';
 import type { ContentAsset } from '../library/library-contracts.js';
@@ -58,11 +62,13 @@ export class WorkspaceCatalog {
     return assignDouyinTags(this.#taxonomy, contentId, tags);
   }
 
-  listChannels(): Channel[] {
-    return this.#distribution.channels();
+  listChannels(connections: Readonly<Record<string, ChannelConnection>> = {}): Channel[] {
+    return this.#distribution
+      .channels()
+      .map((record) => channelWithConnection(record, connections[record.id] ?? 'not_connected'));
   }
 
-  saveChannel(input: unknown): Channel {
+  saveChannel(input: unknown): ChannelRecord {
     return this.#distribution.saveChannel(input);
   }
 
@@ -110,6 +116,10 @@ export class WorkspaceCatalog {
     return this.#posts.get(id);
   }
 
+  setPublication(id: string, publication: Publication): Post {
+    return this.#posts.setPublication(id, publication);
+  }
+
   listProfiles(): ProcessingProfile[] {
     return this.#profiles.list();
   }
@@ -150,10 +160,13 @@ export class WorkspaceCatalog {
     return this.#workflows.admitted(id, jobs);
   }
 
-  snapshot(executionAvailable: boolean): CatalogSnapshot {
+  snapshot(
+    executionAvailable: boolean,
+    connections: Readonly<Record<string, ChannelConnection>> = {},
+  ): CatalogSnapshot {
     return {
       revision: this.#db.version,
-      channels: this.listChannels(),
+      channels: this.listChannels(connections),
       links: this.listLinks(),
       labels: this.#taxonomy.list(),
       content_labels: this.listContentLabels(),

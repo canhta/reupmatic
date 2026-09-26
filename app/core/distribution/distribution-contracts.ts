@@ -1,5 +1,8 @@
 import type { MutationIdentity, RecordMeta } from '../catalog/catalog-contracts.js';
-export type Platform = 'youtube' | 'facebook_page';
+import type { Platform, Publication } from './publishing/contracts.js';
+
+export type { Platform };
+export type ChannelConnection = 'not_connected' | 'connected' | 'reauthorize';
 export interface ChannelData {
   name: string;
   platform: Platform;
@@ -7,8 +10,8 @@ export interface ChannelData {
   label_ids: string[];
   archived: boolean;
 }
-export type Channel = ChannelData &
-  RecordMeta & { connection: 'not_connected'; can_publish: false };
+export type ChannelRecord = ChannelData & RecordMeta;
+export type Channel = ChannelRecord & { connection: ChannelConnection; can_publish: boolean };
 export type SaveChannel = ChannelData & MutationIdentity;
 export interface AffiliateData {
   name: string;
@@ -37,6 +40,7 @@ export interface PostData {
   links: Pick<AffiliateLink, 'id' | 'name' | 'url'>[];
   planned: PostPlan | null;
   state: 'draft' | 'cancelled';
+  publication: Publication | null;
 }
 export type Post = PostData & RecordMeta;
 export interface CreatePost extends MutationIdentity {

@@ -8,7 +8,8 @@ TikTok follow on the same seam. Issues: #16 (YouTube, Facebook), #17 (TikTok), #
 1. **One destination interface, one adapter per platform.** Policy (post lifecycle, capability
    checks, caption composition, reconcile rules) lives in `app/core/distribution/publishing/` and
    imports no Electron. Network adapters, OAuth windows and credential storage live in
-   `app/electron/features/publishing/`.
+   `app/electron/features/publishing/`. Authorization is host-only: the core `Destination` contract
+   covers capabilities, preflight and the network phases, not the OAuth window.
 2. **Secrets stay off the desktop.** Meta and TikTok require the app secret for every code or
    refresh exchange, so a stateless token broker in `web/` (Vercel route) performs only those
    exchanges. It stores nothing, logs no token, and accepts only the registered redirect URIs.
@@ -49,7 +50,14 @@ TikTok follow on the same seam. Issues: #16 (YouTube, Facebook), #17 (TikTok), #
 type Platform = 'facebook_page' | 'youtube' | 'tiktok';
 interface DestinationCapabilities {
   native_schedule: { min_lead_ms: number; max_lead_ms: number } | null;
-  media: { min_ms: number; max_ms: number; aspect: 'portrait' | 'any'; max_bytes: number };
+  media: {
+    min_ms: number;
+    max_ms: number;
+    min_width: number;
+    min_height: number;
+    max_bytes: number;
+    aspect: { width: number; height: number; tolerance: number } | 'any';
+  };
   caption: { title_max: number | null; body_max: number };
 }
 type PublicationPhase =
@@ -74,19 +82,27 @@ interface Publication {
 allowed only when `publication` is null or `failed`. `unknown` and `submitted` resolve only through
 `reconcile`. The `published` view of the post list reads `publication.phase`.
 
-Host adapter per platform:
+Host adapter per platform. Adapters return platform outcomes; the host applies the core transition
+functions, so an adapter cannot skip the never-publish-twice policy:
 
 ```ts
+type SubmitOutcome =
+  | { kind: 'scheduled'; scheduled_for: number; remote_post_id: string | null; remote_url: string | null }
+  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
+  | { kind: 'failed'; error: string };
+
 interface Destination {
   capabilities: DestinationCapabilities;
-  authorize(signal): Promise<ConnectedAccount>;           // opens the OAuth window
-  preflight(post, media): NamedProblem[];                 // before any network call
-  begin(post, credentials): Promise<{ remote_ref }>;      // persisted before upload
+  preflight(post, media, now): NamedProblem[];             // before any network call
+  begin(post, credentials): Promise<{ remote_ref }>;       // persisted before upload
   upload(remote_ref, file, onProgress, signal): Promise<void>;
-  submit(remote_ref, post, plan): Promise<Publication>;   // the one call that can create a post
-  reconcile(remote_ref, credentials): Promise<Publication>;
+  submit(remote_ref, post, plan): Promise<SubmitOutcome>;  // the one call that can create a post
+  reconcile(remote_ref, credentials, now): Promise<SubmitOutcome | { kind: 'unknown'; error }>;
 }
 ```
+
+Authorization is a host flow (`app/electron/features/publishing/`): the OAuth window, the broker
+exchange and the Page choice never cross IPC, and the renderer only receives account display data.
 
 Caption composition is one core function: post body, then one line per affiliate link; the
 platform title comes from `post.title`, clipped only where a platform limit forces it (preflight

@@ -3,6 +3,8 @@ import type { BrowserWindow } from 'electron';
 import type { BatchQueue } from '../../../core/batch/batch-queue.js';
 import type { WorkspaceCatalog } from '../../../core/catalog/workspace-catalog.js';
 import type { DiagnosticRecorder } from '../../../core/diagnostics/recorder.js';
+import type { ChannelConnection, Post } from '../../../core/distribution/distribution-contracts.js';
+import type { Publication } from '../../../core/distribution/publishing/contracts.js';
 import type { ContentLibrary } from '../../../core/library/content-library.js';
 import type { RegisteredVideo } from '../../../core/media/media-contracts.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
@@ -21,6 +23,7 @@ interface Host {
   worker: WorkerClient;
   library(): ContentLibrary | undefined;
   resolveLibrary(id: string): Promise<RegisteredVideo>;
+  connections?: () => Readonly<Record<string, ChannelConnection>>;
   getWindow(): BrowserWindow;
 }
 
@@ -37,6 +40,9 @@ export async function installCatalog(host: Host) {
       const library = host.library();
       if (!library) throw new Error('LIBRARY_UNAVAILABLE');
       return library;
+    },
+    connections() {
+      return host.connections?.() ?? {};
     },
     changed() {
       const window = host.getWindow();
@@ -67,7 +73,9 @@ export async function installCatalog(host: Host) {
     });
   }
   const workflows = installWorkflows(context, host.queue, host.worker, host.resolveLibrary);
-  host.wire('catalog-snapshot', () => context.catalog().snapshot(workflows.available));
+  host.wire('catalog-snapshot', () =>
+    context.catalog().snapshot(workflows.available, context.connections()),
+  );
   host.wire('catalog-save-label', (input) => {
     const result = context.catalog().saveLabel(input);
     context.changed();
@@ -87,6 +95,12 @@ export async function installCatalog(host: Host) {
     },
     dependencies(id: string) {
       return context.catalog().dependencies(id);
+    },
+    getPost(id: string): Post {
+      return context.catalog().getPost(id);
+    },
+    setPublication(id: string, publication: Publication): Post {
+      return context.catalog().setPublication(id, publication);
     },
     listContentLabels() {
       return context.catalog().listContentLabels();

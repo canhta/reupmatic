@@ -1,13 +1,14 @@
 import { lstat } from 'node:fs/promises';
 import { shell } from 'electron';
+import { channelWithConnection } from '../../../core/distribution/publishing/channels.js';
 import { hashFile } from '../../../core/media/files.js';
 import type { CatalogHost } from '../catalog/context.js';
 
 export function installDistribution(host: CatalogHost): void {
   host.wire('channel-save', (input) => {
-    const value = host.catalog().saveChannel(input);
+    const record = host.catalog().saveChannel(input);
     host.changed();
-    return value;
+    return channelWithConnection(record, host.connections()[record.id] ?? 'not_connected');
   });
   host.wire('affiliate-save', (input) => {
     const value = host.catalog().saveLink(input);
