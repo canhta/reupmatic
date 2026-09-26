@@ -6,7 +6,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe, TimeRange } from '../../../../core/editing/edit-recipe';
-import { resolveEditWindow } from '../../../../core/editing/edit-recipe';
+import { clampEditing, resolveEditWindow } from '../../../../core/editing/edit-recipe';
 import type { ProcessingRecipe } from '../../../../core/processing/recipe';
 import { useEditor } from '../EditorContext';
 import { FadeTools } from '../video-tools/FadeTools';
@@ -31,7 +31,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
   const editing = editor.processing?.editing;
 
   function update(patch: Partial<EditingRecipe>) {
-    const next: EditingRecipe = { ...editing, ...patch };
+    const next = clampEditing({ ...editing, ...patch }, editor.duration);
     for (const key of Object.keys(next) as (keyof EditingRecipe)[]) {
       if (next[key] === undefined) delete next[key];
     }
@@ -87,7 +87,7 @@ function WholeVideoClip() {
     outputDuration = resolveEditWindow(editing, editor.duration).duration_ms;
   } catch {}
   function update(patch: Partial<EditingRecipe>) {
-    const next: EditingRecipe = { ...editing, ...patch };
+    const next = clampEditing({ ...editing, ...patch }, editor.duration);
     for (const key of Object.keys(next) as (keyof EditingRecipe)[]) {
       if (next[key] === undefined) delete next[key];
     }

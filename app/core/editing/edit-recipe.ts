@@ -183,6 +183,64 @@ export function parseEditing(value: unknown): EditingRecipe {
   return result;
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Normalises Edit-tool values before they reach the live preview and the document. Number
+ * fields do not clamp themselves, so an out-of-range entry could otherwise reach the
+ * geometry/colour preview. Fades are bounded by the output duration when it is known.
+ */
+export function clampEditing(editing: EditingRecipe, outputDurationMs?: number): EditingRecipe {
+  const result: EditingRecipe = { ...editing };
+  if (result.color) {
+    result.color = {
+      brightness: clampNumber(result.color.brightness, -1, 1),
+      contrast: clampNumber(result.color.contrast, 0, 2),
+      saturation: clampNumber(result.color.saturation, 0, 3),
+    };
+  }
+  if (result.crop) {
+    const width = clampNumber(result.crop.width, 0.01, 1);
+    const height = clampNumber(result.crop.height, 0.01, 1);
+    result.crop = {
+      width,
+      height,
+      x: clampNumber(result.crop.x, 0, 1 - width),
+      y: clampNumber(result.crop.y, 0, 1 - height),
+    };
+  }
+  if (result.fade) {
+    const max = outputDurationMs && outputDurationMs > 0 ? Math.round(outputDurationMs) : 86400000;
+    const in_ms = Math.round(clampNumber(result.fade.in_ms, 0, max));
+    result.fade = {
+      ...result.fade,
+      in_ms,
+      out_ms: Math.round(clampNumber(result.fade.out_ms, 0, max - in_ms)),
+    };
+  }
+  if (result.logo) {
+    result.logo = {
+      ...result.logo,
+      scale: clampNumber(result.logo.scale, 0.01, 1),
+      margin: clampNumber(result.logo.margin, 0, 0.5),
+      opacity: clampNumber(result.logo.opacity, 0, 1),
+    };
+  }
+  if (result.speed !== undefined) result.speed = clampNumber(result.speed, 0.25, 4);
+  if (result.audio)
+    result.audio = { ...result.audio, gain_db: clampNumber(result.audio.gain_db, -60, 24) };
+  if (result.trim) {
+    const start_ms = Math.max(0, Math.round(result.trim.start_ms));
+    result.trim = {
+      start_ms,
+      end_ms: Math.max(start_ms + 1, Math.round(result.trim.end_ms)),
+    };
+  }
+  return result;
+}
+
 export function resolveEditWindow(
   editing: EditingRecipe | undefined,
   duration: number,

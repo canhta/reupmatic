@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  clampEditing,
   parseEditing,
   resolveEditWindow,
   retimeCues,
@@ -15,6 +16,40 @@ test('editing-only recipes need no model and isolate the caller snapshot', () =>
   copy.editing.trim.start_ms = 2000;
   assert.equal(input.editing.trim.start_ms, 1000);
 });
+test('the Edit tool clamps out-of-range values before they reach the preview', () => {
+  const clamped = clampEditing(
+    {
+      color: { brightness: 2, contrast: 2, saturation: 2 },
+      crop: { x: 0.9, y: 0.9, width: 2, height: 2 },
+      fade: { in_ms: 9000, out_ms: 9000, audio: false },
+      logo: { anchor: 'bottom-right', scale: 2, margin: 0.9, opacity: 2 },
+      speed: 9,
+      audio: { muted: false, gain_db: 99 },
+      trim: { start_ms: 2000, end_ms: 2000 },
+    },
+    1000,
+  );
+  assert.deepEqual(clamped, {
+    color: { brightness: 1, contrast: 2, saturation: 2 },
+    crop: { x: 0, y: 0, width: 1, height: 1 },
+    fade: { in_ms: 1000, out_ms: 0, audio: false },
+    logo: { anchor: 'bottom-right', scale: 1, margin: 0.5, opacity: 1 },
+    speed: 4,
+    audio: { muted: false, gain_db: 24 },
+    trim: { start_ms: 2000, end_ms: 2001 },
+  });
+  // The clamped recipe is one the parser accepts.
+  assert.deepEqual(parseEditing(clamped), {
+    color: clamped.color,
+    crop: clamped.crop,
+    fade: clamped.fade,
+    logo: clamped.logo,
+    speed: clamped.speed,
+    audio: clamped.audio,
+    trim: clamped.trim,
+  });
+});
+
 test('trim resolves in source time and output duration respects speed', () => {
   const edit = parseEditing({ trim, speed: 2 });
   assert.deepEqual(resolveEditWindow(edit, 10000), {
