@@ -1,3 +1,12 @@
 # Optional explicit installation; never installed or downloaded by the application.
-# The adapter targets the SDK's v3 Turbo ONNX/CPU engine at this exact version.
-vieneu==3.7.1
+# The adapter targets the SDK's v3 Turbo/Nano ONNX/CPU engines at this exact version.
+# `vieneu` itself is installed with `--no-deps` (scripts/package-python.mjs); its published
+# metadata also requires gradio and librosa, which no code path the worker runs imports. Its real
+# runtime dependencies are the pinned list below.
+numpy==2.5.3
+onnxruntime==1.30.0
+tokenizers==0.23.2
+huggingface_hub==1.33.0
+soundfile==0.14.0
+soxr==1.1.0
+sea-g2p==0.10.0

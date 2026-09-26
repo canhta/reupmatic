@@ -1,7 +1,8 @@
 # Every optional local model runtime in one install. Each referenced file targets one domain; the
 # app itself never installs these (no silent dependency install, D-38). Review the
 # per-domain requirements files for what each adapter needs and what those sources did not
-# verify.
+# verify. The synthesis and vision engine SDKs are installed separately with `--no-deps`:
+#   node scripts/python.mjs -m pip install --no-deps -r worker/requirements-sources.txt
 -r requirements-speech.txt
 -r requirements-synthesis.txt
 -r requirements-translation.txt

@@ -1,9 +1,17 @@
 # Explicit optional local vision adapter target; not a complete platform dependency lock.
 # No model weights are installed by these requirements.
-# The worker's vision runtime check looks for numpy, cv2, onnxruntime and rapidocr; ranges rather
-# than exact pins, because a pin can have no wheel for every supported Python (see the translation
-# requirements for the same lesson). Install exactly one OpenCV wheel in the environment.
-rapidocr>=3,<4
-opencv-python>=4.10,<6
-onnxruntime>=1.20,<2
-numpy>=2,<3
+# `rapidocr` itself is installed with `--no-deps` (scripts/package-python.mjs): its published
+# metadata pins opencv-python, but the worker imports only `cv2` non-GUI functions, so the
+# headless wheel replaces it. Its real runtime dependencies are the pinned list below.
+opencv-python-headless==5.0.0.93
+onnxruntime==1.30.0
+numpy==2.5.3
+pyclipper==1.4.0
+shapely==2.1.2
+omegaconf==2.3.1
+pillow==12.3.0
+tqdm==4.70.1
+requests==2.34.2
+PyYAML==6.0.3
+colorlog==6.12.0
+six==1.17.0

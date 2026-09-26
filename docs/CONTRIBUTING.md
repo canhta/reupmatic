@@ -33,6 +33,9 @@ domains you need:
 
 ```sh
 node scripts/python.mjs -m pip install -r worker/requirements-optional.txt
+# vieneu and rapidocr ship dependency metadata broader than the worker's code paths; their real
+# dependencies come from the domain files above.
+node scripts/python.mjs -m pip install --no-deps -r worker/requirements-sources.txt
 ```
 
 Individual files are `worker/requirements-{speech,synthesis,translation,vision}.txt`. A model
