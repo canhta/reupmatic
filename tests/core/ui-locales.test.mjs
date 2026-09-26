@@ -31,6 +31,15 @@ test('the distribution locale catalogues carry identical keys in English and Vie
   assert.deepEqual(messageKeys(distribution('en')), messageKeys(distribution('vi')));
 });
 
+test('the recognized cue count uses i18next plural keys in both locales', () => {
+  for (const locale of ['en', 'vi']) {
+    const source = readFileSync(path.join(ui, 'locales', locale, 'speech.ts'), 'utf8');
+    assert.match(source, /^ {2}speechReplaceHelp_one:/m, `${locale} needs the singular key`);
+    assert.match(source, /^ {2}speechReplaceHelp_other:/m, `${locale} needs the plural key`);
+    assert.doesNotMatch(source, /^ {2}speechReplaceHelp:/m, `${locale} kept the "(s)" key`);
+  }
+});
+
 test('UI messages are separated by locale and composed outside the i18n initializer', () => {
   const english = filesBelow(path.join(ui, 'locales/en')).filter((file) => file.endsWith('.ts'));
   const vietnamese = filesBelow(path.join(ui, 'locales/vi')).filter((file) => file.endsWith('.ts'));
