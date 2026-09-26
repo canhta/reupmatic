@@ -14,6 +14,7 @@ export const speechVoicesVi = {
   settingsVoicesAttest: 'Đây là giọng của tôi, hoặc tôi có quyền sử dụng nó.',
   settingsVoicesChooseFile: 'Chọn đoạn âm thanh và nhân bản',
   settingsVoicesCloning: 'Đang nhân bản giọng',
+  settingsVoicesPreview: 'Nghe thử',
   settingsVoicesRename: 'Đổi tên',
   settingsVoicesRenameTitle: 'Đổi tên giọng',
   settingsVoicesRemove: 'Xoá',

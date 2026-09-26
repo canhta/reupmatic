@@ -13,6 +13,17 @@ import {
 import { operation } from '../operation-contract.js';
 import { requestId, requestRecord } from '../validators.js';
 
+function hash(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value))
+    throw new Error('INVALID_REQUEST');
+  return value;
+}
+function shortText(value: unknown, max: number): string {
+  if (typeof value !== 'string' || !value || value.length > max || value.includes('\0'))
+    throw new Error('INVALID_REQUEST');
+  return value;
+}
+
 export const synthesisOperations = {
   'synthesis-status': operation<undefined, SynthesisStatus>()({
     rendererMethod: 'synthesisStatus',
@@ -114,5 +125,26 @@ export const synthesisOperations = {
     rendererMethod: 'synthesisOpenStudio',
     validate: () => undefined,
     toRequest: () => undefined,
+  }),
+  // One short explicit synthesis of the chosen voice; cloud previews spend only on this click.
+  'synthesis-voice-preview': operation<
+    { voice_id: string; model_id: string; language: 'en' | 'vi' },
+    { url: string }
+  >()({
+    rendererMethod: 'synthesisVoicePreview',
+    validate: (input) => {
+      const value = requestRecord(input, ['voice_id', 'model_id', 'language']);
+      if (value.language !== 'en' && value.language !== 'vi') throw new Error('INVALID_REQUEST');
+      return {
+        voice_id: shortText(value.voice_id, 128),
+        model_id: hash(value.model_id),
+        language: value.language,
+      };
+    },
+    toRequest: (voiceId: string, modelId: string, language: 'en' | 'vi') => ({
+      voice_id: voiceId,
+      model_id: modelId,
+      language,
+    }),
   }),
 } as const;

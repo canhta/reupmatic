@@ -12,6 +12,7 @@ export const speechVoicesEn = {
   settingsVoicesAttest: 'This is my voice, or I have the right to use it.',
   settingsVoicesChooseFile: 'Choose clip and clone',
   settingsVoicesCloning: 'Cloning voice',
+  settingsVoicesPreview: 'Preview',
   settingsVoicesRename: 'Rename',
   settingsVoicesRenameTitle: 'Rename voice',
   settingsVoicesRemove: 'Delete',

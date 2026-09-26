@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { type BrowserWindow, dialog, shell } from 'electron';
 import {
@@ -48,9 +49,14 @@ export function installSynthesis(host: Host) {
     },
   );
   const exports = installSynthesisExports({ ...host, artifacts });
+  const previewText = {
+    vi: 'Xin chào, đây là giọng đọc thử nghiệm của Reupmatic. Chúc bạn một ngày tốt lành.',
+    en: 'Hello, this is a preview of the selected voice from Reupmatic. Have a wonderful day.',
+  } as const;
   let setup: Ticket<unknown> | undefined;
   let choosing = false,
     cloning = false,
+    previewing = false,
     cancelled = false,
     closing = false;
   const send = (channel: string, message?: unknown) => {
@@ -173,9 +179,44 @@ export function installSynthesis(host: Host) {
     await shell.openExternal('https://vieneu.io/#/clone');
     return { opened: true };
   });
+  // The one place a cloud preview spends credits, and only on an explicit click.
+  host.wire('synthesis-voice-preview', async (input) => {
+    if (closing) throw new Error('APP_CLOSING');
+    if (choosing || cloning || previewing || coordinator.activeCount)
+      throw new Error('EDITOR_BUSY');
+    previewing = true;
+    try {
+      const ticket = coordinator.start({
+        request_id: randomUUID(),
+        revision: 0,
+        params: {
+          source_layer: 'spoken',
+          source_token: `preview-${randomUUID().replace(/-/g, '')}`,
+          language: input.language,
+          model_id: input.model_id,
+          voice_id: input.voice_id,
+          cues: [{ id: 'preview', text: previewText[input.language], start_ms: 0, end_ms: 8000 }],
+        },
+      });
+      const result = await ticket.result;
+      const filename = await artifacts.verify(result.artifact_id);
+      if (closing) throw new Error('APP_CLOSING');
+      const grant = `voice-preview-${input.voice_id}`;
+      host.media.registerArtifact(grant, filename);
+      return { url: `media://local/${grant}` };
+    } finally {
+      previewing = false;
+    }
+  });
   return {
     get activeCount() {
-      return coordinator.activeCount + Number(choosing) + Number(cloning) + exports.activeCount;
+      return (
+        coordinator.activeCount +
+        Number(choosing) +
+        Number(cloning) +
+        Number(previewing) +
+        exports.activeCount
+      );
     },
     /** Re-verifies the saved voice artifact; a caller-supplied path is never admitted. */
     async verifyVoice(track: VoiceTrack) {

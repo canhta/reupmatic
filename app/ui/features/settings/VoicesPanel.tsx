@@ -32,6 +32,9 @@ export function VoicesPanel() {
   const { raiseError } = useNotifications();
   const [cloned, setCloned] = useState<ClonedVoiceMeta[] | null>(null);
   const [cloud, setCloud] = useState<CloudVoices>(null);
+  const [localModelId, setLocalModelId] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ url: string; id: string } | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
   const [error, setError] = useState('');
   const [cloning, setCloning] = useState(false);
   const [renaming, setRenaming] = useState<ClonedVoiceMeta | null>(null);
@@ -45,18 +48,36 @@ export function VoicesPanel() {
 
   const reload = useCallback(async () => {
     try {
-      const [voices, cloudVoices] = await Promise.all([
+      const [voices, cloudVoices, status] = await Promise.all([
         unwrap(window.reupmatic.synthesisVoiceList()),
         unwrap(window.reupmatic.synthesisCloudVoices()),
+        unwrap(window.reupmatic.synthesisStatus()),
       ]);
       if (alive.current) {
         setCloned(voices);
         setCloud(cloudVoices);
+        setLocalModelId(status.model_id);
       }
     } catch (reason) {
       if (alive.current) setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
     }
   }, []);
+
+  async function previewVoice(voiceId: string, modelId: string | null, language: 'en' | 'vi') {
+    if (!modelId || previewBusy) return;
+    setPreviewBusy(true);
+    setError('');
+    try {
+      const value = await unwrap(
+        window.reupmatic.synthesisVoicePreview(voiceId, modelId, language),
+      );
+      if (alive.current) setPreview({ url: value.url, id: voiceId });
+    } catch (reason) {
+      raiseError(t(synthesisErrorKey(reason instanceof Error ? reason.message : 'WORKER_FAILURE')));
+    } finally {
+      if (alive.current) setPreviewBusy(false);
+    }
+  }
 
   useEffect(() => {
     void reload();
@@ -122,6 +143,15 @@ export function VoicesPanel() {
               description={`${t('settingsVoicesSourceCloned')} · ${ENGINE_LABELS[voice.engine] ?? voice.engine}`}
               endContent={
                 <HStack gap={1}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    label={`${voice.name}: ${t('settingsVoicesPreview')}`}
+                    isDisabled={!localModelId || previewBusy}
+                    onClick={() => void previewVoice(voice.id, localModelId, voice.language)}
+                  >
+                    {t('settingsVoicesPreview')}
+                  </Button>
                   <IconButton
                     size="sm"
                     variant="ghost"
@@ -161,6 +191,17 @@ export function VoicesPanel() {
                 key={voice.id}
                 label={voice.label}
                 description={t('settingsVoicesSourceCloud')}
+                endContent={
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    label={`${voice.label}: ${t('settingsVoicesPreview')}`}
+                    isDisabled={previewBusy}
+                    onClick={() => void previewVoice(voice.id, cloud.model_id, 'vi')}
+                  >
+                    {t('settingsVoicesPreview')}
+                  </Button>
+                }
               />
             ))}
           </List>
@@ -179,6 +220,7 @@ export function VoicesPanel() {
           </HStack>
         </VStack>
       </VStack>
+      {preview && <audio controls autoPlay src={preview.url} aria-label={t('synthesisPlayer')} />}
       {cloning && (
         <CloneVoiceDialog
           onClose={() => setCloning(false)}
