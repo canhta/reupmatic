@@ -27,6 +27,41 @@ export interface Soundtrack {
   muted: boolean;
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.round(clampNumber(value, min, Math.max(min, max)));
+}
+
+/**
+ * Normalises out-of-order live edits into a lane that `parseSoundtrack` accepts, so the
+ * soundtrack controls can apply to the document on every change.
+ */
+export function clampSoundtrack(track: Soundtrack): Soundtrack {
+  const duration = Math.max(1, Math.round(track.source.duration_ms));
+  const start_ms = clampInt(track.start_ms, 0, duration - 1);
+  const end_ms = clampInt(track.end_ms, start_ms + 1, duration);
+  const fade_in_ms = clampInt(track.fade_in_ms, 0, end_ms - start_ms);
+  const fade_out_ms = clampInt(track.fade_out_ms, 0, end_ms - start_ms - fade_in_ms);
+  return {
+    ...track,
+    source: { ...track.source, duration_ms: duration },
+    start_ms,
+    end_ms,
+    fade_in_ms,
+    fade_out_ms,
+    offset_ms: clampInt(track.offset_ms, 0, 86400000),
+    gain_db: clampNumber(track.gain_db, -60, 24),
+    duck: {
+      ...track.duck,
+      amount_db: clampNumber(track.duck.amount_db, 1, 24),
+      release_ms: clampInt(track.duck.release_ms, 10, 5000),
+    },
+  };
+}
+
 export function parseSoundtrack(value: unknown): Soundtrack {
   function object(input: unknown, keys: string[]): Record<string, unknown> {
     if (

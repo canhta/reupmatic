@@ -8,7 +8,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
-import type { SubtitleStyle } from '../../../../core/subtitles/style';
+import { type SubtitleStyle, subtitleStyleFieldInvalid } from '../../../../core/subtitles/style';
 
 interface Props {
   value: SubtitleStyle;
@@ -35,7 +35,17 @@ function ColorField({
   const { t } = useTranslation();
   return (
     <HStack gap={2} vAlign="end">
-      <TextInput label={label} value={value} isDisabled={disabled} onChange={onChange} />
+      <TextInput
+        label={label}
+        value={value}
+        isDisabled={disabled}
+        status={
+          subtitleStyleFieldInvalid(fieldKey, value)
+            ? { type: 'error', message: t('styleColorInvalid') }
+            : undefined
+        }
+        onChange={onChange}
+      />
       <input
         type="color"
         id={`style-color-swatch-${fieldKey}`}
@@ -68,6 +78,11 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
           label={t('styleFontFamily')}
           value={value.font_family}
           isDisabled={disabled}
+          status={
+            subtitleStyleFieldInvalid('font_family', value.font_family)
+              ? { type: 'error', message: t('styleFontInvalid') }
+              : undefined
+          }
           onChange={(font_family) => onChange({ ...value, font_family })}
         />
         <NumberInput
@@ -78,6 +93,11 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
           step={0.25}
           isWheelEnabled={false}
           isDisabled={disabled}
+          status={
+            subtitleStyleFieldInvalid('font_size_pct', value.font_size_pct)
+              ? { type: 'error', message: t('styleNumberInvalid') }
+              : undefined
+          }
           onChange={(font_size_pct) => onChange({ ...value, font_size_pct })}
         />
         <Selector
@@ -122,6 +142,11 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
               step={step}
               isWheelEnabled={false}
               isDisabled={disabled}
+              status={
+                subtitleStyleFieldInvalid(key, value[key])
+                  ? { type: 'error', message: t('styleNumberInvalid') }
+                  : undefined
+              }
               onChange={(next) => onChange({ ...value, [key]: next })}
             />
           ))}

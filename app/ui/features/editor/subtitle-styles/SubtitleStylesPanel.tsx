@@ -12,7 +12,6 @@ export function SubtitleStylesPanel() {
   const { t } = useTranslation();
   const editor = useEditor();
   const [customize, setCustomize] = useState(false);
-  const [dirty, setDirty] = useState(false);
   const selected = editor.cues.find((cue) => cue.id === editor.selected);
   const disabled = editor.busy || editor.opening;
   const globalStyle = editor.processing?.subtitle_style;
@@ -33,17 +32,12 @@ export function SubtitleStylesPanel() {
         <CheckboxInput
           label={t('styleCustomizeCue')}
           value={customize}
-          isDisabled={disabled || dirty || !selected}
+          isDisabled={disabled || !selected}
           onChange={setCustomize}
         />
         {customize && !selected && (
           <Text as="p" type="body" role="status">
             {t('styleChooseCue')}
-          </Text>
-        )}
-        {dirty && (
-          <Text as="p" type="body" role="status">
-            {t('styleFinishDraft')}
           </Text>
         )}
         <SubtitleStyleForm
@@ -52,7 +46,6 @@ export function SubtitleStylesPanel() {
           inherited={scope === 'cue' ? globalStyle : undefined}
           disabled={disabled}
           onChange={apply}
-          onDirtyChange={setDirty}
         />
       </VStack>
     </Section>

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseSoundtrack } from '../../dist-core/editing/soundtrack.js';
+import { clampSoundtrack, parseSoundtrack } from '../../dist-core/editing/soundtrack.js';
 import {
   changeEditor,
   openEditorHistory,
@@ -56,6 +56,30 @@ test('invalid paths, hashes, audio bounds, fades, and arbitrary worker inputs ar
   const { muted, ...withoutMute } = track;
   assert.equal(muted, false);
   assert.throws(() => parseSoundtrack(withoutMute), /INVALID_SOUNDTRACK/);
+});
+
+test('live soundtrack controls clamp an out-of-order edit back to a valid lane', () => {
+  const clamped = clampSoundtrack({
+    ...track,
+    start_ms: 8000,
+    end_ms: 6000,
+    fade_in_ms: 5000,
+    fade_out_ms: 5000,
+    offset_ms: -10,
+    gain_db: 99,
+    duck: { enabled: true, amount_db: 0, release_ms: 9000 },
+  });
+  assert.deepEqual(clamped, {
+    ...track,
+    start_ms: 8000,
+    end_ms: 8001,
+    fade_in_ms: 1,
+    fade_out_ms: 0,
+    offset_ms: 0,
+    gain_db: 24,
+    duck: { enabled: true, amount_db: 1, release_ms: 5000 },
+  });
+  assert.deepEqual(parseSoundtrack(clamped), clamped);
 });
 
 const voiceTrackFixture = () => ({

@@ -13,8 +13,6 @@ const COPY = {
     duck: 'Duck under voice',
     amount: 'Amount (dB)',
     release: 'Release (s)',
-    apply: 'Apply',
-    draft: 'Draft not applied — rendering uses the last applied track.',
     export: 'Export…',
     exportRun: 'Export',
     monitorPlay: 'Play',
@@ -27,8 +25,6 @@ const COPY = {
     duck: 'Giảm dưới giọng',
     amount: 'Mức giảm (dB)',
     release: 'Hồi phục (s)',
-    apply: 'Áp dụng',
-    draft: 'Bản nháp chưa áp dụng — render vẫn dùng nhạc đã áp dụng lần cuối.',
     export: 'Xuất…',
     exportRun: 'Xuất',
     monitorPlay: 'Phát',
@@ -170,8 +166,8 @@ for (const locale of ['en', 'vi']) {
           await page.getByRole('spinbutton', { name: copy.release, exact: true }).inputValue(),
           '0.35',
         );
-        await page.getByRole('button', { name: copy.apply, exact: true }).click();
-        await page.getByText(copy.draft, { exact: true }).waitFor({ state: 'hidden' });
+        // Editing controls apply to the document live; there is no Apply/Revert pair.
+        assert.equal(await page.getByRole('button', { name: 'Apply', exact: true }).count(), 0);
 
         // The live program monitor builds its mix and keeps playing without an error.
         await page.getByRole('button', { name: copy.monitorPlay, exact: true }).click();

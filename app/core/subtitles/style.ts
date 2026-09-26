@@ -34,6 +34,40 @@ export const defaultSubtitleStyle: Readonly<SubtitleStyle> = Object.freeze({
   italic: false,
 });
 
+const FONT_FAMILY = /^[\p{L}\p{N} _.-]{1,80}$/u;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const STYLE_RANGES: Record<string, [number, number]> = {
+  font_size_pct: [1, 15],
+  outline_pct: [0, 2],
+  shadow_pct: [0, 2],
+  box_opacity: [0, 1],
+  position: [1, 9],
+  margin_x_pct: [0, 40],
+  margin_y_pct: [0, 40],
+  spacing_pct: [-0.2, 2],
+};
+
+/** True when one field's value is outside its own type, format or numeric range. */
+export function subtitleStyleFieldInvalid(key: keyof SubtitleStyle, value: unknown): boolean {
+  if (key === 'font_family')
+    return typeof value !== 'string' || !FONT_FAMILY.test(value) || !value.trim();
+  if (key === 'bold' || key === 'italic') return typeof value !== 'boolean';
+  if (key === 'text_color' || key === 'outline_color' || key === 'box_color')
+    return typeof value !== 'string' || !HEX_COLOR.test(value);
+  if (key === 'position')
+    return typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 9;
+  const [min, max] = STYLE_RANGES[key] ?? [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+  return typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max;
+}
+
+/** The first field that would fail `parseSubtitleStyle`, or null when the style is valid. */
+export function firstInvalidSubtitleStyleField(style: SubtitleStyle): keyof SubtitleStyle | null {
+  for (const key of Object.keys(defaultSubtitleStyle) as (keyof SubtitleStyle)[]) {
+    if (subtitleStyleFieldInvalid(key, style[key])) return key;
+  }
+  return null;
+}
+
 export function parseSubtitleStyle(value: unknown): SubtitleStyle {
   const fail = () => {
     throw new Error('INVALID_SUBTITLE_STYLE');
@@ -43,36 +77,10 @@ export function parseSubtitleStyle(value: unknown): SubtitleStyle {
   const keys = Object.keys(defaultSubtitleStyle);
   if (Object.keys(input).length !== keys.length || keys.some((key) => !(key in input)))
     return fail();
-  if (
-    typeof input.font_family !== 'string' ||
-    !/^[\p{L}\p{N} _.-]{1,80}$/u.test(input.font_family) ||
-    !input.font_family.trim() ||
-    typeof input.bold !== 'boolean' ||
-    typeof input.italic !== 'boolean'
-  )
-    return fail();
-  for (const key of ['text_color', 'outline_color', 'box_color']) {
-    if (typeof input[key] !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(input[key])) return fail();
-  }
-  const ranges: Record<string, [number, number]> = {
-    font_size_pct: [1, 15],
-    outline_pct: [0, 2],
-    shadow_pct: [0, 2],
-    box_opacity: [0, 1],
-    position: [1, 9],
-    margin_x_pct: [0, 40],
-    margin_y_pct: [0, 40],
-    spacing_pct: [-0.2, 2],
-  };
-  for (const [key, [min, max]] of Object.entries(ranges)) {
-    const field = input[key];
-    if (typeof field !== 'number' || !Number.isFinite(field) || field < min || field > max)
-      return fail();
-  }
-  if (!Number.isInteger(input.position)) return fail();
+  if (firstInvalidSubtitleStyleField(input as unknown as SubtitleStyle)) return fail();
   return {
     ...input,
-    font_family: input.font_family.trim(),
+    font_family: String(input.font_family).trim(),
     text_color: String(input.text_color).toUpperCase(),
     outline_color: String(input.outline_color).toUpperCase(),
     box_color: String(input.box_color).toUpperCase(),

@@ -1,4 +1,3 @@
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -7,11 +6,11 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  clampSoundtrack,
   DEFAULT_SOUNDTRACK_DUCK,
-  parseSoundtrack,
   type Soundtrack,
 } from '../../../../core/editing/soundtrack';
 import { unwrap } from '../../../bridge/client';
@@ -23,24 +22,11 @@ const milliseconds = ['start_ms', 'end_ms', 'offset_ms', 'fade_in_ms', 'fade_out
 export function SoundtrackPanel() {
   const { t } = useTranslation();
   const editor = useEditor();
-  const current = JSON.stringify(editor.soundtrack ?? null);
-  const [baseline, setBaseline] = useState(current);
-  const [draft, setDraft] = useState<Soundtrack | undefined>(editor.soundtrack);
-  const [error, setError] = useState('');
-  const [url, setUrl] = useState('');
-  const dirty = JSON.stringify(draft ?? null) !== baseline;
-  const stale = baseline !== current;
+  const track = editor.soundtrack;
   const disabled = editor.busy || editor.opening;
+  const [url, setUrl] = useState('');
+  const source = track?.source;
 
-  const reload = useCallback(() => {
-    setDraft(editor.soundtrack);
-    setBaseline(current);
-    setError('');
-  }, [editor.soundtrack, current]);
-  useEffect(() => {
-    if (!dirty && stale) reload();
-  }, [dirty, stale, reload]);
-  const source = draft?.source;
   useEffect(() => {
     let alive = true;
     setUrl('');
@@ -61,42 +47,32 @@ export function SoundtrackPanel() {
         .then((value) => {
           if (alive) setUrl(value.url);
         })
-        .catch((reason) => {
-          if (alive) setError(reason.message);
-        });
+        .catch(() => undefined);
     }
     return () => {
       alive = false;
     };
   }, [source?.path, source?.sha256, source?.duration_ms, source]);
 
-  function apply() {
-    try {
-      if (stale) throw new Error('STALE_OPERATION');
-      const value = draft ? parseSoundtrack(draft) : undefined;
-      editor.changeSoundtrack(value);
-      // dirty is a JSON comparison: keep the canonical parser's field order.
-      setDraft(value);
-      setBaseline(JSON.stringify(value ?? null));
-      setError('');
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'INVALID_SOUNDTRACK');
-    }
+  function update(patch: Partial<Soundtrack>) {
+    if (!track) return;
+    editor.changeSoundtrack(clampSoundtrack({ ...track, ...patch }));
   }
+
   return (
     <InspectorPanelSection title={t('soundtrackTitle')}>
       <VStack gap={3}>
-        <HStack gap={2} vAlign="center" wrap="wrap">
-          <Button
-            label={t('soundtrackRemove')}
-            isDisabled={disabled || !draft}
-            onClick={() => setDraft(undefined)}
-          />
-        </HStack>
-        {draft ? (
+        {track ? (
           <>
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Button
+                label={t('soundtrackRemove')}
+                isDisabled={disabled}
+                onClick={() => editor.changeSoundtrack(undefined)}
+              />
+            </HStack>
             <Text as="p" type="body">
-              {draft.source.name} · {(draft.source.duration_ms / 1000).toFixed(2)} s
+              {track.source.name} · {(track.source.duration_ms / 1000).toFixed(2)} s
             </Text>
             {url && (
               <audio
@@ -109,10 +85,10 @@ export function SoundtrackPanel() {
             )}
             <RadioList
               label={t('soundtrackMode')}
-              value={draft.mode}
+              value={track.mode}
               isDisabled={disabled}
               onChange={(mode) => {
-                if (mode === 'replace' || mode === 'mix') setDraft({ ...draft, mode });
+                if (mode === 'replace' || mode === 'mix') update({ mode });
               }}
             >
               <RadioListItem
@@ -131,62 +107,54 @@ export function SoundtrackPanel() {
                 <NumberInput
                   key={key}
                   label={t(`soundtrack_${key}`)}
-                  value={draft[key] / 1000}
+                  value={track[key] / 1000}
                   min={0}
-                  max={key === 'offset_ms' ? 86400 : draft.source.duration_ms / 1000}
+                  max={key === 'offset_ms' ? 86400 : track.source.duration_ms / 1000}
                   step={0.1}
                   isDisabled={disabled}
                   isWheelEnabled={false}
-                  onChange={(value) => setDraft({ ...draft, [key]: Math.round(value * 1000) })}
+                  onChange={(value) => update({ [key]: Math.round(value * 1000) })}
                 />
               ))}
               <NumberInput
                 label={t('soundtrackGain')}
-                value={draft.gain_db}
+                value={track.gain_db}
                 min={-60}
                 max={24}
                 step={1}
                 isWheelEnabled={false}
                 isDisabled={disabled}
-                onChange={(gain_db) => setDraft({ ...draft, gain_db })}
+                onChange={(gain_db) => update({ gain_db })}
               />
             </FormLayout>
             <CheckboxInput
               label={t('soundtrackDuck')}
-              value={draft.duck.enabled}
+              value={track.duck.enabled}
               isDisabled={disabled}
-              onChange={(enabled) => setDraft({ ...draft, duck: { ...draft.duck, enabled } })}
+              onChange={(enabled) => update({ duck: { ...track.duck, enabled } })}
             />
-            {draft.duck.enabled && (
+            {track.duck.enabled && (
               <FormLayout direction="vertical">
                 <NumberInput
                   label={t('soundtrackDuckAmount')}
-                  value={draft.duck.amount_db}
+                  value={track.duck.amount_db}
                   min={1}
                   max={24}
                   step={1}
                   isWheelEnabled={false}
                   isDisabled={disabled}
-                  onChange={(amount_db) =>
-                    setDraft({ ...draft, duck: { ...draft.duck, amount_db } })
-                  }
+                  onChange={(amount_db) => update({ duck: { ...track.duck, amount_db } })}
                 />
                 <NumberInput
                   label={t('soundtrackDuckRelease')}
-                  value={draft.duck.release_ms / 1000}
+                  value={track.duck.release_ms / 1000}
                   min={0.01}
                   max={5}
                   step={0.01}
                   isWheelEnabled={false}
                   isDisabled={disabled}
                   onChange={(seconds) =>
-                    setDraft({
-                      ...draft,
-                      duck: {
-                        ...draft.duck,
-                        release_ms: Math.max(10, Math.min(5000, Math.round(seconds * 1000))),
-                      },
-                    })
+                    update({ duck: { ...track.duck, release_ms: Math.round(seconds * 1000) } })
                   }
                 />
               </FormLayout>
@@ -197,31 +165,6 @@ export function SoundtrackPanel() {
             {t('soundtrackNone')}
           </Text>
         )}
-        {dirty && (
-          <Text as="p" type="body" role="status">
-            {t('soundtrackDraft')}
-          </Text>
-        )}
-        {(error || stale) && (
-          <Banner
-            status="error"
-            title={t(stale ? 'soundtrackStale' : 'soundtrackInvalid')}
-            description={error ? <code>{error}</code> : undefined}
-          />
-        )}
-        <HStack gap={2} vAlign="center" wrap="wrap">
-          <Button
-            label={t('soundtrackApply')}
-            variant="primary"
-            isDisabled={disabled || !dirty || stale}
-            onClick={apply}
-          />
-          <Button
-            label={t('soundtrackReload')}
-            isDisabled={disabled || (!dirty && !stale)}
-            onClick={reload}
-          />
-        </HStack>
       </VStack>
     </InspectorPanelSection>
   );

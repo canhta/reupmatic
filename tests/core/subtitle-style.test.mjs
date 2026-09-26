@@ -6,7 +6,9 @@ import { assertCues, splitCue } from '../../dist-core/subtitles/cues.js';
 import {
   applyCueStyle,
   defaultSubtitleStyle,
+  firstInvalidSubtitleStyleField,
   parseSubtitleStyle,
+  subtitleStyleFieldInvalid,
 } from '../../dist-core/subtitles/style.js';
 
 const cue = { id: 'first', start_ms: 0, end_ms: 2000, text: 'Tiếng Việt {not markup}' };
@@ -51,4 +53,20 @@ test('style validation rejects ASS injection, invalid opacity, unsupported keys 
   }
   assert.throws(() => assertCues([{ ...cue, style: {} }]), /INVALID_SUBTITLE_STYLE/);
   assert.throws(() => applyCueStyle([cue], ['missing'], defaultSubtitleStyle), /INVALID_CUES/);
+});
+test('each field names its own failure so the form can mark it inline', () => {
+  assert.equal(subtitleStyleFieldInvalid('font_family', 'DejaVu Sans'), false);
+  assert.equal(subtitleStyleFieldInvalid('font_family', 'Arial,10'), true);
+  assert.equal(subtitleStyleFieldInvalid('font_family', ''), true);
+  assert.equal(subtitleStyleFieldInvalid('text_color', '#A1B2C3'), false);
+  assert.equal(subtitleStyleFieldInvalid('text_color', 'A1B2C3'), true);
+  assert.equal(subtitleStyleFieldInvalid('position', 9), false);
+  assert.equal(subtitleStyleFieldInvalid('position', 2.5), true);
+  assert.equal(subtitleStyleFieldInvalid('margin_x_pct', 40), false);
+  assert.equal(subtitleStyleFieldInvalid('margin_x_pct', 50), true);
+  assert.equal(firstInvalidSubtitleStyleField(defaultSubtitleStyle), null);
+  assert.equal(
+    firstInvalidSubtitleStyleField({ ...defaultSubtitleStyle, box_opacity: 2 }),
+    'box_opacity',
+  );
 });
