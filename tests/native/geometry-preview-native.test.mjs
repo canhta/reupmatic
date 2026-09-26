@@ -143,7 +143,6 @@ test('the preview mapping agrees with a real worker render for rotate, crop and 
         'media.process',
         {
           asset_id: asset.asset_id,
-          mode: 'full',
           encoding: 'review',
           processing: { editing },
         },

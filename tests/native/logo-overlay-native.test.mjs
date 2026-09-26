@@ -185,7 +185,6 @@ test('the logo preview box agrees with a real worker render', { timeout: 180000 
       'media.process',
       {
         asset_id: asset.asset_id,
-        mode: 'full',
         encoding: 'review',
         processing: { editing: { logo: PLACEMENT } },
         logo: { asset_id: image.asset_id, sha256: image.sha256 },
@@ -227,7 +226,6 @@ test('the logo preview box agrees with a real worker render', { timeout: 180000 
       'media.process',
       {
         asset_id: asset.asset_id,
-        mode: 'full',
         encoding: 'review',
         processing: { editing: { logo: { ...PLACEMENT, opacity: 0.5 } } },
         logo: { asset_id: image.asset_id, sha256: image.sha256 },
@@ -283,7 +281,6 @@ test('PNG alpha and recipe opacity composite exactly as the preview box says', {
         'media.process',
         {
           asset_id: asset.asset_id,
-          mode: 'full',
           encoding: 'review',
           processing: { editing: { logo: { ...placement, opacity } } },
           logo: { asset_id: image.asset_id, sha256: image.sha256 },

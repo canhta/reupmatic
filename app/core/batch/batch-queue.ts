@@ -270,7 +270,6 @@ export class BatchQueue extends EventEmitter {
           asset_id: videoId,
           cues: [],
           revision: job.attempt,
-          mode: 'full',
           encoding: job.input.encoding,
           ...(job.input.processing ? { processing: job.input.processing } : {}),
         },
