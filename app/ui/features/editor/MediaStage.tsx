@@ -384,8 +384,14 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             label={t('resultPost')}
             size="sm"
             variant="primary"
+            isDisabled={!editor.media?.library_id}
             onClick={() => void editor.postExport(result.artifact_id)}
           />
+          {!editor.media?.library_id && (
+            <Text as="span" type="supporting">
+              {t('postRequiresLibrary')}
+            </Text>
+          )}
         </HStack>
       )}
       <VisuallyHidden as="div" role="status">
