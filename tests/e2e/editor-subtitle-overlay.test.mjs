@@ -98,9 +98,10 @@ for (const locale of ['en', 'vi']) {
         assert.deepEqual(taints, [], 'the media frame path must stay untainted');
         await page.evaluate(() => {
           const video = document.querySelector('video[data-monitor-video="source"]');
-          if (video instanceof HTMLElement) video.style.visibility = '';
+          if (video instanceof HTMLElement)
+            video.style.setProperty('visibility', 'visible', 'important');
         });
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(500);
         await page.screenshot({
           path: path.join(artifacts, `editor-subtitle-overlay-${locale}.png`),
         });
