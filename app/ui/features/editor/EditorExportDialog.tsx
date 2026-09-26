@@ -52,6 +52,8 @@ export function EditorExportDialog() {
       editor.processing.editing.speed !== 1 &&
       t('exportStepSpeed'),
     editor.soundtrack && t('exportStepMusic'),
+    editor.voiceTrack && t('exportStepVoice'),
+    editor.processing?.editing?.logo && t('exportStepLogo'),
   ].filter((value): value is string => Boolean(value));
 
   const disabled = running || editor.opening || editor.busy || !editor.media;

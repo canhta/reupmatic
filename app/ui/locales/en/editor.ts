@@ -115,6 +115,8 @@ export const editorEn = {
   exportStepCrop: 'Crop',
   exportStepSpeed: 'Change speed',
   exportStepMusic: 'Soundtrack',
+  exportStepVoice: 'Voice-over',
+  exportStepLogo: 'Logo',
   exportRun: 'Export',
   exportRendering: 'Rendering…',
   resizeCueHandle: 'Resize cue list',

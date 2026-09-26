@@ -117,6 +117,8 @@ export const editorVi = {
   exportStepCrop: 'Cắt khung hình',
   exportStepSpeed: 'Đổi tốc độ',
   exportStepMusic: 'Nhạc nền',
+  exportStepVoice: 'Giọng đọc',
+  exportStepLogo: 'Logo',
   exportRun: 'Xuất',
   exportRendering: 'Đang render…',
   resizeCueHandle: 'Đổi cỡ danh sách câu',
