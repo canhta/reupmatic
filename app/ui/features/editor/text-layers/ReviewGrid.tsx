@@ -1,6 +1,7 @@
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { type ColumnWidth, proportional, Table, type TableColumn } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -41,7 +42,7 @@ export function ReviewGrid<T>({
     ),
   }));
   return (
-    <div className="review-grid">
+    <VStack maxWidth="100%">
       <Table
         density="compact"
         aria-label={ariaLabel}
@@ -62,6 +63,6 @@ export function ReviewGrid<T>({
           pageLabel={t('reviewGridPage')}
         />
       )}
-    </div>
+    </VStack>
   );
 }

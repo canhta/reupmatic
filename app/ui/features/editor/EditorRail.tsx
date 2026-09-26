@@ -1,3 +1,4 @@
+import { Divider } from '@astryxdesign/core/Divider';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -81,7 +82,7 @@ export function EditorRail<Id extends string>({
       >
         {items.map((item) => (
           <Fragment key={item.id}>
-            {item.hasRuleBefore && <div aria-hidden="true" className="editor-rail-rule" />}
+            {item.hasRuleBefore && <Divider aria-hidden="true" className="editor-rail-rule" />}
             <IconButton
               ref={(node: HTMLButtonElement | null) => {
                 if (node) refs.current.set(item.id, node);

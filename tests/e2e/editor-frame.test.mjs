@@ -172,6 +172,7 @@ test('tool rail items and labels fit unclipped at 1420x900 and 1050x700 in Engli
           assert.deepEqual(
             await tablist.evaluate((element) =>
               [...element.children]
+                .filter((child) => !child.hasAttribute('aria-hidden'))
                 .map((child) => child.getAttribute('role'))
                 .filter((role) => role !== null),
             ),

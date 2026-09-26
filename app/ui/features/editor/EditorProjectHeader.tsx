@@ -2,6 +2,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import type { DropdownMenuItemData, DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
+import { HStack } from '@astryxdesign/core/HStack';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -110,7 +111,8 @@ export function EditorProjectHeader() {
   ];
 
   return (
-    <div
+    <HStack
+      vAlign="center"
       className="workspace-title editor-project-header"
       ref={(node) => {
         editor.titleRef.current = node;
@@ -173,6 +175,6 @@ export function EditorProjectHeader() {
         isDisabled={!editor.media || locked || saved}
         onClick={() => void editor.saveCurrentProject()}
       />
-    </div>
+    </HStack>
   );
 }

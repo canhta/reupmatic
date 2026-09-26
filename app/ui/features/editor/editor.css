@@ -26,8 +26,6 @@
   min-width: 0;
   min-height: 0;
   overflow: clip;
-  display: flex;
-  flex-direction: column;
 }
 
 .editor-viewer-region {
@@ -78,10 +76,7 @@
   border-inline-start: var(--border-width) solid var(--color-border);
 }
 .editor-rail-rule {
-  align-self: stretch;
-  block-size: var(--border-width);
   margin-block: var(--space-1);
-  background: var(--color-border);
 }
 
 .video-tray {
@@ -305,16 +300,11 @@
   }
 }
 
-.style-color-field {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
-}
 .style-color-swatch {
-  inline-size: 36px;
-  block-size: 36px;
+  inline-size: var(--size-element-lg);
+  block-size: var(--size-element-lg);
   padding: 0;
-  border: 1px solid var(--edge-subtle);
+  border: var(--border-width) solid var(--edge-subtle);
   border-radius: var(--radius-sm);
   background: none;
   cursor: pointer;
@@ -322,11 +312,6 @@
 .style-color-swatch:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.review-grid {
-  min-width: 0;
-  max-width: 100%;
 }
 
 .review-rows {

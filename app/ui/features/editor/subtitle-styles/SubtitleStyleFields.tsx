@@ -1,6 +1,7 @@
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
@@ -33,7 +34,7 @@ function ColorField({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="style-color-field">
+    <HStack gap={2} vAlign="end">
       <TextInput label={label} value={value} isDisabled={disabled} onChange={onChange} />
       <input
         type="color"
@@ -44,7 +45,7 @@ function ColorField({
         value={HEX_COLOR.test(value) ? value : '#000000'}
         onChange={(event) => onChange(event.target.value.toUpperCase())}
       />
-    </div>
+    </HStack>
   );
 }
 
