@@ -12,8 +12,27 @@ from typing import Callable
 from assets.registry import sha256 as file_hash
 from runtime.errors import WorkerError
 
+from vision.algorithms import lama_signature
+
 LANGUAGES = {"en", "vi", "zh"}
 VERSIONS = {"PP-OCRv3", "PP-OCRv4", "PP-OCRv5"}
+
+
+def runtime_available(packages: tuple[str, ...]) -> bool:
+    try:
+        return all(importlib.util.find_spec(name) is not None for name in packages)
+    except (ImportError, ValueError):
+        return False
+
+
+def open_inpainting_session(path: Path):
+    """Session metadata only; status must not run inference."""
+    import onnxruntime as ort
+
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    options.inter_op_num_threads = 1
+    return ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
 
 
 class ModelRegistry:
@@ -104,7 +123,7 @@ class ModelRegistry:
             packages = ("numpy", "cv2", "onnxruntime")
         else:
             raise WorkerError("INVALID_REQUEST")
-        if runtime and any(importlib.util.find_spec(name) is None for name in packages):
+        if runtime and not runtime_available(packages):
             raise WorkerError("RUNTIME_PACK_MISSING")
         # Paths are NOT included in identity or public status.
         identity = {
@@ -159,7 +178,18 @@ class ModelRegistry:
                     if not languages:
                         raise WorkerError(failures[0])
                 else:
-                    self.require(kind, verify=False)
+                    bundle = self.require(kind, verify=False)
+                    inputs = {}
+                    try:
+                        session = open_inpainting_session(Path(bundle["model"]["path"]))
+                        inputs = {
+                            item.name: {"shape": list(item.shape), "type": item.type}
+                            for item in session.get_inputs()
+                        }
+                    except Exception:
+                        raise WorkerError("MODEL_INFERENCE_FAILED") from None
+                    if not lama_signature(inputs):
+                        raise WorkerError("MODEL_SHAPE_UNSUPPORTED")
             except WorkerError as error:
                 code = error.code
             result[kind] = {

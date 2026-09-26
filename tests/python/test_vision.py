@@ -141,6 +141,64 @@ class ModelRegistryTests(unittest.TestCase):
 
         self.assertFalse(ModelRegistry(self.manifest).status()["inpainting"]["verified"])
 
+    def signature_session(self, image_shape, mask_shape=("batch", 1, 512, 512)):
+        from types import SimpleNamespace
+
+        class SessionDouble:
+            def get_inputs(self):
+                return [
+                    SimpleNamespace(name="image", shape=list(image_shape), type="tensor(float)"),
+                    SimpleNamespace(name="mask", shape=list(mask_shape), type="tensor(float)"),
+                ]
+
+        return SessionDouble()
+
+    def test_status_opens_the_model_and_names_an_unsupported_signature(self):
+        from unittest.mock import patch
+
+        from vision.models import ModelRegistry
+
+        with (
+            patch("vision.models.runtime_available", return_value=True),
+            patch(
+                "vision.models.open_inpainting_session",
+                return_value=self.signature_session([1, 3, 256, 256]),
+            ),
+        ):
+            status = ModelRegistry(self.manifest).status()
+        self.assertFalse(status["inpainting"]["available"])
+        self.assertEqual(status["inpainting"]["code"], "MODEL_SHAPE_UNSUPPORTED")
+
+    def test_status_offers_the_installed_symbolic_signature(self):
+        from unittest.mock import patch
+
+        from vision.models import ModelRegistry
+
+        with (
+            patch("vision.models.runtime_available", return_value=True),
+            patch(
+                "vision.models.open_inpainting_session",
+                return_value=self.signature_session(["batch", 3, 512, 512]),
+            ),
+        ):
+            status = ModelRegistry(self.manifest).status()
+        self.assertTrue(status["inpainting"]["available"])
+        self.assertIsNone(status["inpainting"]["code"])
+        self.assertFalse(status["inpainting"]["verified"])
+
+    def test_status_survives_a_model_that_cannot_be_opened(self):
+        from unittest.mock import patch
+
+        from vision.models import ModelRegistry
+
+        with (
+            patch("vision.models.runtime_available", return_value=True),
+            patch("vision.models.open_inpainting_session", side_effect=ValueError("not a model")),
+        ):
+            status = ModelRegistry(self.manifest).status()
+        self.assertFalse(status["inpainting"]["available"])
+        self.assertEqual(status["inpainting"]["code"], "MODEL_INFERENCE_FAILED")
+
 
 class VisionValidationTests(unittest.TestCase):
     def test_invalid_numbers_regions_and_long_samples_are_rejected(self):
