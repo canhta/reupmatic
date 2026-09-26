@@ -27,17 +27,11 @@ def encode(root: Path, audio: Path, denoise: bool = True) -> dict:
     )
     if engine.device.type != "cpu":
         raise WorkerError("SYNTHESIS_RUNTIME_VERSION")
-    # The SDK's encode path yields the same speaker embedding + reference codes as a preset.
-    encoded = engine.encode_reference(str(audio), denoise=denoise)
-    if isinstance(encoded, dict):
-        embedding = encoded.get("speaker_emb", encoded.get("speaker"))
-        reference = encoded.get("ref_codes", encoded.get("codes"))
-    else:
-        embedding = getattr(encoded, "speaker_emb", None)
-        reference = getattr(encoded, "ref_codes", None) or getattr(encoded, "codes", None)
-    if embedding is None or reference is None:
+    # The SDK's clone path returns ``(speaker_emb, ref_codes)``, mirroring a preset's payload.
+    speaker, reference = engine.prepare_reference(str(audio), denoise=denoise)
+    if speaker is None or reference is None:
         raise WorkerError("MODEL_OUTPUT_INVALID")
     return {
-        "speaker_emb": np.asarray(embedding, dtype=np.float32).reshape(-1).tolist(),
+        "speaker_emb": np.asarray(speaker, dtype=np.float32).reshape(-1).tolist(),
         "ref_codes": _reference_rows(np.asarray(reference).tolist()),
     }

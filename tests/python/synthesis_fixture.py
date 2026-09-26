@@ -80,15 +80,19 @@ class OnnxV3LiteEngine:
         self.n_vq = 8
         self.tokenizer = SimpleNamespace(encode=lambda text, **kw: SimpleNamespace(ids=list(range(513))
             if os.environ.get('SYNTH_TEST_TOKEN') else [1,2,3]))
-    def encode_reference(self, path, denoise=True):
-        assert denoise is True
-        assert Path(path).is_file()
+    def prepare_reference(self, ref_audio, *, sr=None, denoise=True, use_ref_codes=True,
+                          max_seconds=8.0):
+        # Mirrors OnnxV3LiteEngine.prepare_reference: same parameters, same (emb, codes) tuple.
+        assert sr is None and denoise is True and use_ref_codes is True and max_seconds == 8.0
+        assert Path(ref_audio).is_file()
         if os.environ.get('SYNTH_TEST_NETWORK'): socket.getaddrinfo('example.invalid', 443)
         if os.environ.get('SYNTH_TEST_CHILD'):
             import subprocess
             subprocess.run(['echo','NOT ALLOWED'])
-        if os.environ.get('SYNTH_TEST_CLONE_BAD'): return {}
-        return {'speaker_emb': [0.25]*192, 'codes': [[1,2,3,4,5,6,7,8]]*2}
+        if os.environ.get('SYNTH_TEST_CLONE_BAD'): return (None, None)
+        emb = np.array([0.25]*192, dtype=np.float32)
+        codes = np.array([[1,2,3,4,5,6,7,8]]*2, dtype=np.int64)
+        return (emb, codes)
     def infer(self, **kwargs):
         assert set(kwargs) == {'phonemes','text','speaker_emb','ref_codes','use_ref_codes','temperature',
             'top_k','top_p','max_new_frames','repetition_penalty','frame_cap'}
