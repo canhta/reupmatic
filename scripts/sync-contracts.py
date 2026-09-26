@@ -208,6 +208,9 @@ def compose():
         ),
         "speech.transcribe": copy.deepcopy(speech["worker_params"]),
         "audio.probe": object_schema({"asset_id": asset_id}, ["asset_id"]),
+        "media.probe-file": object_schema(
+            {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
+        ),
         "subtitles.prepare": object_schema(
             {
                 "asset_id": asset_id,

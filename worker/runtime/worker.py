@@ -13,7 +13,7 @@ from media.audio.soundtrack import probe as probe_audio
 from media.download import download
 from media.peaks import peaks
 from media.poster import poster
-from media.probe import probe
+from media.probe import probe, probe_file_request
 from media.render import render
 from processing.recipe import model_snapshot
 from processing.service import process_video
@@ -213,6 +213,7 @@ class Worker:
                     "media.inpaint": self.vision.run,
                     "asset.register": self.assets.register,
                     "media.probe": partial(probe, self),
+                    "media.probe-file": partial(probe_file_request, self),
                     "media.download": partial(download, self),
                     "media.peaks": partial(peaks, self),
                     "media.poster": partial(poster, self),

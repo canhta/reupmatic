@@ -1,4 +1,4 @@
-import { realpath, stat } from 'node:fs/promises';
+import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { authorizedCompositionSources } from '../../../core/editing/composition/dependencies.js';
 import type { Composition } from '../../../core/editing/composition/document.js';
@@ -13,6 +13,7 @@ import { libraryCoverAssetId } from '../../../core/library/library-contracts.js'
 import type { PublicVideo, RegisteredVideo } from '../../../core/media/media-contracts.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { requestId } from '../../runtime/ipc.js';
+import { probeVideoFile } from './probe-file.js';
 
 export interface MediaFilter {
   name: string;
@@ -98,31 +99,11 @@ export class MediaRegistry {
     return record;
   }
 
-  /** Probes an export file without registering it as an original (no overwrite protection). */
+  /** Probes an export file directly, without registering it as an asset or an original. */
   async probeVideoFile(
     filename: string,
   ): Promise<{ duration_ms: number; width: number; height: number; size_bytes: number }> {
-    const canonical = await realpath(filename);
-    const source = await this.worker.request('asset.register', { path: canonical, kind: 'video' })
-      .result;
-    const assetId = requestId(source.asset_id);
-    const info = await this.worker.request('media.probe', { asset_id: assetId }).result;
-    if (
-      !Number.isInteger(info.duration_ms) ||
-      Number(info.duration_ms) <= 0 ||
-      !Number.isInteger(info.width) ||
-      Number(info.width) <= 0 ||
-      !Number.isInteger(info.height) ||
-      Number(info.height) <= 0
-    )
-      throw new Error('INVALID_WORKER_RESPONSE');
-    const facts = await stat(canonical);
-    return {
-      duration_ms: Number(info.duration_ms),
-      width: Number(info.width),
-      height: Number(info.height),
-      size_bytes: facts.size,
-    };
+    return probeVideoFile(this.worker, filename);
   }
 
   async registerSubtitle(filename: string): Promise<RegisteredSubtitle> {

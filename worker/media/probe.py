@@ -5,7 +5,7 @@ from pathlib import Path
 
 from runtime.context import WorkerContext
 from runtime.errors import WorkerError
-from runtime.protocol import exact
+from runtime.protocol import exact, string
 
 
 def frame_rate(video):
@@ -83,3 +83,18 @@ def probe(host: WorkerContext, req: dict) -> dict:
     result = probe_file(host, req, asset["path"])
     host.assets.get(params["asset_id"], "video")
     return result
+
+
+def probe_file_request(host: WorkerContext, req: dict) -> dict:
+    """Probes a path directly, without registering it: preflight must not grow the asset registry."""
+    params = exact(req["params"], {"path"})
+    path = Path(string(params["path"]))
+    if not path.is_absolute():
+        raise WorkerError("PATH_NOT_ABSOLUTE")
+    try:
+        path = path.resolve(strict=True)
+    except OSError:
+        raise WorkerError("SOURCE_MISSING")
+    if not path.is_file():
+        raise WorkerError("SOURCE_MISSING")
+    return probe_file(host, req, path)

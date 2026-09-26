@@ -95,6 +95,11 @@ function validateMediaPosterResult(data: unknown): MediaPosterResult {
 
 export const mediaOperations = {
   'media.probe': { method: 'media.probe', kind: 'queued', validate: validateMediaProbeResult },
+  'media.probe-file': {
+    method: 'media.probe-file',
+    kind: 'queued',
+    validate: validateMediaProbeResult,
+  },
   'media.download': {
     method: 'media.download',
     kind: 'queued',
