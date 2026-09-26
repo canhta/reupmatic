@@ -46,6 +46,12 @@ Severity: **H** = a feature does not work; **M** = wrong or misleading result; *
 | B13 | L | Post on a video opened outside the Library runs the save flow, then fails with `POST_REQUIRES_LIBRARY` | `useEditorSession.ts` `postExport` | Disable Post with a one-clause reason when the source has no Library item |
 | B14 | L | Voice lines with a rate other than 1 play pitch-shifted live (AudioBufferSource `playbackRate`), while the export's `atempo` keeps the pitch | remove-preview report | Time-stretch while keeping pitch (e.g. `HTMLAudioElement.preservesPitch` per line, or pre-stretched buffers), or keep it as a named deviation if the cost is too high; report which |
 
+## D. Performance found by the real-model run (2026-09-27)
+
+| # | Sev | Bug | Evidence | Direction (owner to choose) |
+| --- | --- | --- | --- | --- |
+| D1 | H | Object removal runs LaMa on every frame on the CPU at ~4.3 s/frame, so a 30 s, 30 fps short takes about an hour to export | `test:e2e:models` timing (editor-bugs-a report); fixture had to shrink to 3 s 360×640 | Measure first, then combine: skip frames with no detected text or with an unchanged region (reuse the previous inpaint when the masked area is static), run at the 512² crop only, and try the CoreML (macOS) / DirectML (Windows) execution providers. Report the time per frame for each step |
+
 ## C. Test drift that hid these bugs
 
 `remove-preview` slice 5 fixes the bell selector, the settings duplicate and the preview
