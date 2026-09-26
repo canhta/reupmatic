@@ -4,7 +4,6 @@ export const soundtrackVi = {
   audioSourceTitle: 'Âm thanh gốc',
   soundtrackTitle: 'Nhạc & âm thanh',
   soundtrackRemove: 'Bỏ',
-  soundtrackHelp: 'Xuất video để nghe toàn bộ bản trộn.',
   soundtrackListen: 'Âm thanh gốc',
   soundtrackMode: 'Cách dùng âm thanh',
   soundtrackReplace: 'Thay âm thanh nguồn',

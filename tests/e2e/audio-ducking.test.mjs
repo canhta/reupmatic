@@ -13,7 +13,6 @@ const COPY = {
     duck: 'Duck under voice',
     amount: 'Amount (dB)',
     release: 'Release (s)',
-    help: 'Export to hear the full mix.',
     apply: 'Apply',
     draft: 'Draft not applied — rendering uses the last applied track.',
     export: 'Export…',
@@ -28,7 +27,6 @@ const COPY = {
     duck: 'Giảm dưới giọng',
     amount: 'Mức giảm (dB)',
     release: 'Hồi phục (s)',
-    help: 'Xuất video để nghe toàn bộ bản trộn.',
     apply: 'Áp dụng',
     draft: 'Bản nháp chưa áp dụng — render vẫn dùng nhạc đã áp dụng lần cuối.',
     export: 'Xuất…',
@@ -165,7 +163,7 @@ for (const locale of ['en', 'vi']) {
         assert.equal(await duck.isChecked(), false);
 
         await duck.click();
-        await page.getByText(copy.help, { exact: true }).waitFor();
+        await page.getByRole('spinbutton', { name: copy.amount, exact: true }).waitFor();
         await commitNumber(page, copy.amount, 12);
         await commitNumber(page, copy.release, 0.35);
         assert.equal(

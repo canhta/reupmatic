@@ -98,9 +98,6 @@ export function SoundtrackPanel() {
             <Text as="p" type="body">
               {draft.source.name} · {(draft.source.duration_ms / 1000).toFixed(2)} s
             </Text>
-            <Text as="p" type="supporting">
-              {t('soundtrackHelp')}
-            </Text>
             {url && (
               <audio
                 className="soundtrack-preview"

@@ -2,7 +2,6 @@ export const soundtrackEn = {
   audioSourceTitle: 'Source',
   soundtrackTitle: 'Music & audio',
   soundtrackRemove: 'Remove',
-  soundtrackHelp: 'Export to hear the full mix.',
   soundtrackListen: 'Original audio',
   soundtrackMode: 'Audio behavior',
   soundtrackReplace: 'Replace source audio',
