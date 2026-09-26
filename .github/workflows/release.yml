@@ -55,6 +55,42 @@ jobs:
       # Packaging needs both staged: the bundled runtime and the media tools.
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
+      - name: Import the Developer ID certificate before signing runtime packs
+        env:
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -z "$MAC_CSC_LINK" ]; then
+            echo "No macOS certificate configured; runtime packs will be unsigned." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/reupmatic-pack.keychain"
+          security create-keychain -p actions "$keychain"
+          printf '%s' "$MAC_CSC_LINK" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MAC_CSC_KEY_PASSWORD" \
+            -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k actions "$keychain" >/dev/null
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p actions "$keychain"
+          # Pack signing runs before electron-builder imports the cert for the app.
+          identity=$(security find-identity -v -p codesigning "$keychain" \
+            | grep 'Developer ID Application' | head -1 | awk '{print $2}')
+          if [ -z "$identity" ]; then
+            echo "No Developer ID Application identity in the imported certificate." >&2
+            exit 1
+          fi
+          echo "REUPMATIC_MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+      - name: Build and sign runtime packs
+        env:
+          REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
+          REUPMATIC_PACK_VERSION: ${{ inputs.version }}
+        run: pnpm run stage:packs
+      - name: Upload runtime packs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ inputs.version }}" release/runtime-packs/*.tar.gz \
+            --clobber -R "$GITHUB_REPOSITORY"
       - run: pnpm run build
         env:
           REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}
@@ -119,6 +155,17 @@ jobs:
           LEFTHOOK: "0"
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
+      - name: Build runtime packs
+        env:
+          REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
+          REUPMATIC_PACK_VERSION: ${{ inputs.version }}
+        run: pnpm run stage:packs
+      - name: Upload runtime packs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ inputs.version }}" release/runtime-packs/*.tar.gz \
+            --clobber -R "$GITHUB_REPOSITORY"
       - run: pnpm run build
         env:
           REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}

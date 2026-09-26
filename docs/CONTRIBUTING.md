@@ -108,14 +108,26 @@ file-picker choices are controlled — media and render results are not mocked.
 
 ## Packaging a release
 
-A signed release bundles the Python runtime and FFmpeg, so an end user installs nothing else.
+A signed release bundles the Python runtime and FFmpeg, so an end user installs nothing else. The
+base Python payload carries the worker, faster-whisper and CTranslate2 translation only; the
+Vision and VieNeu synthesis runtimes are **runtime packs** the user installs with the model that
+needs them (see `docs/adr/0002-runtime-packs.md`).
 
 ```sh
-pnpm run stage:python   # a relocatable interpreter with the runtimes, under python/
+pnpm run stage:python   # relocatable CPython + the base runtimes, under python/
+pnpm run stage:packs    # per-platform vision/synthesis packs + the generated manifest
 pnpm run stage:ffmpeg   # GPL ffmpeg/ffprobe, under ffmpeg/
 pnpm run package:dir    # unpacked app under release/, for inspection
 pnpm run package:mac    # or package:win
 ```
+
+`stage:packs` builds for the host platform only (never cross-build), archives each pack under
+`release/runtime-packs/` and writes the gitignored `app/core/speech/runtime-packs.json` the app
+embeds. The release workflow sets `REUPMATIC_RELEASE_TAG` and `REUPMATIC_PACK_VERSION`, uploads
+the archives to the same GitHub release, and on macOS signs every pack Mach-O with the release
+Developer ID (`REUPMATIC_MACOS_SIGN_IDENTITY`) before archiving. Without a tag the manifest URLs
+are placeholders; `pnpm dev` resolves packs from `python/runtime-packs/` instead, so no download is
+needed locally.
 
 macOS needs a Developer ID certificate plus notarization credentials; Windows a code-signing
 certificate. `.github/workflows/release.yml` is a manual workflow that takes the version, the

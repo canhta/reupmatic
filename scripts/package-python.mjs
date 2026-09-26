@@ -179,8 +179,9 @@ async function directorySize(directory) {
   return total;
 }
 
-// Import the exact modules each adapter imports and smoke-test the cheap ones; a missing or
-// shadowed dependency fails staging here, never a user's job.
+// Import the exact modules the base adapters import and smoke-test the cheap ones; a missing or
+// shadowed dependency fails staging here, never a user's job. Vision and synthesis runtimes come
+// from packs and are probed by scripts/package-runtime-packs.mjs.
 const PROBE = `
 import importlib.util as u, json, sys, traceback
 sys.path.insert(0, 'worker')
@@ -209,34 +210,8 @@ def translation():
     import ctranslate2
     return runtime_available() and hasattr(ctranslate2, 'Translator')
 
-def synthesis():
-    from speech.synthesis.models import turbo_runtime_code, nano_runtime_code
-    from vieneu._v3_turbo_engine.onnx_runtime_lite import OnnxV3LiteEngine
-    from vieneu.v3nano import OnnxV3NanoEngine
-    from vieneu_utils.phonemize_text import phonemize_text_with_emotions
-    phones = phonemize_text_with_emotions('Xin chào')
-    return (
-        turbo_runtime_code() is None
-        and nano_runtime_code() is None
-        and isinstance(phones, str)
-        and bool(phones.strip())
-    )
-
-def vision():
-    import cv2, numpy, onnxruntime
-    from rapidocr import RapidOCR
-    from rapidocr.utils.typings import EngineType, LangRec, ModelType, OCRVersion
-    rgb = numpy.zeros((2, 2, 3), dtype=numpy.uint8)
-    bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-    return all(
-        u.find_spec(name) is not None
-        for name in ('numpy', 'cv2', 'onnxruntime', 'rapidocr')
-    ) and bgr.shape == (2, 2, 3)
-
 check('speech.faster-whisper', recognition)
 check('translation.ctranslate2', translation)
-check('synthesis.vieneu', synthesis)
-check('vision', vision)
 
 print(json.dumps(result))
 raise SystemExit(0 if result and all(result.values()) else 1)
@@ -272,21 +247,7 @@ run(pythonExe, [
   '--no-cache-dir',
   '--no-warn-script-location',
   '-r',
-  'worker/requirements.txt',
-  '-r',
-  'worker/requirements-optional.txt',
-]);
-// vieneu and rapidocr publish dependency metadata (gradio, librosa, the GUI OpenCV build) that no
-// worker code path imports; their real dependencies are declared in the domain requirements.
-run(pythonExe, [
-  '-m',
-  'pip',
-  'install',
-  '--no-cache-dir',
-  '--no-warn-script-location',
-  '--no-deps',
-  '-r',
-  'worker/requirements-sources.txt',
+  'worker/requirements-base.txt',
 ]);
 
 await stripInterpreter(target);

@@ -1,0 +1,3 @@
+# SDKs whose published dependency metadata is broader than the worker's code paths, split by pack.
+# Install with `--no-deps`; real dependencies are in requirements-pack-*.txt.
+rapidocr==3.9.2

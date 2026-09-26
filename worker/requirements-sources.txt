@@ -1,5 +1,5 @@
 # Engine SDKs whose published metadata declares dependencies no worker code path imports.
-# Install these with `--no-deps`; their real runtime dependencies are declared explicitly in
+# Install with `--no-deps`; their real runtime dependencies are declared explicitly in
 # requirements-synthesis.txt and requirements-vision.txt.
-vieneu==3.7.1
-rapidocr==3.9.2
+-r requirements-sources-synthesis.txt
+-r requirements-sources-vision.txt

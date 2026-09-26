@@ -45,6 +45,7 @@
     "start:automation": "node --env-file-if-exists=.env.local scripts/start-automation.mjs",
     "contracts:generate": "node scripts/python.mjs scripts/sync-contracts.py",
     "stage:python": "node scripts/package-python.mjs",
+    "stage:packs": "node scripts/package-runtime-packs.mjs",
     "stage:ffmpeg": "node scripts/package-ffmpeg.mjs",
     "package:dir": "npm run build && electron-builder --dir",
     "package:mac": "npm run build && electron-builder --mac",

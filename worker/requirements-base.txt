@@ -1,0 +1,5 @@
+# The base bundle: CPython plus the runtimes every install can use without a runtime pack.
+# Vision (RapidOCR/OpenCV) and synthesis (VieNeu) are runtime packs; see docs/adr/0002.
+-r requirements.txt
+-r requirements-speech.txt
+-r requirements-translation.txt

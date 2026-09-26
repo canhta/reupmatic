@@ -42,12 +42,19 @@ renderer code and filesystem access.
 | `app/electron/` | Host adapters: typed IPC, native pickers and grants, the `persist:douyin` session, media protocols, CSP, window chrome, the diagnostic log sink, the publishing OAuth window and safeStorage credential store |
 | `app/ui/` | Renderer features by capability, the shell (navigation, status, notification centre), locale catalogues and the Astryx design system |
 | `worker/` | The Python worker: protocol/runtime, FFmpeg media operations, subtitle serialization, processing orchestration, vision and speech adapters |
+| `scripts/` | Build and staging only: the base CPython (`package-python.mjs`), the per-platform runtime packs (`package-runtime-packs.mjs`) and FFmpeg |
 | `contracts/` | One current cross-runtime schema per boundary, composed from tracked `*.source.schema.json` files |
-| `web/` | The Next.js marketing site and the stateless publishing token broker, a separate workspace package |
+| `web/` | The Next.js marketing site, a separate workspace package |
 
 Each public capability exposes one small interface and keeps its store private. `app/core` must not
 import React, React DOM or Electron. Host modules translate a seam (IPC, NDJSON, SQLite, a native
 API) — core policy is not an adapter.
+
+The base Python bundle carries only the worker, faster-whisper and CTranslate2 translation. Vision
+(RapidOCR/OpenCV) and VieNeu synthesis are **runtime packs** the user installs with a model that
+needs them: the host installs a pack into `userData/runtime-packs/<name>/<version>` and appends the
+directory to the worker's import path. Pack contents, signing and the install lifecycle are
+ADR-0002; the generated manifest is build output under `app/core/speech/runtime-packs.json`.
 
 ## Invariants
 

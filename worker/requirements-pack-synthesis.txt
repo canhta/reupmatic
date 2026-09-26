@@ -1,0 +1,10 @@
+# The synthesis runtime pack's exclusive distributions. Shared deps (numpy, onnxruntime,
+# tokenizers, huggingface_hub) stay in the base bundle; install these with --no-deps.
+# `vieneu` itself is installed with --no-deps from requirements-sources-synthesis.txt.
+sea-g2p==0.10.0
+soundfile==0.14.0
+cffi==2.1.1
+pycparser==3.0
+soxr==1.1.0
+# The Turbo clone encoder's speaker front-end.
+kaldi-native-fbank==1.22.3

@@ -17,6 +17,8 @@ files:
   - dist-node/**
   # Read by the host at `repo/app/core/speech/catalogue.json`; must be inside the asar.
   - app/core/speech/catalogue.json
+  # Generated per-platform runtime pack manifest; absent in a dev-only build (ADR-0002).
+  - app/core/speech/runtime-packs.json
 asar: true
 extraResources:
   - from: worker
