@@ -102,22 +102,52 @@ function buildMedia(temp) {
   return video;
 }
 
-async function waitForFile(filePath, timeoutMs) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
+// Fail the moment a tool shows an error code; otherwise succeed when the result appears.
+async function waitForOutcome(page, panel, result, timeoutMs, label) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const code = await panel
+      .locator('[role="alert"] code')
+      .first()
+      .innerText()
+      .catch(() => null);
+    if (code?.trim()) throw new Error(`${label} failed: ${code.trim()}`);
+    if (
+      (await result.count()) &&
+      (await result
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
+      return result.first();
+    }
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`);
+}
+
+async function waitForExport(page, dialog, filePath, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const code = await dialog
+      .locator('[role="alert"] code')
+      .first()
+      .innerText()
+      .catch(() => null);
+    if (code?.trim()) throw new Error(`Export failed: ${code.trim()}`);
     try {
       const info = await stat(filePath);
       if (info.size > 1000) return info;
     } catch {
       // not written yet
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await page.waitForTimeout(1000);
   }
-  throw new Error(`the exported file never appeared at ${filePath}`);
+  throw new Error(`Export timed out after ${Math.round(timeoutMs / 1000)}s`);
 }
 
 test('Editor with real models: recognise, apply, translate and export with object removal', {
-  timeout: 1800000,
+  timeout: 900000,
 }, async (t) => {
   const missing = missingPrerequisites();
   if (missing.length) {
@@ -166,8 +196,13 @@ test('Editor with real models: recognise, apply, translate and export with objec
         await page.getByRole('option', { name: 'Full original video', exact: true }).click();
       }
       await speech.getByRole('button', { name: 'Recognize speech', exact: true }).click();
-      const applyTranscript = page.getByRole('button', { name: 'Replace transcript', exact: true });
-      await applyTranscript.waitFor({ timeout: 1200000 });
+      const applyTranscript = await waitForOutcome(
+        page,
+        transcribe,
+        page.getByRole('button', { name: 'Replace transcript', exact: true }),
+        300000,
+        'Recognition',
+      );
       await applyTranscript.click();
 
       // Translate zh→vi with the installed opus-mt model.
@@ -179,11 +214,21 @@ test('Editor with real models: recognise, apply, translate and export with objec
       const createDraft = translate.getByRole('button', { name: 'Create draft', exact: true });
       await createDraft.waitFor({ timeout: 120000 });
       await createDraft.click();
-      const reviewTranslation = page.getByRole('button', { name: 'Review', exact: true });
-      await reviewTranslation.waitFor({ timeout: 1200000 });
+      const reviewTranslation = await waitForOutcome(
+        page,
+        translate,
+        page.getByRole('button', { name: 'Review', exact: true }),
+        300000,
+        'Translation',
+      );
       await reviewTranslation.click();
-      const applyTranslation = page.getByRole('button', { name: 'Apply', exact: true });
-      await applyTranslation.waitFor({ timeout: 120000 });
+      const applyTranslation = await waitForOutcome(
+        page,
+        translate,
+        page.getByRole('button', { name: 'Apply', exact: true }),
+        120000,
+        'Translation review',
+      );
       await applyTranslation.click();
 
       // Object removal is export-only; include the fixed rectangle in the render.
@@ -197,7 +242,7 @@ test('Editor with real models: recognise, apply, translate and export with objec
       const dialog = page.getByRole('dialog');
       await dialog.getByText('Remove on-screen text', { exact: true }).waitFor();
       await dialog.getByRole('button', { name: 'Export', exact: true }).click();
-      const exported = await waitForFile(exportPath, 1500000);
+      const exported = await waitForExport(page, dialog, exportPath, 600000);
       assert.ok(exported.size > 1000, 'the export is a real file, never published anywhere');
     },
   );
