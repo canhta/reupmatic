@@ -552,3 +552,73 @@ test('only a definite Graph refusal after finish is failed; everything else is u
     }
   }
 });
+
+test('a stuck uploading post reconciles to failed so the user can retry', async () => {
+  const graph = await fakeGraph([
+    {
+      match: (r) => r.method === 'GET' && r.path === '/v25.0/vid-stuck',
+      reply: () => ({ body: { status: { publish_status: 'processing' } } }),
+    },
+  ]);
+  try {
+    const runner = new PublishRunner({ ...graph, now: () => 10 });
+    const uploading = {
+      ...POST,
+      publication: {
+        attempt_id: 'attempt_stuck',
+        phase: 'uploading',
+        remote_ref: 'vid-stuck',
+        remote_post_id: null,
+        remote_url: null,
+        scheduled_for: null,
+        error: null,
+        updated_at: 1,
+      },
+    };
+    const persisted = [];
+    const result = await runner.reconcile({
+      post: uploading,
+      credentials: { account_id: '1', access_token: 't' },
+      persist: (value) => persisted.push(value),
+    });
+    assert.equal(result.phase, 'failed');
+    assert.equal(result.error, 'PUBLISH_UPLOAD_INTERRUPTED');
+    assert.equal(persisted.length, 1);
+  } finally {
+    await graph.close();
+  }
+});
+
+test('an uploading post the platform reports published resolves to published', async () => {
+  const graph = await fakeGraph([
+    {
+      match: (r) => r.method === 'GET' && r.path === '/v25.0/vid-late',
+      reply: () => ({ body: { status: { publish_status: 'published' } } }),
+    },
+  ]);
+  try {
+    const runner = new PublishRunner({ ...graph, now: () => 10 });
+    const uploading = {
+      ...POST,
+      publication: {
+        attempt_id: 'attempt_late',
+        phase: 'uploading',
+        remote_ref: 'vid-late',
+        remote_post_id: null,
+        remote_url: null,
+        scheduled_for: null,
+        error: null,
+        updated_at: 1,
+      },
+    };
+    const result = await runner.reconcile({
+      post: uploading,
+      credentials: { account_id: '1', access_token: 't' },
+      persist: () => undefined,
+    });
+    assert.equal(result.phase, 'published');
+    assert.equal(result.remote_ref, 'vid-late');
+  } finally {
+    await graph.close();
+  }
+});

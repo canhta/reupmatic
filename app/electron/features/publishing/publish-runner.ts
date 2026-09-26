@@ -150,6 +150,27 @@ export class PublishRunner {
 
   #applyReconcile(current: Publication, outcome: ReconcileOutcome): Publication {
     const now = this.#now();
+    // An upload that never reached finish cannot have created a post: anything but a confirmed
+    // publish/schedule is a definite interruption, so the user can retry instead of being stuck.
+    if (current.phase === 'uploading') {
+      if (outcome.kind === 'published')
+        return markPublished(
+          markSubmitted(current, now),
+          { remote_post_id: outcome.remote_post_id, remote_url: outcome.remote_url },
+          now,
+        );
+      if (outcome.kind === 'scheduled')
+        return markScheduled(
+          markSubmitted(current, now),
+          {
+            scheduled_for: outcome.scheduled_for ?? current.scheduled_for ?? now,
+            remote_post_id: outcome.remote_post_id,
+            remote_url: outcome.remote_url,
+          },
+          now,
+        );
+      return markFailed(current, { error: 'PUBLISH_UPLOAD_INTERRUPTED' }, now);
+    }
     if (outcome.kind === 'published')
       return markPublished(
         current,

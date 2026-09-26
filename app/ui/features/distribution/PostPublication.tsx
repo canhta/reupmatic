@@ -36,7 +36,8 @@ export function PostPublication({
   const warnings = (problems ?? []).filter((problem) => problem.severity === 'warning');
   const canStart = phase === null || phase === 'failed';
   const showPublish = isFacebook && !!channel?.can_publish && canStart;
-  const showCheck = isFacebook && (phase === 'submitted' || phase === 'unknown');
+  const showCheck =
+    isFacebook && (phase === 'submitted' || phase === 'unknown' || phase === 'uploading');
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a publish bumps revision and preflight must re-run
   useEffect(() => {
@@ -184,7 +185,7 @@ export function PostPublication({
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Button
             label={t('postCheckStatus')}
-            isDisabled={disabled || checking}
+            isDisabled={disabled || checking || publishing}
             onClick={() => void check()}
           />
         </HStack>
