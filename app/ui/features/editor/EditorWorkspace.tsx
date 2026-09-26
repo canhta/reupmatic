@@ -1,6 +1,8 @@
+import { Banner } from '@astryxdesign/core/Banner';
 import { useResizable } from '@astryxdesign/core/Resizable';
 import { percent, pixel } from '@astryxdesign/core/Resizable/utils';
 import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MAX_CLIPS } from '../../../core/editing/composition/document';
@@ -143,15 +145,15 @@ function EditorStudio() {
 
   return (
     <div className="editor-workspace">
-      <div className="editor-feedback">
-        {cap && !cap.pysubs2 && <div className="warning">{t('missing')}</div>}
+      <VStack gap={3}>
+        {cap && !cap.pysubs2 && <Banner status="warning" title={t('missing')} />}
         {media && (
           <VisuallyHidden as="div" role="status">
             {editor.dirty ? t('projectUnsaved') : t('projectClean')}
           </VisuallyHidden>
         )}
         <EditorRecoveryNotice />
-      </div>
+      </VStack>
       <div className="editor-studio-body" ref={studioBodyRef}>
         <EditorSourceRail />
         <EditorSourceRegion region={sourceRegion} />

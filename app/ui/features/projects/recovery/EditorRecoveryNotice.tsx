@@ -18,19 +18,17 @@ export function EditorRecoveryNotice() {
         </VisuallyHidden>
       )}
       {editor.autosave.status.error && (
-        <div className="editor-notice">
-          <Banner
-            status="error"
-            title={t('recoveryFailed')}
-            description={t('recoveryFailureHelp')}
-            endContent={
-              <Button
-                label={t('recoveryRetry')}
-                onClick={() => void editor.autosave.flush().catch(editor.report)}
-              />
-            }
-          />
-        </div>
+        <Banner
+          status="error"
+          title={t('recoveryFailed')}
+          description={t('recoveryFailureHelp')}
+          endContent={
+            <Button
+              label={t('recoveryRetry')}
+              onClick={() => void editor.autosave.flush().catch(editor.report)}
+            />
+          }
+        />
       )}
     </>
   );
