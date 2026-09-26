@@ -2,13 +2,16 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
+import { VStack } from '@astryxdesign/core/VStack';
 import { Pause, Play } from 'lucide-react';
 import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +42,7 @@ function MonitorTransport({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="monitor-transport">
+    <HStack gap={2} vAlign="center">
       <IconButton
         label={isPlaying ? t('monitorPause') : t('monitorPlay')}
         tooltip={isPlaying ? t('monitorPause') : t('monitorPlay')}
@@ -51,7 +54,7 @@ function MonitorTransport({
       <Text type="supporting" as="span" className="monitor-clock">
         {`${clockText(at)} / ${clockText(of)}`}
       </Text>
-    </div>
+    </HStack>
   );
 }
 
@@ -143,8 +146,16 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
 
   return (
     <div className="viewers">
-      <div className="monitor-header">
-        <div className="monitor-header-title">
+      <HStack
+        gap={3}
+        vAlign="center"
+        wrap="wrap"
+        hAlign="between"
+        minHeight="var(--spacing-10)"
+        paddingBlock={2}
+        className="monitor-header"
+      >
+        <StackItem size="fill">
           {isWide ? (
             <Heading level={5} maxLines={1}>
               {t('monitorTitle')}
@@ -152,15 +163,15 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
           ) : (
             <VisuallyHidden as="h5">{t('monitorTitle')}</VisuallyHidden>
           )}
-        </div>
+        </StackItem>
         {stale && (
-          <div className="monitor-header-badge">
+          <StackItem className="monitor-header-badge">
             <Tooltip content={t('staleHelp')}>
               <Badge variant="warning" label={t('stale')} />
             </Tooltip>
-          </div>
+          </StackItem>
         )}
-        <div className="monitor-mode-switch">
+        <HStack gap={2} vAlign="center" wrap="wrap" hAlign="end" className="monitor-mode-switch">
           <SegmentedControl
             label={t('monitorModeLabel')}
             value={mode}
@@ -177,8 +188,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             isDisabled={!media || editor.renderUnavailable}
             onClick={() => void editor.render('sample')}
           />
-        </div>
-      </div>
+        </HStack>
+      </HStack>
       {mode === 'source' && editor.sourceSelection && (
         <Text as="p" type="supporting" className="monitor-source-name">
           {editor.sourceSelection.name}
@@ -364,8 +375,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
         : mode === 'source'
           ? null
           : preview && (
-              <div className="preview-controls">
-                <div className="monitor-render-actions">
+              <VStack gap={2}>
+                <HStack gap={3} vAlign="end" wrap="wrap">
                   <NumberInput
                     label={t('sampleStart')}
                     value={Number(editor.sampleStart)}
@@ -386,8 +397,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                     isDisabled={editor.opening}
                     onChange={(value) => editor.changeSampleEnd(String(value))}
                   />
-                </div>
-              </div>
+                </HStack>
+              </VStack>
             )}
     </div>
   );
