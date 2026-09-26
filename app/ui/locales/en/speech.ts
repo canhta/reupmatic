@@ -3,9 +3,6 @@ export const speechEn = {
   speechComposition: 'Recognize the original clip before composing.',
   speechNoAudio:
     'The selected video has no audio stream. Import a transcript or choose a video with audio.',
-  speechScope: 'Recognition range',
-  speechSample: 'Current sample range',
-  speechFull: 'Full original video',
   speechEngine: 'Recognition engine',
   speechEngineSingle: 'Recognition engine: {{engine}}',
   speechChooseLanguage: 'Choose the language spoken in the source.',
@@ -13,10 +10,9 @@ export const speechEn = {
   speechDecoding: 'Preparing source audio',
   speechRecognizing: 'Recognizing speech',
   speechDraft: 'Transcript result — not applied',
-  speechReplaceHelp:
-    '{{count}} recognized cue(s). Applying replaces the entire transcript, including text outside this range.',
+  speechReplaceHelp: '{{count}} recognized cue(s). Applying replaces the entire transcript.',
   speechResultInfo: '{{language}} · source {{start}}–{{end}} s · {{engine}}',
-  speechEmpty: 'No speech found — nothing was replaced. Try another range.',
+  speechEmpty: 'No speech found — nothing was replaced.',
   speechStaleHelp: 'Document changed — review before replacing the transcript.',
   speechReview: 'Review',
   speechApply: 'Replace transcript',
@@ -26,7 +22,7 @@ export const speechEn = {
   speechModelChanged: 'Model changed or failed verification. Restore it or choose again.',
   speechLanguageMissing: "Model doesn't support this language. Choose another model.",
   speechInvalid: 'Invalid request — your text is retained. Check the selection.',
-  speechLimit: 'Request too long. Choose a shorter range.',
+  speechLimit: 'The source is too long for recognition.',
   speechDiskLow: 'Not enough disk space. Free space and retry.',
   speechFailed: 'Recognition failed. Check the runtime and model, then retry.',
 } as const;

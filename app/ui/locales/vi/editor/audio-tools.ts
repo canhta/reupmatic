@@ -4,7 +4,7 @@ export const soundtrackVi = {
   audioSourceTitle: 'Âm thanh gốc',
   soundtrackTitle: 'Nhạc & âm thanh',
   soundtrackRemove: 'Bỏ',
-  soundtrackHelp: 'Render mẫu để nghe kết quả.',
+  soundtrackHelp: 'Xuất video để nghe toàn bộ bản trộn.',
   soundtrackListen: 'Âm thanh gốc',
   soundtrackMode: 'Cách dùng âm thanh',
   soundtrackReplace: 'Thay âm thanh nguồn',
@@ -37,8 +37,6 @@ export const soundtrackVi = {
   voiceTrackGain: 'Âm lượng giọng đọc (dB)',
   voiceTrackFadeIn: 'Mờ vào (s)',
   voiceTrackFadeOut: 'Mờ ra (s)',
-  voiceTrackAudition: 'Xem thử',
-  voiceTrackAuditionWarning: 'Nghe đoạn mẫu không chứng minh bạn đã nghe hết mọi câu.',
   voiceTrackKeep: 'Giữ âm thanh',
   voiceTrackRemove: 'Bỏ giọng đọc',
 } satisfies Record<keyof typeof soundtrackEn, string>;

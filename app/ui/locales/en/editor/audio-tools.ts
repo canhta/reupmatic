@@ -2,7 +2,7 @@ export const soundtrackEn = {
   audioSourceTitle: 'Source',
   soundtrackTitle: 'Music & audio',
   soundtrackRemove: 'Remove',
-  soundtrackHelp: 'Render a sample to hear the result.',
+  soundtrackHelp: 'Export to hear the full mix.',
   soundtrackListen: 'Original audio',
   soundtrackMode: 'Audio behavior',
   soundtrackReplace: 'Replace source audio',
@@ -35,8 +35,6 @@ export const soundtrackEn = {
   voiceTrackGain: 'Narration level (dB)',
   voiceTrackFadeIn: 'Fade in (s)',
   voiceTrackFadeOut: 'Fade out (s)',
-  voiceTrackAudition: 'Preview',
-  voiceTrackAuditionWarning: 'Hearing the sample is not proof you heard every line.',
   voiceTrackKeep: 'Keep audio',
   voiceTrackRemove: 'Remove narration',
 } as const;

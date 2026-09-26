@@ -42,7 +42,7 @@ export const settingsVi = {
   settingsChooseModelManifest: 'Chọn tệp cấu hình mô hình…',
   settingsChooseModelFolder: 'Chọn thư mục mô hình…',
   settingsModelsChecking: 'Đang kiểm tra tệp mô hình trên máy…',
-  settingsModelsSaved: 'Đã lưu. Chạy thử một mẫu để kiểm tra.',
+  settingsModelsSaved: 'Đã lưu. Xuất video để kiểm tra.',
   settingsModelsOverride: 'Một tệp cấu hình bên ngoài đang ghi đè. Gỡ nó rồi khởi động lại.',
   settingsModelsFailure: 'Cấu hình thất bại. Vẫn giữ cấu hình trước đó.',
   settingsModelsUnavailable: 'Không đọc được trạng thái mô hình trên máy.',

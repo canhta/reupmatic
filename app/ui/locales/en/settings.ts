@@ -40,7 +40,7 @@ export const settingsEn = {
   settingsChooseModelManifest: 'Choose model manifest…',
   settingsChooseModelFolder: 'Choose model folder…',
   settingsModelsChecking: 'Checking local model files…',
-  settingsModelsSaved: 'Saved. Run a sample to check it works.',
+  settingsModelsSaved: 'Saved. Export to check it works.',
   settingsModelsOverride: 'An outside manifest overrides this. Remove it, then restart.',
   settingsModelsFailure: 'Setup failed. Your previous configuration was kept.',
   settingsModelsUnavailable: 'Local model status could not be read.',
