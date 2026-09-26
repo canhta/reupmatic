@@ -58,7 +58,13 @@ export function createRuntimePackSupport(
   const packRoot = path.join(host.userData, 'runtime-packs');
   const stagingRoot = path.join(host.repo, 'python', 'runtime-packs');
   const platform = currentRuntimePackPlatform(host.platform, host.arch);
-  void discardStalePacks(packRoot).catch(() => undefined);
+  // Prune versions the current manifest no longer lists, but only when it actually lists packs for
+  // this platform; an empty manifest must never delete installed packs.
+  const keep = new Map<string, string>();
+  for (const pack of manifest.packs) {
+    if (pack.platform === platform) keep.set(pack.name, pack.version);
+  }
+  void discardStalePacks(packRoot, keep.size > 0 ? keep : undefined).catch(() => undefined);
 
   return {
     manifest,

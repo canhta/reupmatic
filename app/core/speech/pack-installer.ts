@@ -183,6 +183,8 @@ export async function installRuntimePack(options: PackInstallOptions): Promise<P
     await mkdir(path.dirname(finalDirectory), { recursive: true });
     await rename(staging, finalDirectory);
     moved = true;
+    // A new manifest version must not leave the previous one on disk.
+    await removeOtherVersions(packRoot, entry.name, entry.version).catch(() => undefined);
     return { name: entry.name, version: entry.version, directory: finalDirectory };
   } catch (error) {
     await rm(staging, { recursive: true, force: true });
@@ -212,8 +214,26 @@ export async function uninstallRuntimePack(
   return { removed: present };
 }
 
-// Discard a host that died mid-transfer: staging and download scratch never survive a launch.
-export async function discardStalePacks(packRoot: string): Promise<void> {
+// Remove every version of `name` other than the one just installed.
+async function removeOtherVersions(
+  packRoot: string,
+  name: RuntimePackName,
+  version: string,
+): Promise<void> {
+  const parent = path.join(packRoot, name);
+  for (const entry of await readdir(parent, { withFileTypes: true }).catch(() => [])) {
+    if (entry.isDirectory() && entry.name !== version) {
+      await rm(path.join(parent, entry.name), { recursive: true, force: true });
+    }
+  }
+}
+
+// Discard a host that died mid-transfer, and — when the current manifest is known — versions the
+// manifest no longer lists. Without `keep`, installed version directories are left untouched.
+export async function discardStalePacks(
+  packRoot: string,
+  keep?: ReadonlyMap<string, string>,
+): Promise<void> {
   let entries: string[];
   try {
     entries = await readdir(packRoot);
@@ -226,4 +246,17 @@ export async function discardStalePacks(packRoot: string): Promise<void> {
       .filter((name) => name.startsWith('.staging-') || name.startsWith('.download-'))
       .map((name) => rm(path.join(packRoot, name), { recursive: true, force: true })),
   );
+  if (!keep) return;
+  for (const name of entries) {
+    if (name.startsWith('.')) continue;
+    const parent = path.join(packRoot, name);
+    const wanted = keep.get(name);
+    for (const entry of await readdir(parent, { withFileTypes: true }).catch(() => [])) {
+      if (!entry.isDirectory() || entry.name === wanted) continue;
+      await rm(path.join(parent, entry.name), { recursive: true, force: true });
+    }
+    if ((await readdir(parent).catch(() => null))?.length === 0) {
+      await rmdir(parent).catch(() => undefined);
+    }
+  }
 }
