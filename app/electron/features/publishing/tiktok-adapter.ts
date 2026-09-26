@@ -16,7 +16,7 @@ import {
   tiktokPreflight,
   tiktokUploadPlan,
 } from '../../../core/distribution/publishing/tiktok.js';
-import { errorCodeOf, isDefiniteRefusal, publishError } from './publishing-error.js';
+import { errorCodeOf, publishError } from './publishing-error.js';
 import { mapTikTokError, TikTokApi, type TikTokCreatorInfo } from './tiktok-api.js';
 
 export const DEFAULT_TIKTOK_BASE_URL = 'https://open.tiktokapis.com';
@@ -180,11 +180,9 @@ export class TikTokDestination implements Destination {
     try {
       status = await api.status(remote_ref);
     } catch (error) {
-      // A definite refusal is a real failure; anything ambiguous (5xx, timeout, unparseable body)
-      // must not be retried automatically.
-      return isDefiniteRefusal(error)
-        ? { kind: 'failed', error: errorCodeOf(error) }
-        : { kind: 'unknown', error: errorCodeOf(error) };
+      // A refused status query (expired token, rate limit) says nothing about the post; only a
+      // FAILED status proves it was not created.
+      return { kind: 'unknown', error: errorCodeOf(error) };
     }
     if (status.kind === 'complete')
       return { kind: 'published', remote_post_id: status.post_id, remote_url: null, privacy };

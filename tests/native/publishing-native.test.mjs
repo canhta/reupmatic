@@ -1137,6 +1137,31 @@ test('B1: an ambiguous or unparseable TikTok status reconciles to unknown, not f
   }
 });
 
+test('B1: a refused status query is not a failed post: an expired token or rate limit stays unknown', async () => {
+  for (const [status, code] of [
+    [401, 'access_token_invalid'],
+    [429, 'rate_limit_exceeded'],
+  ]) {
+    const graph = await fakeTikTok([
+      {
+        match: (r) => r.path === '/v2/post/publish/status/fetch/',
+        reply: () => ({ status, body: { error: { code } } }),
+      },
+    ]);
+    try {
+      const next = await tiktokService(graph.base).reconcile({
+        post: uploadingPost(),
+        credentials: { account_id: 'open-id-1', access_token: 'token' },
+        persist: () => undefined,
+      });
+      assert.equal(next.phase, 'unknown', `${status} ${code}`);
+      assert.equal(canStartAttempt(next), false, 'the post may exist; a retry could duplicate it');
+    } finally {
+      await graph.close();
+    }
+  }
+});
+
 test('B1: only a definite platform failure after upload is retryable, with the platform error', async () => {
   const graph = await fakeTikTok([
     {
