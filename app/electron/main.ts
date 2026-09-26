@@ -156,17 +156,17 @@ const douyin = installDouyinSources({
   getLanguage,
 });
 const recovery = installRecovery({ wire, workspace, media, getWindow: () => win, getLanguage });
-// App-owned cloned voices; never inside a hash-verified model bundle or the worker workspace.
-const speechVoices = new ClonedVoiceStore(path.join(app.getPath('userData'), 'speech-voices'));
-const synthesis = installSynthesis({ wire, getWindow: () => win, getLanguage, worker: client, media, workspace, savePath: settings.savePath, voices: speechVoices });
-// Gate the render path's voice audio through the same verification the save dialog uses.
-const renderer = new RenderCoordinator(client, (track) => synthesis.verifyVoice(track));
-const translation = installTranslation({ wire, getWindow: () => win, getLanguage, worker: client });
 // Outside the workspace: encrypted credentials must never reach the worker.
 const providers = new SpeechProviderStore(
   path.join(app.getPath('userData'), 'speech-providers'),
   safeStorage,
 );
+// App-owned cloned voices; never inside a hash-verified model bundle or the worker workspace.
+const speechVoices = new ClonedVoiceStore(path.join(app.getPath('userData'), 'speech-voices'));
+const synthesis = installSynthesis({ wire, getWindow: () => win, getLanguage, worker: client, media, workspace, savePath: settings.savePath, voices: speechVoices, providers });
+// Gate the render path's voice audio through the same verification the save dialog uses.
+const renderer = new RenderCoordinator(client, (track) => synthesis.verifyVoice(track));
+const translation = installTranslation({ wire, getWindow: () => win, getLanguage, worker: client });
 // Outside the workspace: page tokens are encrypted and never cross IPC.
 const channelCredentials = new ChannelCredentialStore(
   path.join(app.getPath('userData'), 'publishing-channels'),

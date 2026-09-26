@@ -1,6 +1,13 @@
 import { EventEmitter } from 'node:events';
 import { RemoteError } from '../../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../../worker/worker-client.js';
+import {
+  HOSTED_CREDENTIAL_ENV_VAR,
+  hostedModelIdentity,
+  type SpeechProvider,
+  VIEU_CLOUD_MODEL,
+  VIEU_CLOUD_PROTOCOL,
+} from '../providers.js';
 import type { ClonedVoiceData } from '../voices.js';
 import type { SynthesisArtifacts } from './artifacts.js';
 import { parseSynthesisInput, type SynthesisInput, type SynthesisResult } from './contracts.js';
@@ -8,6 +15,12 @@ import { parseSynthesisInput, type SynthesisInput, type SynthesisResult } from '
 // Resolves a stored clone's numeric payload; presets and cloud voices resolve to undefined.
 export interface VoiceDataLookup {
   voiceData(voiceId: string): Promise<ClonedVoiceData | undefined>;
+}
+
+// The BYOK provider store, reached only to read a credential and hand it to the child's env.
+export interface HostedSynthesisLookup {
+  listProviders(): Promise<readonly SpeechProvider[]>;
+  credentialEnv(providerId: string): Promise<Record<string, string> | undefined>;
 }
 
 interface Operation {
@@ -27,6 +40,7 @@ export class SynthesisCoordinator extends EventEmitter {
     private readonly worker: WorkerPort,
     private readonly artifacts: SynthesisArtifacts,
     private readonly voices?: VoiceDataLookup,
+    private readonly providers?: HostedSynthesisLookup,
   ) {
     super();
     worker.on('message', this.onMessage);
@@ -97,14 +111,41 @@ export class SynthesisCoordinator extends EventEmitter {
     this.worker.off('message', this.onMessage);
   }
 
+  /** A cloud model_id resolves to its credentialed VieNeu provider; local ids return undefined. */
+  private async cloudParams(operation: Operation): Promise<Record<string, unknown> | undefined> {
+    if (!this.providers) return undefined;
+    const { model_id } = operation.input.params;
+    const providers = await this.providers.listProviders();
+    const match = providers.find(
+      (provider) =>
+        provider.protocol === VIEU_CLOUD_PROTOCOL &&
+        hostedModelIdentity({
+          protocol: provider.protocol,
+          remote_model_name: VIEU_CLOUD_MODEL,
+          endpoint_host: provider.endpoint_host,
+        }) === model_id,
+    );
+    if (!match) return undefined;
+    const env = await this.providers.credentialEnv(match.id);
+    if (!env) throw new RemoteError('MODEL_MISSING');
+    return {
+      provider: { protocol: match.protocol, endpoint_host: match.endpoint_host },
+      credential: env[HOSTED_CREDENTIAL_ENV_VAR],
+    };
+  }
+
   private async execute(operation: Operation): Promise<SynthesisResult> {
     const { input } = operation;
     try {
-      const voice = this.voices ? await this.voices.voiceData(input.params.voice_id) : undefined;
+      // Only touch the host lookups when a store is wired, so a plain local job stays synchronous.
+      const hosted = this.providers ? await this.cloudParams(operation) : undefined;
+      if (operation.cancelled || this.closing) throw new RemoteError('CANCELLED');
+      const voice =
+        hosted || !this.voices ? undefined : await this.voices.voiceData(input.params.voice_id);
       if (operation.cancelled || this.closing) throw new RemoteError('CANCELLED');
       const ticket = this.worker.request(
         'speech.synthesize',
-        voice ? { ...input.params, voice } : input.params,
+        { ...input.params, ...hosted, ...(voice ? { voice } : {}) },
         input.revision,
       );
       operation.ticket = ticket;

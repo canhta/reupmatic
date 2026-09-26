@@ -5,6 +5,12 @@ import {
   SYNTHESIS_LANGUAGES,
   writeLocalBundleDescriptor,
 } from '../../../../core/speech/local-bundle.js';
+import {
+  HOSTED_CREDENTIAL_ENV_VAR,
+  hostedModelIdentity,
+  VIEU_CLOUD_MODEL,
+  VIEU_CLOUD_PROTOCOL,
+} from '../../../../core/speech/providers.js';
 import { verifyVoiceTrack } from '../../../../core/speech/synthesis/admission.js';
 import { SynthesisArtifacts } from '../../../../core/speech/synthesis/artifacts.js';
 import { parseSynthesisStatus } from '../../../../core/speech/synthesis/contracts.js';
@@ -14,6 +20,7 @@ import { parseVoiceCloneRequest } from '../../../../core/speech/voices.js';
 import type { Ticket, WorkerClient } from '../../../../core/worker/worker-client.js';
 import type { IpcWire } from '../../../runtime/ipc.js';
 import type { MediaRegistry } from '../../media/registry.js';
+import type { SpeechProviderStore } from '../provider-store.js';
 import type { ClonedVoiceStore } from '../voice-store.js';
 import { installSynthesisExports } from './exports.js';
 
@@ -26,13 +33,20 @@ interface Host {
   getWindow: () => BrowserWindow | undefined;
   getLanguage: () => string;
   voices: ClonedVoiceStore;
+  providers: SpeechProviderStore;
 }
 
 export function installSynthesis(host: Host) {
   const artifacts = new SynthesisArtifacts(host.workspace);
-  const coordinator = new SynthesisCoordinator(host.worker, artifacts, {
-    voiceData: (voiceId) => host.voices.resolve(voiceId),
-  });
+  const coordinator = new SynthesisCoordinator(
+    host.worker,
+    artifacts,
+    { voiceData: (voiceId) => host.voices.resolve(voiceId) },
+    {
+      listProviders: () => host.providers.list(),
+      credentialEnv: (providerId) => host.providers.credentialEnv(providerId),
+    },
+  );
   const exports = installSynthesisExports({ ...host, artifacts });
   let setup: Ticket<unknown> | undefined;
   let choosing = false,
@@ -134,6 +148,26 @@ export function installSynthesis(host: Host) {
   host.wire('synthesis-voice-remove', async (input) => {
     await host.voices.remove(input.id);
     return { removed: true };
+  });
+  host.wire('synthesis-cloud-voices', async () => {
+    const provider = (await host.providers.list()).find(
+      (candidate) => candidate.protocol === VIEU_CLOUD_PROTOCOL && candidate.has_credential,
+    );
+    if (!provider) return null;
+    const env = await host.providers.credentialEnv(provider.id);
+    if (!env) return null;
+    const data = await host.worker.request('synthesis.cloud-voices', {
+      provider: { protocol: provider.protocol, endpoint_host: provider.endpoint_host },
+      credential: env[HOSTED_CREDENTIAL_ENV_VAR],
+    }).result;
+    return {
+      model_id: hostedModelIdentity({
+        protocol: provider.protocol,
+        remote_model_name: VIEU_CLOUD_MODEL,
+        endpoint_host: provider.endpoint_host,
+      }),
+      voices: data.voices.map((voice) => ({ id: voice.id, label: voice.label })),
+    };
   });
   return {
     get activeCount() {

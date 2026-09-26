@@ -100,4 +100,13 @@ export const synthesisOperations = {
     validate: (input) => ({ id: parseClonedVoiceId(requestRecord(input, ['id']).id) }),
     toRequest: (id: string) => ({ id }),
   }),
+  // Null when no VieNeu key is stored; the UI then offers key entry instead of a list.
+  'synthesis-cloud-voices': operation<
+    undefined,
+    { model_id: string; voices: { id: string; label: string }[] } | null
+  >()({
+    rendererMethod: 'synthesisCloudVoices',
+    validate: () => undefined,
+    toRequest: () => undefined,
+  }),
 } as const;

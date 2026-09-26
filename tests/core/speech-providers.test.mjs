@@ -9,6 +9,8 @@ import {
   parseModelDraft,
   parseProviderDraft,
   resolveHostedModel,
+  VIEU_CLOUD_HOST,
+  vieuCloudModelId,
 } from '../../dist-core/speech/providers.js';
 import { parseSpeechStatus } from '../../dist-core/speech/recognition.js';
 
@@ -39,10 +41,12 @@ test('a provider draft validates shape and rejects extra/missing/malformed field
   assert.throws(() => parseProviderDraft(null), /INVALID_REQUEST/);
 });
 
-test('the shipped protocol registry names dashscope, the first implemented protocol', () => {
-  assert.equal(IMPLEMENTED_PROTOCOLS.size, 1);
+test('the shipped protocol registry names the implemented recognition and synthesis protocols', () => {
+  assert.equal(IMPLEMENTED_PROTOCOLS.size, 2);
   assert.ok(IMPLEMENTED_PROTOCOLS.has('dashscope'));
+  assert.ok(IMPLEMENTED_PROTOCOLS.has('vieneu'));
   assert.doesNotThrow(() => assertProtocolImplemented('dashscope'));
+  assert.doesNotThrow(() => assertProtocolImplemented('vieneu'));
   assert.throws(() => assertProtocolImplemented('some-other-protocol'), /SPEECH_PROTOCOL_UNKNOWN/);
 });
 
@@ -53,6 +57,13 @@ test('an unimplemented protocol is refused at configuration time, plainly; an im
     /SPEECH_PROTOCOL_UNKNOWN/,
   );
   assert.doesNotThrow(() => assertProtocolImplemented('dashscope', implemented));
+});
+
+test('the VieNeu cloud synthesis identity is a stable 64-hex digest tied to its endpoint', () => {
+  const digest = vieuCloudModelId();
+  assert.match(digest, /^[a-f0-9]{64}$/);
+  assert.equal(vieuCloudModelId(VIEU_CLOUD_HOST), digest);
+  assert.notEqual(vieuCloudModelId('other.example.com'), digest);
 });
 
 test('a model draft validates languages and a duration strictly below the local ceiling', () => {

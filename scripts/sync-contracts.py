@@ -197,6 +197,19 @@ def compose():
             {"path": {"type": "string", "minLength": 1, "maxLength": 4096}}, ["path"]
         ),
         "synthesis.clone": object_schema({"asset_id": asset_id}, ["asset_id"]),
+        "synthesis.cloud-voices": object_schema(
+            {
+                "provider": object_schema(
+                    {
+                        "protocol": {"type": "string", "minLength": 1, "maxLength": 64},
+                        "endpoint_host": {"type": "string", "minLength": 1, "maxLength": 255},
+                    },
+                    ["protocol", "endpoint_host"],
+                ),
+                "credential": {"type": "string", "minLength": 1, "maxLength": 4096},
+            },
+            ["provider", "credential"],
+        ),
         "speech.synthesize": copy.deepcopy(synthesis["worker_params"]),
         "translation.status": object_schema({}, []),
         "translation.configure": object_schema(

@@ -177,6 +177,42 @@ export function parseClonedVoiceData(value: unknown): ClonedVoiceData {
   return { speaker_emb: value.speaker_emb, ref_codes: value.ref_codes };
 }
 
+export interface CloudVoice {
+  id: string;
+  label: string;
+  kind: string;
+}
+
+/** The cloud voice list as the hosted worker returns it; `kind` distinguishes clones. */
+export function parseCloudVoices(value: unknown): { voices: CloudVoice[] } {
+  if (
+    !isPlainRecord(value) ||
+    !exactKeys(value, ['voices']) ||
+    !Array.isArray(value.voices) ||
+    value.voices.length > 500
+  ) {
+    throw new RemoteError('INVALID_WORKER_RESPONSE');
+  }
+  const seen = new Set<string>();
+  const voices = value.voices.map((voice) => {
+    if (
+      !isPlainRecord(voice) ||
+      !exactKeys(voice, ['id', 'label', 'kind']) ||
+      !namedText(voice.id, 128) ||
+      !namedText(voice.label, 160) ||
+      typeof voice.kind !== 'string' ||
+      !voice.kind ||
+      voice.kind.length > 32 ||
+      seen.has(voice.id)
+    ) {
+      throw new RemoteError('INVALID_WORKER_RESPONSE');
+    }
+    seen.add(voice.id);
+    return { id: voice.id, label: voice.label, kind: voice.kind };
+  });
+  return { voices };
+}
+
 /** The local engine view the status carries, without the wire's stricter shape. */
 export interface LocalVoiceStatusView {
   engine: string | null;

@@ -38,6 +38,12 @@ ERRORS = {
     "SYNTHESIS_VOICE_UNAVAILABLE",
     "SYNTHESIS_CLONE_INVALID",
     "SYNTHESIS_CLONE_UNSUPPORTED_ENGINE",
+    "VIENEU_CLONE_WEB_ONLY",
+    "VIENEU_KEY_INVALID",
+    "VIENEU_OUT_OF_CREDITS",
+    "VIENEU_RATE_LIMITED",
+    "VIENEU_TEXT_REFUSED",
+    "VIENEU_UNAVAILABLE",
 }
 
 
@@ -81,15 +87,21 @@ def read_audio(directory: Path, params: dict) -> dict:
 
 def synthesize(host, req: dict) -> dict:
     params = parse_options(req["params"])
-    # A cloned payload is used in-process only; it never reaches the result, receipt or job params.
+    # Optional keys are used in-process only; none reach the result, receipt or job params.
     voice_data = params.pop("voice", None)
+    provider = params.pop("provider", None)
+    credential = params.pop("credential", None)
 
     def check():
         return host.cancelled(req)
 
-    model = host.synthesis_models.require(
-        params["language"], params["voice_id"], params["model_id"], check, voice_data
-    )
+    if provider is None:
+        model = host.synthesis_models.require(
+            params["language"], params["voice_id"], params["model_id"], check, voice_data
+        )
+    else:
+        model = None
+        voice_data = None
     if shutil.disk_usage(host.workspace).free < 128 * 1024**2:
         raise WorkerError("SYNTHESIS_DISK_LOW")
     root = host.workspace / "speech"
@@ -103,9 +115,23 @@ def synthesize(host, req: dict) -> dict:
     with tempfile.TemporaryDirectory(dir=root, prefix=".synthesis-") as directory:
         tmp = Path(directory)
         path = tmp / "request.json"
-        job = {"params": params, "model": model}
-        if voice_data is not None:
-            job["voice"] = voice_data
+        if provider is None:
+            module = "speech.synthesis.runner"
+            child_env = None
+            job = {"params": params, "model": model}
+            if voice_data is not None:
+                job["voice"] = voice_data
+        else:
+            # `credential` is absent from this dict: the hosted child gets it only via `env`.
+            module = "speech.synthesis.hosted_runner"
+            child_env = {"REUPMATIC_SPEECH_PROVIDER_CREDENTIAL": credential}
+            job = {
+                "params": params,
+                "provider": provider,
+                "request_id": req["id"],
+                "voice_id": params["voice_id"],
+                "cues": params["cues"],
+            }
         path.write_text(json.dumps(job, ensure_ascii=False), encoding="utf-8")
         emit(None)
         last = -1
@@ -129,15 +155,17 @@ def synthesize(host, req: dict) -> dict:
 
         host.process.run(
             req,
-            [sys.executable, "-u", "-m", "speech.synthesis.runner", str(path)],
+            [sys.executable, "-u", "-m", module, str(path)],
             cwd=Path(__file__).resolve().parents[2],
-            timeout=3600,
+            timeout=3600 if provider is None else 600,
             on_poll=progress,
+            env=child_env,
         )
         progress()
         check()
         audio = read_audio(tmp, params)
-        verify_bundle(model, check)
+        if model is not None:
+            verify_bundle(model, check)
         artifact = str(uuid.uuid4())
         result = make_result(params, audio, artifact, sha256(tmp / "speech.wav", check))
         # Promote only WAV + receipt; requests, model paths and partials stay scratch.

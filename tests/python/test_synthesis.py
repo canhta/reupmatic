@@ -10,6 +10,7 @@ from unittest.mock import patch as mock_patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from runtime.errors import WorkerError
 from speech.synthesis.contracts import parse_options, parse_voice, validate_audio
+from speech.synthesis.hosted import idempotency_key
 from speech.synthesis.models import (
     ENGINES,
     SynthesisRegistry,
@@ -63,6 +64,40 @@ class SynthesisContractTests(unittest.TestCase):
                 self.assertRaisesRegex(WorkerError, "SYNTHESIS_CLONE_INVALID"),
             ):
                 parse_options({**p, "voice": bad})
+
+    def test_a_hosted_provider_and_credential_travel_together_and_never_beside_a_clone(self):
+        p = {**params("a" * 64), "model_id": "c" * 64}
+        provider = {"protocol": "vieneu", "endpoint_host": "api.vieneu.io"}
+        hosted = parse_options({**p, "provider": provider, "credential": "vn_test_key"})
+        self.assertEqual(hosted["provider"], provider)
+        self.assertEqual(hosted["credential"], "vn_test_key")
+        for patch in (
+            {"provider": provider},
+            {"credential": "vn_test_key"},
+            {
+                "provider": provider,
+                "credential": "vn_test_key",
+                "voice": {"speaker_emb": [0.5] * 192, "ref_codes": [[1] * 8]},
+            },
+            {
+                "provider": {"protocol": "other", "endpoint_host": "api.vieneu.io"},
+                "credential": "k",
+            },
+            {"provider": {"protocol": "vieneu", "endpoint_host": "host/path"}, "credential": "k"},
+            {"provider": {"protocol": "vieneu", "endpoint_host": "bad host"}, "credential": "k"},
+            {"provider": {**provider, "extra": 1}, "credential": "k"},
+            {"provider": provider, "credential": ""},
+        ):
+            with self.subTest(patch=patch), self.assertRaisesRegex(WorkerError, "INVALID_REQUEST"):
+                parse_options({**p, **patch})
+
+    def test_a_retry_of_the_same_request_reuses_the_cue_key_and_a_different_cue_does_not(self):
+        cue = {"id": "cue-1", "text": "Xin chào", "start_ms": 0, "end_ms": 1000}
+        first = idempotency_key("request-12345678", cue)
+        self.assertEqual(idempotency_key("request-12345678", cue), first)
+        self.assertRegex(first, r"^[A-Za-z0-9_-]{8,128}$")
+        self.assertNotEqual(idempotency_key("request-87654321", cue), first)
+        self.assertNotEqual(idempotency_key("request-12345678", {**cue, "text": "Khác"}), first)
 
     def test_frame_spans_must_exactly_cover_all_cues_and_reported_spacing(self):
         p = params("a" * 64)

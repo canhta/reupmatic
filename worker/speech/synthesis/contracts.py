@@ -12,8 +12,9 @@ from runtime.protocol import exact
 from subtitles.validation import validate_cues
 
 PARAMS = {"source_layer", "source_token", "language", "model_id", "voice_id", "cues"}
-# A cloned voice's numeric payload rides beside the params, never into the result or receipt.
-OPTIONAL_PARAMS = {"voice"}
+# Optional keys ride beside the params, never into the result or receipt: a cloned voice's
+# numeric payload, and a hosted provider's endpoint plus its credential.
+OPTIONAL_PARAMS = {"voice", "provider", "credential"}
 SAMPLE_RATES = frozenset({16000, 22050, 24000, 32000, 44100, 48000})
 MAX_SECONDS = 600
 MAX_CUE_SECONDS = 60
@@ -89,6 +90,26 @@ def parse_options(value: object) -> dict:
             raise WorkerError("SYNTHESIS_LIMIT")
     except UnicodeError:
         raise WorkerError("INVALID_REQUEST") from None
+    if ("provider" in p) != ("credential" in p):
+        raise WorkerError("INVALID_REQUEST")
+    if "provider" in p:
+        if "voice" in p:
+            raise WorkerError("INVALID_REQUEST")
+        provider = p["provider"]
+        if not isinstance(provider, dict) or set(provider) != {"protocol", "endpoint_host"}:
+            raise WorkerError("INVALID_REQUEST")
+        protocol, endpoint_host = provider["protocol"], provider["endpoint_host"]
+        if (
+            protocol != "vieneu"
+            or not isinstance(endpoint_host, str)
+            or not endpoint_host
+            or len(endpoint_host) > 255
+            or "/" in endpoint_host
+            or " " in endpoint_host
+            or not isinstance(p["credential"], str)
+            or not 1 <= len(p["credential"]) <= 4096
+        ):
+            raise WorkerError("INVALID_REQUEST")
     if "voice" in p:
         p["voice"] = parse_voice(p["voice"])
     return copy.deepcopy(p)
