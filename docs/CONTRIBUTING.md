@@ -99,8 +99,15 @@ pnpm run test:bridge   # Library/project/batch -> Python/FFmpeg and model config
 pnpm test              # core, bridge and Python suites
 pnpm run test:e2e      # builds and launches Editor, batch and folder scenarios
 pnpm run test:e2e:visual  # screenshot/visual passes; run locally, not in CI
+pnpm run test:e2e:models  # real installed models: recognise -> translate -> export; opt-in
 # Linux without a display: xvfb-run -a pnpm run test:e2e
 ```
+
+`test:e2e:models` runs `tests/e2e/models/` against the staged `python/` interpreter and the local
+models, copying the owner's `local-speech.json`, `local-models.json` and `local-translation.json`
+into an isolated workspace (the same files the exploratory crawl reads). It skips itself, naming
+what is missing, when the staged interpreter or those configuration files are absent, and it never
+uploads or publishes.
 
 The e2e launcher refuses every Douyin host from `fetch` and from each Electron session, so no test
 reaches Douyin. Tests use synthetic local fixtures and isolated application data; only native

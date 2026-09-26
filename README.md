@@ -79,6 +79,7 @@ pnpm start
 | `pnpm run check:python` | Ruff validation for worker and scripts |
 | `pnpm test` | Core, bridge and Python suites |
 | `pnpm run test:e2e` | Electron scenarios (needs native prerequisites) |
+| `pnpm run test:e2e:models` | Real-model Editor flow (opt-in; needs staged Python and models) |
 
 Full setup, hooks, contracts and packaging live in [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md); the
 stack and source layout are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The marketing site is the `web` package —
