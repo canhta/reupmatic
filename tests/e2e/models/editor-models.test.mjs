@@ -81,7 +81,7 @@ function buildMedia(temp) {
       '-f',
       'lavfi',
       '-i',
-      'testsrc2=size=720x1280:rate=30:duration=8',
+      'testsrc2=size=360x640:rate=24:duration=3',
       '-i',
       speech,
       '-vf',
@@ -126,30 +126,70 @@ async function waitForOutcome(page, panel, result, timeoutMs, label) {
   throw new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`);
 }
 
-// The monitor owns the export; wait for the result view or the render error, and return the id.
+// The monitor owns the export; wait for the result view or the job's error code, and return the id.
 async function waitForExport(page, timeoutMs) {
-  const renderError = page.locator('.editor-workspace > .error[role="alert"]');
   const result = page.locator('video[data-monitor-video="result"]');
-  await result.or(renderError).first().waitFor({ state: 'visible', timeout: timeoutMs });
-  if (await renderError.isVisible().catch(() => false)) {
-    const code = await renderError
-      .locator('code')
-      .first()
-      .innerText()
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const code = await page
+      .evaluate(() => window.__renderErrors?.shift() ?? null)
       .catch(() => null);
-    throw new Error(`Export failed: ${code?.trim() || (await renderError.innerText())}`);
+    if (code) throw new Error(`Export failed: ${code}`);
+    if (
+      (await result.count()) &&
+      (await result
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
+      await page.waitForFunction(
+        () => {
+          const element = document.querySelector('video[data-monitor-video="result"]');
+          return (
+            element instanceof HTMLVideoElement && element.readyState >= 1 && element.duration > 0
+          );
+        },
+        undefined,
+        { timeout: timeoutMs },
+      );
+      const src = await result.getAttribute('src');
+      assert.ok(src?.startsWith('media://local/'), 'the result loads through media://');
+      return src.slice('media://local/'.length);
+    }
+    await page.waitForTimeout(1000);
   }
-  await page.waitForFunction(
-    () => {
-      const element = document.querySelector('video[data-monitor-video="result"]');
-      return element instanceof HTMLVideoElement && element.readyState >= 1 && element.duration > 0;
-    },
-    undefined,
-    { timeout: timeoutMs },
+  const diagnostic = await page
+    .evaluate(() => ({
+      replyErrors: window.__renderReplyErrors ?? [],
+      events: window.__renderEvents?.slice(-10) ?? [],
+      alerts: [...document.querySelectorAll('[role="alert"]')]
+        .map((element) => (element.innerText || '').trim())
+        .filter(Boolean),
+    }))
+    .catch(() => null);
+  throw new Error(
+    `Export timed out after ${Math.round(timeoutMs / 1000)}s: ${JSON.stringify(diagnostic)}`,
   );
-  const src = await result.getAttribute('src');
-  assert.ok(src?.startsWith('media://local/'), 'the result loads through media://');
-  return src.slice('media://local/'.length);
+}
+
+async function captureRenderDiagnostics(page) {
+  await page.evaluate(() => {
+    window.__renderErrors = [];
+    window.__renderEvents = [];
+    window.__renderReplyErrors = [];
+    window.reupmatic.onJob((message) => {
+      if (message.event === 'error') window.__renderErrors.push(message.data.code);
+      else window.__renderEvents.push(`${message.event}:${message.data?.phase ?? ''}`);
+    });
+    const original = window.reupmatic.render?.bind(window.reupmatic);
+    if (original) {
+      window.reupmatic.render = async (input) => {
+        const reply = await original(input);
+        if (reply && reply.ok === false) window.__renderReplyErrors.push(reply.error);
+        return reply;
+      };
+    }
+  });
 }
 
 test('Editor with real models: recognise, apply, translate and export with object removal', {
@@ -178,6 +218,7 @@ test('Editor with real models: recognise, apply, translate and export with objec
     },
     async ({ application, page }) => {
       await waitForEditorReady(page);
+      await captureRenderDiagnostics(page);
       await application.evaluate(({ dialog }, filePath) => {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
       }, video);
