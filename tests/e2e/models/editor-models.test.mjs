@@ -37,12 +37,23 @@ function commandExists(command) {
   }
 }
 
+// A zh_CN voice so recognition and the zh→vi model both see real Chinese, not English mislabelled.
+function chineseVoice() {
+  const rows = execFileSync('say', ['-v', '?'], { encoding: 'utf8' }).split('\n');
+  const line =
+    rows.find((row) => /\szh_CN\s/.test(row)) ?? rows.find((row) => /\szh_TW\s/.test(row));
+  return line ? line.replace(/\s(?:zh_CN|zh_TW)\s[\s\S]*/, '').trim() : null;
+}
+
 function missingPrerequisites() {
   const missing = [];
   if (!existsSync(stagedPython)) missing.push(`staged interpreter ${stagedPython}`);
   if (!commandExists(process.env.FFMPEG_PATH || 'ffmpeg')) missing.push('ffmpeg');
-  if (!(process.platform === 'darwin' && commandExists('say')))
+  if (!(process.platform === 'darwin' && commandExists('say'))) {
     missing.push('macOS `say` (the speech fixture)');
+  } else if (!chineseVoice()) {
+    missing.push('a Chinese `say` voice (zh_CN/zh_TW)');
+  }
   const workspace = realWorkspace();
   for (const name of CONFIGS) {
     if (!existsSync(path.join(workspace, name))) missing.push(path.join(workspace, name));
@@ -54,9 +65,11 @@ function buildMedia(temp) {
   const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
   const speech = path.join(temp, 'speech.aiff');
   execFileSync('say', [
+    '-v',
+    chineseVoice(),
     '-o',
     speech,
-    'Hello and welcome. This is a short test video for the editor. Thank you for watching.',
+    '你好，欢迎观看这个简短的测试视频。谢谢观看。',
   ]);
   const video = path.join(temp, 'models-e2e.mp4');
   execFileSync(
