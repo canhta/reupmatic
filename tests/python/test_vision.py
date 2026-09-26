@@ -176,6 +176,62 @@ class VisionValidationTests(unittest.TestCase):
                 session.close()
 
 
+class LamaSignatureTests(unittest.TestCase):
+    """The catalogue Carve model declares a symbolic batch dimension on both inputs."""
+
+    def session(self, image_shape, mask_shape=("batch", 1, 512, 512)):
+        from types import SimpleNamespace
+
+        class SessionDouble:
+            def get_inputs(self):
+                return [
+                    SimpleNamespace(name="image", shape=list(image_shape), type="tensor(float)"),
+                    SimpleNamespace(name="mask", shape=list(mask_shape), type="tensor(float)"),
+                ]
+
+        return SessionDouble()
+
+    def test_symbolic_or_literal_batch_dimensions_are_accepted(self):
+        from vision.algorithms import LamaAdapter
+
+        for image, mask in (
+            (["batch", 3, 512, 512], ["batch", 1, 512, 512]),
+            ([None, 3, 512, 512], [None, 1, 512, 512]),
+            ([1, 3, 512, 512], [1, 1, 512, 512]),
+        ):
+            with self.subTest(image=image):
+                LamaAdapter(self.session(image, mask))
+
+    def test_wrong_plane_channels_or_type_are_still_rejected(self):
+        from types import SimpleNamespace
+
+        from runtime.errors import WorkerError
+        from vision.algorithms import LamaAdapter
+
+        class IntImageDouble:
+            def get_inputs(self):
+                return [
+                    SimpleNamespace(
+                        name="image", shape=["batch", 3, 512, 512], type="tensor(int32)"
+                    ),
+                    SimpleNamespace(
+                        name="mask", shape=["batch", 1, 512, 512], type="tensor(float)"
+                    ),
+                ]
+
+        bad_inputs = (
+            (["batch", 3, 256, 256], ["batch", 1, 512, 512]),
+            (["batch", 3, 512, 512], ["batch", 3, 512, 512]),
+            (["batch", "batch", 512, 512], ["batch", 1, 512, 512]),
+            (["batch", 3, 512, 512, 1], ["batch", 1, 512, 512]),
+        )
+        for image, mask in bad_inputs:
+            with self.assertRaisesRegex(WorkerError, "MODEL_SHAPE_UNSUPPORTED"):
+                LamaAdapter(self.session(image, mask))
+        with self.assertRaisesRegex(WorkerError, "MODEL_SHAPE_UNSUPPORTED"):
+            LamaAdapter(IntImageDouble())
+
+
 @unittest.skipUnless(HAS_CV2, "optional NumPy/OpenCV required")
 class ModelAdapterDoubleTests(unittest.TestCase):
     """Geometry/pre/postprocessing with deterministic SDK doubles, not AI quality."""

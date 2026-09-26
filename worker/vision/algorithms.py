@@ -145,18 +145,37 @@ class RapidAdapter:
         return detections
 
 
+def lama_signature(inputs: dict) -> bool:
+    """`inputs` maps a name to `{"shape": [...], "type": str}`; batch may be symbolic or 1."""
+    if set(inputs) != {"image", "mask"}:
+        return False
+    if any(inputs[name]["type"] != "tensor(float)" for name in inputs):
+        return False
+    return _lama_plane(inputs["image"]["shape"], 3) and _lama_plane(inputs["mask"]["shape"], 1)
+
+
+def _lama_plane(shape: object, channels: int) -> bool:
+    if not isinstance(shape, (list, tuple)) or len(shape) != 4:
+        return False
+    batch, channel, height, width = shape
+    return (
+        (batch == 1 or batch is None or isinstance(batch, str))
+        and channel == channels
+        and height == 512
+        and width == 512
+    )
+
+
 class LamaAdapter:
     """Carve lama_fp32.onnx: RGB float32 [0,1], binary mask; output RGB [0,255]."""
 
     def __init__(self, session):
         self.session = session
-        inputs = {item.name: item for item in session.get_inputs()}
-        if (
-            set(inputs) != {"image", "mask"}
-            or list(inputs["image"].shape) != [1, 3, 512, 512]
-            or list(inputs["mask"].shape) != [1, 1, 512, 512]
-            or any(item.type != "tensor(float)" for item in inputs.values())
-        ):
+        inputs = {
+            item.name: {"shape": list(item.shape), "type": item.type}
+            for item in session.get_inputs()
+        }
+        if not lama_signature(inputs):
             raise WorkerError("MODEL_SHAPE_UNSUPPORTED")
 
     def erase(self, rgb, mask):
