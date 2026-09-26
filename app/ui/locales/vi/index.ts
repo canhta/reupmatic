@@ -25,6 +25,7 @@ import { speechVi } from './speech';
 import { speechProvidersVi } from './speech/providers';
 import { synthesisVi } from './speech/synthesis';
 import { translationVi } from './speech/translation';
+import { speechVoicesVi } from './speech/voices';
 import { visionVi } from './vision';
 
 export const vi = mergeCatalogs(
@@ -47,6 +48,7 @@ export const vi = mergeCatalogs(
   settingsVi,
   speechVi,
   speechProvidersVi,
+  speechVoicesVi,
   synthesisVi,
   translationVi,
   visionVi,

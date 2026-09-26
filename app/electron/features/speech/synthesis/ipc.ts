@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { type BrowserWindow, dialog } from 'electron';
+import { type BrowserWindow, dialog, shell } from 'electron';
 import {
   SYNTHESIS_ENGINE,
   SYNTHESIS_LANGUAGES,
@@ -168,6 +168,10 @@ export function installSynthesis(host: Host) {
       }),
       voices: data.voices.map((voice) => ({ id: voice.id, label: voice.label })),
     };
+  });
+  host.wire('synthesis-open-studio', async () => {
+    await shell.openExternal('https://vieneu.io/#/clone');
+    return { opened: true };
   });
   return {
     get activeCount() {

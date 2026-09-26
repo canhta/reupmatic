@@ -109,4 +109,10 @@ export const synthesisOperations = {
     validate: () => undefined,
     toRequest: () => undefined,
   }),
+  // A fixed, trusted URL; never a renderer-supplied address.
+  'synthesis-open-studio': operation<undefined, { opened: boolean }>()({
+    rendererMethod: 'synthesisOpenStudio',
+    validate: () => undefined,
+    toRequest: () => undefined,
+  }),
 } as const;

@@ -1,0 +1,30 @@
+import type { speechVoicesEn } from '../../en/speech/voices';
+
+export const speechVoicesVi = {
+  settingsVoicesTitle: 'Giọng nói',
+  settingsVoicesHelp:
+    'Nhân bản giọng của bạn từ một đoạn ngắn, hoặc dùng giọng đám mây với khoá VieNeu của riêng bạn.',
+  settingsVoicesLoading: 'Đang tải giọng nói',
+  settingsVoicesClone: 'Nhân bản giọng',
+  settingsVoicesCloneTitle: 'Nhân bản giọng nói',
+  settingsVoicesName: 'Tên giọng',
+  settingsVoicesEngine: 'Bộ máy',
+  settingsVoicesLanguage: 'Ngôn ngữ',
+  settingsVoicesReferenceHelp: '3–8 giây, một người nói, không có nhạc.',
+  settingsVoicesAttest: 'Đây là giọng của tôi, hoặc tôi có quyền sử dụng nó.',
+  settingsVoicesChooseFile: 'Chọn đoạn âm thanh và nhân bản',
+  settingsVoicesCloning: 'Đang nhân bản giọng',
+  settingsVoicesRename: 'Đổi tên',
+  settingsVoicesRenameTitle: 'Đổi tên giọng',
+  settingsVoicesRemove: 'Xoá',
+  settingsVoicesRemoveConfirm: 'Xoá “{{name}}”? Không thể hoàn tác.',
+  settingsVoicesSourceCloned: 'Nhân bản trên máy này',
+  settingsVoicesSourceCloud: 'Đám mây',
+  settingsVoicesCloudTitle: 'VieNeu Cloud',
+  settingsVoicesCloudHelp: 'Tạo và quản lý giọng đám mây trong VieNeu Studio.',
+  settingsVoicesCloudMissingKey: 'Thêm khoá VieNeu trong phần nhà cung cấp để dùng giọng đám mây.',
+  settingsVoicesCloudEmpty: 'Chưa có giọng đám mây.',
+  settingsVoicesOpenStudio: 'Mở VieNeu Studio',
+  settingsVoicesEmpty: 'Chưa có giọng nào. Nhân bản một giọng để bắt đầu.',
+  settingsVoicesFailed: 'Không cập nhật được giọng nói. Kiểm tra cấu hình rồi thử lại.',
+} satisfies Record<keyof typeof speechVoicesEn, string>;

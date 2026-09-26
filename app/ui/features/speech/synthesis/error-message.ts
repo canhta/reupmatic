@@ -28,6 +28,15 @@ export function synthesisErrorKey(code: string): MessageKey {
   if (code === 'SOURCE_OVERWRITE' || code.startsWith('OUTPUT_')) return 'synthesisProtected';
   if (code === 'SYNTHESIS_EXPORT_EXTENSION') return 'synthesisExtension';
   if (code === 'MODEL_NETWORK_DISABLED') return 'synthesisNetwork';
+  if (code === 'VIENEU_KEY_INVALID') return 'synthesisCloudKey';
+  if (code === 'VIENEU_OUT_OF_CREDITS') return 'synthesisCloudCredits';
+  if (code === 'VIENEU_TEXT_REFUSED') return 'synthesisCloudRefused';
+  if (code === 'VIENEU_RATE_LIMITED') return 'synthesisCloudRateLimited';
+  if (code === 'VIENEU_UNAVAILABLE' || code === 'VIENEU_CLONE_WEB_ONLY')
+    return 'synthesisCloudUnavailable';
+  if (code === 'SYNTHESIS_CLONE_UNSUPPORTED_ENGINE') return 'synthesisCloneEngine';
+  if (code === 'SYNTHESIS_CLONE_AUDIO_INVALID') return 'synthesisCloneAudio';
+  if (code === 'SYNTHESIS_CLONE_INVALID') return 'synthesisCloneInvalid';
   if (code.includes('INVALID') || code === 'UNKNOWN_ARTIFACT') return 'synthesisInvalid';
   return 'synthesisFailed';
 }

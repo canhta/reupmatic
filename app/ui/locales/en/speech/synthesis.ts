@@ -58,5 +58,15 @@ export const synthesisEn = {
   synthesisProtected: 'Destination protected or changed. Choose a different output file.',
   synthesisExtension: 'Choose a .wav filename for audio or a .json filename for the receipt.',
   synthesisNetwork: 'Blocked a network attempt. Check the voice setup and try again.',
+  synthesisCloudKey: 'Your VieNeu API key was refused. Update it under speech providers.',
+  synthesisCloudCredits: 'Your VieNeu plan has no credits left for this run.',
+  synthesisCloudRefused: 'VieNeu refused part of the text. Edit it and try again.',
+  synthesisCloudRateLimited: 'VieNeu is rate limiting this key. Wait and try again.',
+  synthesisCloudUnavailable: 'VieNeu Cloud is unavailable right now. Try again later.',
+  synthesisCloneInvalid: 'Could not read the reference clip. Try another 3–8 second clip.',
+  synthesisCloneEngine: 'This engine cannot clone voices. Switch to the Turbo model.',
+  synthesisCloneAudio: 'Choose a clip that is 3–8 seconds long.',
+  synthesisCloudCharacters:
+    'VieNeu Cloud bills per character: this run sends {{count}}. Each request has a 50-character minimum.',
   synthesisFailed: 'Voice generation failed. Check the voice setup, then retry.',
 } as const;

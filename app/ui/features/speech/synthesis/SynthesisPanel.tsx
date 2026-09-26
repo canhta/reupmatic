@@ -31,12 +31,21 @@ export function SynthesisPanel() {
     [scope, setScope] = useState<'all' | 'selected'>('selected');
   const [reviewBusy, setReviewBusy] = useState(false);
   const busy = Boolean(job.active) || job.settingUp || reviewBusy;
+  const hasVoices = job.voices.length > 0;
   const available =
-    job.models?.available &&
-    (language === 'en' || language === 'vi') &&
-    job.models.languages.includes(language) &&
-    job.models.voices.some((value) => value.id === voice);
+    (language === 'en' || language === 'vi') && job.voices.some((value) => value.id === voice);
   const languageUnsupported = language !== null && language !== 'en' && language !== 'vi';
+  const selectedVoice = job.voices.find((value) => value.id === voice);
+  const runCues =
+    scope === 'selected' ? source.cues.filter((cue) => cue.id === editor.selected) : source.cues;
+  const characters = runCues.reduce((total, cue) => total + cue.text.length, 0);
+  const cloudShort = selectedVoice?.source === 'cloud' && characters < 50;
+  const voiceLabel = (value: (typeof job.voices)[number]) =>
+    value.source === 'cloned'
+      ? `${value.label} — ${t('settingsVoicesSourceCloned')}`
+      : value.source === 'cloud'
+        ? `${value.label} — ${t('settingsVoicesSourceCloud')}`
+        : value.label;
   const selectionValid =
     editor.activeTextLayer === 'spoken' && source.cues.some((cue) => cue.id === editor.selected);
   return (
@@ -58,7 +67,7 @@ export function SynthesisPanel() {
             isDisabled={busy}
             options={[
               { value: '', label: t('synthesisChooseVoice') },
-              ...(job.models?.voices ?? []).map((v) => ({ value: v.id, label: v.label })),
+              ...job.voices.map((v) => ({ value: v.id, label: voiceLabel(v) })),
             ]}
             onChange={setVoice}
           />
@@ -75,7 +84,7 @@ export function SynthesisPanel() {
             }}
           />
         </FormLayout>
-        {(job.checking || !job.models?.available) && (
+        {(job.checking || (!job.models?.available && !hasVoices)) && (
           <>
             <Text as="p" display="block" type="body" role="status">
               {job.checking
@@ -100,7 +109,7 @@ export function SynthesisPanel() {
             </HStack>
           </>
         )}
-        {!available && job.models?.available && (
+        {!available && hasVoices && (
           <Text as="p" display="block" type="body" role="status">
             {t('synthesisVoiceMissing')}
           </Text>
@@ -108,6 +117,11 @@ export function SynthesisPanel() {
         {scope === 'selected' && !selectionValid && (
           <Text as="p" display="block" type="body" role="status">
             {t('synthesisSelectionHelp')}
+          </Text>
+        )}
+        {selectedVoice?.source === 'cloud' && (
+          <Text as="p" display="block" type="body" role="status">
+            {t('synthesisCloudCharacters', { count: characters })}
           </Text>
         )}
         {!source.cues.length && (
@@ -125,6 +139,7 @@ export function SynthesisPanel() {
               busy ||
               editor.opening ||
               !available ||
+              cloudShort ||
               languageUnsupported ||
               source.stale ||
               !source.cues.length ||

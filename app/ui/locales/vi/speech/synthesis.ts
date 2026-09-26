@@ -57,5 +57,15 @@ export const synthesisVi = {
   synthesisProtected: 'Đích lưu bị bảo vệ hoặc đã đổi. Chọn tệp đầu ra khác.',
   synthesisExtension: 'Chọn tên có đuôi .wav cho âm thanh hoặc .json cho hồ sơ.',
   synthesisNetwork: 'Đã chặn một kết nối mạng. Kiểm tra phần giọng nói rồi thử lại.',
+  synthesisCloudKey: 'Khoá VieNeu của bạn bị từ chối. Cập nhật lại trong phần nhà cung cấp.',
+  synthesisCloudCredits: 'Gói VieNeu của bạn đã hết credit cho lần này.',
+  synthesisCloudRefused: 'VieNeu từ chối một phần nội dung. Sửa lại rồi thử tiếp.',
+  synthesisCloudRateLimited: 'VieNeu đang giới hạn tốc độ với khoá này. Chờ rồi thử lại.',
+  synthesisCloudUnavailable: 'VieNeu Cloud tạm thời không khả dụng. Thử lại sau.',
+  synthesisCloneInvalid: 'Không đọc được đoạn âm thanh. Thử đoạn khác dài 3–8 giây.',
+  synthesisCloneEngine: 'Bộ máy này không nhân bản được giọng. Chuyển sang mô hình Turbo.',
+  synthesisCloneAudio: 'Chọn đoạn âm thanh dài 3–8 giây.',
+  synthesisCloudCharacters:
+    'VieNeu Cloud tính tiền theo ký tự: lần này gửi {{count}}. Mỗi yêu cầu tối thiểu 50 ký tự.',
   synthesisFailed: 'Tạo giọng nói thất bại. Kiểm tra phần giọng nói rồi thử lại.',
 } satisfies Record<keyof typeof synthesisEn, string>;

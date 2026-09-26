@@ -7,6 +7,11 @@ import {
   validateSynthesisResult,
 } from '../../../../core/speech/synthesis/contracts';
 import { prepareSynthesis, type SynthesisOptions } from '../../../../core/speech/synthesis/review';
+import {
+  buildSynthesisVoices,
+  type ClonedVoiceMeta,
+  type SynthesisVoiceOption,
+} from '../../../../core/speech/voices';
 import type { TextSnapshot } from '../../../../core/subtitles/layers/document';
 import { unwrap } from '../../../bridge/client';
 
@@ -38,6 +43,7 @@ export function useSynthesisJob(context: Context) {
     configuring = useRef(false);
   const sequence = useRef(0);
   const [models, setModels] = useState<SynthesisStatus | null>(null);
+  const [voices, setVoices] = useState<SynthesisVoiceOption[]>([]);
   const [checking, setChecking] = useState(false),
     [settingUp, setSettingUp] = useState(false);
   const [active, setActive] = useState<Active | null>(null);
@@ -50,8 +56,22 @@ export function useSynthesisJob(context: Context) {
     const captured = ++sequence.current;
     setChecking(true);
     try {
-      const status = parseSynthesisStatus(await unwrap(window.reupmatic.synthesisStatus()));
-      if (alive.current && captured === sequence.current) setModels(status);
+      const [status, cloned, cloud] = await Promise.all([
+        unwrap(window.reupmatic.synthesisStatus()).then((value) => parseSynthesisStatus(value)),
+        unwrap(window.reupmatic.synthesisVoiceList()),
+        unwrap(window.reupmatic.synthesisCloudVoices()),
+      ]);
+      if (alive.current && captured === sequence.current) {
+        setModels(status);
+        setVoices(
+          buildSynthesisVoices(
+            status,
+            cloned as ClonedVoiceMeta[],
+            cloud?.voices ?? [],
+            cloud?.model_id ?? null,
+          ),
+        );
+      }
     } catch (reason) {
       report(reason);
     } finally {
@@ -98,11 +118,15 @@ export function useSynthesisJob(context: Context) {
     const offModels = window.reupmatic.onSynthesisModelsChanged(() => {
       void refresh();
     });
+    const offVoices = window.reupmatic.onSynthesisVoicesChanged(() => {
+      void refresh();
+    });
     void refresh();
     return () => {
       alive.current = false;
       off();
       offModels();
+      offVoices();
       const request = operation.current;
       operation.current = null;
       if (request)
@@ -136,24 +160,23 @@ export function useSynthesisJob(context: Context) {
     try {
       const c = current.current;
       if (c.opening) throw new Error('EDITOR_BUSY');
-      if (!models?.available || !models.model_id || !models.engine)
-        throw new Error(models?.code || 'MODEL_MISSING');
-      if (!models.languages.includes(options.language))
-        throw new Error('MODEL_LANGUAGE_UNAVAILABLE');
-      if (!models.voices.some((voice) => voice.id === options.voice_id))
+      const option = voices.find((value) => value.id === options.voice_id);
+      if (!option) {
+        if (!models?.available) throw new Error(models?.code || 'MODEL_MISSING');
         throw new Error('SYNTHESIS_VOICE_UNAVAILABLE');
+      }
       const input = prepareSynthesis(c.snapshot, {
         ...options,
         request_id: requestId,
         revision: c.revision,
-        model_id: models.model_id,
+        model_id: option.model_id,
       });
       const request: Active = {
         input,
         documentId: c.documentId,
         phase: 'queued',
         fraction: null,
-        engine: models.engine,
+        engine: option.engine,
       };
       operation.current = request;
       admitted = true;
@@ -185,6 +208,7 @@ export function useSynthesisJob(context: Context) {
 
   return {
     models,
+    voices,
     checking,
     settingUp,
     active,

@@ -25,6 +25,7 @@ import { speechEn } from './speech';
 import { speechProvidersEn } from './speech/providers';
 import { synthesisEn } from './speech/synthesis';
 import { translationEn } from './speech/translation';
+import { speechVoicesEn } from './speech/voices';
 import { visionEn } from './vision';
 
 export const en = mergeCatalogs(
@@ -47,6 +48,7 @@ export const en = mergeCatalogs(
   settingsEn,
   speechEn,
   speechProvidersEn,
+  speechVoicesEn,
   synthesisEn,
   translationEn,
   visionEn,

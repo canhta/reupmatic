@@ -18,6 +18,7 @@ import { LocalModelSetup } from './LocalModelSetup';
 import { modelStatusKey } from './model-status';
 import { OfferedModels } from './OfferedModels';
 import { SpeechProvidersPanel } from './SpeechProvidersPanel';
+import { VoicesPanel } from './VoicesPanel';
 
 export type SettingsCategory = 'general' | 'processing' | 'account' | 'advanced';
 
@@ -284,6 +285,7 @@ function ProcessingCategory({ snapshot }: { snapshot: SettingsSnapshot }) {
 
         <OfferedModels />
         <SpeechProvidersPanel />
+        <VoicesPanel />
       </VStack>
     </Section>
   );
