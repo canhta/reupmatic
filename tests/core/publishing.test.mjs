@@ -116,6 +116,43 @@ test('Facebook preflight enforces the verified Reels media and schedule window',
   assert.deepEqual(codes(good, { instant: now + 30 * 24 * 60 * 60 * 1000, timezone: 'UTC' }, now), [
     'PUBLISH_SCHEDULE_TOO_FAR',
   ]);
+
+  // The problems carry the destination's real limits so the UI copy can interpolate them.
+  const params = (media, planned, at) =>
+    Object.fromEntries(
+      facebookPreflight({ ...post, planned }, media, at).map((problem) => [
+        problem.code,
+        problem.params,
+      ]),
+    );
+  assert.deepEqual(params({ ...good, duration_ms: 2_000 }, null, 0).PUBLISH_MEDIA_TOO_SHORT, {
+    seconds: 3,
+  });
+  assert.deepEqual(params({ ...good, duration_ms: 90_001 }, null, 0).PUBLISH_MEDIA_TOO_LONG, {
+    seconds: 90,
+  });
+  assert.deepEqual(params({ ...good, width: 500, height: 900 }, null, 0).PUBLISH_MEDIA_RESOLUTION, {
+    min_width: 540,
+    min_height: 960,
+  });
+  assert.deepEqual(params({ ...good, width: 1920, height: 1080 }, null, 0).PUBLISH_MEDIA_ASPECT, {
+    width: 9,
+    height: 16,
+  });
+  assert.deepEqual(
+    params({ ...good, size_bytes: FACEBOOK_CAPABILITIES.media.max_bytes + 1 }, null, 0)
+      .PUBLISH_MEDIA_TOO_LARGE,
+    { gigabytes: 2 },
+  );
+  assert.deepEqual(
+    params(good, { instant: now + 9 * 60 * 1000, timezone: 'UTC' }, now).PUBLISH_SCHEDULE_TOO_SOON,
+    { minutes: 10 },
+  );
+  assert.deepEqual(
+    params(good, { instant: now + 30 * 24 * 60 * 60 * 1000, timezone: 'UTC' }, now)
+      .PUBLISH_SCHEDULE_TOO_FAR,
+    { days: 29 },
+  );
 });
 
 test('caption composition is body then one line per affiliate link, clipped only when forced', () => {
@@ -166,7 +203,10 @@ test('YouTube preflight enforces the verified upload and schedule window', () =>
 
 test('a YouTube post must declare made-for-kids explicitly; other platforms carry no options', () => {
   const kids = { self_declared_made_for_kids: true, contains_synthetic_media: false };
-  assert.deepEqual(parsePostOptions({ youtube: kids }, 'youtube'), { youtube: kids });
+  assert.deepEqual(parsePostOptions({ youtube: kids }, 'youtube'), {
+    youtube: kids,
+    tiktok: null,
+  });
   assert.throws(() => parsePostOptions({ youtube: null }, 'youtube'), /INVALID_REQUEST/);
   assert.throws(
     () => parsePostOptions({ youtube: { self_declared_made_for_kids: true } }, 'youtube'),
@@ -176,10 +216,31 @@ test('a YouTube post must declare made-for-kids explicitly; other platforms carr
     () => parsePostOptions({ youtube: { ...kids, self_declared_made_for_kids: 'yes' } }, 'youtube'),
     /INVALID_REQUEST/,
   );
-  assert.deepEqual(parsePostOptions({ youtube: null }, 'facebook_page'), { youtube: null });
+  assert.deepEqual(parsePostOptions({ youtube: null }, 'facebook_page'), {
+    youtube: null,
+    tiktok: null,
+  });
   assert.throws(() => parsePostOptions({ youtube: kids }, 'facebook_page'), /INVALID_REQUEST/);
   assert.throws(
     () => parsePostOptions({ youtube: null, tiktok: null }, 'youtube'),
+    /INVALID_REQUEST/,
+  );
+
+  const tiktok = {
+    privacy_level: 'PUBLIC_TO_EVERYONE',
+    allow_comment: false,
+    allow_duet: false,
+    allow_stitch: false,
+    disclose: false,
+    brand_content_toggle: false,
+    brand_organic_toggle: false,
+    is_aigc: false,
+  };
+  assert.deepEqual(parsePostOptions({ tiktok }, 'tiktok'), { youtube: null, tiktok });
+  assert.throws(() => parsePostOptions({ tiktok: null }, 'tiktok'), /INVALID_REQUEST/);
+  assert.throws(() => parsePostOptions({ youtube: kids, tiktok }, 'tiktok'), /INVALID_REQUEST/);
+  assert.throws(
+    () => parsePostOptions({ youtube: null, tiktok }, 'facebook_page'),
     /INVALID_REQUEST/,
   );
 });

@@ -15,6 +15,15 @@ import {
   readAuthorizationCode,
 } from '../../dist-node/electron/features/publishing/oauth.js';
 import { PublishingService } from '../../dist-node/electron/features/publishing/publish-service.js';
+import { TikTokDestination } from '../../dist-node/electron/features/publishing/tiktok-adapter.js';
+import { mapTikTokError } from '../../dist-node/electron/features/publishing/tiktok-api.js';
+import {
+  buildAuthorizationUrl as buildTikTokAuthorizationUrl,
+  createPkcePair,
+  exchangeCodeForTokens,
+  readAuthorizationCode as readTikTokAuthorizationCode,
+  refreshTokens,
+} from '../../dist-node/electron/features/publishing/tiktok-oauth.js';
 
 function fakeEncryption({ available = true } = {}) {
   const KEY = 0x5a;
@@ -634,5 +643,436 @@ test('an uploading post the platform reports published resolves to published', a
     assert.equal(result.remote_ref, 'vid-late');
   } finally {
     await graph.close();
+  }
+});
+
+// --- TikTok Direct Post ---
+
+const TT_OPTIONS = {
+  privacy_level: 'PUBLIC_TO_EVERYONE',
+  allow_comment: false,
+  allow_duet: false,
+  allow_stitch: false,
+  disclose: false,
+  brand_content_toggle: false,
+  brand_organic_toggle: false,
+  is_aigc: true,
+};
+
+const TT_POST = {
+  ...POST,
+  id: 'post_tt_01',
+  channel: { id: 'channel_tt_01', name: 'TikTok', platform: 'tiktok' },
+  links: [],
+  options: { youtube: null, tiktok: { ...TT_OPTIONS } },
+};
+
+const TT_MEDIA = { duration_ms: 30_000, width: 1080, height: 1920, size_bytes: 11, fps: 30 };
+
+async function fakeTikTok(routes) {
+  const seen = [];
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    const chunks = [];
+    request.on('data', (chunk) => chunks.push(chunk));
+    request.on('end', () => {
+      const body = Buffer.concat(chunks);
+      const record = {
+        method: request.method,
+        path: url.pathname,
+        headers: request.headers,
+        params: new URLSearchParams(body.toString('utf-8')),
+        json: (() => {
+          try {
+            return JSON.parse(body.toString('utf-8'));
+          } catch {
+            return null;
+          }
+        })(),
+        body_bytes: body.length,
+      };
+      seen.push(record);
+      const handler = routes.find((route) => route.match(record));
+      if (!handler) {
+        response.writeHead(404, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ error: { code: 'not_found' } }));
+        return;
+      }
+      const localBase = `http://127.0.0.1:${server.address().port}`;
+      const reply = handler.reply?.(record, localBase) ?? {
+        body: { data: {}, error: { code: 'ok' } },
+      };
+      response.writeHead(reply.status ?? 200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify(reply.body));
+    });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  return {
+    seen,
+    base: `http://127.0.0.1:${port}`,
+    close: () => {
+      server.closeAllConnections?.();
+      return new Promise((resolve) => server.close(() => resolve()));
+    },
+  };
+}
+
+const ttCreatorInfo = (overrides = {}) => ({
+  body: {
+    data: {
+      creator_nickname: 'Creator Nickname',
+      privacy_level_options: ['PUBLIC_TO_EVERYONE', 'SELF_ONLY'],
+      comment_disabled: false,
+      duet_disabled: false,
+      stitch_disabled: false,
+      max_video_post_duration_sec: 600,
+      ...overrides,
+    },
+    error: { code: 'ok' },
+  },
+});
+
+const ttInit = (id, url) => ({
+  body: { data: { publish_id: id, upload_url: url }, error: { code: 'ok' } },
+});
+
+function tiktokService(base, now = () => 1000) {
+  return new PublishingService({
+    now,
+    destinationFor: (_platform, credentials, media) =>
+      new TikTokDestination({
+        accessToken: credentials.access_token,
+        videoSizeBytes: media?.size_bytes ?? 0,
+        ...(media ? { videoDurationMs: media.duration_ms } : {}),
+        baseUrl: base,
+      }),
+  });
+}
+
+test('a TikTok post uploads and publishes: publish_id persists before chunks, post_info is the caption', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'reupmatic-tiktok-'));
+  const file = path.join(directory, 'video.mp4');
+  const bytes = Buffer.from('video-bytes');
+  await writeFile(file, bytes);
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/creator_info/query/',
+      reply: () => ttCreatorInfo(),
+    },
+    {
+      match: (r) => r.path === '/v2/post/publish/video/init/',
+      reply: (_r, base) => ttInit('pub_1', `${base}/put`),
+    },
+    { match: (r) => r.method === 'PUT' && r.path === '/put', reply: () => ({ body: {} }) },
+    {
+      match: (r) => r.path === '/v2/post/publish/status/fetch/',
+      reply: () => ({
+        body: {
+          data: { status: 'PUBLISH_COMPLETE', publicaly_available_post_id: '7401' },
+          error: { code: 'ok' },
+        },
+      }),
+    },
+  ]);
+  try {
+    const persisted = [];
+    const progress = [];
+    const publication = await tiktokService(graph.base).publish({
+      post: { ...TT_POST, export: { ...TT_POST.export, path: file } },
+      attempt_id: 'attempt_tt_01',
+      credentials: { account_id: 'open-id-1', access_token: 'access-token' },
+      media: { ...TT_MEDIA, size_bytes: bytes.length },
+      persist: (value) => persisted.push(value),
+      onProgress: (fraction) => progress.push(fraction),
+    });
+    assert.equal(publication.phase, 'published');
+    assert.equal(publication.remote_ref, 'pub_1');
+    assert.equal(publication.remote_post_id, '7401');
+    assert.equal(publication.privacy, 'public');
+    assert.deepEqual(
+      persisted.map((value) => value.phase),
+      ['uploading', 'submitted', 'published'],
+    );
+    assert.equal(persisted[0].remote_ref, 'pub_1');
+    const init = graph.seen.find((r) => r.path === '/v2/post/publish/video/init/');
+    assert.equal(init.headers.authorization, 'Bearer access-token');
+    assert.equal(init.json.post_info.title, 'My body #hashtag');
+    assert.equal(init.json.post_info.privacy_level, 'PUBLIC_TO_EVERYONE');
+    assert.equal(init.json.post_info.disable_comment, true);
+    assert.equal(init.json.source_info.source, 'FILE_UPLOAD');
+    const upload = graph.seen.find((r) => r.method === 'PUT');
+    assert.equal(upload.headers['content-range'], `bytes 0-${bytes.length - 1}/${bytes.length}`);
+    assert.equal(upload.headers['content-type'], 'video/mp4');
+    assert.ok(progress.at(-1) === 1);
+  } finally {
+    await graph.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('missing or disallowed TikTok options are refused before anything is persisted', async () => {
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/creator_info/query/',
+      reply: () => ttCreatorInfo(),
+    },
+  ]);
+  try {
+    await assert.rejects(
+      tiktokService(graph.base).publish({
+        post: { ...TT_POST, options: { youtube: null, tiktok: null } },
+        attempt_id: 'attempt_tt_02',
+        credentials: { account_id: 'open-id-1', access_token: 'token' },
+        media: TT_MEDIA,
+        persist: () => assert.fail('nothing should be persisted'),
+        onProgress: () => undefined,
+      }),
+      /PUBLISH_OPTIONS_REQUIRED/,
+    );
+    await assert.rejects(
+      tiktokService(graph.base).publish({
+        post: {
+          ...TT_POST,
+          options: {
+            youtube: null,
+            tiktok: { ...TT_OPTIONS, privacy_level: 'MUTUAL_FOLLOW_FRIENDS' },
+          },
+        },
+        attempt_id: 'attempt_tt_03',
+        credentials: { account_id: 'open-id-1', access_token: 'token' },
+        media: TT_MEDIA,
+        persist: () => assert.fail('nothing should be persisted'),
+        onProgress: () => undefined,
+      }),
+      /PUBLISH_OPTIONS_INVALID/,
+    );
+    assert.equal(graph.seen.filter((r) => r.path === '/v2/post/publish/video/init/').length, 0);
+  } finally {
+    await graph.close();
+  }
+});
+
+test('TikTok upload semantics: a 4xx before the first chunk is failed, a 5xx after is unknown', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'reupmatic-tiktok-'));
+  const file = path.join(directory, 'video.mp4');
+  await writeFile(file, Buffer.from('video-bytes'));
+  const uploadStatus = 429;
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/creator_info/query/',
+      reply: () => ttCreatorInfo(),
+    },
+    {
+      match: (r) => r.path === '/v2/post/publish/video/init/',
+      reply: (_r, base) => ttInit('pub_2', `${base}/put`),
+    },
+    {
+      match: (r) => r.method === 'PUT',
+      reply: () => ({
+        status: uploadStatus,
+        body: { error: { code: 'spam_risk_too_many_posts' } },
+      }),
+    },
+  ]);
+  try {
+    const persisted = [];
+    await assert.rejects(
+      tiktokService(graph.base).publish({
+        post: { ...TT_POST, export: { ...TT_POST.export, path: file } },
+        attempt_id: 'attempt_tt_04',
+        credentials: { account_id: 'open-id-1', access_token: 'token' },
+        media: { ...TT_MEDIA, size_bytes: 11 },
+        persist: (value) => persisted.push(value),
+        onProgress: () => undefined,
+      }),
+      /PUBLISH_RATE_LIMITED/,
+    );
+    assert.deepEqual(
+      persisted.map((value) => value.phase),
+      ['uploading', 'failed'],
+    );
+    assert.equal(persisted[1].error, 'PUBLISH_RATE_LIMITED');
+  } finally {
+    await graph.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+
+  const directory2 = await mkdtemp(path.join(tmpdir(), 'reupmatic-tiktok-'));
+  const file2 = path.join(directory2, 'video.mp4');
+  await writeFile(file2, Buffer.from('video-bytes'));
+  const graph2 = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/creator_info/query/',
+      reply: () => ttCreatorInfo(),
+    },
+    {
+      match: (r) => r.path === '/v2/post/publish/video/init/',
+      reply: (_r, base) => ttInit('pub_3', `${base}/put`),
+    },
+    { match: (r) => r.method === 'PUT', reply: () => ({ status: 503, body: {} }) },
+  ]);
+  try {
+    const persisted = [];
+    const unknown = await tiktokService(graph2.base).publish({
+      post: { ...TT_POST, export: { ...TT_POST.export, path: file2 } },
+      attempt_id: 'attempt_tt_05',
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      media: { ...TT_MEDIA, size_bytes: 11 },
+      persist: (value) => persisted.push(value),
+      onProgress: () => undefined,
+    });
+    assert.equal(unknown.phase, 'unknown');
+    assert.deepEqual(
+      persisted.map((value) => value.phase),
+      ['uploading', 'unknown'],
+    );
+  } finally {
+    await graph2.close();
+    await rm(directory2, { recursive: true, force: true });
+  }
+});
+
+test('a failed TikTok status maps fail_reason, and reconcile resolves processing and interruption', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'reupmatic-tiktok-'));
+  const file = path.join(directory, 'video.mp4');
+  await writeFile(file, Buffer.from('video-bytes'));
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/creator_info/query/',
+      reply: () => ttCreatorInfo(),
+    },
+    {
+      match: (r) => r.path === '/v2/post/publish/video/init/',
+      reply: (_r, base) => ttInit('pub_4', `${base}/put`),
+    },
+    { match: (r) => r.method === 'PUT', reply: () => ({ body: {} }) },
+    {
+      match: (r) => r.path === '/v2/post/publish/status/fetch/',
+      reply: (r) => ({
+        body:
+          r.json.publish_id === 'pub_4'
+            ? {
+                data: { status: 'FAILED', fail_reason: 'duration_check_failed' },
+                error: { code: 'ok' },
+              }
+            : { data: { status: 'PROCESSING_UPLOAD' }, error: { code: 'ok' } },
+      }),
+    },
+  ]);
+  try {
+    const failed = await tiktokService(graph.base).publish({
+      post: { ...TT_POST, export: { ...TT_POST.export, path: file } },
+      attempt_id: 'attempt_tt_06',
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      media: { ...TT_MEDIA, size_bytes: 11 },
+      persist: () => undefined,
+      onProgress: () => undefined,
+    });
+    assert.equal(failed.phase, 'failed');
+    assert.equal(failed.error, 'PUBLISH_MEDIA_TOO_LONG');
+
+    const submitted = {
+      ...TT_POST,
+      publication: {
+        attempt_id: 'attempt_tt_07',
+        phase: 'submitted',
+        remote_ref: 'pub_5',
+        remote_post_id: null,
+        remote_url: null,
+        scheduled_for: null,
+        privacy: null,
+        error: null,
+        updated_at: 1,
+      },
+    };
+    const processing = await tiktokService(graph.base).reconcile({
+      post: submitted,
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      persist: () => undefined,
+    });
+    assert.equal(processing.phase, 'submitted');
+
+    const uploading = {
+      ...submitted,
+      publication: { ...submitted.publication, phase: 'uploading', remote_ref: 'pub_5' },
+    };
+    const interrupted = await tiktokService(graph.base).reconcile({
+      post: uploading,
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      persist: () => undefined,
+    });
+    assert.equal(interrupted.phase, 'failed');
+    assert.equal(interrupted.error, 'PUBLISH_UPLOAD_INTERRUPTED');
+  } finally {
+    await graph.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('TikTok token errors map to named codes', () => {
+  assert.equal(mapTikTokError('access_token_expired'), 'CHANNEL_REAUTHORIZE');
+  assert.equal(mapTikTokError('spam_risk_too_many_posts'), 'PUBLISH_RATE_LIMITED');
+  assert.equal(mapTikTokError('unaudited_client_cannot_post'), 'PUBLISH_PERMISSION_DENIED');
+  assert.equal(mapTikTokError(undefined), 'PUBLISH_FAILED');
+});
+
+test('TikTok OAuth builds the PKCE URL and the broker exchange uses the verifier', async () => {
+  const pkce = createPkcePair();
+  assert.match(pkce.code_verifier, /^[A-Za-z0-9\-._~]{43,128}$/);
+  const url = buildTikTokAuthorizationUrl({
+    clientKey: 'client-key',
+    state: 'state-1',
+    redirectUri: 'https://app.example/tiktok/callback',
+    codeChallenge: pkce.code_challenge,
+  });
+  const parsed = new URL(url);
+  assert.equal(parsed.origin, 'https://www.tiktok.com');
+  assert.equal(parsed.searchParams.get('code_challenge_method'), 'S256');
+  assert.equal(
+    readTikTokAuthorizationCode(
+      'https://app.example/tiktok/callback?code=abc&state=state-1',
+      'state-1',
+      'https://app.example/tiktok/callback',
+    ),
+    'abc',
+  );
+  assert.throws(
+    () =>
+      readTikTokAuthorizationCode(
+        'https://app.example/tiktok/callback?code=abc&state=other',
+        'state-1',
+        'https://app.example/tiktok/callback',
+      ),
+    /CHANNEL_AUTHORIZE_STATE/,
+  );
+
+  const tokens = {
+    access_token: 'access',
+    refresh_token: 'refresh',
+    open_id: 'open',
+    expires_in: 86_400,
+    refresh_expires_in: 31_536_000,
+  };
+  const broker = await fakeTikTok([
+    {
+      match: (r) => r.method === 'POST' && r.path === '/api/tiktok/token',
+      reply: () => ({ body: { tokens } }),
+    },
+  ]);
+  try {
+    const exchanged = await exchangeCodeForTokens(
+      {
+        code: 'code-1',
+        codeVerifier: pkce.code_verifier,
+        redirectUri: 'https://app.example/tiktok/callback',
+      },
+      `${broker.base}/api/tiktok/token`,
+    );
+    assert.equal(exchanged.access_token, 'access');
+    assert.equal(broker.seen[0].json.action, 'exchange');
+    assert.deepEqual(await refreshTokens('refresh', `${broker.base}/api/tiktok/token`), tokens);
+  } finally {
+    await broker.close();
   }
 });

@@ -22,12 +22,24 @@ test('probing an export never registers it as an asset', async () => {
   await writeFile(file, Buffer.from('0123456789'));
   const worker = fakeWorker((method) => {
     if (method === 'media.probe-file')
-      return { duration_ms: 30_000, width: 1080, height: 1920, has_audio: true };
+      return {
+        duration_ms: 30_000,
+        width: 1080,
+        height: 1920,
+        has_audio: true,
+        frame_rate: '30000/1001',
+      };
     throw new Error(`unexpected worker call ${method}`);
   });
   try {
     const facts = await probeVideoFile(worker, file);
-    assert.deepEqual(facts, { duration_ms: 30_000, width: 1080, height: 1920, size_bytes: 10 });
+    assert.deepEqual(facts, {
+      duration_ms: 30_000,
+      width: 1080,
+      height: 1920,
+      size_bytes: 10,
+      fps: 30000 / 1001,
+    });
     assert.deepEqual(
       worker.calls.map((call) => call.method),
       ['media.probe-file'],

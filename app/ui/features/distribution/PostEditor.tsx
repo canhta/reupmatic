@@ -20,6 +20,7 @@ import type { useRecordDraft } from '../catalog/useRecordDraft';
 import { PostPlanFields } from './PostPlanFields';
 import { PostPublication } from './PostPublication';
 import { type PostDraft, postDraft } from './post-draft';
+import { TikTokPostOptions } from './TikTokPostOptions';
 
 export function PostEditor({
   form,
@@ -60,7 +61,19 @@ export function PostEditor({
     channels.find((channel) => channel.id === draft.channel_id) ?? draft.saved?.channel;
   const isYouTube = selectedChannel?.platform === 'youtube';
   const youtubeOptions = draft.options.youtube;
-  const validOptions = !isYouTube || youtubeOptions !== null;
+  const isTikTok = selectedChannel?.platform === 'tiktok';
+  const tiktokOptions = draft.options.tiktok;
+  const tiktokReady =
+    !isTikTok ||
+    (tiktokOptions !== null &&
+      !!tiktokOptions.privacy_level &&
+      !(
+        tiktokOptions.disclose &&
+        !tiktokOptions.brand_content_toggle &&
+        !tiktokOptions.brand_organic_toggle
+      ) &&
+      !(tiktokOptions.brand_content_toggle && tiktokOptions.privacy_level === 'SELF_ONLY'));
+  const validOptions = (!isYouTube || youtubeOptions !== null) && tiktokReady;
   let validPlan = true;
   try {
     readPlanDraft(draft.plan);
@@ -72,6 +85,7 @@ export function PostEditor({
     setDraft({
       ...draft,
       options: {
+        ...draft.options,
         youtube: {
           self_declared_made_for_kids: youtubeOptions?.self_declared_made_for_kids ?? false,
           contains_synthetic_media: youtubeOptions?.contains_synthetic_media ?? false,
@@ -79,6 +93,10 @@ export function PostEditor({
         },
       },
     });
+  }
+
+  function setTikTok(tiktok: NonNullable<typeof tiktokOptions>) {
+    setDraft({ ...draft, options: { ...draft.options, tiktok } });
   }
 
   async function save() {
@@ -121,7 +139,7 @@ export function PostEditor({
               placeholder={t('postChooseChannel')}
               options={channels.map((channel) => ({ value: channel.id, label: channel.name }))}
               onChange={(channel_id) =>
-                setDraft({ ...draft, channel_id, options: { youtube: null } })
+                setDraft({ ...draft, channel_id, options: { youtube: null, tiktok: null } })
               }
             />
             <Selector
@@ -244,6 +262,14 @@ export function PostEditor({
             {t('postSyntheticMediaHelp')}
           </Text>
         </VStack>
+      )}
+      {isTikTok && (
+        <TikTokPostOptions
+          channelId={draft.channel_id}
+          value={tiktokOptions}
+          onChange={setTikTok}
+          disabled={disabled}
+        />
       )}
       {draft.saved && (
         <Selector

@@ -88,7 +88,20 @@ interface YouTubeOptions {
   self_declared_made_for_kids: boolean;
   contains_synthetic_media: boolean;
 }
-interface PostOptions { youtube: YouTubeOptions | null }
+// TikTok's per-post choices: privacy has no default, interaction toggles start off, and commercial
+// content goes through the app-side `disclose` switch (brand_organic = own promotion; brand_content
+// = a third-party paid partnership).
+interface TikTokPostOptions {
+  privacy_level: string;
+  allow_comment: boolean;
+  allow_duet: boolean;
+  allow_stitch: boolean;
+  disclose: boolean;
+  brand_content_toggle: boolean;
+  brand_organic_toggle: boolean;
+  is_aigc: boolean;
+}
+interface PostOptions { youtube: YouTubeOptions | null; tiktok: TikTokPostOptions | null }
 ```
 
 `Post` gains `publication: Publication | null` and `options: PostOptions`; `state` stays
@@ -96,18 +109,22 @@ interface PostOptions { youtube: YouTubeOptions | null }
 and `submitted` resolve only through `reconcile`. The `published` view of the post list reads
 `publication.phase`.
 
-Host adapter per platform. Adapters return platform outcomes; the host applies the core transition
-functions, so an adapter cannot skip the never-publish-twice policy:
+One platform-agnostic host service, one adapter per platform. `PublishingService` owns the
+per-post in-flight lock, the fresh attempt check and the core transitions, so an adapter cannot skip
+the never-publish-twice policy; `publishing-error.ts` classifies a failure as a definite refusal (a
+mapped 4xx) or ambiguous. Adapters return raw platform outcomes:
 
 ```ts
 type SubmitOutcome =
   | { kind: 'scheduled'; scheduled_for: number; remote_post_id: string | null; remote_url: string | null; privacy: 'public' | 'private' | 'unlisted' | null }
   | { kind: 'published'; remote_post_id: string | null; remote_url: string | null; privacy: 'public' | 'private' | 'unlisted' | null }
+  | { kind: 'submitted' }               // create landed, still processing → reconcile only
   | { kind: 'failed'; error: string }   // definite refusal: nothing was created
-  | { kind: 'unknown'; error: string }; // ambiguous after finish → reconcile only
+  | { kind: 'unknown'; error: string }; // ambiguous after create → reconcile only
 
 interface Destination {
   capabilities: DestinationCapabilities;
+  upload_publishes?: boolean;                              // upload completion creates the post
   preflight(post, media, now): NamedProblem[];             // before any network call
   begin(post, credentials): Promise<{ remote_ref }>;       // persisted before upload
   upload(remote_ref, file, onProgress, signal): Promise<void>;
@@ -116,12 +133,40 @@ interface Destination {
 }
 ```
 
+`NamedProblem` carries the destination's real limits as `params`, so English and Vietnamese copy
+interpolates the same keys (`at most {{seconds}} seconds`) instead of hardcoding one platform.
+
 Authorization is a host flow (`app/electron/features/publishing/`): the OAuth window, the broker
 exchange and the Page choice never cross IPC, and the renderer only receives account display data.
 
 Caption composition is one core function: post body, then one line per affiliate link; the
 platform title comes from `post.title`, clipped only where a platform limit forces it (preflight
 reports a clip rather than silently truncating).
+
+## TikTok (issue #17, publish-now only)
+
+TikTok has no scheduling API and unattended app-driven scheduling (#18) is not approved, so a TikTok
+post with `planned` set fails preflight with the blocking `PUBLISH_SCHEDULE_UNSUPPORTED` problem and
+nothing is sent; only posts without a planned instant publish, on the explicit Publish action.
+
+- **Content Sharing Guidelines.** Interaction settings default off and honour the creator's own
+  disabled flags. Commercial content goes through the `disclose` switch: own promotion
+  (`brand_organic_toggle`) is labelled *Promotional content*, a third party (`brand_content_toggle`)
+  is labelled *Paid partnership*; a bare `disclose` blocks with `PUBLISH_DISCLOSURE_REQUIRED`, and a
+  paid partnership cannot be `SELF_ONLY` (`PUBLISH_PRIVACY_BRANDED_SELF_ONLY`). The panel shows the
+  matching label notice and the consent declaration with TikTok's Music Usage Confirmation and, for a
+  partnership, the Branded Content Policy.
+- **Options.** `privacy_level` has no default and comes from
+  `POST /v2/post/publish/creator_info/query/`'s `privacy_level_options`; the renderer receives only
+  display data (`TikTokCreatorSettings`), never a token. Creator info is re-queried before each post.
+- **Init / upload / publication.** `POST /v2/post/publish/video/init/` (FILE_UPLOAD) carries
+  `post_info.title` (the composed caption, UTF-16 clipped to 2200) and `source_info`; `publish_id` is
+  persisted as `remote_ref` right after init. Upload completion publishes, so `upload_publishes` is
+  set: after the first accepted chunk an upload failure is `unknown` (reconcile only), and a
+  still-`PROCESSING_UPLOAD` status after upload is `submitted`. Refresh runs through the broker; a
+  failed refresh is `CHANNEL_REAUTHORIZE`.
+- **Open item.** The desktop redirect URI form (loopback vs a registered https URL) is unverified;
+  the operator supplies the registered value via the build-time config.
 
 ## Open policy (recorded as missing, not invented)
 

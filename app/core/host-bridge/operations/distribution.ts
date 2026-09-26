@@ -10,7 +10,10 @@ import type {
   SaveAffiliate,
   SaveChannel,
 } from '../../distribution/distribution-contracts.js';
-import type { NamedProblem } from '../../distribution/publishing/contracts.js';
+import type {
+  NamedProblem,
+  TikTokCreatorSettings,
+} from '../../distribution/publishing/contracts.js';
 import { operation } from '../operation-contract.js';
 import { requestId, requestRecord } from '../validators.js';
 
@@ -33,6 +36,16 @@ export const distributionOperations = {
   }),
   'channel-connect': operation<{ id: string }, { account_name: string }>()({
     rendererMethod: 'channelConnect',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'channel-connect-tiktok': operation<{ id: string }, { account_name: string }>()({
+    rendererMethod: 'channelConnectTikTok',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
+  'tiktok-creator-info': operation<{ id: string }, TikTokCreatorSettings>()({
+    rendererMethod: 'tiktokCreatorInfo',
     validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
     toRequest: (id: string) => ({ id }),
   }),

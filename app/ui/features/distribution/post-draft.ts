@@ -25,7 +25,10 @@ export function postDraft(post?: Post): PostDraft {
     channel_id: post?.channel.id ?? '',
     export_id: post?.export.link_id ?? '',
     link_ids: post?.links.map((link) => link.id) ?? [],
-    options: post?.options ?? { youtube: null },
+    options: {
+      youtube: post?.options.youtube ?? null,
+      tiktok: post?.options.tiktok ?? null,
+    },
     state: post?.state ?? 'draft',
     plan: {
       enabled: !!planned,

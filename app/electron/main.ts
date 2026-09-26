@@ -249,6 +249,8 @@ const publishing = installPublishing({
   graphBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_GRAPH_BASE_URL,
   uploadBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_UPLOAD_BASE_URL,
   oauthBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_OAUTH_BASE_URL,
+  tiktokBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_TIKTOK_API_BASE_URL,
+  authorizeBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_TIKTOK_AUTHORIZE_BASE_URL,
 });
 
 // macOS stacks 3+ buttons top-to-bottom and always moves cancelId's button to the end.

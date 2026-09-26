@@ -30,14 +30,33 @@ function readMeta(env) {
   return { metaAppId, brokerUrl: broker.replace(/\/$/, '') };
 }
 
+function readTikTok(env) {
+  const clientKey = env.REUPMATIC_TIKTOK_CLIENT_KEY?.trim();
+  const redirectUri = env.REUPMATIC_TIKTOK_REDIRECT_URI?.trim();
+  const broker = env.REUPMATIC_TIKTOK_BROKER_URL?.trim();
+  if (!clientKey || !redirectUri || !broker) return null;
+  try {
+    if (new URL(broker).protocol !== 'https:') return null;
+  } catch {
+    return null;
+  }
+  return {
+    tiktokClientKey: clientKey,
+    tiktokRedirectUri: redirectUri,
+    tiktokBrokerUrl: broker.replace(/\/$/, ''),
+  };
+}
+
 /** Pure parse so the script and its test share one definition of a valid build config. */
 export function publishingConfigFromEnv(env = process.env) {
   const meta = readMeta(env);
   const googleClientId = env.REUPMATIC_GOOGLE_CLIENT_ID?.trim();
-  if (!meta && !googleClientId) return null;
+  const tiktok = readTikTok(env);
+  if (!meta && !googleClientId && !tiktok) return null;
   return {
     ...(meta ? { metaAppId: meta.metaAppId, brokerUrl: meta.brokerUrl } : {}),
     ...(googleClientId ? { googleClientId } : {}),
+    ...(tiktok ?? {}),
   };
 }
 

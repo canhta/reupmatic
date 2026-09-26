@@ -1,6 +1,6 @@
 import type { Platform } from './contracts.js';
 
-// Facebook Page Reels and YouTube have implemented destinations; the seam is shared, not the adapters.
+// Facebook Page Reels, YouTube and TikTok have implemented destinations; the seam, not the adapter.
 export function destinationAvailable(platform: Platform | string): boolean {
-  return platform === 'facebook_page' || platform === 'youtube';
+  return platform === 'facebook_page' || platform === 'youtube' || platform === 'tiktok';
 }

@@ -22,8 +22,12 @@ export const FACEBOOK_CAPABILITIES: DestinationCapabilities = {
   caption: { title_max: null, body_max: 2200 },
 };
 
-function problem(code: PublishProblemCode, severity: NamedProblem['severity'] = 'blocking') {
-  return { code, severity } satisfies NamedProblem;
+function problem(
+  code: PublishProblemCode,
+  severity: NamedProblem['severity'] = 'blocking',
+  params?: Record<string, number>,
+) {
+  return { code, severity, ...(params ? { params } : {}) } satisfies NamedProblem;
 }
 
 export function facebookPreflight(
@@ -34,26 +38,56 @@ export function facebookPreflight(
   const capabilities = FACEBOOK_CAPABILITIES;
   const problems: NamedProblem[] = [];
   if (media.duration_ms < capabilities.media.min_ms)
-    problems.push(problem('PUBLISH_MEDIA_TOO_SHORT'));
+    problems.push(
+      problem('PUBLISH_MEDIA_TOO_SHORT', 'blocking', {
+        seconds: capabilities.media.min_ms / 1000,
+      }),
+    );
   if (media.duration_ms > capabilities.media.max_ms)
-    problems.push(problem('PUBLISH_MEDIA_TOO_LONG'));
+    problems.push(
+      problem('PUBLISH_MEDIA_TOO_LONG', 'blocking', {
+        seconds: capabilities.media.max_ms / 1000,
+      }),
+    );
   if (media.width < capabilities.media.min_width || media.height < capabilities.media.min_height)
-    problems.push(problem('PUBLISH_MEDIA_RESOLUTION'));
+    problems.push(
+      problem('PUBLISH_MEDIA_RESOLUTION', 'blocking', {
+        min_width: capabilities.media.min_width,
+        min_height: capabilities.media.min_height,
+      }),
+    );
   const aspect = capabilities.media.aspect;
   if (
     aspect !== 'any' &&
     Math.abs(media.width / media.height - aspect.width / aspect.height) > aspect.tolerance
   )
-    problems.push(problem('PUBLISH_MEDIA_ASPECT'));
+    problems.push(
+      problem('PUBLISH_MEDIA_ASPECT', 'blocking', {
+        width: aspect.width,
+        height: aspect.height,
+      }),
+    );
   if (media.size_bytes > capabilities.media.max_bytes)
-    problems.push(problem('PUBLISH_MEDIA_TOO_LARGE'));
+    problems.push(
+      problem('PUBLISH_MEDIA_TOO_LARGE', 'blocking', {
+        gigabytes: capabilities.media.max_bytes / 1024 ** 3,
+      }),
+    );
   if (post.planned !== null && capabilities.native_schedule !== null) {
     const { min_lead_ms, max_lead_ms } = capabilities.native_schedule;
     const lead = post.planned.instant - now;
-    if (lead <= min_lead_ms) problems.push(problem('PUBLISH_SCHEDULE_TOO_SOON'));
-    if (lead > max_lead_ms) problems.push(problem('PUBLISH_SCHEDULE_TOO_FAR'));
+    if (lead <= min_lead_ms)
+      problems.push(
+        problem('PUBLISH_SCHEDULE_TOO_SOON', 'blocking', { minutes: min_lead_ms / 60000 }),
+      );
+    if (lead > max_lead_ms)
+      problems.push(
+        problem('PUBLISH_SCHEDULE_TOO_FAR', 'blocking', { days: max_lead_ms / 86400000 }),
+      );
   }
   if (composeCaption(post, capabilities).clipped)
-    problems.push(problem('PUBLISH_CAPTION_CLIPPED', 'warning'));
+    problems.push(
+      problem('PUBLISH_CAPTION_CLIPPED', 'warning', { limit: capabilities.caption.body_max }),
+    );
   return problems;
 }

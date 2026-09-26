@@ -26,6 +26,11 @@ function messageKeys(files) {
   return [...owners.keys()].sort();
 }
 
+test('the distribution locale catalogues carry identical keys in English and Vietnamese', () => {
+  const distribution = (locale) => [path.join(ui, 'locales', locale, 'distribution.ts')];
+  assert.deepEqual(messageKeys(distribution('en')), messageKeys(distribution('vi')));
+});
+
 test('UI messages are separated by locale and composed outside the i18n initializer', () => {
   const english = filesBelow(path.join(ui, 'locales/en')).filter((file) => file.endsWith('.ts'));
   const vietnamese = filesBelow(path.join(ui, 'locales/vi')).filter((file) => file.endsWith('.ts'));

@@ -37,7 +37,7 @@ export function PostPublication({
 
   const channel = catalog.snapshot?.channels.find((item) => item.id === post.channel.id);
   const platform = post.channel.platform;
-  const supported = platform === 'facebook_page' || platform === 'youtube';
+  const supported = platform === 'facebook_page' || platform === 'youtube' || platform === 'tiktok';
   const phase = post.publication?.phase ?? null;
   const blocking = (problems ?? []).filter((problem) => problem.severity === 'blocking');
   const warnings = (problems ?? []).filter((problem) => problem.severity === 'warning');
@@ -176,7 +176,7 @@ export function PostPublication({
           <VStack gap={1}>
             {[...blocking, ...warnings].map((problem) => (
               <Text as="p" type="body" key={problem.code}>
-                {t(problemKey(problem.code, platform))}
+                {t(problemKey(problem.code, platform), problem.params ?? {})}
               </Text>
             ))}
           </VStack>
@@ -186,7 +186,9 @@ export function PostPublication({
       {showPublish && (
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Button
-            label={post.planned ? t('postPublishScheduled') : t('postPublish')}
+            label={
+              post.planned && platform !== 'tiktok' ? t('postPublishScheduled') : t('postPublish')
+            }
             variant="primary"
             isDisabled={disabled || publishing || blocking.length > 0 || problems === null}
             onClick={() => void publish()}

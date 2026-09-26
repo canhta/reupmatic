@@ -6,12 +6,14 @@ import type {
   DestinationCredentials,
   Publication,
   PublicationMedia,
+  TikTokCreatorSettings,
 } from '../../../core/distribution/publishing/contracts.js';
 import { facebookPreflight } from '../../../core/distribution/publishing/facebook.js';
+import { tiktokPreflight } from '../../../core/distribution/publishing/tiktok.js';
 import { youtubePreflight } from '../../../core/distribution/publishing/youtube.js';
 import type { IpcWire } from '../../runtime/ipc.js';
 import type { PublishingConfig } from './config.js';
-import { requireGoogleClientId, requireMeta } from './config.js';
+import { requireGoogleClientId, requireMeta, requireTikTok } from './config.js';
 import type { ChannelCredentialStore } from './credential-store.js';
 import { publishingDiagnostics } from './diagnostics.js';
 import {
@@ -26,9 +28,12 @@ import {
   listPages,
 } from './oauth.js';
 import { GOOGLE_TOKEN_ENDPOINT, refreshAccessToken } from './oauth-loopback.js';
-import { openFacebookLogin } from './oauth-window.js';
+import { openFacebookLogin, openTikTokLogin } from './oauth-window.js';
 import { PublishingService } from './publish-service.js';
 import { errorCodeOf } from './publishing-error.js';
+import { DEFAULT_TIKTOK_BASE_URL, TikTokDestination } from './tiktok-adapter.js';
+import { TikTokApi, type TikTokCreatorInfo } from './tiktok-api.js';
+import { exchangeCodeForTokens, refreshTokens, TIKTOK_AUTHORIZE_BASE_URL } from './tiktok-oauth.js';
 import { YOUTUBE_UPLOAD_ENDPOINT, YouTubeDestination } from './youtube-adapter.js';
 import { connectYouTubeChannel } from './youtube-connect.js';
 
@@ -47,6 +52,8 @@ export interface PublishingHost {
   oauthBaseUrl?: string;
   youtubeUploadEndpoint?: string;
   youtubeTokenEndpoint?: string;
+  tiktokBaseUrl?: string;
+  authorizeBaseUrl?: string;
   fetch?: typeof fetch;
   diagnostics?: DiagnosticRecorder;
 }
@@ -58,8 +65,9 @@ export function installPublishing(host: PublishingHost) {
   const pending = new Map<string, { pages: ConnectedPage[] }>();
   const diagnostics = publishingDiagnostics(host.diagnostics);
   // One platform-agnostic service; each attempt builds its own adapter.
+  const tiktokBaseUrl = host.tiktokBaseUrl ?? DEFAULT_TIKTOK_BASE_URL;
   const service = new PublishingService({
-    destinationFor: (platform, credentials) => {
+    destinationFor: (platform, credentials, media) => {
       if (platform === 'facebook_page')
         return new FacebookDestination({
           pageId: credentials.account_id,
@@ -74,9 +82,30 @@ export function installPublishing(host: PublishingHost) {
           fetchImpl: host.fetch,
           diagnostics,
         });
+      if (platform === 'tiktok')
+        return new TikTokDestination({
+          accessToken: credentials.access_token,
+          videoSizeBytes: media?.size_bytes ?? 0,
+          ...(media ? { videoDurationMs: media.duration_ms } : {}),
+          baseUrl: tiktokBaseUrl,
+          fetch: host.fetch,
+        });
       throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
     },
   });
+  function tiktokApi(accessToken: string): TikTokApi {
+    return new TikTokApi({ accessToken, baseUrl: tiktokBaseUrl, fetch: host.fetch });
+  }
+  function settingsFrom(info: TikTokCreatorInfo): TikTokCreatorSettings {
+    return {
+      nickname: info.nickname,
+      privacy_level_options: info.privacy_level_options,
+      comment_disabled: info.comment_disabled,
+      duet_disabled: info.duet_disabled,
+      stitch_disabled: info.stitch_disabled,
+      max_video_post_duration_ms: info.max_video_post_duration_ms,
+    };
+  }
 
   function requireConfig(): PublishingConfig {
     if (!host.config) throw new Error('PUBLISHING_NOT_CONFIGURED');
@@ -90,17 +119,47 @@ export function installPublishing(host: PublishingHost) {
     if (post.channel.platform === 'youtube') return youtubePreflight(post, media, Date.now());
     if (post.channel.platform === 'facebook_page')
       return facebookPreflight(post, media, Date.now());
+    if (post.channel.platform === 'tiktok') return tiktokPreflight(post, media, Date.now());
     throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
   }
-  /** Refreshes an expired Google access token before any network phase; page tokens never expire. */
-  async function freshCredentials(post: Post): Promise<DestinationCredentials> {
-    const stored = await host.credentials.credential(post.channel.id);
+  /**
+   * Refreshes an expired access token before any network phase; Facebook page tokens never expire,
+   * Google and TikTok refresh through their broker (a failed refresh needs a new login).
+   */
+  async function freshCredentials(
+    channelId: string,
+    platform: Platform,
+  ): Promise<DestinationCredentials> {
+    const stored = await host.credentials.credential(channelId);
     if (!stored) throw new Error('CHANNEL_NOT_CONNECTED');
     const expiring = stored.expires_at !== null && stored.expires_at <= Date.now() + 60_000;
-    if (post.channel.platform !== 'youtube' || !expiring)
+    if (!expiring || platform === 'facebook_page')
       return { account_id: stored.account_id, access_token: stored.access_token };
+    if (platform === 'tiktok') {
+      if (!stored.refresh_token) {
+        await host.credentials.markReauthorize(channelId);
+        throw new Error('CHANNEL_REAUTHORIZE');
+      }
+      try {
+        const tokens = await refreshTokens(
+          stored.refresh_token,
+          requireTikTok(host.config).brokerUrl,
+          host.fetch,
+        );
+        await host.credentials.updateTokens(channelId, {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_at: Date.now() + tokens.expires_in * 1000,
+        });
+        return { account_id: stored.account_id, access_token: tokens.access_token };
+      } catch (error) {
+        // Any failed refresh needs a new login.
+        await host.credentials.markReauthorize(channelId);
+        throw error;
+      }
+    }
     if (!stored.refresh_token) {
-      await host.credentials.markReauthorize(post.channel.id);
+      await host.credentials.markReauthorize(channelId);
       throw new Error('CHANNEL_REAUTHORIZE');
     }
     try {
@@ -110,7 +169,7 @@ export function installPublishing(host: PublishingHost) {
         tokenEndpoint: host.youtubeTokenEndpoint ?? GOOGLE_TOKEN_ENDPOINT,
         fetchImpl: host.fetch,
       });
-      await host.credentials.updateTokens(post.channel.id, {
+      await host.credentials.updateTokens(channelId, {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? stored.refresh_token,
         expires_at: tokens.expires_at,
@@ -118,7 +177,7 @@ export function installPublishing(host: PublishingHost) {
       return { account_id: stored.account_id, access_token: tokens.access_token };
     } catch (error) {
       if (errorCodeOf(error) === 'CHANNEL_REAUTHORIZE')
-        await host.credentials.markReauthorize(post.channel.id);
+        await host.credentials.markReauthorize(channelId);
       throw error;
     }
   }
@@ -185,6 +244,43 @@ export function installPublishing(host: PublishingHost) {
     return { account_name: channel.name };
   });
 
+  host.wire('channel-connect-tiktok', async (input) => {
+    const channel = host.getChannel(input.id);
+    if (!channel) throw new Error('CHANNEL_NOT_FOUND');
+    if (channel.platform !== 'tiktok') throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
+    const window = host.getWindow();
+    if (!window) throw new Error('WINDOW_UNAVAILABLE');
+    const config = requireTikTok(host.config);
+    const { code, codeVerifier } = await openTikTokLogin(window, {
+      clientKey: config.clientKey,
+      redirectUri: config.redirectUri,
+      authorizeBaseUrl: host.authorizeBaseUrl ?? TIKTOK_AUTHORIZE_BASE_URL,
+    });
+    const tokens = await exchangeCodeForTokens(
+      { code, codeVerifier, redirectUri: config.redirectUri },
+      config.brokerUrl,
+      host.fetch,
+    );
+    const info = await tiktokApi(tokens.access_token).creatorInfo();
+    await host.credentials.save(input.id, {
+      account_id: tokens.open_id,
+      account_name: info.nickname,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expires_at: Date.now() + tokens.expires_in * 1000,
+    });
+    host.changed();
+    return { account_name: info.nickname };
+  });
+
+  host.wire('tiktok-creator-info', async (input) => {
+    const channel = host.getChannel(input.id);
+    if (!channel) throw new Error('CHANNEL_NOT_FOUND');
+    if (channel.platform !== 'tiktok') throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
+    const credentials = await freshCredentials(input.id, 'tiktok');
+    return settingsFrom(await tiktokApi(credentials.access_token).creatorInfo());
+  });
+
   host.wire('channel-disconnect', async (input) => {
     await host.credentials.remove(input.id);
     pending.delete(input.id);
@@ -200,7 +296,7 @@ export function installPublishing(host: PublishingHost) {
 
   host.wire('post-publish', async (input) => {
     const { post, media } = await publishable(input.id);
-    const credentials = await freshCredentials(post);
+    const credentials = await freshCredentials(post.channel.id, post.channel.platform);
     const attempt_id = randomUUID();
     try {
       await service.publish({
@@ -231,7 +327,7 @@ export function installPublishing(host: PublishingHost) {
 
   host.wire('post-reconcile', async (input) => {
     const post = host.getPost(input.id);
-    const credentials = await freshCredentials(post);
+    const credentials = await freshCredentials(post.channel.id, post.channel.platform);
     try {
       await service.reconcile({
         post,

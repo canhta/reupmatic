@@ -194,6 +194,18 @@ export function ChannelManager({
       setConnecting(false);
     }
   }
+  async function connectTikTok() {
+    setConnecting(true);
+    setConnectError('');
+    try {
+      await unwrap(window.reupmatic.channelConnectTikTok(draft.id));
+      await catalog.reload();
+    } catch (reason) {
+      setConnectError(connectMessage(reason, 'channelConnectFailed'));
+    } finally {
+      setConnecting(false);
+    }
+  }
 
   const platformFields = useMemo(
     () =>
@@ -205,6 +217,7 @@ export function ChannelManager({
           enumValues: [
             { value: 'youtube', label: t('platform_youtube') },
             { value: 'facebook_page', label: t('platform_facebook_page') },
+            { value: 'tiktok', label: t('platform_tiktok') },
           ],
         },
       ] as const,
@@ -382,7 +395,7 @@ export function ChannelManager({
                 label={t('channelPlatform')}
                 value={draft.platform}
                 isDisabled={disabled || draft.expected_revision !== null}
-                options={['youtube', 'facebook_page'].map((value) => ({
+                options={['youtube', 'facebook_page', 'tiktok'].map((value) => ({
                   value,
                   label: t(`platform_${value}`),
                 }))}
@@ -483,6 +496,44 @@ export function ChannelManager({
                 </HStack>
                 {savedChannel?.connection !== 'connected' && (
                   <Text type="supporting">{t('channelConnectGoogleHelp')}</Text>
+                )}
+                {connectError && (
+                  <Text as="p" type="body" className="inline-error" role="alert">
+                    {connectError}
+                  </Text>
+                )}
+              </VStack>
+            )}
+            {draft.expected_revision !== null && draft.platform === 'tiktok' && (
+              <VStack gap={2}>
+                <Text type="body">
+                  {t('channelConnection')}:{' '}
+                  {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
+                </Text>
+                {savedChannel?.account_name && (
+                  <Text type="supporting">
+                    {t('channelConnectedAs', { name: savedChannel.account_name })}
+                  </Text>
+                )}
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Button
+                    label={
+                      savedChannel?.connection === 'connected'
+                        ? t('channelDisconnect')
+                        : savedChannel?.connection === 'reauthorize'
+                          ? t('channelReconnect')
+                          : t('channelConnect')
+                    }
+                    isDisabled={disabled || connecting}
+                    onClick={() =>
+                      void (savedChannel?.connection === 'connected'
+                        ? disconnect()
+                        : connectTikTok())
+                    }
+                  />
+                </HStack>
+                {savedChannel?.connection !== 'connected' && (
+                  <Text type="supporting">{t('channelConnectHelpTikTok')}</Text>
                 )}
                 {connectError && (
                   <Text as="p" type="body" className="inline-error" role="alert">

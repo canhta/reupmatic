@@ -1,5 +1,6 @@
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
+import type { PublicationMedia } from '../../../core/distribution/publishing/contracts.js';
 import { authorizedCompositionSources } from '../../../core/editing/composition/dependencies.js';
 import type { Composition } from '../../../core/editing/composition/document.js';
 import {
@@ -100,9 +101,7 @@ export class MediaRegistry {
   }
 
   /** Probes an export file directly, without registering it as an asset or an original. */
-  async probeVideoFile(
-    filename: string,
-  ): Promise<{ duration_ms: number; width: number; height: number; size_bytes: number }> {
+  async probeVideoFile(filename: string): Promise<PublicationMedia> {
     return probeVideoFile(this.worker, filename);
   }
 

@@ -19,8 +19,15 @@ import {
 import { errorCodeOf, isDefiniteRefusal } from './publishing-error.js';
 
 export interface PublishingServiceOptions {
-  /** Builds the platform adapter for one attempt; the service itself stays platform-agnostic. */
-  destinationFor(platform: Platform, credentials: DestinationCredentials): Destination;
+  /**
+   * Builds the platform adapter for one attempt; the service itself stays platform-agnostic. The
+   * media is provided at publish time (TikTok's init needs the size) and is null for reconcile.
+   */
+  destinationFor(
+    platform: Platform,
+    credentials: DestinationCredentials,
+    media: PublicationMedia | null,
+  ): Destination;
   now?: () => number;
 }
 
@@ -62,7 +69,11 @@ export class PublishingService {
     try {
       if (!canStartAttempt(input.post.publication))
         throw new Error('PUBLICATION_ALREADY_ATTEMPTED');
-      const destination = this.#destinationFor(input.post.channel.platform, input.credentials);
+      const destination = this.#destinationFor(
+        input.post.channel.platform,
+        input.credentials,
+        input.media,
+      );
       const { remote_ref } = await destination.begin(input.post, input.credentials);
       let publication = startAttempt(input.post.publication, {
         attempt_id: input.attempt_id,
@@ -111,7 +122,7 @@ export class PublishingService {
     const current = input.post.publication;
     if (!current) throw new Error('PUBLICATION_MISSING');
     if (current.phase === 'published' || current.phase === 'failed') return current;
-    const destination = this.#destinationFor(input.post.channel.platform, input.credentials);
+    const destination = this.#destinationFor(input.post.channel.platform, input.credentials, null);
     const outcome = await destination.reconcile(
       current.remote_ref,
       input.post,
@@ -146,6 +157,8 @@ export class PublishingService {
         },
         now,
       );
+    // Already persisted as submitted; the platform is still processing.
+    if (outcome.kind === 'submitted') return publication;
     if (outcome.kind === 'unknown') return markUnknown(publication, { error: outcome.error }, now);
     return markFailed(publication, { error: outcome.error }, now);
   }
@@ -200,6 +213,10 @@ export class PublishingService {
         },
         now,
       );
+    }
+    if (outcome.kind === 'submitted') {
+      if (current.phase === 'submitted' || current.phase === 'unknown') return current;
+      return markSubmitted(current, now);
     }
     if (outcome.kind === 'failed') return markFailed(current, { error: outcome.error }, now);
     if (current.phase === 'unknown' && outcome.error === current.error) return current;
