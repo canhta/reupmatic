@@ -33,7 +33,7 @@ export const distributionVi = {
   channelConnectedAs: 'Đã kết nối với {{name}}',
   channelConnectFailed: 'Không kết nối được. Thử lại.',
   channelDisconnectFailed: 'Không ngắt kết nối được. Thử lại.',
-  channelNotConfigured: 'Bản dựng này chưa cấu hình đăng bài.',
+  channelNotConfigured: 'Hiện chưa đăng bài được.',
   channelNoPages: 'Tài khoản này không có Trang nào.',
   channelSchedule: 'Bài kế tiếp',
   channelNoUpcoming: 'Chưa có bài dự kiến',
@@ -113,7 +113,7 @@ export const distributionVi = {
   publishError_PUBLISH_PERMISSION_DENIED: 'Tài khoản không có quyền đăng lên Trang này.',
   publishError_PUBLISH_INVALID_REQUEST:
     'Facebook từ chối bài đăng. Kiểm tra lại video rồi thử lại.',
-  publishError_PUBLISHING_NOT_CONFIGURED: 'Bản dựng này chưa cấu hình đăng bài.',
+  publishError_PUBLISHING_NOT_CONFIGURED: 'Hiện chưa đăng bài được.',
   publishError_PUBLISH_PLATFORM_UNSUPPORTED: 'Đích này chưa đăng được.',
   publishError_PUBLISH_PREFLIGHT_FAILED: 'Hãy xử lý các vấn đề phía trên trước khi đăng.',
   publishErrorDefault: 'Không đăng được. Thử lại.',

@@ -31,7 +31,7 @@ export const distributionEn = {
   channelConnectedAs: 'Connected as {{name}}',
   channelConnectFailed: 'Could not connect. Try again.',
   channelDisconnectFailed: 'Could not disconnect. Try again.',
-  channelNotConfigured: 'Publishing is not set up in this build.',
+  channelNotConfigured: "Publishing isn't available right now.",
   channelNoPages: 'No Page is available for this account.',
   channelSchedule: 'Next post',
   channelNoUpcoming: 'No upcoming post',
@@ -111,7 +111,7 @@ export const distributionEn = {
   publishError_PUBLISH_PERMISSION_DENIED: 'The account lacks permission to publish to this Page.',
   publishError_PUBLISH_INVALID_REQUEST:
     'Facebook rejected the post. Check the media and try again.',
-  publishError_PUBLISHING_NOT_CONFIGURED: 'Publishing is not set up in this build.',
+  publishError_PUBLISHING_NOT_CONFIGURED: "Publishing isn't available right now.",
   publishError_PUBLISH_PLATFORM_UNSUPPORTED: 'This destination cannot publish yet.',
   publishError_PUBLISH_PREFLIGHT_FAILED: 'Fix the issues above before publishing.',
   publishErrorDefault: 'Could not publish. Try again.',
