@@ -15,10 +15,10 @@ from vision_fixture import HAS_NATIVE, VisionFixture
 
 @unittest.skipUnless(HAS_NATIVE, "native FFmpeg + optional NumPy/OpenCV required")
 class ControlledVisionPipelineTests(VisionFixture, unittest.TestCase):
-    def test_controlled_ocr_returns_timed_cues_and_separate_persisted_evidence(self):
+    def test_controlled_ocr_extraction_returns_timed_cues_and_persisted_evidence(self):
         s, aid = self.session()
         data = s.call(
-            "media.ocr",
+            "media.ocr.extract",
             {
                 "asset_id": aid,
                 "start_ms": 0,
@@ -29,6 +29,7 @@ class ControlledVisionPipelineTests(VisionFixture, unittest.TestCase):
             },
             revision=9,
         )
+        self.assertEqual(data["scope"], "full-source")
         self.assertEqual(
             [(c["start_ms"], c["end_ms"], c["text"]) for c in data["cues"]],
             [(0, 1000, "Fixture OCR")],
@@ -36,7 +37,7 @@ class ControlledVisionPipelineTests(VisionFixture, unittest.TestCase):
         self.assertEqual(len(data["observations"]), 2)
         self.assertEqual(data["source_sha256"], self.source_hash)
         saved = json.loads(
-            (self.workspace / "analyses" / f"{data['analysis_id']}.json").read_text()
+            (self.workspace / "analyses" / data["analysis_id"] / "summary.json").read_text()
         )
         self.assertEqual(saved["observations"], data["observations"])
 

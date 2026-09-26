@@ -28,7 +28,8 @@ DISK_RESERVE = 64 * 1024**2
 
 def parse_options(method: str, params: object) -> dict:
     common = {"asset_id", "start_ms", "end_ms"}
-    ocr = method in ("media.ocr", "media.ocr.extract")
+    # vision.ocr is the internal chunk call the processing scan uses; it is not a wire method.
+    ocr = method in ("media.ocr.extract", "vision.ocr")
     required = common | (
         {"language", "sample_ms", "min_confidence"} if ocr else {"target", "padding_px"}
     )
@@ -88,7 +89,7 @@ class VisionService:
         emit = emit_progress or (lambda data: host.emit(req, "progress", data))
         params = parse_options(req["method"], req["params"])
         source = host.assets.get(params["asset_id"], "video")
-        ocr = req["method"] == "media.ocr"
+        ocr = req["method"] == "vision.ocr"
         kind = "ocr" if ocr else "inpainting"
 
         def check():

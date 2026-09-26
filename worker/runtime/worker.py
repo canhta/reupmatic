@@ -221,7 +221,6 @@ class Worker:
                     "models.configure": partial(configure_models, self),
                     "models.merge": partial(merge_models, self),
                     "models.unconfigure": partial(unconfigure_models, self),
-                    "media.ocr": self.vision.run,
                     "media.inpaint": self.vision.run,
                     "asset.register": self.assets.register,
                     "media.probe": partial(probe, self),

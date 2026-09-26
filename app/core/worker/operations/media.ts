@@ -108,7 +108,6 @@ export const mediaOperations = {
   'media.peaks': { method: 'media.peaks', kind: 'queued', validate: validateMediaPeaksResult },
   'media.poster': { method: 'media.poster', kind: 'queued', validate: validateMediaPosterResult },
   'audio.probe': { method: 'audio.probe', kind: 'queued', validate: validateAudioProbeResult },
-  'media.ocr': { method: 'media.ocr', kind: 'queued', validate: resultRecord },
   'media.ocr.extract': { method: 'media.ocr.extract', kind: 'queued', validate: resultRecord },
   'media.inpaint': { method: 'media.inpaint', kind: 'queued', validate: resultRecord },
   'media.render': { method: 'media.render', kind: 'queued', validate: validateRenderOutput },

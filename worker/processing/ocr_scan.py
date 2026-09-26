@@ -21,7 +21,7 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
         result = service.run(
             {
                 **req,
-                "method": "media.ocr",
+                "method": "vision.ocr",
                 "params": {
                     **options,
                     "asset_id": req["params"]["asset_id"],
@@ -32,7 +32,7 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
             staging=staging,
             emit_progress=progress_for(host, req, "processingOcr", first, last, start, end),
         )
-        verify_segment_models(result, fingerprints, options, "media.ocr")
+        verify_segment_models(result, fingerprints, options, "vision.ocr")
         current = (result["width"], result["height"])
         if geometry is not None and current != geometry:
             raise WorkerError("VISION_FRAME_INVALID")

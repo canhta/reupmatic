@@ -21,7 +21,7 @@ def ocr_window(sample_ms):
 def verify_segment_models(result, expected, options, method):
     actual = result.get("model_fingerprints", {})
     needed = {}
-    if method == "media.ocr" or options.get("target") == "text":
+    if method == "vision.ocr" or options.get("target") == "text":
         needed["ocr"] = expected["ocr_" + options["language"]]
     if method == "media.inpaint":
         needed["inpainting"] = expected["inpainting"]

@@ -7,10 +7,10 @@ import { parseVisionInput, VisionCoordinator } from '../../dist-core/vision/visi
 const input = (id = 'vision-request-001') => ({
   request_id: id,
   revision: 4,
-  method: 'media.ocr',
+  method: 'media.ocr.extract',
   params: {
     asset_id: 'video-1',
-    start_ms: 1000,
+    start_ms: 0,
     end_ms: 2000,
     language: 'vi',
     sample_ms: 500,
@@ -21,13 +21,15 @@ const output = () => ({
   kind: 'ocr',
   asset_id: 'video-1',
   source_sha256: 'a'.repeat(64),
-  start_ms: 1000,
+  start_ms: 0,
   end_ms: 2000,
   language: 'vi',
   sample_ms: 500,
   width: 160,
   height: 90,
   analysis_id: 'analysis-1',
+  scope: 'full-source',
+  evidence: { chunks: 1, preview_count: 0, observation_count: 0 },
   observations: [],
   cues: [{ id: 'cue-1', start_ms: 1000, end_ms: 1500, text: 'Tiếng Việt' }],
 });
@@ -53,13 +55,14 @@ test('vision validates bounded requests and preserves content language', () => {
     { sample_ms: true },
     { min_confidence: NaN },
     { language: 'xx' },
-    { end_ms: 150000 },
+    { start_ms: 1 },
     { start_ms: -1 },
     { region: { x: 0, y: 0, width: 2, height: 1 } },
   ]) {
     assert.throws(() => parseVisionInput({ ...value, params: { ...value.params, ...patch } }));
   }
   assert.throws(() => parseVisionInput({ ...value, method: 'models.install' }));
+  assert.throws(() => parseVisionInput({ ...value, method: 'media.ocr' }));
   assert.throws(() => parseVisionInput({ ...value, revision: Infinity }));
 });
 test('manual masks require coordinates; automatic text masks do not require review', () => {

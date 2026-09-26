@@ -101,7 +101,7 @@ Snapshots contain monotonic per-host `version`, `paused`, active job ID, recover
 
 ## Local vision
 `models.status {}` reports local OCR/inpainting availability with `verified: false`.
-`media.ocr` and `media.inpaint` use the existing envelope, queue and cancellation.
+`media.ocr.extract` and `media.inpaint` use the existing envelope, queue and cancellation.
 See `worker-request.schema.json`, `app/core/vision/vision.ts` for bounds and exact request/result behavior. OCR observations
 are evidence, not editor instructions. Draft application is a separate explicit,
 revision-checked operation. The manifest, model weights and private paths are not

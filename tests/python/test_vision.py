@@ -163,7 +163,7 @@ class VisionValidationTests(unittest.TestCase):
             {"region": {"x": 0, "y": 0, "width": 2, "height": 1}},
         ):
             with self.subTest(patch=patch), self.assertRaises(WorkerError):
-                parse_options("media.ocr", {**p, **patch})
+                parse_options("vision.ocr", {**p, **patch})
 
     def test_bad_vision_request_does_not_kill_worker(self):
         with tempfile.TemporaryDirectory() as directory:

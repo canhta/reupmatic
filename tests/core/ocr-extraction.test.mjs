@@ -31,9 +31,9 @@ const result = {
   scope: 'full-source',
   evidence: { chunks: 2, preview_count: 0, observation_count: 61 },
 };
-test('full extraction has an independent request contract beyond the sample limit', () => {
+test('full extraction is the only OCR request contract', () => {
   assert.deepEqual(parseVisionInput(request), request);
-  assert.throws(() => parseVisionInput({ ...request, method: 'media.ocr' }), /VISION_LIMIT/);
+  assert.throws(() => parseVisionInput({ ...request, method: 'media.ocr' }), /INVALID_REQUEST/);
   assert.throws(
     () => parseVisionInput({ ...request, params: { ...request.params, start_ms: 1 } }),
     /INVALID_REQUEST/,

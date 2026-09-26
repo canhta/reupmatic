@@ -42,13 +42,13 @@ class VisionContracts(unittest.TestCase):
             "sample_ms": 500,
             "min_confidence": 0.5,
         }
-        self.assertTrue(self.valid("media.ocr", params))
-        self.assertEqual(parse_options("media.ocr", params), params)
+        self.assertTrue(self.valid("media.ocr.extract", params))
+        self.assertEqual(parse_options("media.ocr.extract", params), params)
         for changed in ({"sample_ms": 10}, {"min_confidence": 2}, {"shell": "command"}):
             with self.subTest(changed=changed):
-                self.assertFalse(self.valid("media.ocr", params | changed))
+                self.assertFalse(self.valid("media.ocr.extract", params | changed))
                 with self.assertRaises(WorkerError):
-                    parse_options("media.ocr", params | changed)
+                    parse_options("media.ocr.extract", params | changed)
 
     def test_manual_and_text_inpainting_have_distinct_requirements(self):
         common = {"asset_id": "known-asset", "start_ms": 0, "end_ms": 1000, "padding_px": 4}
@@ -73,4 +73,4 @@ class VisionContracts(unittest.TestCase):
             "min_confidence": 0.5,
         }
         with self.assertRaises(WorkerError):
-            parse_options("media.ocr", params)
+            parse_options("media.ocr.extract", params)

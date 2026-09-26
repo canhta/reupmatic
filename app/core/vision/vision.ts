@@ -5,7 +5,6 @@ import { RemoteError } from '../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../worker/worker-client.js';
 
 const VISION_METHODS = [
-  'media.ocr',
   'media.ocr.extract',
   'media.inpaint',
 ] as const satisfies readonly OperationName[];
