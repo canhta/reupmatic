@@ -2,11 +2,13 @@ import { Button } from '@astryxdesign/core/Button';
 import { ContextMenu } from '@astryxdesign/core/ContextMenu';
 import type { DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { StatusDot } from '@astryxdesign/core/StatusDot';
+import { VStack } from '@astryxdesign/core/VStack';
 import { Captions, Film, Image as ImageIcon, Music, Plus } from 'lucide-react';
 import { type DragEvent, type MouseEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -139,7 +141,7 @@ export function ProjectMediaSection() {
   }
 
   return (
-    <div className="project-media" onContextMenuCapture={capture}>
+    <VStack gap={2} onContextMenuCapture={capture}>
       {}
       <Button
         label={t('mediaAdd')}
@@ -175,7 +177,7 @@ export function ProjectMediaSection() {
                   onDragStart={(event) => startDrag(event, row)}
                   startContent={<Icon icon={KIND_ICON[row.kind]} size="sm" color="secondary" />}
                   endContent={
-                    <span className="project-media-actions">
+                    <HStack as="span" gap={2} vAlign="center" paddingInlineStart={2}>
                       {row.missing && (
                         <Button
                           label={t('mediaRelink')}
@@ -214,7 +216,7 @@ export function ProjectMediaSection() {
                           items={actions}
                         />
                       )}
-                    </span>
+                    </HStack>
                   }
                 />
               );
@@ -222,7 +224,7 @@ export function ProjectMediaSection() {
           </List>
         </ContextMenu>
       )}
-    </div>
+    </VStack>
   );
 }
 

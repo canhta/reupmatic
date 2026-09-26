@@ -1,3 +1,4 @@
+import { HStack } from '@astryxdesign/core/HStack';
 import { EditorExportDialog } from './EditorExportDialog';
 import { EditorProfileSwitcher } from './EditorProfileSwitcher';
 import { EditorProjectHeader } from './EditorProjectHeader';
@@ -8,9 +9,9 @@ export function EditorToolbarTitle() {
 
 export function EditorToolbarActions() {
   return (
-    <div className="workspace-command-actions">
+    <HStack vAlign="center" className="workspace-command-actions">
       <EditorProfileSwitcher />
       <EditorExportDialog />
-    </div>
+    </HStack>
   );
 }

@@ -187,7 +187,7 @@ export function EditorExportDialog() {
             </Collapsible>
           )}
           {steps.length > 0 && (
-            <div>
+            <VStack>
               <Text as="p" type="supporting">
                 {t('exportStepsSummary')}
               </Text>
@@ -200,7 +200,7 @@ export function EditorExportDialog() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </VStack>
           )}
           {(running || editor.job) && (
             <Text as="p" type="body" role="status">
