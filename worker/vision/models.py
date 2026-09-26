@@ -35,6 +35,26 @@ def open_inpainting_session(path: Path):
     return ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
 
 
+# Status is called often; the ~200 MB LaMa graph is opened once per (path, weight hash).
+_SIGNATURE_CACHE: dict[tuple[str, str], str | None] = {}
+
+
+def inpainting_signature_code(bundle: dict) -> str | None:
+    key = (str(bundle["model"]["path"]), str(bundle["model"]["sha256"]))
+    if key not in _SIGNATURE_CACHE:
+        try:
+            session = open_inpainting_session(Path(key[0]))
+            inputs = {
+                item.name: {"shape": list(item.shape), "type": item.type}
+                for item in session.get_inputs()
+            }
+        except Exception:
+            _SIGNATURE_CACHE[key] = "MODEL_INFERENCE_FAILED"
+        else:
+            _SIGNATURE_CACHE[key] = None if lama_signature(inputs) else "MODEL_SHAPE_UNSUPPORTED"
+    return _SIGNATURE_CACHE[key]
+
+
 class ModelRegistry:
     def __init__(self, manifest: Path):
         self.manifest = manifest
@@ -179,17 +199,9 @@ class ModelRegistry:
                         raise WorkerError(failures[0])
                 else:
                     bundle = self.require(kind, verify=False)
-                    inputs = {}
-                    try:
-                        session = open_inpainting_session(Path(bundle["model"]["path"]))
-                        inputs = {
-                            item.name: {"shape": list(item.shape), "type": item.type}
-                            for item in session.get_inputs()
-                        }
-                    except Exception:
-                        raise WorkerError("MODEL_INFERENCE_FAILED") from None
-                    if not lama_signature(inputs):
-                        raise WorkerError("MODEL_SHAPE_UNSUPPORTED")
+                    signature = inpainting_signature_code(bundle)
+                    if signature is not None:
+                        raise WorkerError(signature)
             except WorkerError as error:
                 code = error.code
             result[kind] = {

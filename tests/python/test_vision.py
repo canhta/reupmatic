@@ -186,6 +186,51 @@ class ModelRegistryTests(unittest.TestCase):
         self.assertIsNone(status["inpainting"]["code"])
         self.assertFalse(status["inpainting"]["verified"])
 
+    def test_status_opens_the_session_once_per_model_file(self):
+        from unittest.mock import patch
+
+        from vision.models import ModelRegistry
+
+        opened = []
+
+        def opener(path):
+            opened.append(str(path))
+            return self.signature_session(["batch", 3, 512, 512])
+
+        with (
+            patch("vision.models.runtime_available", return_value=True),
+            patch("vision.models.open_inpainting_session", side_effect=opener),
+        ):
+            first = ModelRegistry(self.manifest).status()
+            second = ModelRegistry(self.manifest).status()
+        self.assertTrue(first["inpainting"]["available"])
+        self.assertTrue(second["inpainting"]["available"])
+        self.assertEqual(len(opened), 1)
+
+    def test_a_changed_weight_reopens_the_session(self):
+        import hashlib
+        import json
+        from unittest.mock import patch
+
+        from vision.models import ModelRegistry
+
+        opened = []
+
+        def opener(path):
+            opened.append(str(path))
+            return self.signature_session(["batch", 3, 512, 512])
+
+        with (
+            patch("vision.models.runtime_available", return_value=True),
+            patch("vision.models.open_inpainting_session", side_effect=opener),
+        ):
+            ModelRegistry(self.manifest).status()
+            (self.root / "local.onnx").write_bytes(b"a different weight file")
+            self.artifact["sha256"] = hashlib.sha256(b"a different weight file").hexdigest()
+            self.manifest.write_text(json.dumps({"inpainting": {"model": self.artifact}}))
+            ModelRegistry(self.manifest).status()
+        self.assertEqual(len(opened), 2)
+
     def test_status_survives_a_model_that_cannot_be_opened(self):
         from unittest.mock import patch
 
