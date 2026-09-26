@@ -30,6 +30,11 @@ extraResources:
       - "!.venv/**"
   - from: python
     to: python
+    # Runtime packs are installed by the user, never bundled; `stage:packs` leaves them here for
+    # local `pnpm dev` resolution only.
+    filter:
+      - "**/*"
+      - "!runtime-packs/**"
   - from: ffmpeg
     to: ffmpeg
 mac:
