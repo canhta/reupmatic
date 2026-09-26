@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { canStartAttempt } from '../../dist-core/distribution/publishing/publication.js';
 import { readPublishingConfig } from '../../dist-node/electron/features/publishing/config.js';
 import { ChannelCredentialStore } from '../../dist-node/electron/features/publishing/credential-store.js';
 import { FacebookDestination } from '../../dist-node/electron/features/publishing/facebook-adapter.js';
@@ -993,17 +994,18 @@ test('a failed TikTok status maps fail_reason, and reconcile resolves processing
     });
     assert.equal(processing.phase, 'submitted');
 
+    // An uploading TikTok post whose upload completed is still processing, never retryable.
     const uploading = {
       ...submitted,
       publication: { ...submitted.publication, phase: 'uploading', remote_ref: 'pub_5' },
     };
-    const interrupted = await tiktokService(graph.base).reconcile({
+    const stillProcessing = await tiktokService(graph.base).reconcile({
       post: uploading,
       credentials: { account_id: 'open-id-1', access_token: 'token' },
       persist: () => undefined,
     });
-    assert.equal(interrupted.phase, 'failed');
-    assert.equal(interrupted.error, 'PUBLISH_UPLOAD_INTERRUPTED');
+    assert.equal(stillProcessing.phase, 'submitted');
+    assert.equal(canStartAttempt(stillProcessing), false);
   } finally {
     await graph.close();
     await rm(directory, { recursive: true, force: true });
@@ -1074,5 +1076,88 @@ test('TikTok OAuth builds the PKCE URL and the broker exchange uses the verifier
     assert.deepEqual(await refreshTokens('refresh', `${broker.base}/api/tiktok/token`), tokens);
   } finally {
     await broker.close();
+  }
+});
+
+function uploadingPost(ref = 'pub_reconcile') {
+  return {
+    ...TT_POST,
+    publication: {
+      attempt_id: 'attempt_reconcile',
+      phase: 'uploading',
+      remote_ref: ref,
+      remote_post_id: null,
+      remote_url: null,
+      scheduled_for: null,
+      privacy: null,
+      error: null,
+      updated_at: 1,
+    },
+  };
+}
+
+test('B1: an uploading TikTok post is never marked retryable while the platform is still processing', async () => {
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/status/fetch/',
+      reply: () => ({ body: { data: { status: 'PROCESSING_UPLOAD' }, error: { code: 'ok' } } }),
+    },
+  ]);
+  try {
+    const next = await tiktokService(graph.base).reconcile({
+      post: uploadingPost(),
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      persist: () => undefined,
+    });
+    assert.equal(next.phase, 'submitted');
+    assert.equal(canStartAttempt(next), false, 'a retry must not be allowed');
+  } finally {
+    await graph.close();
+  }
+});
+
+test('B1: an ambiguous or unparseable TikTok status reconciles to unknown, not failed', async () => {
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/status/fetch/',
+      reply: () => ({ status: 503, body: {} }),
+    },
+  ]);
+  try {
+    const next = await tiktokService(graph.base).reconcile({
+      post: uploadingPost(),
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      persist: () => undefined,
+    });
+    assert.equal(next.phase, 'unknown');
+    assert.equal(canStartAttempt(next), false, 'an ambiguous outcome must not be retried');
+  } finally {
+    await graph.close();
+  }
+});
+
+test('B1: only a definite platform failure after upload is retryable, with the platform error', async () => {
+  const graph = await fakeTikTok([
+    {
+      match: (r) => r.path === '/v2/post/publish/status/fetch/',
+      reply: () => ({
+        body: {
+          data: { status: 'FAILED', fail_reason: 'duration_check_failed' },
+          error: { code: 'ok' },
+        },
+      }),
+    },
+  ]);
+  try {
+    const next = await tiktokService(graph.base).reconcile({
+      post: uploadingPost(),
+      credentials: { account_id: 'open-id-1', access_token: 'token' },
+      persist: () => undefined,
+    });
+    assert.equal(next.phase, 'failed');
+    assert.equal(next.error, 'PUBLISH_MEDIA_TOO_LONG');
+    assert.equal(canStartAttempt(next), true);
+  } finally {
+    await graph.close();
   }
 });

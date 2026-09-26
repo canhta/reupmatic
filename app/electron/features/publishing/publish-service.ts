@@ -129,7 +129,7 @@ export class PublishingService {
       input.credentials,
       this.#now(),
     );
-    const next = this.#applyReconcile(current, outcome);
+    const next = this.#applyReconcile(current, outcome, destination.upload_publishes === true);
     if (next !== current) input.persist(next);
     return next;
   }
@@ -163,10 +163,12 @@ export class PublishingService {
     return markFailed(publication, { error: outcome.error }, now);
   }
 
-  #applyReconcile(current: Publication, outcome: ReconcileOutcome): Publication {
+  #applyReconcile(
+    current: Publication,
+    outcome: ReconcileOutcome,
+    uploadPublishes: boolean,
+  ): Publication {
     const now = this.#now();
-    // An upload that never reached submit cannot have created a post: anything but a confirmed
-    // publish/schedule is a definite interruption, so the user can retry instead of being stuck.
     if (current.phase === 'uploading') {
       if (outcome.kind === 'published')
         return markPublished(
@@ -189,6 +191,15 @@ export class PublishingService {
           },
           now,
         );
+      if (uploadPublishes) {
+        // Upload completion creates the post, so a still-processing or ambiguous outcome may
+        // already be public: reconcile again rather than mark it retryable.
+        if (outcome.kind === 'submitted') return markSubmitted(current, now);
+        if (outcome.kind === 'unknown') return markUnknown(current, { error: outcome.error }, now);
+        if (outcome.kind === 'failed') return markFailed(current, { error: outcome.error }, now);
+      }
+      // An upload that never reached submit cannot have created a post: anything but a confirmed
+      // publish/schedule is a definite interruption, so the user can retry instead of being stuck.
       return markFailed(current, { error: 'PUBLISH_UPLOAD_INTERRUPTED' }, now);
     }
     if (outcome.kind === 'published')
