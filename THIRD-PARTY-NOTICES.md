@@ -26,7 +26,7 @@ components below, each under its own licence. This file ships inside the app.
 The packaged app bundles a CPython interpreter (from `python-build-standalone`,
 <https://github.com/astral-sh/python-build-standalone>, PSF/BSD-style licence) and the Python
 packages named in `worker/requirements.txt` and `worker/requirements-optional.txt` (for example
-`faster-whisper`, `qwen-asr`, `torch`, `transformers`, `ctranslate2`, `sentencepiece`, `vieneu`,
+`faster-whisper`, `ctranslate2`, `sentencepiece`, `vieneu`,
 `rapidocr`, `onnxruntime`, `opencv-python`), each under its own licence. Enumerate the installed
 set with `<resources>/python/bin/python3 -m pip list`; their licence metadata is in each
 distribution's `*.dist-info`.
