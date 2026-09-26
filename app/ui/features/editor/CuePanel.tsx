@@ -2,8 +2,10 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { HStack } from '@astryxdesign/core/HStack';
+import { Item } from '@astryxdesign/core/Item';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { Table, TableBody, TableCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -11,6 +13,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { ToggleButton } from '@astryxdesign/core/ToggleButton';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Cue, mergeNext, splitCue } from '../../../core/subtitles/cues';
@@ -101,11 +104,11 @@ export function CuePanel() {
 
   if (review) {
     return (
-      <section className="cue-panel" aria-label={t('subtitle')}>
+      <VStack as="section" gap={3} height="100%" className="cue-panel" aria-label={t('subtitle')}>
         {review === 'speech' && <SpeechReview />}
         {review === 'ocr' && <OcrReview />}
         {review === 'translate' && <TranslateReview />}
-      </section>
+      </VStack>
     );
   }
 
@@ -115,9 +118,9 @@ export function CuePanel() {
   }
 
   return (
-    <section className="cue-panel" aria-label={t('subtitle')}>
+    <VStack as="section" gap={3} height="100%" className="cue-panel" aria-label={t('subtitle')}>
       {}
-      <div className="cue-panel-layer">
+      <VStack gap={2}>
         <Selector
           label={t('textEditingLayer')}
           size="sm"
@@ -144,7 +147,7 @@ export function CuePanel() {
               });
           }}
         />
-      </div>
+      </VStack>
       {activeLayer.stale && (
         <Banner
           status="warning"
@@ -153,9 +156,9 @@ export function CuePanel() {
         />
       )}
       {}
-      <div className="cue-search-row">
+      <HStack gap={2} vAlign="end">
         {}
-        <div className="cue-search-field">
+        <StackItem size="fill">
           <TextInput
             label={t('cueSearch')}
             isLabelHidden
@@ -166,7 +169,7 @@ export function CuePanel() {
             value={query}
             onChange={setQuery}
           />
-        </div>
+        </StackItem>
         <ToggleButton
           label={t('rulesToggle')}
           size="sm"
@@ -177,7 +180,7 @@ export function CuePanel() {
             if (!pressed) findReplace.reset();
           }}
         />
-      </div>
+      </HStack>
       {replaceOpen && (
         <FindReplaceBar find={query} hasSelection={Boolean(selected)} state={findReplace} />
       )}
@@ -208,7 +211,7 @@ export function CuePanel() {
         }
       />
       {!findReplace.preview && (
-        <div className="cue-list">
+        <StackItem size="fill" isScrollable className="cue-list">
           {!media ? (
             <EmptyState title={t('noSubtitlesYet')} />
           ) : !cues.length ? (
@@ -230,8 +233,8 @@ export function CuePanel() {
                     <TableRow key={cue.id}>
                       {}
                       <TableCell>
-                        <div className="cue-row">
-                          <div className="cue-row-index">
+                        <HStack gap={2} vAlign="start" width="100%">
+                          <HStack gap={1} vAlign="center">
                             <Button
                               label={String(index + 1)}
                               size="sm"
@@ -246,80 +249,88 @@ export function CuePanel() {
                                 tooltip={qcLabel(t, flags)}
                               />
                             )}
-                          </div>
+                          </HStack>
                           {isSelected ? (
-                            <div className="cue-row-expanded">
-                              <TextArea
-                                label={`${t('text')} ${index + 1}`}
-                                isLabelHidden
-                                rows={2}
-                                width="100%"
-                                value={cue.text}
-                                onFocus={() => setSelected(cue.id)}
-                                onSelect={(event) => {
-                                  if (event.target instanceof HTMLTextAreaElement) {
-                                    caret.current = event.target.selectionStart;
-                                  }
-                                }}
-                                onChange={(text) => update(cue.id, { text })}
-                              />
-                              <div className="cue-row-timing">
-                                <TimeInput
-                                  label={`${t('start')} ${index + 1}`}
-                                  value={cue.start_ms}
+                            <StackItem size="fill">
+                              <VStack gap={2} paddingBlock={1}>
+                                <TextArea
+                                  label={`${t('text')} ${index + 1}`}
+                                  isLabelHidden
+                                  rows={2}
+                                  width="100%"
+                                  value={cue.text}
                                   onFocus={() => setSelected(cue.id)}
-                                  onCommit={(value) => update(cue.id, { start_ms: value })}
+                                  onSelect={(event) => {
+                                    if (event.target instanceof HTMLTextAreaElement) {
+                                      caret.current = event.target.selectionStart;
+                                    }
+                                  }}
+                                  onChange={(text) => update(cue.id, { text })}
                                 />
-                                <TimeInput
-                                  label={`${t('end')} ${index + 1}`}
-                                  value={cue.end_ms}
-                                  onFocus={() => setSelected(cue.id)}
-                                  onCommit={(value) => update(cue.id, { end_ms: value })}
-                                />
-                                <MoreMenu
-                                  label={t('moreRowActions', { index: index + 1 })}
-                                  size="sm"
-                                  items={[
-                                    {
-                                      label: t('remove'),
-                                      variant: 'destructive',
-                                      onClick: () => remove(cue.id),
-                                    },
-                                    {
-                                      label: t('split'),
-                                      onClick: () => split(cue.id),
-                                    },
-                                    {
-                                      label: t('merge'),
-                                      isDisabled: index + 1 >= cues.length,
-                                      onClick: () => merge(cue.id),
-                                    },
-                                  ]}
-                                />
-                              </div>
-                            </div>
+                                <HStack gap={2} vAlign="end" wrap="wrap" hAlign="between">
+                                  <HStack gap={2} vAlign="end" wrap="wrap">
+                                    <TimeInput
+                                      label={`${t('start')} ${index + 1}`}
+                                      value={cue.start_ms}
+                                      onFocus={() => setSelected(cue.id)}
+                                      onCommit={(value) => update(cue.id, { start_ms: value })}
+                                    />
+                                    <TimeInput
+                                      label={`${t('end')} ${index + 1}`}
+                                      value={cue.end_ms}
+                                      onFocus={() => setSelected(cue.id)}
+                                      onCommit={(value) => update(cue.id, { end_ms: value })}
+                                    />
+                                  </HStack>
+                                  <MoreMenu
+                                    label={t('moreRowActions', { index: index + 1 })}
+                                    size="sm"
+                                    items={[
+                                      {
+                                        label: t('remove'),
+                                        variant: 'destructive',
+                                        onClick: () => remove(cue.id),
+                                      },
+                                      {
+                                        label: t('split'),
+                                        onClick: () => split(cue.id),
+                                      },
+                                      {
+                                        label: t('merge'),
+                                        isDisabled: index + 1 >= cues.length,
+                                        onClick: () => merge(cue.id),
+                                      },
+                                    ]}
+                                  />
+                                </HStack>
+                              </VStack>
+                            </StackItem>
                           ) : (
-                            <button
-                              type="button"
-                              className="cue-row-preview"
-                              aria-label={cue.text || t('cueEmptyText')}
-                              onClick={() => open(cue)}
-                            >
-                              <Text
-                                as="span"
-                                type="supporting"
-                                size="xsm"
-                                hasTabularNumbers
-                                aria-hidden="true"
-                              >
-                                {formatTime(cue.start_ms)}–{formatTime(cue.end_ms)}
-                              </Text>
-                              <Text type="body" maxLines={2}>
-                                {cue.text || t('cueEmptyText')}
-                              </Text>
-                            </button>
+                            <StackItem size="fill">
+                              <Item
+                                onClick={() => open(cue)}
+                                align="start"
+                                density="compact"
+                                label={
+                                  <Text
+                                    as="span"
+                                    type="supporting"
+                                    size="xsm"
+                                    hasTabularNumbers
+                                    aria-hidden="true"
+                                  >
+                                    {formatTime(cue.start_ms)}–{formatTime(cue.end_ms)}
+                                  </Text>
+                                }
+                                description={
+                                  <Text type="body" maxLines={2}>
+                                    {cue.text || t('cueEmptyText')}
+                                  </Text>
+                                }
+                              />
+                            </StackItem>
                           )}
-                        </div>
+                        </HStack>
                       </TableCell>
                     </TableRow>
                   );
@@ -327,11 +338,11 @@ export function CuePanel() {
               </TableBody>
             </Table>
           )}
-        </div>
+        </StackItem>
       )}
       <CopyLayerDialog isOpen={dialog === 'copy'} onClose={() => setDialog(null)} />
       <ShiftTimingDialog isOpen={dialog === 'shift'} onClose={() => setDialog(null)} />
-    </section>
+    </VStack>
   );
 }
 

@@ -94,77 +94,6 @@
   background: var(--color-border);
 }
 
-.cue-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-}
-
-.cue-panel-layer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.cue-search-row {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.cue-search-row .cue-search-field {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.cue-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  width: 100%;
-}
-.cue-row-index {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.cue-row-preview {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-  gap: 2px;
-  padding-block: var(--space-1);
-  background: none;
-  border: none;
-  text-align: start;
-  cursor: pointer;
-}
-
-.cue-row-expanded {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-width: 0;
-  gap: var(--space-2);
-  padding-block: var(--space-1);
-}
-.cue-row-timing {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-2);
-}
-.cue-row-timing > :last-child {
-  margin-inline-start: auto;
-}
-
 .project-media {
   display: flex;
   flex-direction: column;
@@ -315,10 +244,7 @@
   gap: var(--space-3);
 }
 .cue-list {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 120px;
-  overflow: auto;
+  min-height: calc(var(--spacing-12) * 2.5);
 }
 .timeline {
   min-width: 0;

@@ -4,7 +4,7 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { HStack } from '@astryxdesign/core/HStack';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCallback, useEffect, useState } from 'react';
@@ -120,7 +120,7 @@ export function CompositionPanel() {
         </HStack>
         {composition && (
           <>
-            <div className="cue-list">
+            <StackItem size="fill" isScrollable className="cue-list">
               <List density="compact" hasDividers aria-label={t('compositionTitle')}>
                 {spans.map((span, order) => (
                   <ListItem
@@ -149,7 +149,7 @@ export function CompositionPanel() {
                   />
                 ))}
               </List>
-            </div>
+            </StackItem>
             {draft && (
               <>
                 <Text as="p" type="supporting">
