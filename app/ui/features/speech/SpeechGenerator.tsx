@@ -12,6 +12,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { speechDraftFresh } from '../../../core/speech/draft-freshness';
 import { offeredSpeechEngines } from '../../../core/speech/engine-capability';
 import { getTextLayer } from '../../../core/subtitles/layers/document';
 import { InspectorPanelSection } from '../../design-system/InspectorPanelSection';
@@ -162,10 +163,12 @@ export function SpeechReview() {
   const draft = job.draft;
   const busy = Boolean(job.active) || job.settingUp;
   if (!draft) return null;
-  const fresh =
-    draft.revision === editor.revision &&
-    draft.documentId === editor.documentId &&
-    !editor.composition;
+  const fresh = speechDraftFresh(draft, {
+    documentId: editor.documentId,
+    assetId: editor.media?.asset_id ?? '',
+    composed: Boolean(editor.composition),
+    targetCues: JSON.stringify(transcript.cues),
+  });
   const before = transcript.cues;
 
   return (
@@ -228,7 +231,7 @@ export function SpeechReview() {
               isDisabled={!fresh || busy || editor.opening}
               onClick={() => {
                 try {
-                  if (editor.applySpeech(draft.data, draft.revision, draft.requestId)) {
+                  if (editor.applySpeech(draft.data, draft.requestId)) {
                     job.consume(draft);
                   }
                 } catch (reason) {

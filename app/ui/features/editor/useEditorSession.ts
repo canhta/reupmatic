@@ -125,7 +125,7 @@ export interface EditorSession {
   applyLayerCopy: (preview: LayerCopyPreview, expectedRevision: number) => void;
   reviewLayerSource: (preview: LayerCopyPreview, expectedRevision: number) => void;
   applyTranslation: (preview: TranslationPreview, expectedRevision: number) => void;
-  applySpeech: (result: SpeechResult, expectedRevision: number, requestId: string) => boolean;
+  applySpeech: (result: SpeechResult, requestId: string) => boolean;
   applyOcr: (result: OcrResult, expectedRevision: number) => boolean;
   textSnapshot: EditorSnapshot;
   documentId: string;
@@ -482,9 +482,10 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     document.change(next);
   }
 
-  function applySpeech(result: SpeechResult, expectedRevision: number, requestId: string) {
-    if (result.asset_id !== media?.asset_id || composition) throw new Error('STALE_OPERATION');
-    assertAdmitted(rev.current, expectedRevision, openingRef.current);
+  function applySpeech(result: SpeechResult, requestId: string) {
+    // Freshness is the caller's target-layer check; unrelated edits must not block an apply.
+    if (result.asset_id !== media?.asset_id || composition || openingRef.current)
+      throw new Error('STALE_OPERATION');
     return changeLayerCues(result.cues, 'transcript', {
       language: result.language,
       origin: {

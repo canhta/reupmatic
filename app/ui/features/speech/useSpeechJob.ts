@@ -20,6 +20,8 @@ export interface SpeechContext {
   duration: number;
   hasAudio: boolean;
   composed: boolean;
+  /** JSON of the transcript layer's cues; a change here invalidates a draft. */
+  targetCues: string;
 }
 interface Active {
   id: string;
@@ -27,12 +29,15 @@ interface Active {
   phase: string;
   fraction: number | null;
   documentId: string;
+  targetCues: string;
 }
 export interface SpeechDraft {
   data: SpeechResult;
   revision: number;
   requestId: string;
   documentId: string;
+  assetId: string;
+  targetCues: string;
 }
 
 export function useSpeechJob(context: SpeechContext) {
@@ -92,6 +97,8 @@ export function useSpeechJob(context: SpeechContext) {
         revision: request.revision,
         requestId: request.id,
         documentId: request.documentId,
+        assetId: message.data.asset_id,
+        targetCues: request.targetCues,
       });
     });
     const offModels = window.reupmatic.onSpeechModelsChanged(() => {
@@ -157,6 +164,7 @@ export function useSpeechJob(context: SpeechContext) {
         phase: 'queued',
         fraction: null,
         documentId: c.documentId,
+        targetCues: c.targetCues,
       };
       operation.current = request;
       admitted = true;
@@ -188,15 +196,14 @@ export function useSpeechJob(context: SpeechContext) {
 
   function review(captured: SpeechDraft) {
     const c = current.current;
-    if (
-      c.composed ||
-      captured.documentId !== c.documentId ||
-      captured.data.asset_id !== c.assetId
-    ) {
+    if (c.composed || captured.documentId !== c.documentId || captured.assetId !== c.assetId) {
       report(new Error('STALE_OPERATION'));
       return;
     }
-    setDraft((value) => (value === captured ? { ...captured, revision: c.revision } : value));
+    // Accept the target layer's current state and admit the draft against the live revision.
+    setDraft((value) =>
+      value === captured ? { ...captured, revision: c.revision, targetCues: c.targetCues } : value,
+    );
   }
 
   return {

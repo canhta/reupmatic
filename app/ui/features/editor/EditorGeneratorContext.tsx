@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useState } from 'react';
+import { getTextLayer } from '../../../core/subtitles/layers/document';
 import { useTranslationJob } from '../speech/translation/useTranslationJob';
 import { useSpeechJob } from '../speech/useSpeechJob';
 import { useVisionJob } from '../vision/useVisionJob';
@@ -30,6 +31,7 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     duration: media?.duration_ms ?? 0,
     hasAudio: Boolean(media?.has_audio),
     composed: Boolean(editor.composition),
+    targetCues: JSON.stringify(getTextLayer(editor.textSnapshot, 'transcript').cues),
   });
   const vision = useVisionJob({
     assetId: media?.asset_id ?? '',
