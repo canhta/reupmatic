@@ -24,7 +24,10 @@ const csp =
 export function installProtocols(
   uiDirectory: string,
   resolveMedia: (id: string) => string | undefined,
+  devServerOrigin?: string,
 ): void {
+  // The renderer origin under `pnpm dev` is the Vite server; a packaged build is app://ui.
+  const mediaOrigins = devServerOrigin ? ['app://ui', devServerOrigin] : ['app://ui'];
   protocol.handle('app', async (request) => {
     try {
       const url = new URL(request.url);
@@ -47,7 +50,7 @@ export function installProtocols(
     const url = new URL(request.url);
     const filename = url.hostname === 'local' ? resolveMedia(url.pathname.slice(1)) : undefined;
     return filename
-      ? registeredMediaResponse(request, filename)
+      ? registeredMediaResponse(request, filename, mediaOrigins)
       : new Response('Not found', { status: 404 });
   });
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) =>

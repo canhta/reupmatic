@@ -21,18 +21,27 @@ export function singleByteRange(value: string | null, size: number): ByteRange {
   return { start: Number(start), end: Number(end >= sizeBig ? sizeBig - 1n : end) };
 }
 
-/** The caller must resolve pathname from its trusted asset registry, never a URL path. */
+/**
+ * The caller must resolve pathname from its trusted asset registry, never a URL path. The
+ * renderer origin is echoed only when it is allowed (the packaged `app://ui` origin, or the
+ * Vite dev origin passed in during development), never a wildcard.
+ */
 export async function registeredMediaResponse(
   request: Request,
   pathname: string,
+  allowedOrigins: readonly string[] = ['app://ui'],
 ): Promise<Response> {
   const headers = new Headers({
     'Accept-Ranges': 'bytes',
-    'Access-Control-Allow-Origin': 'app://ui',
     'Cross-Origin-Resource-Policy': 'cross-origin',
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'no-store',
   });
+  const origin = request.headers.get('Origin');
+  if (origin && allowedOrigins.includes(origin)) {
+    headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Vary', 'Origin');
+  }
   // A crossOrigin="anonymous" media element may issue a Range preflight; allow it so
   // Chromium can create VideoFrames instead of refusing a tainted source.
   if (request.method === 'OPTIONS') {

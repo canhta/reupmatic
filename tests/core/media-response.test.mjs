@@ -55,21 +55,40 @@ test('registered file response serves actual ranges, HEAD, misses and cancel saf
     await rm(folder, { recursive: true, force: true });
   }
 });
-test('media responses allow the app origin so JASSUB can read untainted frames', async () => {
+test('media responses echo only an allowed renderer origin so JASSUB can read frames', async () => {
   const folder = await mkdtemp(path.join(tmpdir(), 'reupmatic-cors-'));
   const filename = path.join(folder, 'clip.mp4');
   await writeFile(filename, '0123456789');
-  const request = (headers = {}, method = 'GET') =>
-    new Request('https://local/video', {
-      headers: { Origin: 'app://ui', ...headers },
-      method,
-    });
+  const DEV = 'http://localhost:5173';
+  const respond = (origin, allowedOrigins, method = 'GET') =>
+    registeredMediaResponse(
+      new Request('https://local/video', {
+        headers: origin ? { Origin: origin } : {},
+        method,
+      }),
+      filename,
+      allowedOrigins,
+    );
   try {
-    const get = await registeredMediaResponse(request(), filename);
-    assert.equal(get.headers.get('Access-Control-Allow-Origin'), 'app://ui');
-    assert.equal(get.headers.get('Cross-Origin-Resource-Policy'), 'cross-origin');
+    const app = await respond('app://ui', ['app://ui']);
+    assert.equal(app.headers.get('Access-Control-Allow-Origin'), 'app://ui');
+    assert.equal(app.headers.get('Vary'), 'Origin');
+    assert.equal(app.headers.get('Cross-Origin-Resource-Policy'), 'cross-origin');
+    // The Vite dev renderer is allowed only when the dev origin is configured.
+    const dev = await respond(DEV, ['app://ui', DEV]);
+    assert.equal(dev.headers.get('Access-Control-Allow-Origin'), DEV);
+    assert.equal(
+      (await respond(DEV, ['app://ui'])).headers.get('Access-Control-Allow-Origin'),
+      null,
+    );
+    assert.equal(
+      (await respond('https://evil.example', ['app://ui', DEV])).headers.get(
+        'Access-Control-Allow-Origin',
+      ),
+      null,
+    );
     // An element with crossOrigin="anonymous" may send a Range preflight.
-    const preflight = await registeredMediaResponse(request({}, 'OPTIONS'), filename);
+    const preflight = await respond('app://ui', ['app://ui'], 'OPTIONS');
     assert.equal(preflight.status, 204);
     assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), 'app://ui');
     assert.equal(preflight.headers.get('Access-Control-Allow-Methods'), 'GET, HEAD');

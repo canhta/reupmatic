@@ -225,7 +225,12 @@ renderer.on('job', message => {
   if (win && !win.isDestroyed()) win.webContents.send('reupmatic:job', outgoing);
 });
 
-installProtocols(path.join(repo, 'dist-ui'), id => media.resolve(id));
+installProtocols(
+  path.join(repo, 'dist-ui'),
+  id => media.resolve(id),
+  // Only an unpackaged dev run may serve the renderer from the Vite origin.
+  app.isPackaged ? undefined : devServerOrigin,
+);
 const editorApi = installEditor({ wire, getWindow: () => win, getLanguage,
   worker: client, renderer, media, library, workspace, savePath: settings.savePath,
   onRecentChanged: () => void rebuildMenu() });
