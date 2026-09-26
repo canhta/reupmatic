@@ -155,6 +155,24 @@
   pointer-events: none;
   object-fit: fill;
 }
+/* The clean-up rectangle sits on the output frame; the numeric fields stay the precise input. */
+.inpaint-region {
+  position: absolute;
+  box-sizing: border-box;
+  border: calc(var(--border-width) * 2) solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  touch-action: none;
+  cursor: move;
+}
+.inpaint-region-handle {
+  position: absolute;
+  inset-inline-end: calc(-1 * var(--spacing-1));
+  inset-block-end: calc(-1 * var(--spacing-1));
+  width: var(--spacing-3);
+  height: var(--spacing-3);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
 .editor-start-frame {
   width: 100%;
   height: 100%;

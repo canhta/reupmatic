@@ -3,7 +3,7 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
   InpaintOptions,
@@ -47,6 +47,10 @@ export function InpaintControls({
       ? processing.inpaint.region
       : { x: 0.1, y: 0.7, width: 0.8, height: 0.2 },
   );
+  // A drag on the monitor writes the region to the document; mirror it back into the fields.
+  useEffect(() => {
+    if (processing?.inpaint?.target === 'manual') setRectangle(processing.inpaint.region);
+  }, [processing?.inpaint]);
   const validRegion =
     rectangle.width > 0 &&
     rectangle.height > 0 &&

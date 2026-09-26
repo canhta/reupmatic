@@ -17,8 +17,11 @@ import { resolveEditWindow } from '../../../core/editing/edit-recipe';
 import { fadePreviewOpacity } from '../../../core/editing/fade-preview';
 import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
+import type { ProcessingRegion } from '../../../core/processing/recipe';
 import { unwrap } from '../../bridge/client';
+import { InpaintRegionOverlay } from '../vision/InpaintRegionOverlay';
 import { useEditor } from './EditorContext';
+import { useEditorTools } from './EditorToolContext';
 import { useLiveMix } from './live-mix/useLiveMix';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
@@ -61,8 +64,11 @@ function clockText(milliseconds: number): string {
 export function MediaStage({ isWide }: { isWide: boolean }) {
   const { t } = useTranslation();
   const editor = useEditor();
+  const { activeTool } = useEditorTools();
   const { media, revision, ass } = editor;
   const { color, crop, flip, rotate, fade, logo, output } = editor.processing?.editing ?? {};
+  const inpaint = editor.processing?.inpaint;
+  const showRegion = activeTool === 'clean-up' && inpaint?.target === 'manual';
   const [logoAspect, setLogoAspect] = useState<number | null>(null);
   const geometry = useMemo(
     () =>
@@ -118,11 +124,19 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
     soundtrack: editor.soundtrack,
     voiceTrack: editor.voiceTrack,
     editing: editor.processing?.editing,
+    clockMs: () => clockRef.current,
+    clipId: editor.sourceSelection?.id ?? media?.asset_id,
     enabled: !result,
   });
   useEffect(() => {
     if (liveMix.error) editor.setError(liveMix.error);
   }, [liveMix.error, editor.setError]);
+
+  function changeInpaintRegion(region: ProcessingRegion) {
+    const processing = editor.processing;
+    if (processing?.inpaint?.target !== 'manual') return;
+    editor.changeProcessing({ ...processing, inpaint: { ...processing.inpaint, region } });
+  }
 
   // A cancelled open must not strand focus on <body> after the busy button blurs.
   const wasOpening = useRef(false);
@@ -217,7 +231,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
               <EmptyState isCompact className="video-placeholder" title={t('openHint')} />
             </div>
           ) : editor.sourceUrl ? (
-            staged && geometry ? (
+            (staged || showRegion) && geometry ? (
               // Numbers come from geometryPreview, the same recipe the worker's filter chain consumes.
               <div className="geometry-stage">
                 <div
@@ -290,6 +304,13 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                         )
                       }
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
+                    />
+                  )}
+                  {showRegion && inpaint?.region && (
+                    <InpaintRegionOverlay
+                      region={inpaint.region}
+                      disabled={editor.opening || editor.busy}
+                      onChange={changeInpaintRegion}
                     />
                   )}
                 </div>
