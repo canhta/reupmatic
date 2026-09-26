@@ -145,7 +145,7 @@ function EditorStudio() {
 
   return (
     <div className="editor-workspace">
-      <VStack gap={3}>
+      <VStack gap={3} className="editor-feedback">
         {cap && !cap.pysubs2 && <Banner status="warning" title={t('missing')} />}
         {media && (
           <VisuallyHidden as="div" role="status">
