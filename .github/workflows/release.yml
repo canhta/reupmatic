@@ -56,6 +56,9 @@ jobs:
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
       - run: pnpm run build
+        env:
+          REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}
+          REUPMATIC_META_BROKER_URL: ${{ vars.META_BROKER_URL }}
       - name: Export signing credentials when configured
         env:
           MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
@@ -117,6 +120,9 @@ jobs:
       - run: pnpm run stage:python
       - run: pnpm run stage:ffmpeg
       - run: pnpm run build
+        env:
+          REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}
+          REUPMATIC_META_BROKER_URL: ${{ vars.META_BROKER_URL }}
       - name: Export signing credentials when configured
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}

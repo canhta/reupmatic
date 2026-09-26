@@ -387,7 +387,7 @@ test('the broker exchange and page listing use the faked endpoints and never log
   }
 });
 
-test('publishing config needs both values and an https broker URL', () => {
+test('publishing config falls back to the environment when no build config is baked in', () => {
   assert.equal(readPublishingConfig({}), null);
   assert.equal(readPublishingConfig({ REUPMATIC_META_APP_ID: '1' }), null);
   assert.equal(

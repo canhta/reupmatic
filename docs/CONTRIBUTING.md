@@ -73,6 +73,21 @@ it, every subtitle-burn render fails in a way that looks like a code bug. Never 
 
 In a worktree, symlink `.env.local` and `.venv` from the main checkout rather than recreating them.
 
+### Publishing build config
+
+The desktop Facebook publishing config is baked in at build time, not read from a user's
+environment. `scripts/generate-publishing-config.mjs` writes the gitignored
+`app/electron/features/publishing/config.generated.ts` from `REUPMATIC_META_APP_ID` and
+`REUPMATIC_META_BROKER_URL`; `pnpm install` (via `prepare`), `pnpm run build`, `pnpm run typecheck`
+and `pnpm run test:bridge` all regenerate it first. A checkout with neither variable ends up with
+`null` and falls back to the environment at runtime, so local dev can still set them in `.env.local`.
+
+A release reads `META_APP_ID` and `META_BROKER_URL` from the repository's `release` environment
+variables and passes them to `pnpm run build`; `META_APP_SECRET` belongs only to the `web/` broker
+(Vercel) and never ships in the desktop build. Without the two values a packaged app reports
+`PUBLISHING_NOT_CONFIGURED` rather than guessing.
+
+
 ## Testing
 
 ```sh

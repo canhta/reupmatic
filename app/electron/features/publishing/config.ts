@@ -1,11 +1,13 @@
-// One place owns the desktop publishing build configuration. With nothing configured, connecting a
-// channel fails loudly with PUBLISHING_NOT_CONFIGURED rather than guessing an app or broker.
+import { GENERATED_PUBLISHING_CONFIG } from './config.generated.js';
+
+// One place owns the desktop publishing build configuration: the Meta App ID and broker URL are
+// baked in at build time, and a dev checkout without them falls back to the environment.
 export interface PublishingConfig {
   metaAppId: string;
   brokerUrl: string;
 }
 
-export function readPublishingConfig(
+export function readEnvPublishingConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): PublishingConfig | null {
   const metaAppId = env.REUPMATIC_META_APP_ID?.trim();
@@ -18,4 +20,10 @@ export function readPublishingConfig(
     return null;
   }
   return { metaAppId, brokerUrl: broker.replace(/\/$/, '') };
+}
+
+export function readPublishingConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): PublishingConfig | null {
+  return GENERATED_PUBLISHING_CONFIG ?? readEnvPublishingConfig(env);
 }
