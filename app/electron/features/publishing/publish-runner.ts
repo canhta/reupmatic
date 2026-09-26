@@ -144,6 +144,7 @@ export class PublishRunner {
         { remote_post_id: outcome.remote_post_id, remote_url: outcome.remote_url },
         now,
       );
+    if (outcome.kind === 'unknown') return markUnknown(publication, { error: outcome.error }, now);
     return markFailed(publication, { error: outcome.error }, now);
   }
 

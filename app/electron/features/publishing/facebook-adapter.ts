@@ -14,7 +14,7 @@ import {
   FACEBOOK_CAPABILITIES,
   facebookPreflight,
 } from '../../../core/distribution/publishing/facebook.js';
-import { readGraphError } from './graph.js';
+import { parseGraphFailure, readGraphError } from './graph.js';
 
 export const GRAPH_VERSION = 'v25.0';
 export const DEFAULT_GRAPH_BASE_URL = 'https://graph.facebook.com';
@@ -123,7 +123,14 @@ export class FacebookDestination implements Destination {
     });
     if (plan) body.set('scheduled_publish_time', String(Math.floor(plan.instant / 1000)));
     const response = await this.#fetch(this.#reelsUrl(), { method: 'POST', body });
-    if (!response.ok) return { kind: 'failed', error: await readGraphError(response) };
+    if (!response.ok) {
+      // Only a definite refusal proves nothing was created; a 5xx/timeout/unmapped code is unknown
+      // and must be reconciled, never retried.
+      const failure = await parseGraphFailure(response);
+      return failure.definite
+        ? { kind: 'failed', error: failure.named }
+        : { kind: 'unknown', error: failure.named };
+    }
     if (plan)
       return {
         kind: 'scheduled',

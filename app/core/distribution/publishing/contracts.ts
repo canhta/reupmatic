@@ -79,7 +79,9 @@ export type SubmitOutcome =
       scheduled_for: number;
     }
   | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
-  | { kind: 'failed'; error: string };
+  | { kind: 'failed'; error: string }
+  // The finish call may have created a post; only a definite refusal proves otherwise.
+  | { kind: 'unknown'; error: string };
 
 export type ReconcileOutcome =
   | {

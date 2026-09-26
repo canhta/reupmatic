@@ -89,7 +89,8 @@ functions, so an adapter cannot skip the never-publish-twice policy:
 type SubmitOutcome =
   | { kind: 'scheduled'; scheduled_for: number; remote_post_id: string | null; remote_url: string | null }
   | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
-  | { kind: 'failed'; error: string };
+  | { kind: 'failed'; error: string }   // definite refusal: nothing was created
+  | { kind: 'unknown'; error: string }; // ambiguous after finish → reconcile only
 
 interface Destination {
   capabilities: DestinationCapabilities;

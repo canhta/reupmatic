@@ -491,3 +491,64 @@ test('two concurrent publishes of one post create exactly one Reel', async () =>
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('only a definite Graph refusal after finish is failed; everything else is unknown', async () => {
+  const scenarios = [
+    {
+      label: '500 gateway',
+      reply: { status: 500, body: {} },
+      phase: 'unknown',
+      error: 'PUBLISH_FAILED',
+    },
+    {
+      label: 'unmapped 400',
+      reply: { status: 400, body: { error: { code: 999, message: 'weird' } } },
+      phase: 'unknown',
+      error: 'PUBLISH_FAILED',
+    },
+    {
+      label: 'refusal 100',
+      reply: { status: 400, body: { error: { code: 100, message: 'bad param' } } },
+      phase: 'failed',
+      error: 'PUBLISH_INVALID_REQUEST',
+    },
+    {
+      label: 'refusal 190',
+      reply: { status: 400, body: { error: { code: 190, message: 'expired' } } },
+      phase: 'failed',
+      error: 'CHANNEL_REAUTHORIZE',
+    },
+  ];
+  for (const scenario of scenarios) {
+    const directory = await tempDir();
+    const file = path.join(directory, 'video.mp4');
+    await writeFile(file, Buffer.from('bytes'));
+    const graph = await fakeGraph([
+      {
+        match: (r) => r.method === 'POST' && r.params.get('upload_phase') === 'start',
+        reply: () => ({ body: { video_id: 'vid-finish' } }),
+      },
+      { match: (r) => r.method === 'POST' && r.path === '/upload/v25.0/vid-finish' },
+      {
+        match: (r) => r.method === 'POST' && r.params.get('upload_phase') === 'finish',
+        reply: () => scenario.reply,
+      },
+    ]);
+    try {
+      const runner = new PublishRunner({ ...graph, now: () => 1 });
+      const publication = await runner.publish({
+        post: { ...POST, export: { ...POST.export, path: file } },
+        attempt_id: 'attempt_finish',
+        credentials: { account_id: '1', access_token: 't' },
+        media: { duration_ms: 30_000, width: 1080, height: 1920, size_bytes: 5 },
+        persist: () => undefined,
+        onProgress: () => undefined,
+      });
+      assert.equal(publication.phase, scenario.phase, scenario.label);
+      assert.equal(publication.error, scenario.error, scenario.label);
+    } finally {
+      await graph.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  }
+});

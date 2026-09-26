@@ -7,7 +7,10 @@ export interface GraphErrorBody {
   };
 }
 
-// Meta's own error codes (ADR 0001): token expiry, throttling, invalid parameters, permissions.
+// Meta error codes that prove the platform refused the call and created nothing. Anything else
+// after a finish call (5xx, gateway/timeout, unparseable body, an unmapped code) is ambiguous.
+const DEFINITE_REFUSAL = new Set([100, 190, 200, 32, 613, 80001]);
+
 export function mapGraphError(error: GraphErrorBody['error']): string {
   const code = Number(error?.code);
   if (code === 190) return 'CHANNEL_REAUTHORIZE';
@@ -17,7 +20,22 @@ export function mapGraphError(error: GraphErrorBody['error']): string {
   return 'PUBLISH_FAILED';
 }
 
-export async function readGraphError(response: Response): Promise<string> {
+export interface GraphFailure {
+  code: number;
+  named: string;
+  definite: boolean;
+}
+
+export async function parseGraphFailure(response: Response): Promise<GraphFailure> {
   const body = (await response.json().catch(() => null)) as GraphErrorBody | null;
-  return mapGraphError(body?.error);
+  const code = Number(body?.error?.code);
+  return {
+    code: Number.isFinite(code) ? code : 0,
+    named: mapGraphError(body?.error),
+    definite: DEFINITE_REFUSAL.has(code),
+  };
+}
+
+export async function readGraphError(response: Response): Promise<string> {
+  return (await parseGraphFailure(response)).named;
 }
