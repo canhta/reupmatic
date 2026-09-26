@@ -36,6 +36,16 @@ Severity: **H** = a feature does not work; **M** = wrong or misleading result; *
 | B8 | M | Post editor doesn't reload export choices when the library changes (`PostEditor.tsx` effect with `[]` deps) | code | Already in `remove-preview` slice 3c |
 | B9 | L | The export step summary doesn't list voice and logo, though both are rendered | `EditorExportDialog.tsx:60` | Add them. `remove-preview` may rewrite the dialog, so check after it lands |
 
+### Added after the remove-preview review (2026-09-27)
+
+| # | Sev | Bug | Evidence | Fix expected |
+| --- | --- | --- | --- | --- |
+| B10 | M | The live monitor shows no subtitle overlay while a cue is active (cue 1 0–3 s, playhead 0:01). Likely the same cause as B2 | `monitor-live-voice-music-en.png` from the remove-preview e2e | Fixed with B2. An e2e asserts the overlay canvas has non-transparent pixels while a cue is active |
+| B11 | M | The live mix is off for compositions (multi-clip): `useLiveMix` returns early when `composition` is set | `app/ui/features/editor/live-mix/useLiveMix.ts` | Map composition time to clip/source time for the voice and music schedule, the same way the render does, or state the gap in the tool in one clause if a clip's speed makes it impractical |
+| B12 | L | The live ducking follows the peak of each sample, while FFmpeg `sidechaincompress` defaults to RMS detection, so the live mix ducks harder than the export | `public/duck-envelope.js` | RMS detection over the same window FFmpeg uses, with the constant shared from `live-mix.ts` |
+| B13 | L | Post on a video opened outside the Library runs the save flow, then fails with `POST_REQUIRES_LIBRARY` | `useEditorSession.ts` `postExport` | Disable Post with a one-clause reason when the source has no Library item |
+| B14 | L | Voice lines with a rate other than 1 play pitch-shifted live (AudioBufferSource `playbackRate`), while the export's `atempo` keeps the pitch | remove-preview report | Time-stretch while keeping pitch (e.g. `HTMLAudioElement.preservesPitch` per line, or pre-stretched buffers), or keep it as a named deviation if the cost is too high; report which |
+
 ## C. Test drift that hid these bugs
 
 `remove-preview` slice 5 fixes the bell selector, the settings duplicate and the preview
