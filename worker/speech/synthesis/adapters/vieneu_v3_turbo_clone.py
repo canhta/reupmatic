@@ -42,14 +42,21 @@ def _composed_codec(base: Path, clone: Path, target: Path) -> None:
         _link_or_copy(clone / "codec" / name, target / name)
 
 
+def _require(directory: Path, names: tuple[str, ...], code: str) -> None:
+    if any(not (directory / name).is_file() for name in names):
+        raise WorkerError(code)
+
+
 def encode(base: Path, clone: Path, audio: Path, denoise: bool = True) -> dict:
+    # Check every artifact before importing or constructing the engine: a missing file must be a
+    # named code, never the SDK's silent Hugging Face fallback.
+    _require(base / "onnx", ("vieneu_prefill.onnx",), "MODEL_MISSING")
+    _require(base / "codec", _BASE_CODEC, "MODEL_MISSING")
+    _require(clone, ("speaker_encoder.onnx", "denoiser.onnx"), "SYNTHESIS_CLONE_UNAVAILABLE")
+    _require(clone / "codec", _CLONE_CODEC, "SYNTHESIS_CLONE_UNAVAILABLE")
     import numpy as np
     from vieneu._v3_turbo_engine.onnx_runtime_lite import OnnxV3LiteEngine
 
-    # Check every artifact before constructing the engine: a missing file must be a named code,
-    # never the SDK's silent Hugging Face fallback.
-    if not (clone / "speaker_encoder.onnx").is_file() or not (clone / "denoiser.onnx").is_file():
-        raise WorkerError("SYNTHESIS_CLONE_UNAVAILABLE")
     with tempfile.TemporaryDirectory() as scratch:
         codec = Path(scratch) / "codec"
         _composed_codec(base, clone, codec)

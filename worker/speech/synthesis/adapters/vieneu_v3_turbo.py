@@ -17,6 +17,12 @@ def run(params: dict, model: dict, voice: dict, directory: Path) -> dict:
     from vieneu_utils.phonemize_text import phonemize_text_with_emotions
 
     root = Path(model["directory"])
+    # Every artifact is checked first: a missing file is a named code, never a hub fetch.
+    if (
+        not (root / "onnx" / "vieneu_prefill.onnx").is_file()
+        or not (root / "codec" / "moss_audio_tokenizer_decode_full.onnx").is_file()
+    ):
+        raise WorkerError("MODEL_MISSING")
     engine = OnnxV3LiteEngine(
         checkpoint_path=str(root),
         onnx_dir=str(root / "onnx"),

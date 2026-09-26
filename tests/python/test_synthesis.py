@@ -9,6 +9,7 @@ from unittest.mock import patch as mock_patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from runtime.errors import WorkerError
+from speech.synthesis.adapters import vieneu_v3_turbo_clone
 from speech.synthesis.contracts import parse_options, parse_voice, validate_audio
 from speech.synthesis.hosted import idempotency_key
 from speech.synthesis.models import (
@@ -169,6 +170,49 @@ class SynthesisContractTests(unittest.TestCase):
                 validate_audio({**valid, "sample_rate": rate}, p)
         supported = {**valid, "sample_rate": 24000}
         self.assertEqual(validate_audio(supported, p)["sample_rate"], 24000)
+
+
+class CloneAdapterGuardTests(unittest.TestCase):
+    """A missing artifact is refused before the SDK can fall back to a hub download."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.base = self.root / "base"
+        self.clone = self.root / "clone"
+        (self.base / "onnx").mkdir(parents=True)
+        (self.base / "codec").mkdir()
+        (self.clone / "codec").mkdir(parents=True)
+        self.audio = self.root / "ref.wav"
+        self.audio.write_bytes(b"controlled")
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def complete_base(self):
+        (self.base / "onnx/vieneu_prefill.onnx").write_bytes(b"x")
+        (self.base / "codec/moss_audio_tokenizer_decode_full.onnx").write_bytes(b"x")
+        (self.base / "codec/moss_audio_tokenizer_decode_shared.data").write_bytes(b"x")
+
+    def complete_clone(self):
+        (self.clone / "speaker_encoder.onnx").write_bytes(b"x")
+        (self.clone / "denoiser.onnx").write_bytes(b"x")
+        (self.clone / "codec/moss_audio_tokenizer_encode.onnx").write_bytes(b"x")
+        (self.clone / "codec/moss_audio_tokenizer_encode.data").write_bytes(b"x")
+
+    def test_a_missing_base_artifact_is_model_missing_before_the_sdk_is_imported(self):
+        with self.assertRaisesRegex(WorkerError, "MODEL_MISSING"):
+            vieneu_v3_turbo_clone.encode(self.base, self.clone, self.audio)
+
+    def test_a_missing_clone_artifact_is_clone_unavailable_before_the_sdk_is_imported(self):
+        self.complete_base()
+        with self.assertRaisesRegex(WorkerError, "SYNTHESIS_CLONE_UNAVAILABLE"):
+            vieneu_v3_turbo_clone.encode(self.base, self.clone, self.audio)
+        # A missing encoder graph is refused too, not silently skipped.
+        (self.clone / "speaker_encoder.onnx").write_bytes(b"x")
+        (self.clone / "denoiser.onnx").write_bytes(b"x")
+        with self.assertRaisesRegex(WorkerError, "SYNTHESIS_CLONE_UNAVAILABLE"):
+            vieneu_v3_turbo_clone.encode(self.base, self.clone, self.audio)
 
 
 class SynthesisModelTests(unittest.TestCase):

@@ -177,6 +177,20 @@ class SynthesisNativeTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "MODEL_NETWORK_DISABLED"):
             s.call("synthesis.clone", {"asset_id": asset})
 
+    def test_a_tampered_clone_artifact_is_a_named_code_before_any_network(self):
+        s, _ = self.session(SYNTH_TEST_NETWORK="1")
+        self.configure_clone(s)
+        asset = self.register_audio(s, self.reference())
+        os.unlink(self.clone_model / "speaker_encoder.onnx")
+        with self.assertRaisesRegex(RuntimeError, "MODEL_MISSING"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
+    def test_a_missing_clone_bundle_is_unavailable_not_a_silent_download(self):
+        s, _ = self.session(SYNTH_TEST_NETWORK="1")
+        asset = self.register_audio(s, self.reference())
+        with self.assertRaisesRegex(RuntimeError, "SYNTHESIS_CLONE_UNAVAILABLE"):
+            s.call("synthesis.clone", {"asset_id": asset})
+
     def test_a_nano_job_for_a_language_the_engine_does_not_serve_is_refused(self):
         s, p = self.nano_session()
         with self.assertRaisesRegex(RuntimeError, "MODEL_LANGUAGE_UNAVAILABLE"):
