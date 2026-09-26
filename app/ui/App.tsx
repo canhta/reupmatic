@@ -11,6 +11,7 @@ import { useBatchQueue } from './features/batch/useBatchQueue';
 import { CatalogProvider } from './features/catalog/CatalogProvider';
 import { CatalogStatus } from './features/catalog/CatalogStatus';
 import { ChannelsWorkspace } from './features/distribution/ChannelsWorkspace';
+import { onPostRequested } from './features/distribution/post-intent';
 import { EditorProvider } from './features/editor/EditorContext';
 import { EditorToolbarActions, EditorToolbarTitle } from './features/editor/EditorToolbar';
 import { EditorWorkspace } from './features/editor/EditorWorkspace';
@@ -36,6 +37,8 @@ export function App() {
   const [navigationCollapsed, setNavigationCollapsed] = useState(false);
   const { registerDirty } = useSessionLifecycle();
   const queue = useBatchQueue((dirty) => registerDirty('batch', dirty));
+
+  useEffect(() => onPostRequested(() => setArea('channels')), []);
 
   useEffect(
     () =>

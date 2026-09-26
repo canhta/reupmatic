@@ -108,6 +108,20 @@ export const editorOperations = {
     }),
     toRequest: (id: string) => ({ artifact_id: id }),
   }),
+  'output-open': operation<{ artifact_id: string }, { opened: boolean }>()({
+    rendererMethod: 'outputOpen',
+    validate: (input) => ({
+      artifact_id: requestId(requestRecord(input, ['artifact_id']).artifact_id),
+    }),
+    toRequest: (id: string) => ({ artifact_id: id }),
+  }),
+  'output-reveal': operation<{ artifact_id: string }, { revealed: boolean }>()({
+    rendererMethod: 'outputReveal',
+    validate: (input) => ({
+      artifact_id: requestId(requestRecord(input, ['artifact_id']).artifact_id),
+    }),
+    toRequest: (id: string) => ({ artifact_id: id }),
+  }),
   'open-project': operation<undefined, OpenedProject | null>()({
     rendererMethod: 'openProject',
     validate: () => undefined,

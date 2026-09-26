@@ -29,6 +29,7 @@ import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
 import { PostEditor } from './PostEditor';
 import { postDraft } from './post-draft';
+import { consumePostIntent, onPostRequested } from './post-intent';
 
 const PAGE_SIZE = 25;
 
@@ -91,6 +92,15 @@ export function PostBrowser({
         void form.choose(postDraft());
       }),
     [catalog.busy, catalog.snapshot, form],
+  );
+  useEffect(
+    () =>
+      onPostRequested((exportId) => {
+        setEditing(true);
+        void form.choose({ ...postDraft(), export_id: exportId });
+        consumePostIntent(exportId);
+      }),
+    [form],
   );
   const filtered = !!filter.channel_id || !!filter.link_id;
   const filterName = filter.channel_id

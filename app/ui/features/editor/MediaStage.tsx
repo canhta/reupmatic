@@ -1,4 +1,5 @@
 import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -16,6 +17,8 @@ import { resolveEditWindow } from '../../../core/editing/edit-recipe';
 import { fadePreviewOpacity } from '../../../core/editing/fade-preview';
 import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
+import { unwrap } from '../../bridge/client';
+import { requestPost } from '../distribution/post-intent';
 import { useEditor } from './EditorContext';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
@@ -103,6 +106,10 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   })();
   const [dragOver, setDragOver] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const resultVideo = useRef<HTMLVideoElement>(null);
+  const [resultClock, setResultClock] = useState(0);
+  const [resultDuration, setResultDuration] = useState(0);
+  const result = editor.preview && editor.preview.revision === revision ? editor.preview : null;
 
   // A cancelled open must not strand focus on <body> after the busy button blurs.
   const wasOpening = useRef(false);
@@ -161,7 +168,17 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
               </filter>
             </svg>
           )}
-          {!media ? (
+          {result ? (
+            <video
+              ref={resultVideo}
+              data-monitor-video="result"
+              src={result.url}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onLoadedMetadata={(event) => setResultDuration(event.currentTarget.duration * 1000)}
+              onTimeUpdate={(event) => setResultClock(event.currentTarget.currentTime * 1000)}
+            />
+          ) : !media ? (
             // biome-ignore lint/a11y/noStaticElementInteractions: a drag-and-drop target, not a click/keyboard control — Project media Add… and File > Import Media… stay the keyboard-operable ways to add media; this only adds an alternate pointer/drag path.
             <div
               id="editor-start-drop-target"
@@ -288,18 +305,46 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
           )}
         </div>
       </div>
-      {media && editor.sourceUrl && (
+      {result || (media && editor.sourceUrl) ? (
         <MonitorTransport
           isPlaying={playing}
-          at={editor.clock}
-          of={editor.duration}
+          at={result ? resultClock : editor.clock}
+          of={result ? resultDuration : editor.duration}
           onToggle={() => {
-            const video = editor.video.current;
+            const video = result ? resultVideo.current : editor.video.current;
             if (!video) return;
             if (video.paused) void video.play();
             else video.pause();
           }}
         />
+      ) : null}
+      {result && (
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Button
+            label={t('resultOpen')}
+            size="sm"
+            onClick={() =>
+              void unwrap(window.reupmatic.outputOpen(result.artifact_id)).catch((reason) =>
+                editor.report(reason),
+              )
+            }
+          />
+          <Button
+            label={t('resultShowInFolder')}
+            size="sm"
+            onClick={() =>
+              void unwrap(window.reupmatic.outputReveal(result.artifact_id)).catch((reason) =>
+                editor.report(reason),
+              )
+            }
+          />
+          <Button
+            label={t('resultPost')}
+            size="sm"
+            variant="primary"
+            onClick={() => requestPost(result.artifact_id)}
+          />
+        </HStack>
       )}
       <VisuallyHidden as="div" role="status">
         {stale ? t('staleHelp') : ''}

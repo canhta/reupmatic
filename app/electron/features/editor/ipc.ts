@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { access } from 'node:fs/promises';
 import path from 'node:path';
-import { type BrowserWindow, dialog } from 'electron';
+import { type BrowserWindow, dialog, shell } from 'electron';
 import { parseComposition } from '../../../core/editing/composition/document.js';
 import { parseEditing } from '../../../core/editing/edit-recipe.js';
 import { parseProjectMedia } from '../../../core/editing/project-media.js';
@@ -429,12 +429,25 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       library_linked: await host.library.recordLink(source, 'subtitle', chosen.filePath),
     };
   });
-  wire('save-video', async (input) => {
-    const artifactId = input.artifact_id;
+  function outputArtifactPath(artifactId: string): string {
     const artifactPath = media.resolve(artifactId);
     if (!artifactPath?.startsWith(path.join(host.workspace, 'renders') + path.sep)) {
       throw new Error('UNKNOWN_ASSET');
     }
+    return artifactPath;
+  }
+  wire('output-open', async (input) => {
+    const failure = await shell.openPath(outputArtifactPath(input.artifact_id));
+    if (failure) throw new Error('COMPONENT_MISSING');
+    return { opened: true };
+  });
+  wire('output-reveal', (input) => {
+    shell.showItemInFolder(outputArtifactPath(input.artifact_id));
+    return { revealed: true };
+  });
+  wire('save-video', async (input) => {
+    const artifactId = input.artifact_id;
+    const artifactPath = outputArtifactPath(artifactId);
     const chosen = await dialog.showSaveDialog(host.getWindow(), {
       defaultPath: host.savePath('processed.mp4'),
       filters: [{ name: 'MP4', extensions: ['mp4'] }],

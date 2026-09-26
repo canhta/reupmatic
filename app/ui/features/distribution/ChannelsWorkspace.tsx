@@ -5,6 +5,7 @@ import { registerMenuCommand } from '../../shell/menuCommands';
 import { AffiliateManager } from './AffiliateManager';
 import { ChannelManager } from './ChannelManager';
 import { PostBrowser, type PostFilter } from './PostBrowser';
+import { onPostRequested } from './post-intent';
 
 export function ChannelsWorkspace() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export function ChannelsWorkspace() {
   }
 
   useEffect(() => registerMenuCommand('channels.gotoPosts', () => setTab('posts')), []);
+  useEffect(() => onPostRequested(() => setTab('posts')), []);
 
   return (
     <div className="business-area">

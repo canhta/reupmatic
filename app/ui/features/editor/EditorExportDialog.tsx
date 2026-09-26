@@ -26,8 +26,6 @@ export function EditorExportDialog() {
   const [timing, setTiming] = useState<'source' | 'output'>('source');
   const [running, setRunning] = useState(false);
   const [message, setMessage] = useState('');
-  // Baseline artifact id is null on first render, so it needs its own "awaiting" flag.
-  const awaitingSave = useRef(false);
   const baselineArtifact = useRef<string | null>(null);
 
   useEffect(() => registerMenuCommand('editor.export', () => setIsOpen(true)), []);
@@ -41,15 +39,11 @@ export function EditorExportDialog() {
   );
 
   useEffect(() => {
-    if (!awaitingSave.current || !editor.preview) return;
+    if (!running || !editor.preview) return;
     if (editor.preview.artifact_id === baselineArtifact.current) return;
-    const artifact = editor.preview.artifact_id;
-    awaitingSave.current = false;
-    void editor.saveVideo(artifact).then(() => {
-      setMessage(t('exportComplete'));
-      setIsOpen(false);
-    });
-  }, [editor, editor.preview, t]);
+    setMessage(t('exportComplete'));
+    setIsOpen(false);
+  }, [running, editor.preview, t]);
 
   const output = editor.processing?.editing?.output ?? DEFAULT_OUTPUT;
   function changeOutput(patch: Partial<Output>) {
@@ -77,7 +71,6 @@ export function EditorExportDialog() {
     try {
       if (kind !== 'video') await editor.saveSubtitles(timing, format);
       if (kind !== 'subtitle') {
-        awaitingSave.current = true;
         baselineArtifact.current = editor.preview?.artifact_id ?? null;
         await editor.render();
         setMessage(t('exportRendering'));

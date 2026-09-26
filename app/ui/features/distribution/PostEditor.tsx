@@ -34,7 +34,9 @@ export function PostEditor({
   const { value: draft, setValue: setDraft } = form;
   const [exports, setExports] = useState<ExportChoice[]>([]);
   const [loadError, setLoadError] = useState(false);
-  const [_generation, setGeneration] = useState(0);
+  const [generation, setGeneration] = useState(0);
+  useEffect(() => window.reupmatic.onLibraryChanged(() => setGeneration((value) => value + 1)), []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refetch when a new export lands.
   useEffect(() => {
     let alive = true;
     setLoadError(false);
@@ -45,14 +47,10 @@ export function PostEditor({
       .catch(() => {
         if (alive) setLoadError(true);
       });
-    const unsubscribe = window.reupmatic.onLibraryChanged(() =>
-      setGeneration((value) => value + 1),
-    );
     return () => {
       alive = false;
-      unsubscribe();
     };
-  }, []);
+  }, [generation]);
   const disabled = catalog.busy || !catalog.snapshot;
   const selectedExport = exports.find((item) => item.export_id === draft.export_id);
   const channels = catalog.snapshot?.channels.filter((channel) => !channel.archived) ?? [];
