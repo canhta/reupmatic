@@ -43,6 +43,9 @@ export function VisionPanel(props: Props) {
           available={Boolean(job.models?.inpainting.available)}
           hasOcr={hasOcr}
         />
+        <Text type="supporting" as="p">
+          {t('visionInpaintExportOnly')}
+        </Text>
         <HStack gap={3} vAlign="center" wrap="wrap" role="status">
           <Text type="body">
             {job.checking

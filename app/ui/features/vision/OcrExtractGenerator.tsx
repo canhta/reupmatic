@@ -9,7 +9,6 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -34,7 +33,6 @@ export function OcrSetup() {
   const language = displayed.language;
   const [sample, setSample] = useState(500);
   const [confidence, setConfidence] = useState(0.5);
-  const [scope, setScope] = useState<'sample' | 'full'>('sample');
   const busy = Boolean(job.active);
   const hasOcr = Boolean(
     language && job.models?.ocr.available && job.models.ocr.languages.includes(language),
@@ -52,18 +50,6 @@ export function OcrSetup() {
             onChange={(value) =>
               editor.changeLayerCues(displayed.cues, 'displayed', { language: value })
             }
-          />
-          <Selector
-            label={t('speechScope')}
-            value={scope}
-            isDisabled={busy}
-            options={[
-              { value: 'sample', label: t('speechSample') },
-              { value: 'full', label: t('speechFull') },
-            ]}
-            onChange={(value) => {
-              if (value === 'sample' || value === 'full') setScope(value);
-            }}
           />
         </FormLayout>
         <Collapsible
@@ -155,7 +141,7 @@ export function OcrSetup() {
             onClick={() => {
               if (!language) return;
               showReview('ocr');
-              void job.start(scope === 'full' ? 'media.ocr.extract' : 'media.ocr', {
+              void job.start('media.ocr.extract', {
                 language,
                 sample_ms: sample,
                 min_confidence: confidence,

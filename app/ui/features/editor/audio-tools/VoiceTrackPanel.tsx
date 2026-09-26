@@ -93,11 +93,6 @@ export function VoiceTrackPanel() {
           />
         </FormLayout>
         <HStack gap={2} vAlign="center" wrap="wrap">
-          <Button
-            label={t('voiceTrackAudition')}
-            isDisabled={disabled || editor.renderUnavailable}
-            onClick={() => void editor.render('sample')}
-          />
           {track.stale && (
             <Button
               label={t('voiceTrackKeep')}
@@ -111,9 +106,6 @@ export function VoiceTrackPanel() {
             onClick={() => editor.changeVoiceTrack(undefined)}
           />
         </HStack>
-        <Text as="p" type="supporting">
-          {t('voiceTrackAuditionWarning')}
-        </Text>
       </VStack>
     </InspectorPanelSection>
   );

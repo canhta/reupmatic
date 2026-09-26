@@ -25,8 +25,6 @@ interface RenderInput {
   media: PublicVideo | null;
   cues: Cue[];
   revision: number;
-  sampleStart: string;
-  sampleEnd: string;
 }
 
 export function useRenderJob(
@@ -65,33 +63,15 @@ export function useRenderJob(
     [report, revision, setStatus],
   );
 
-  async function render(mode: 'sample' | 'full', input: RenderInput) {
+  async function render(input: RenderInput) {
     if (!input.media || activeRequest.current) return;
     const requestId = crypto.randomUUID();
     const duration = input.composition
       ? compositionDuration(input.composition)
       : input.media.duration_ms;
     try {
-      const start = Math.round(Number(input.sampleStart) * 1000);
-      const end = Math.round(Number(input.sampleEnd) * 1000);
-      if (
-        mode === 'sample' &&
-        (!input.sampleStart.trim() ||
-          !input.sampleEnd.trim() ||
-          !Number.isFinite(start) ||
-          !Number.isFinite(end) ||
-          start < 0 ||
-          end <= start ||
-          end > duration)
-      ) {
-        throw new Error('INVALID_CUES');
-      }
       if (input.processing) parseProcessingRecipe(input.processing, input.cues.length > 0);
-      resolveEditWindow(
-        input.processing?.editing,
-        duration,
-        mode === 'sample' ? { start_ms: start, end_ms: end } : undefined,
-      );
+      resolveEditWindow(input.processing?.editing, duration);
       tracker.current.begin(requestId, input.revision);
       activeRequest.current = requestId;
       setBusy(true);
@@ -102,13 +82,11 @@ export function useRenderJob(
           asset_id: input.media.asset_id,
           cues: input.cues,
           revision: input.revision,
-          mode,
           ...(input.composition ? { composition: input.composition } : {}),
           ...(input.soundtrack ? { soundtrack: input.soundtrack } : {}),
           ...(input.voice ? { voice: input.voice } : {}),
           ...(input.logo ? { logo: input.logo } : {}),
           ...(input.processing ? { processing: input.processing } : {}),
-          ...(mode === 'sample' ? { start_ms: start, end_ms: end } : {}),
         }),
       );
       if (tracker.current.acknowledge(reply.request_id)) {

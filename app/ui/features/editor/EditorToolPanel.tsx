@@ -52,8 +52,6 @@ function ToolPanelContent({ activeTool }: { activeTool: ToolId }) {
           key={media.asset_id}
           assetId={media.asset_id}
           revision={editor.revision}
-          start={editor.sampleStart}
-          end={editor.sampleEnd}
           duration={media.duration_ms}
         />
       );

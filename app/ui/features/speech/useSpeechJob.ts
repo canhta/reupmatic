@@ -18,8 +18,6 @@ export interface SpeechContext {
   assetId: string;
   revision: number;
   duration: number;
-  start: string;
-  end: string;
   hasAudio: boolean;
   composed: boolean;
 }
@@ -129,7 +127,7 @@ export function useSpeechJob(context: SpeechContext) {
     }
   }
 
-  async function start(language: SpeechLanguage, scope: 'sample' | 'full', engineId: string) {
+  async function start(language: SpeechLanguage, engineId: string) {
     if (operation.current || configuring.current) return;
     const requestId = crypto.randomUUID();
     let admitted = false;
@@ -141,8 +139,6 @@ export function useSpeechJob(context: SpeechContext) {
         ? offeredSpeechEngines(models, language).find((entry) => entry.engine === engineId)
         : undefined;
       if (!engine?.model_id) throw new Error(problemCode(models, language));
-      if (scope === 'sample' && (!c.start.trim() || !c.end.trim()))
-        throw new Error('INVALID_REQUEST');
       const input = parseSpeechInput({
         request_id: requestId,
         revision: c.revision,
@@ -150,8 +146,8 @@ export function useSpeechJob(context: SpeechContext) {
           asset_id: c.assetId,
           model_id: engine.model_id,
           language,
-          start_ms: scope === 'full' ? 0 : Math.round(Number(c.start) * 1000),
-          end_ms: scope === 'full' ? c.duration : Math.round(Number(c.end) * 1000),
+          start_ms: 0,
+          end_ms: c.duration,
         },
       });
       if (input.params.end_ms > c.duration) throw new Error('INVALID_REQUEST');

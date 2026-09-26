@@ -8,7 +8,7 @@ import {
 } from '../../../core/projects/editor-history';
 import type { EditorSnapshot } from '../../../core/projects/project';
 
-const initial: EditorSnapshot = { cues: [], sample: { start_ms: 0, end_ms: 10000 } };
+const initial: EditorSnapshot = { cues: [] };
 
 export function useEditorDocument(onChange: () => void) {
   const [history, setHistory] = useState(() => openEditorHistory(initial));

@@ -89,7 +89,7 @@ function videoProjectName(name: string): string {
   return name.replace(/\.[^./\\]+$/, '').trim() || name;
 }
 
-const UNTITLED: Snapshot = { cues: [], sample: { start_ms: 0, end_ms: 10000 } };
+const UNTITLED: Snapshot = { cues: [] };
 
 export interface SubtitlePreview {
   revision: number;
@@ -160,8 +160,6 @@ export interface EditorSession {
   changeProcessing: (value: ProcessingRecipe | undefined) => void;
   dirty: boolean;
   clock: number;
-  sampleStart: string;
-  sampleEnd: string;
   savingProject: boolean;
   status: string;
   ass: SubtitlePreview | null;
@@ -187,11 +185,9 @@ export interface EditorSession {
   saveVideo: (artifactId: string) => Promise<void>;
   undo: () => void;
   redo: () => void;
-  render: (mode: 'sample' | 'full') => Promise<void> | undefined;
+  render: () => Promise<void> | undefined;
   compositionBlocked: boolean;
   renderUnavailable: boolean;
-  changeSampleStart: (value: string) => void;
-  changeSampleEnd: (value: string) => void;
   openSettings: (tab?: SettingsCategory) => void;
 }
 
@@ -241,8 +237,6 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     [composition, burnCues],
   );
   const duration = composition ? compositionDuration(composition) : (media?.duration_ms ?? 0);
-  const sampleStart = String(snapshot.sample.start_ms / 1000);
-  const sampleEnd = String(snapshot.sample.end_ms / 1000);
   const report = useCallback((reason: unknown) => {
     setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
   }, []);
@@ -565,11 +559,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   }
 
   function initialSnapshot(value: PublicVideo): Snapshot {
-    return {
-      name: videoProjectName(value.name),
-      cues: [],
-      sample: { start_ms: 0, end_ms: Math.min(10000, value.duration_ms) },
-    };
+    return { name: videoProjectName(value.name), cues: [] };
   }
 
   async function open() {
@@ -690,24 +680,11 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     const savedRevision = rev.current;
     try {
       setSavingProject(true);
-      const start = Math.round(Number(sampleStart) * 1000);
-      const end = Math.round(Number(sampleEnd) * 1000);
-      if (
-        !sampleStart.trim() ||
-        !sampleEnd.trim() ||
-        !Number.isFinite(start) ||
-        !Number.isFinite(end) ||
-        start < 0 ||
-        end <= start ||
-        end > duration
-      ) {
-        throw new Error('INVALID_PROJECT');
-      }
       const value = await unwrap<SaveResult | null>(
         window.reupmatic.saveProject({
           asset_id: media.asset_id,
           revision: savedRevision,
-          snapshot: { ...snapshot, sample: { start_ms: start, end_ms: end } },
+          snapshot,
           ...(saveAs || !projectPath ? {} : { path: projectPath }),
         }),
       );
@@ -931,15 +908,13 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     }
   }
 
-  function render(mode: 'sample' | 'full') {
+  function render() {
     if (openingRef.current) return;
     setError('');
-    return renderingPublic.render(mode, {
+    return renderingPublic.render({
       media,
       cues: renderCues,
       revision,
-      sampleStart,
-      sampleEnd,
       processing,
       soundtrack,
       voice: voiceTrack,
@@ -1007,8 +982,6 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       document.change({ processing: value }),
     dirty,
     clock,
-    sampleStart,
-    sampleEnd,
     savingProject,
     status,
     ass,
@@ -1039,12 +1012,6 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     render,
     compositionBlocked,
     renderUnavailable,
-    changeSampleStart: (value: string) =>
-      document.change({
-        sample: { ...snapshot.sample, start_ms: Math.round(Number(value) * 1000) },
-      }),
-    changeSampleEnd: (value: string) =>
-      document.change({ sample: { ...snapshot.sample, end_ms: Math.round(Number(value) * 1000) } }),
     openSettings: (tab?: SettingsCategory) => onOpenSettings(tab),
   };
 }

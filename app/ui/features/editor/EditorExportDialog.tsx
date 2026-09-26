@@ -79,7 +79,7 @@ export function EditorExportDialog() {
       if (kind !== 'subtitle') {
         awaitingSave.current = true;
         baselineArtifact.current = editor.preview?.artifact_id ?? null;
-        await editor.render('full');
+        await editor.render();
         setMessage(t('exportRendering'));
       } else {
         setMessage(t('exportComplete'));

@@ -1,17 +1,13 @@
 import { Badge } from '@astryxdesign/core/Badge';
-import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
-import { VStack } from '@astryxdesign/core/VStack';
 import { Pause, Play } from 'lucide-react';
 import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,12 +18,8 @@ import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
 import { useEditor } from './EditorContext';
 
-const SAMPLE_RANGE_INPUT_WIDTH = 112;
-
-// Mirrors the worker's FFmpeg `eq`; Source only — a rendered sample already has it baked in.
+// Mirrors the worker's FFmpeg `eq` on the live source.
 const COLOR_PREVIEW_FILTER_ID = 'editor-color-preview';
-
-type MonitorMode = 'source' | 'preview';
 
 function MonitorTransport({
   isPlaying,
@@ -66,9 +58,8 @@ function clockText(milliseconds: number): string {
 export function MediaStage({ isWide }: { isWide: boolean }) {
   const { t } = useTranslation();
   const editor = useEditor();
-  const { media, preview, revision, ass, documentId } = editor;
+  const { media, revision, ass } = editor;
   const { color, crop, flip, rotate, fade, logo, output } = editor.processing?.editing ?? {};
-  const [mode, setMode] = useState<MonitorMode>('source');
   const [logoAspect, setLogoAspect] = useState<number | null>(null);
   const geometry = useMemo(
     () =>
@@ -98,7 +89,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
         )
       : null;
   const fadeOpacity = (() => {
-    if (!fade || !media || mode === 'preview') return 1;
+    if (!fade || !media) return 1;
     try {
       const window = resolveEditWindow(editor.processing?.editing, editor.duration);
       const outputMs = Math.max(
@@ -112,19 +103,6 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   })();
   const [dragOver, setDragOver] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const previewVideo = useRef<HTMLVideoElement>(null);
-  const [previewClock, setPreviewClock] = useState({ at: 0, of: 0 });
-  const lastPreviewId = useRef<string | null>(null);
-  // Adjusting state during render (react.dev), not an Effect; each branch fires once per real change.
-  const [seenDocumentId, setSeenDocumentId] = useState(documentId);
-  if (documentId !== seenDocumentId) {
-    setSeenDocumentId(documentId);
-    setMode('source');
-    lastPreviewId.current = null;
-  } else if (preview && preview.artifact_id !== lastPreviewId.current) {
-    lastPreviewId.current = preview.artifact_id;
-    setMode('preview');
-  }
 
   // A cancelled open must not strand focus on <body> after the busy button blurs.
   const wasOpening = useRef(false);
@@ -139,10 +117,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
     wasOpening.current = false;
   }, [editor.opening, media]);
 
-  const sourceStale = media != null && !editor.composition && ass?.revision !== revision;
-  const previewStale =
-    media != null && mode === 'preview' && preview != null && preview.revision !== revision;
-  const stale = mode === 'source' ? sourceStale : previewStale;
+  const stale = media != null && !editor.composition && ass?.revision !== revision;
 
   return (
     <div className="viewers">
@@ -171,26 +146,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             </Tooltip>
           </StackItem>
         )}
-        <HStack gap={2} vAlign="center" wrap="wrap" hAlign="end" className="monitor-mode-switch">
-          <SegmentedControl
-            label={t('monitorModeLabel')}
-            value={mode}
-            isDisabled={!media}
-            onChange={(value) => setMode(value as MonitorMode)}
-            size="sm"
-          >
-            <SegmentedControlItem value="source" label={t('monitorSource')} />
-            <SegmentedControlItem value="preview" label={t('monitorPreview')} />
-          </SegmentedControl>
-          <Button
-            label={t('sample')}
-            size="sm"
-            isDisabled={!media || editor.renderUnavailable}
-            onClick={() => void editor.render('sample')}
-          />
-        </HStack>
       </HStack>
-      {mode === 'source' && editor.sourceSelection && (
+      {editor.sourceSelection && (
         <Text as="p" type="supporting" className="monitor-source-name">
           {editor.sourceSelection.name}
         </Text>
@@ -228,178 +185,125 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             >
               <EmptyState isCompact className="video-placeholder" title={t('openHint')} />
             </div>
-          ) : mode === 'source' ? (
-            editor.sourceUrl ? (
-              staged && geometry ? (
-                // Numbers come from geometryPreview, the same recipe the worker's filter chain consumes.
-                <div className="geometry-stage">
+          ) : editor.sourceUrl ? (
+            staged && geometry ? (
+              // Numbers come from geometryPreview, the same recipe the worker's filter chain consumes.
+              <div className="geometry-stage">
+                <div
+                  className="geometry-frame"
+                  style={{
+                    width: `min(100cqw, 100cqh * ${geometry.outputAspect})`,
+                    height: `min(100cqh, 100cqw / ${geometry.outputAspect})`,
+                  }}
+                >
                   <div
-                    className="geometry-frame"
+                    className="geometry-rotator"
                     style={{
-                      width: `min(100cqw, 100cqh * ${geometry.outputAspect})`,
-                      height: `min(100cqh, 100cqw / ${geometry.outputAspect})`,
+                      width:
+                        geometry.rotate === 90 || geometry.rotate === 270
+                          ? `${geometry.contentHeight * 100}cqh`
+                          : `${geometry.contentWidth * 100}cqw`,
+                      height:
+                        geometry.rotate === 90 || geometry.rotate === 270
+                          ? `${geometry.contentWidth * 100}cqw`
+                          : `${geometry.contentHeight * 100}cqh`,
+                      transform: geometry.transform,
+                      opacity: fadeOpacity,
                     }}
                   >
-                    <div
-                      className="geometry-rotator"
+                    <video
+                      key={
+                        editor.composition
+                          ? (editor.sourceSelection?.id ?? 'loading')
+                          : media.asset_id
+                      }
+                      ref={editor.video}
+                      data-monitor-video="source"
+                      className="geometry-video"
+                      src={editor.sourceUrl}
                       style={{
-                        width:
-                          geometry.rotate === 90 || geometry.rotate === 270
-                            ? `${geometry.contentHeight * 100}cqh`
-                            : `${geometry.contentWidth * 100}cqw`,
-                        height:
-                          geometry.rotate === 90 || geometry.rotate === 270
-                            ? `${geometry.contentWidth * 100}cqw`
-                            : `${geometry.contentHeight * 100}cqh`,
-                        transform: geometry.transform,
-                        opacity: fadeOpacity,
+                        objectViewBox: `inset(${geometry.viewBox.top}% ${geometry.viewBox.right}% ${geometry.viewBox.bottom}% ${geometry.viewBox.left}%)`,
+                        filter: color ? `url(#${COLOR_PREVIEW_FILTER_ID})` : undefined,
                       }}
-                    >
-                      <video
-                        key={
-                          editor.composition
-                            ? (editor.sourceSelection?.id ?? 'loading')
-                            : media.asset_id
-                        }
-                        ref={editor.video}
-                        data-monitor-video="source"
-                        className="geometry-video"
-                        src={editor.sourceUrl}
-                        style={{
-                          objectViewBox: `inset(${geometry.viewBox.top}% ${geometry.viewBox.right}% ${geometry.viewBox.bottom}% ${geometry.viewBox.left}%)`,
-                          filter: color ? `url(#${COLOR_PREVIEW_FILTER_ID})` : undefined,
-                        }}
-                        onLoadedMetadata={editor.onSourceMetadata}
-                        onPlay={() => setPlaying(true)}
-                        onPause={() => setPlaying(false)}
-                        muted={editor.processing?.editing?.audio?.muted ?? false}
-                        onTimeUpdate={(event) =>
-                          editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
-                        }
-                        onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
-                      />
-                    </div>
-                    {logo && editor.logoUrl && (
-                      <img
-                        key={editor.logoUrl}
-                        data-monitor-logo="true"
-                        className="geometry-logo"
-                        src={editor.logoUrl}
-                        alt=""
-                        style={{
-                          display: logoBox ? 'block' : 'none',
-                          left: `${(logoBox?.x ?? 0) * 100}%`,
-                          top: `${(logoBox?.y ?? 0) * 100}%`,
-                          width: `${(logoBox?.width ?? 0) * 100}%`,
-                          height: `${(logoBox?.height ?? 0) * 100}%`,
-                          opacity: logo.opacity,
-                        }}
-                        onLoad={(event) =>
-                          setLogoAspect(
-                            event.currentTarget.naturalWidth / event.currentTarget.naturalHeight,
-                          )
-                        }
-                        onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
-                      />
-                    )}
+                      onLoadedMetadata={editor.onSourceMetadata}
+                      onPlay={() => setPlaying(true)}
+                      onPause={() => setPlaying(false)}
+                      muted={editor.processing?.editing?.audio?.muted ?? false}
+                      onTimeUpdate={(event) =>
+                        editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
+                      }
+                      onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
+                    />
                   </div>
+                  {logo && editor.logoUrl && (
+                    <img
+                      key={editor.logoUrl}
+                      data-monitor-logo="true"
+                      className="geometry-logo"
+                      src={editor.logoUrl}
+                      alt=""
+                      style={{
+                        display: logoBox ? 'block' : 'none',
+                        left: `${(logoBox?.x ?? 0) * 100}%`,
+                        top: `${(logoBox?.y ?? 0) * 100}%`,
+                        width: `${(logoBox?.width ?? 0) * 100}%`,
+                        height: `${(logoBox?.height ?? 0) * 100}%`,
+                        opacity: logo.opacity,
+                      }}
+                      onLoad={(event) =>
+                        setLogoAspect(
+                          event.currentTarget.naturalWidth / event.currentTarget.naturalHeight,
+                        )
+                      }
+                      onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
+                    />
+                  )}
                 </div>
-              ) : (
-                <video
-                  key={
-                    editor.composition ? (editor.sourceSelection?.id ?? 'loading') : media.asset_id
-                  }
-                  ref={editor.video}
-                  data-monitor-video="source"
-                  src={editor.sourceUrl}
-                  style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
-                  onLoadedMetadata={editor.onSourceMetadata}
-                  muted={editor.processing?.editing?.audio?.muted ?? false}
-                  onPlay={() => setPlaying(true)}
-                  onPause={() => setPlaying(false)}
-                  onTimeUpdate={(event) =>
-                    editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
-                  }
-                  onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
-                />
-              )
+              </div>
             ) : (
-              <EmptyState
-                isCompact
-                className="video-placeholder"
-                title={t(editor.sourceEmpty ? 'sourceEmpty' : 'sourceLoading')}
+              <video
+                key={
+                  editor.composition ? (editor.sourceSelection?.id ?? 'loading') : media.asset_id
+                }
+                ref={editor.video}
+                data-monitor-video="source"
+                src={editor.sourceUrl}
+                style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
+                onLoadedMetadata={editor.onSourceMetadata}
+                muted={editor.processing?.editing?.audio?.muted ?? false}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onTimeUpdate={(event) =>
+                  editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
+                }
+                onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
               />
             )
-          ) : preview ? (
-            <video
-              ref={previewVideo}
-              data-monitor-video="preview"
-              src={preview.url}
-              loop
-              onPlay={() => setPlaying(true)}
-              onPause={() => setPlaying(false)}
-              onLoadedMetadata={(event) =>
-                setPreviewClock({ at: 0, of: event.currentTarget.duration * 1000 })
-              }
-              onTimeUpdate={(event) =>
-                setPreviewClock((clock) => ({
-                  ...clock,
-                  at: event.currentTarget.currentTime * 1000,
-                }))
-              }
-            />
           ) : (
-            <EmptyState isCompact className="video-placeholder" title={t('noPreview')} />
+            <EmptyState
+              isCompact
+              className="video-placeholder"
+              title={t(editor.sourceEmpty ? 'sourceEmpty' : 'sourceLoading')}
+            />
           )}
         </div>
       </div>
-      {media && (mode === 'source' ? editor.sourceUrl : preview) && (
+      {media && editor.sourceUrl && (
         <MonitorTransport
           isPlaying={playing}
-          at={mode === 'source' ? editor.clock : previewClock.at}
-          of={mode === 'source' ? editor.duration : previewClock.of}
+          at={editor.clock}
+          of={editor.duration}
           onToggle={() => {
-            const video = mode === 'source' ? editor.video.current : previewVideo.current;
+            const video = editor.video.current;
             if (!video) return;
             if (video.paused) void video.play();
             else video.pause();
           }}
         />
       )}
-      {}
       <VisuallyHidden as="div" role="status">
         {stale ? t('staleHelp') : ''}
       </VisuallyHidden>
-      {!media
-        ? null
-        : mode === 'source'
-          ? null
-          : preview && (
-              <VStack gap={2}>
-                <HStack gap={3} vAlign="end" wrap="wrap">
-                  <NumberInput
-                    label={t('sampleStart')}
-                    value={Number(editor.sampleStart)}
-                    min={0}
-                    step={0.1}
-                    width={SAMPLE_RANGE_INPUT_WIDTH}
-                    isWheelEnabled={false}
-                    isDisabled={editor.opening}
-                    onChange={(value) => editor.changeSampleStart(String(value))}
-                  />
-                  <NumberInput
-                    label={t('sampleEnd')}
-                    value={Number(editor.sampleEnd)}
-                    min={0}
-                    step={0.1}
-                    width={SAMPLE_RANGE_INPUT_WIDTH}
-                    isWheelEnabled={false}
-                    isDisabled={editor.opening}
-                    onChange={(value) => editor.changeSampleEnd(String(value))}
-                  />
-                </HStack>
-              </VStack>
-            )}
     </div>
   );
 }

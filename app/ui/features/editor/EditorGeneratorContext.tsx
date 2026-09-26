@@ -28,16 +28,12 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     assetId: media?.asset_id ?? '',
     revision: editor.revision,
     duration: media?.duration_ms ?? 0,
-    start: editor.sampleStart,
-    end: editor.sampleEnd,
     hasAudio: Boolean(media?.has_audio),
     composed: Boolean(editor.composition),
   });
   const vision = useVisionJob({
     assetId: media?.asset_id ?? '',
     revision: editor.revision,
-    start: editor.sampleStart,
-    end: editor.sampleEnd,
     duration: media?.duration_ms ?? 0,
   });
   const translation = useTranslationJob({

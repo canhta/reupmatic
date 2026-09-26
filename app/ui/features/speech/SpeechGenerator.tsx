@@ -30,7 +30,6 @@ export function SpeechSetup() {
   const media = editor.media;
   const transcript = getTextLayer(editor.textSnapshot, 'transcript');
   const language = transcript.language;
-  const [scope, setScope] = useState<'sample' | 'full'>('sample');
   const busy = Boolean(job.active) || job.settingUp;
   const engines = useMemo(
     () => (job.models && language ? offeredSpeechEngines(job.models, language) : []),
@@ -61,18 +60,6 @@ export function SpeechSetup() {
             onChange={(value) =>
               editor.changeLayerCues(transcript.cues, 'transcript', { language: value })
             }
-          />
-          <Selector
-            label={t('speechScope')}
-            value={scope}
-            isDisabled={busy}
-            options={[
-              { value: 'sample', label: t('speechSample') },
-              { value: 'full', label: t('speechFull') },
-            ]}
-            onChange={(value) => {
-              if (value === 'sample' || value === 'full') setScope(value);
-            }}
           />
           {engines.length > 1 && (
             <Selector
@@ -157,7 +144,7 @@ export function SpeechSetup() {
             onClick={() => {
               if (language && engineId) {
                 showReview('speech');
-                void job.start(language, scope, engineId);
+                void job.start(language, engineId);
               }
             }}
           />

@@ -11,8 +11,6 @@ import { unwrap } from '../../bridge/client';
 export interface VisionContext {
   assetId: string;
   revision: number;
-  start: string;
-  end: string;
   duration: number;
 }
 export interface Captured<T> {
@@ -101,21 +99,8 @@ export function useVisionJob(context: VisionContext) {
     const id = crypto.randomUUID();
     let admitted = false;
     try {
-      const { assetId, revision, start, end, duration } = current.current;
-      const full = method === 'media.ocr.extract';
-      const start_ms = full ? 0 : Math.round(Number(start) * 1000);
-      const end_ms = full ? duration : Math.round(Number(end) * 1000);
-      if (
-        (!full && (!start.trim() || !end.trim())) ||
-        !Number.isFinite(start_ms) ||
-        !Number.isFinite(end_ms) ||
-        start_ms < 0 ||
-        end_ms <= start_ms ||
-        end_ms > duration
-      )
-        throw new Error('INVALID_REQUEST');
-      if (!full && end_ms - start_ms > (method === 'media.ocr' ? 120000 : 10000))
-        throw new Error('VISION_LIMIT');
+      const { assetId, revision, duration } = current.current;
+      if (!Number.isInteger(duration) || duration < 1) throw new Error('INVALID_REQUEST');
       const request = { id, revision, phase: 'queued', fraction: null };
       operation.current = request;
       admitted = true;
@@ -126,7 +111,7 @@ export function useVisionJob(context: VisionContext) {
           request_id: id,
           revision,
           method,
-          params: { ...settings, asset_id: assetId, start_ms, end_ms },
+          params: { ...settings, asset_id: assetId, start_ms: 0, end_ms: duration },
         }),
       );
       // The terminal event owns completion, even if it arrived before this reply.
