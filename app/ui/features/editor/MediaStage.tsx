@@ -19,6 +19,7 @@ import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
 import { unwrap } from '../../bridge/client';
 import { useEditor } from './EditorContext';
+import { useLiveMix } from './live-mix/useLiveMix';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
 const COLOR_PREVIEW_FILTER_ID = 'editor-color-preview';
@@ -109,6 +110,19 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   const [resultClock, setResultClock] = useState(0);
   const [resultDuration, setResultDuration] = useState(0);
   const result = editor.preview && editor.preview.revision === revision ? editor.preview : null;
+  // The live program monitor mixes the voice track, music and ducking while the source plays.
+  const liveMix = useLiveMix({
+    video: editor.video,
+    media,
+    composition: editor.composition,
+    soundtrack: editor.soundtrack,
+    voiceTrack: editor.voiceTrack,
+    editing: editor.processing?.editing,
+    enabled: !result,
+  });
+  useEffect(() => {
+    if (liveMix.error) editor.setError(liveMix.error);
+  }, [liveMix.error, editor.setError]);
 
   // A cancelled open must not strand focus on <body> after the busy button blurs.
   const wasOpening = useRef(false);
@@ -244,7 +258,9 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                       onLoadedMetadata={editor.onSourceMetadata}
                       onPlay={() => setPlaying(true)}
                       onPause={() => setPlaying(false)}
-                      muted={editor.processing?.editing?.audio?.muted ?? false}
+                      muted={
+                        liveMix.active ? false : (editor.processing?.editing?.audio?.muted ?? false)
+                      }
                       onTimeUpdate={(event) =>
                         editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
                       }
@@ -286,7 +302,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                 src={editor.sourceUrl}
                 style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
                 onLoadedMetadata={editor.onSourceMetadata}
-                muted={editor.processing?.editing?.audio?.muted ?? false}
+                muted={liveMix.active ? false : (editor.processing?.editing?.audio?.muted ?? false)}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onTimeUpdate={(event) =>

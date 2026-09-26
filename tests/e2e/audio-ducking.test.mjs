@@ -18,6 +18,8 @@ const COPY = {
     draft: 'Draft not applied — rendering uses the last applied track.',
     export: 'Export…',
     exportRun: 'Export',
+    monitorPlay: 'Play',
+    monitorPause: 'Pause',
     editorArea: 'Editor',
   },
   vi: {
@@ -31,6 +33,8 @@ const COPY = {
     draft: 'Bản nháp chưa áp dụng — render vẫn dùng nhạc đã áp dụng lần cuối.',
     export: 'Xuất…',
     exportRun: 'Xuất',
+    monitorPlay: 'Phát',
+    monitorPause: 'Tạm dừng',
     editorArea: 'Editor',
   },
 };
@@ -170,6 +174,20 @@ for (const locale of ['en', 'vi']) {
         );
         await page.getByRole('button', { name: copy.apply, exact: true }).click();
         await page.getByText(copy.draft, { exact: true }).waitFor({ state: 'hidden' });
+
+        // The live program monitor builds its mix and keeps playing without an error.
+        await page.getByRole('button', { name: copy.monitorPlay, exact: true }).click();
+        await page.waitForFunction(() => {
+          const video = document.querySelector('video[data-monitor-video="source"]');
+          return video instanceof HTMLVideoElement && !video.paused;
+        });
+        await page.waitForTimeout(500);
+        assert.equal(
+          await page.locator('.editor-workspace .error[role="alert"]').count(),
+          0,
+          'the live mix must not surface an error',
+        );
+        await page.getByRole('button', { name: copy.monitorPause, exact: true }).click();
 
         await assertNoHorizontalOverflow(page, `${locale} 1420×900`);
         await assertHeadingStaysFixed(page, copy.audioTab);
