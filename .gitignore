@@ -55,3 +55,5 @@ app/electron/features/publishing/config.generated.ts
 
 # Local Douyin session export; never commit.
 douyin.cookie.json
+.scratch/editor-crawl/out/
+.scratch/editor-crawl/*.log
