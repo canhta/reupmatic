@@ -39,7 +39,8 @@ def run(job: dict, progress: Path) -> dict:
     cues = []
     for offset in range(0, len(p["cues"]), BATCH_SIZE):
         batch = p["cues"][offset : offset + BATCH_SIZE]
-        tokens = [source.encode(cue["text"], out_type=str) for cue in batch]
+        # Marian/OPUS-MT expects the source to end with EOS; without it the decoder never stops.
+        tokens = [source.encode(cue["text"], out_type=str) + ["</s>"] for cue in batch]
         if any(not value or len(value) > MAX_TOKENS for value in tokens):
             raise WorkerError("TRANSLATION_TOKEN_LIMIT")
         results = translator.translate_batch(

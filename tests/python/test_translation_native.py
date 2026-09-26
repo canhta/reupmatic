@@ -22,6 +22,9 @@ class Translator:
     def translate_batch(self, tokens, **kwargs):
         assert kwargs == dict(beam_size=4, num_hypotheses=1, max_batch_size=8, max_input_length=0,
                              max_decoding_length=512, return_end_token=True, end_token='</s>', replace_unknowns=False)
+        # Marian/OPUS-MT expects the source token list to end with the EOS token; without it the
+        # decoder never emits EOS and runs to max length.
+        assert all(value and value[-1] == '</s>' for value in tokens), tokens
         if os.environ.get('CONTROLLED_TRANSLATION_NETWORK'):
             socket.getaddrinfo('example.invalid', 443)
         if os.environ.get('CONTROLLED_TRANSLATION_SLOW'):
