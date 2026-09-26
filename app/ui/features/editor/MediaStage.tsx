@@ -116,6 +116,9 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   const [resultClock, setResultClock] = useState(0);
   const [resultDuration, setResultDuration] = useState(0);
   const result = editor.preview && editor.preview.revision === revision ? editor.preview : null;
+  // The live mix reads the output clock: a composition's clock, otherwise the element's time.
+  const clockRef = useRef(0);
+  clockRef.current = editor.clock;
   // The live program monitor mixes the voice track, music and ducking while the source plays.
   const liveMix = useLiveMix({
     video: editor.video,

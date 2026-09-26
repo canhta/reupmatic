@@ -1,6 +1,10 @@
 // Envelope follower for the live program monitor. It mirrors the static curve in
 // app/core/editing/live-mix.ts and worker/media/audio/mixing.py; the numbers are set
 // from the main thread so there is one source of truth. Outputs the music gain (0..1).
+//
+// FFmpeg `sidechaincompress` defaults to detection=rms: it smooths the squared sample
+// (power) and reads the level as 10*log10(power), not the peak. `power` arrives as a
+// shared parameter so the detector matches the export.
 class DuckEnvelope extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
@@ -21,6 +25,7 @@ class DuckEnvelope extends AudioWorkletProcessor {
         maxValue: 1,
         automationRate: 'k-rate',
       },
+      { name: 'power', defaultValue: 2, minValue: 1, maxValue: 4, automationRate: 'k-rate' },
     ];
   }
 
@@ -36,11 +41,14 @@ class DuckEnvelope extends AudioWorkletProcessor {
     const ratio = parameters.ratio[0];
     const attack = parameters.attack[0];
     const release = parameters.release[0];
+    const power = parameters.power[0];
     for (let i = 0; i < out.length; i += 1) {
-      const sample = key ? Math.abs(key[i]) : 0;
+      const amplitude = key ? Math.abs(key[i]) : 0;
+      const sample = amplitude === 0 ? 0 : amplitude ** power;
       const coefficient = sample > this.envelope ? attack : release;
       this.envelope = coefficient * this.envelope + (1 - coefficient) * sample;
-      const db = this.envelope > 1e-7 ? 20 * Math.log10(this.envelope) : -Infinity;
+      // `power` is 2, so 10*log10(power) is the RMS level in dBFS (FFmpeg's slope*0.5).
+      const db = this.envelope > 1e-12 ? 10 * Math.log10(this.envelope) : -Infinity;
       const reduction = db > thresholdDb ? (db - thresholdDb) * (1 - 1 / ratio) : 0;
       out[i] = 10 ** (-reduction / 20);
     }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   DUCK_ATTACK_MS,
+  DUCK_DETECTION_POWER,
   DUCK_RATIO,
   DUCK_THRESHOLD_MIN,
   duckGainReductionDb,
@@ -12,6 +13,8 @@ import {
   duckWorkletParams,
   envelopeCoefficients,
   fadeGainAt,
+  liveMixClockMs,
+  liveMixClockRate,
   soundtrackWindow,
   voiceLineSchedule,
   voiceWindow,
@@ -177,4 +180,16 @@ test('the worklet parameters carry the shared threshold, ratio and time constant
   assert.ok(params.attack > 0 && params.attack < 1);
   assert.ok(params.release > 0 && params.release < 1);
   assert.ok(params.attack < params.release);
+});
+
+test('a composed live mix runs on the output clock, not the playing clip source time', () => {
+  assert.equal(liveMixClockMs(true, 4200, 9000), 9000);
+  assert.equal(liveMixClockMs(false, 4200, 9000), 4200);
+  assert.equal(liveMixClockRate(true, 1.5), 1);
+  assert.equal(liveMixClockRate(false, 1.5), 1.5);
+});
+
+test('the live detector follows FFmpeg RMS (squared) detection, not the peak', () => {
+  assert.equal(DUCK_DETECTION_POWER, 2);
+  assert.equal(duckWorkletParams(9, 300, 48000).power, DUCK_DETECTION_POWER);
 });

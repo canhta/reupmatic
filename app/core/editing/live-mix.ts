@@ -10,6 +10,9 @@ export const DUCK_RATIO = 8;
 export const DUCK_ATTACK_MS = 20;
 export const DUCK_REFERENCE_DBFS = -18;
 export const DUCK_THRESHOLD_MIN = 0.000976563;
+// FFmpeg `sidechaincompress` defaults to detection=rms: it smooths the squared sample (its
+// power) and takes half the log, not the peak. The worklet reads this exponent as a param.
+export const DUCK_DETECTION_POWER = 2;
 
 /** Threshold in dBFS such that a -18 dBFS key loses exactly `amountDb` at ratio 8. */
 export function duckThresholdDb(amountDb: number): number {
@@ -114,6 +117,23 @@ export function linearGain(db: number): number {
 }
 
 /**
+ * The clock the live mix schedules on: a composition's output clock, otherwise the element's
+ * own media time. `useSourcePreview` maps composition time to the playing clip for the video.
+ */
+export function liveMixClockMs(
+  composed: boolean,
+  elementTimeMs: number,
+  outputClockMs: number,
+): number {
+  return composed ? outputClockMs : elementTimeMs;
+}
+
+/** Output-clock milliseconds per AudioContext millisecond: a composition advances at 1×. */
+export function liveMixClockRate(composed: boolean, elementRate: number): number {
+  return composed ? 1 : elementRate;
+}
+
+/**
  * Which live bus the ducking envelope listens to. Mirrors `audio_filter_graph`:
  * the voice when it is present, otherwise the original audio unless the original
  * is muted or a `replace` lane already removed it.
@@ -144,6 +164,7 @@ export function duckWorkletParams(
   ratio: number;
   attack: number;
   release: number;
+  power: number;
 } {
   const { attack, release } = envelopeCoefficients(sampleRate, DUCK_ATTACK_MS, releaseMs);
   return {
@@ -152,5 +173,6 @@ export function duckWorkletParams(
     ratio: DUCK_RATIO,
     attack,
     release,
+    power: DUCK_DETECTION_POWER,
   };
 }

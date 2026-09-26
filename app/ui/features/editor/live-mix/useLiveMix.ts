@@ -6,6 +6,8 @@ import {
   duckWorkletParams,
   fadeGainAt,
   linearGain,
+  liveMixClockMs,
+  liveMixClockRate,
   soundtrackWindow,
   voiceLineSchedule,
   voiceWindow,
@@ -28,6 +30,10 @@ export interface LiveMixInput {
   soundtrack: Soundtrack | undefined;
   voiceTrack: VoiceTrack | undefined;
   editing: EditingRecipe | undefined;
+  /** Current output-clock time. A composition's clock is the output clock, not the clip's. */
+  clockMs: () => number;
+  /** Re-attach the graph when the composition moves to another clip. */
+  clipId: string | undefined;
   /** False while the result view replaces the live source. */
   enabled: boolean;
 }
@@ -64,8 +70,7 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     const video = input.video.current;
     const hasMusic = Boolean(input.soundtrack && !input.soundtrack.muted);
     const hasVoice = Boolean(input.voiceTrack && !input.voiceTrack.muted);
-    const wanted =
-      input.enabled && Boolean(input.media) && !input.composition && (hasMusic || hasVoice);
+    const wanted = input.enabled && Boolean(input.media) && (hasMusic || hasVoice);
     if (!video || !wanted) {
       teardown();
       setActive(false);
@@ -73,15 +78,20 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     }
 
     const element = video;
+    const composed = Boolean(input.composition);
+    // The output clock: composition time for a multi-clip project, the element's own time
+    // otherwise. Music and voice are placed on this clock, matching the render.
+    const clockNow = () =>
+      liveMixClockMs(composed, Math.round(element.currentTime * 1000), input.clockMs());
     let alive = true;
-    void activate(element, hasMusic, hasVoice, () => alive).catch((reason) => {
+    void activate(element, hasMusic, hasVoice, () => alive, composed).catch((reason) => {
       if (!alive) return;
       setError(reason instanceof Error ? reason.message : 'PREVIEW_UNAVAILABLE');
     });
 
     function onPlay() {
       if (!graphRef.current) return;
-      void resume().then(() => schedule(element.currentTime * 1000));
+      void resume().then(() => schedule(clockNow()));
     }
     function onPause() {
       stopSources();
@@ -90,10 +100,10 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
       stopSources();
     }
     function onSeek() {
-      if (graphRef.current && !element.paused) schedule(element.currentTime * 1000);
+      if (graphRef.current && !element.paused) schedule(clockNow());
     }
     function onRate() {
-      if (graphRef.current && !element.paused) schedule(element.currentTime * 1000);
+      if (graphRef.current && !element.paused) schedule(clockNow());
     }
     element.addEventListener('play', onPlay);
     element.addEventListener('pause', onPause);
@@ -110,7 +120,15 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
       element.removeEventListener('ratechange', onRate);
       teardown();
     };
-  }, [soundtrackKey, voiceKey, editingKey, input.media?.asset_id, input.enabled, compositionKey]);
+  }, [
+    soundtrackKey,
+    voiceKey,
+    editingKey,
+    input.media?.asset_id,
+    input.enabled,
+    compositionKey,
+    input.clipId,
+  ]);
 
   function context(): AudioContext {
     if (!contextRef.current) {
@@ -127,6 +145,7 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     hasMusic: boolean,
     hasVoice: boolean,
     isAlive: () => boolean,
+    composed: boolean,
   ): Promise<void> {
     const ctx = context();
     let source = elementSources.get(video);
@@ -176,6 +195,7 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
         setParam(worklet, 'ratio', params.ratio);
         setParam(worklet, 'attack', params.attack);
         setParam(worklet, 'release', params.release);
+        setParam(worklet, 'power', params.power);
         musicDuck.gain.value = 0;
         worklet.connect(musicDuck.gain);
         (key === 'voice' ? voiceGain : originalGain).connect(worklet);
@@ -205,14 +225,14 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
       voiceBuffer,
       sources: [],
       anchorCtx: ctx.currentTime,
-      anchorMediaMs: video.currentTime * 1000,
-      rate: video.playbackRate || 1,
+      anchorMediaMs: liveMixClockMs(composed, video.currentTime * 1000, input.clockMs()),
+      rate: liveMixClockRate(composed, video.playbackRate || 1),
     };
     setError('');
     setActive(true);
     if (!video.paused) {
       await resume();
-      schedule(video.currentTime * 1000);
+      schedule(liveMixClockMs(composed, video.currentTime * 1000, input.clockMs()));
     }
   }
 
@@ -242,10 +262,15 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     if (!graph) return;
     if (graph.context.state === 'suspended') await graph.context.resume();
     graph.anchorCtx = graph.context.currentTime;
-    graph.anchorMediaMs = graph.source.mediaElement?.currentTime
-      ? graph.source.mediaElement.currentTime * 1000
-      : graph.anchorMediaMs;
-    graph.rate = graph.source.mediaElement?.playbackRate || 1;
+    if (input.composition) {
+      graph.anchorMediaMs = input.clockMs();
+      graph.rate = 1;
+    } else {
+      graph.anchorMediaMs = graph.source.mediaElement?.currentTime
+        ? graph.source.mediaElement.currentTime * 1000
+        : graph.anchorMediaMs;
+      graph.rate = graph.source.mediaElement?.playbackRate || 1;
+    }
   }
 
   function at(graph: Graph, outputMs: number): number {
