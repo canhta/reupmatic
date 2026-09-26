@@ -1,4 +1,4 @@
-import type { Post } from '../../../core/distribution/distribution-contracts';
+import type { Post, PostOptions } from '../../../core/distribution/distribution-contracts';
 import { formatPlannedTime, type PlanDraft } from '../../../core/distribution/post-schedule';
 
 export interface PostDraft {
@@ -9,6 +9,7 @@ export interface PostDraft {
   channel_id: string;
   export_id: string;
   link_ids: string[];
+  options: PostOptions;
   state: 'draft' | 'cancelled';
   plan: PlanDraft;
   saved?: Post;
@@ -24,6 +25,7 @@ export function postDraft(post?: Post): PostDraft {
     channel_id: post?.channel.id ?? '',
     export_id: post?.export.link_id ?? '',
     link_ids: post?.links.map((link) => link.id) ?? [],
+    options: post?.options ?? { youtube: null },
     state: post?.state ?? 'draft',
     plan: {
       enabled: !!planned,

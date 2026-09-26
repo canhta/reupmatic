@@ -26,6 +26,10 @@ export const PUBLICATION_PHASES = [
 ] as const;
 export type PublicationPhase = (typeof PUBLICATION_PHASES)[number];
 
+// The privacy the platform actually granted; YouTube forces private for unverified projects, so the
+// outcome must report this rather than repeat what was requested.
+export type PublicationPrivacy = 'public' | 'private' | 'unlisted';
+
 export interface Publication {
   attempt_id: string;
   phase: PublicationPhase;
@@ -33,6 +37,7 @@ export interface Publication {
   remote_post_id: string | null;
   remote_url: string | null;
   scheduled_for: number | null;
+  privacy: PublicationPrivacy | null;
   error: string | null;
   updated_at: number;
 }
@@ -71,16 +76,32 @@ export interface DestinationCredentials {
   access_token: string;
 }
 
+// YouTube's per-post choices: made-for-kids is required by YouTube with no default; synthetic-media
+// disclosure is the creator's to make. Other platforms carry no options yet.
+export interface YouTubeOptions {
+  self_declared_made_for_kids: boolean;
+  contains_synthetic_media: boolean;
+}
+export interface PostOptions {
+  youtube: YouTubeOptions | null;
+}
+
 export type SubmitOutcome =
   | {
       kind: 'scheduled';
       remote_post_id: string | null;
       remote_url: string | null;
       scheduled_for: number;
+      privacy: PublicationPrivacy | null;
     }
-  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
+  | {
+      kind: 'published';
+      remote_post_id: string | null;
+      remote_url: string | null;
+      privacy: PublicationPrivacy | null;
+    }
   | { kind: 'failed'; error: string }
-  // The finish call may have created a post; only a definite refusal proves otherwise.
+  // The create call may have landed; only a definite refusal proves otherwise.
   | { kind: 'unknown'; error: string };
 
 export type ReconcileOutcome =
@@ -89,8 +110,14 @@ export type ReconcileOutcome =
       remote_post_id: string | null;
       remote_url: string | null;
       scheduled_for: number | null;
+      privacy: PublicationPrivacy | null;
     }
-  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
+  | {
+      kind: 'published';
+      remote_post_id: string | null;
+      remote_url: string | null;
+      privacy: PublicationPrivacy | null;
+    }
   | { kind: 'failed'; error: string }
   | { kind: 'unknown'; error: string | null };
 
@@ -109,6 +136,7 @@ export interface Destination {
   submit(remote_ref: string, post: Post, plan: PostPlan | null): Promise<SubmitOutcome>;
   reconcile(
     remote_ref: string,
+    post: Post,
     credentials: DestinationCredentials,
     now: number,
   ): Promise<ReconcileOutcome>;

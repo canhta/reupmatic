@@ -164,6 +164,7 @@ test('real saved workflow -> shared SQLite queue -> FFmpeg -> Library export -> 
       export_id: exported.id,
       link_ids: [link.id],
       planned: { instant: Date.parse('2026-09-16T03:30:00Z'), timezone: 'Asia/Bangkok' },
+      options: { youtube: { self_declared_made_for_kids: false, contains_synthetic_media: false } },
     });
     assert.equal(post.state, 'draft');
     assert.equal(catalog.listChannels()[0].can_publish, false);

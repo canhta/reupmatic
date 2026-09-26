@@ -137,12 +137,19 @@ export class FacebookDestination implements Destination {
         scheduled_for: plan.instant,
         remote_post_id: remote_ref,
         remote_url: reelUrl(remote_ref),
+        privacy: null,
       };
-    return { kind: 'published', remote_post_id: remote_ref, remote_url: reelUrl(remote_ref) };
+    return {
+      kind: 'published',
+      remote_post_id: remote_ref,
+      remote_url: reelUrl(remote_ref),
+      privacy: null,
+    };
   }
 
   async reconcile(
     remote_ref: string,
+    _post: Post,
     credentials: DestinationCredentials,
     _now: number,
   ): Promise<ReconcileOutcome> {
@@ -156,13 +163,19 @@ export class FacebookDestination implements Destination {
     } | null;
     const publishStatus = payload?.status?.publish_status;
     if (publishStatus === 'published')
-      return { kind: 'published', remote_post_id: remote_ref, remote_url: reelUrl(remote_ref) };
+      return {
+        kind: 'published',
+        remote_post_id: remote_ref,
+        remote_url: reelUrl(remote_ref),
+        privacy: null,
+      };
     if (publishStatus === 'scheduled')
       return {
         kind: 'scheduled',
         scheduled_for: null,
         remote_post_id: remote_ref,
         remote_url: reelUrl(remote_ref),
+        privacy: null,
       };
     if (publishStatus === 'error') return { kind: 'failed', error: 'PUBLISH_FAILED' };
     return { kind: 'unknown', error: null };

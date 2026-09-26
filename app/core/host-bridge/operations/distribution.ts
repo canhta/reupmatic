@@ -31,6 +31,11 @@ export const distributionOperations = {
       return { id: requestId(value.id), page_id: requestId(value.page_id) };
     },
   }),
+  'channel-connect': operation<{ id: string }, { account_name: string }>()({
+    rendererMethod: 'channelConnect',
+    validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),
+    toRequest: (id: string) => ({ id }),
+  }),
   'channel-disconnect': operation<{ id: string }, { disconnected: true }>()({
     rendererMethod: 'channelDisconnect',
     validate: (input) => ({ id: requestId(requestRecord(input, ['id']).id) }),

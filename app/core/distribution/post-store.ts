@@ -13,6 +13,7 @@ import { POST_QUERY_SORT_DIRECTIONS, POST_SORT_KEYS } from './distribution-contr
 import type { DistributionStore } from './distribution-store.js';
 import { parsePostPlan } from './post-schedule.js';
 import type { Publication } from './publishing/contracts.js';
+import { parsePostOptions } from './publishing/options.js';
 
 export class PostStore {
   constructor(
@@ -47,6 +48,7 @@ export class PostStore {
       'export_id',
       'link_ids',
       'planned',
+      'options',
     ]);
     if (value.expected_revision !== null) throw new Error('INVALID_REQUEST');
     const channel = this.inventory.channel(identifier(value.channel_id));
@@ -70,13 +72,22 @@ export class PostStore {
       export: structuredClone(exported),
       links,
       planned: parsePostPlan(value.planned),
+      options: parsePostOptions(value.options, channel.platform),
       state: 'draft',
       publication: null,
     });
   }
 
   edit(input: unknown): Post {
-    const value = object(input, ['id', 'expected_revision', 'title', 'body', 'planned', 'state']);
+    const value = object(input, [
+      'id',
+      'expected_revision',
+      'title',
+      'body',
+      'planned',
+      'options',
+      'state',
+    ]);
     const current = this.get(identifier(value.id));
     if (value.state !== 'draft' && value.state !== 'cancelled') throw new Error('INVALID_REQUEST');
     const {
@@ -91,6 +102,7 @@ export class PostStore {
       title: text(value.title, 300),
       body: text(value.body, 12000, true),
       planned: parsePostPlan(value.planned),
+      options: parsePostOptions(value.options, current.channel.platform),
       state: value.state,
     });
   }

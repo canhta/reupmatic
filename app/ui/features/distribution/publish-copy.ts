@@ -1,4 +1,4 @@
-import type { PublishProblemCode } from '../../../core/distribution/publishing/contracts';
+import type { Platform, PublishProblemCode } from '../../../core/distribution/publishing/contracts';
 
 const PROBLEM_KEYS: Record<PublishProblemCode, string> = {
   PUBLISH_MEDIA_TOO_SHORT: 'publishProblem_PUBLISH_MEDIA_TOO_SHORT',
@@ -11,7 +11,15 @@ const PROBLEM_KEYS: Record<PublishProblemCode, string> = {
   PUBLISH_CAPTION_CLIPPED: 'publishProblem_PUBLISH_CAPTION_CLIPPED',
 };
 
-export function problemKey(code: PublishProblemCode): string {
+// YouTube's bounds differ from Reels; only the codes whose copy differs get an override.
+const YOUTUBE_PROBLEM_KEYS: Partial<Record<PublishProblemCode, string>> = {
+  PUBLISH_MEDIA_TOO_SHORT: 'publishProblemYoutube_MEDIA_TOO_SHORT',
+  PUBLISH_SCHEDULE_TOO_SOON: 'publishProblemYoutube_SCHEDULE_TOO_SOON',
+  PUBLISH_SCHEDULE_TOO_FAR: 'publishProblemYoutube_SCHEDULE_TOO_FAR',
+};
+
+export function problemKey(code: PublishProblemCode, platform: Platform): string {
+  if (platform === 'youtube' && YOUTUBE_PROBLEM_KEYS[code]) return YOUTUBE_PROBLEM_KEYS[code];
   return PROBLEM_KEYS[code];
 }
 
@@ -23,6 +31,7 @@ const ERROR_KEYS: Record<string, string> = {
   PUBLISH_RATE_LIMITED: 'publishError_PUBLISH_RATE_LIMITED',
   PUBLISH_PERMISSION_DENIED: 'publishError_PUBLISH_PERMISSION_DENIED',
   PUBLISH_INVALID_REQUEST: 'publishError_PUBLISH_INVALID_REQUEST',
+  PUBLISH_CONFIG_MISSING: 'publishError_PUBLISH_CONFIG_MISSING',
   PUBLISHING_NOT_CONFIGURED: 'publishError_PUBLISHING_NOT_CONFIGURED',
   PUBLISH_PLATFORM_UNSUPPORTED: 'publishError_PUBLISH_PLATFORM_UNSUPPORTED',
   PUBLISH_PREFLIGHT_FAILED: 'publishError_PUBLISH_PREFLIGHT_FAILED',

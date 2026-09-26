@@ -6,11 +6,17 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Post } from '../../../core/distribution/distribution-contracts';
+import type { Post, PublicationPrivacy } from '../../../core/distribution/distribution-contracts';
 import type { NamedProblem } from '../../../core/distribution/publishing/contracts';
 import { unwrap } from '../../bridge/client';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { problemKey, publishErrorKey } from './publish-copy';
+
+const PRIVACY_KEYS: Record<PublicationPrivacy, string> = {
+  public: 'publishPrivacyPublic',
+  private: 'publishPrivacyPrivate',
+  unlisted: 'publishPrivacyUnlisted',
+};
 
 export function PostPublication({
   post,
@@ -30,18 +36,19 @@ export function PostPublication({
   const [error, setError] = useState('');
 
   const channel = catalog.snapshot?.channels.find((item) => item.id === post.channel.id);
-  const isFacebook = post.channel.platform === 'facebook_page';
+  const platform = post.channel.platform;
+  const supported = platform === 'facebook_page' || platform === 'youtube';
   const phase = post.publication?.phase ?? null;
   const blocking = (problems ?? []).filter((problem) => problem.severity === 'blocking');
   const warnings = (problems ?? []).filter((problem) => problem.severity === 'warning');
   const canStart = phase === null || phase === 'failed';
-  const showPublish = isFacebook && !!channel?.can_publish && canStart;
+  const showPublish = supported && !!channel?.can_publish && canStart;
   const showCheck =
-    isFacebook && (phase === 'submitted' || phase === 'unknown' || phase === 'uploading');
+    supported && (phase === 'submitted' || phase === 'unknown' || phase === 'uploading');
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a publish bumps revision and preflight must re-run
   useEffect(() => {
-    if (!isFacebook) return;
+    if (!supported) return;
     let alive = true;
     setProblems(null);
     void unwrap(window.reupmatic.postPreflight(post.id))
@@ -54,7 +61,7 @@ export function PostPublication({
     return () => {
       alive = false;
     };
-  }, [post.id, post.revision, isFacebook]);
+  }, [post.id, post.revision, supported]);
 
   useEffect(
     () =>
@@ -64,7 +71,7 @@ export function PostPublication({
     [post.id],
   );
 
-  if (!isFacebook || !channel) return null;
+  if (!supported || !channel) return null;
 
   async function publish() {
     setPublishing(true);
@@ -122,6 +129,11 @@ export function PostPublication({
         )}
       </HStack>
 
+      {post.publication?.privacy && (phase === 'published' || phase === 'scheduled') && (
+        <Text as="p" type="supporting">
+          {t('postPrivacy')}: {t(PRIVACY_KEYS[post.publication.privacy])}
+        </Text>
+      )}
       {phase === 'scheduled' && scheduledTime && (
         <Text as="p" type="body">
           {t('postScheduledFor', { time: scheduledTime })}
@@ -164,7 +176,7 @@ export function PostPublication({
           <VStack gap={1}>
             {[...blocking, ...warnings].map((problem) => (
               <Text as="p" type="body" key={problem.code}>
-                {t(problemKey(problem.code))}
+                {t(problemKey(problem.code, platform))}
               </Text>
             ))}
           </VStack>

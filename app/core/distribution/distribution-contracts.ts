@@ -1,7 +1,13 @@
 import type { MutationIdentity, RecordMeta } from '../catalog/catalog-contracts.js';
-import type { Platform, Publication } from './publishing/contracts.js';
+import type {
+  Platform,
+  PostOptions,
+  Publication,
+  PublicationPrivacy,
+  YouTubeOptions,
+} from './publishing/contracts.js';
 
-export type { Platform };
+export type { Platform, PostOptions, PublicationPrivacy, YouTubeOptions };
 export type ChannelConnection = 'not_connected' | 'connected' | 'reauthorize';
 export interface ChannelConnectionState {
   connection: ChannelConnection;
@@ -43,6 +49,7 @@ export interface PostData {
   export: ExportReference;
   links: Pick<AffiliateLink, 'id' | 'name' | 'url'>[];
   planned: PostPlan | null;
+  options: PostOptions;
   state: 'draft' | 'cancelled';
   publication: Publication | null;
 }
@@ -55,11 +62,13 @@ export interface CreatePost extends MutationIdentity {
   export_id: string;
   link_ids: string[];
   planned: PostPlan | null;
+  options: PostOptions;
 }
 export interface EditPost extends MutationIdentity {
   title: string;
   body: string;
   planned: PostPlan | null;
+  options: PostOptions;
   state: 'draft' | 'cancelled';
 }
 export const POST_SORT_KEYS = ['title', 'channel', 'state', 'planned'] as const;

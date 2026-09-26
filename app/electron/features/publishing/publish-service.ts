@@ -1,5 +1,6 @@
-import type { Post } from '../../../core/distribution/distribution-contracts.js';
+import type { Platform, Post } from '../../../core/distribution/distribution-contracts.js';
 import type {
+  Destination,
   DestinationCredentials,
   Publication,
   PublicationMedia,
@@ -15,12 +16,11 @@ import {
   markUnknown,
   startAttempt,
 } from '../../../core/distribution/publishing/publication.js';
-import { FacebookDestination } from './facebook-adapter.js';
+import { errorCodeOf, isDefiniteRefusal } from './publishing-error.js';
 
-export interface PublishRunnerOptions {
-  graphBaseUrl: string;
-  uploadBaseUrl: string;
-  fetch?: typeof fetch;
+export interface PublishingServiceOptions {
+  /** Builds the platform adapter for one attempt; the service itself stays platform-agnostic. */
+  destinationFor(platform: Platform, credentials: DestinationCredentials): Destination;
   now?: () => number;
 }
 
@@ -39,35 +39,20 @@ export interface ReconcileInput {
   persist(publication: Publication): void;
 }
 
-function errorCode(error: unknown): string {
-  return error instanceof Error && /^[A-Z_]+$/.test(error.message)
-    ? error.message
-    : 'PUBLISH_FAILED';
-}
-
-export class PublishRunner {
-  #graphBaseUrl: string;
-  #uploadBaseUrl: string;
-  #fetch: typeof fetch;
+/**
+ * Applies the core never-publish-twice transitions around a platform adapter: the reference is
+ * persisted before any byte moves, uploads are serialised per post, and only a definite mapped
+ * refusal is `failed` — everything else reconciles.
+ */
+export class PublishingService {
+  #destinationFor: PublishingServiceOptions['destinationFor'];
   #now: () => number;
   // One in-flight publish per post; a concurrent second call must never reach begin().
   #inFlight = new Set<string>();
 
-  constructor(options: PublishRunnerOptions) {
-    this.#graphBaseUrl = options.graphBaseUrl;
-    this.#uploadBaseUrl = options.uploadBaseUrl;
-    this.#fetch = options.fetch ?? fetch;
+  constructor(options: PublishingServiceOptions) {
+    this.#destinationFor = options.destinationFor;
     this.#now = options.now ?? Date.now;
-  }
-
-  #adapter(credentials: DestinationCredentials): FacebookDestination {
-    return new FacebookDestination({
-      pageId: credentials.account_id,
-      accessToken: credentials.access_token,
-      graphBaseUrl: this.#graphBaseUrl,
-      uploadBaseUrl: this.#uploadBaseUrl,
-      fetch: this.#fetch,
-    });
   }
 
   async publish(input: PublishInput): Promise<Publication> {
@@ -77,8 +62,8 @@ export class PublishRunner {
     try {
       if (!canStartAttempt(input.post.publication))
         throw new Error('PUBLICATION_ALREADY_ATTEMPTED');
-      const adapter = this.#adapter(input.credentials);
-      const { remote_ref } = await adapter.begin(input.post, input.credentials);
+      const destination = this.#destinationFor(input.post.channel.platform, input.credentials);
+      const { remote_ref } = await destination.begin(input.post, input.credentials);
       let publication = startAttempt(input.post.publication, {
         attempt_id: input.attempt_id,
         remote_ref,
@@ -87,26 +72,33 @@ export class PublishRunner {
       // The platform reference is durable before any byte is uploaded.
       input.persist(publication);
       try {
-        await adapter.upload(
+        await destination.upload(
           remote_ref,
           { path: input.post.export.path, size_bytes: input.media.size_bytes },
           input.onProgress,
         );
       } catch (error) {
-        const code = errorCode(error);
-        publication = markFailed(publication, { error: code }, this.#now());
+        const code = errorCodeOf(error);
+        if (isDefiniteRefusal(error)) {
+          // A mapped 4xx refusal proves nothing was created, so the user may retry.
+          publication = markFailed(publication, { error: code }, this.#now());
+          input.persist(publication);
+          throw new Error(code);
+        }
+        // 5xx, timeout, unparseable body or unmapped code: the create may have landed.
+        publication = markUnknown(publication, { error: code }, this.#now());
         input.persist(publication);
-        throw new Error(code);
+        return publication;
       }
-      // Persist submitted before the one call that can create a post; an interrupted finish is only
+      // Persist submitted before the call that can create a post; an interrupted create is only
       // ever reconciled.
       publication = markSubmitted(publication, this.#now());
       input.persist(publication);
       try {
-        const outcome = await adapter.submit(remote_ref, input.post, input.post.planned);
+        const outcome = await destination.submit(remote_ref, input.post, input.post.planned);
         publication = this.#applySubmit(publication, outcome);
       } catch (error) {
-        publication = markUnknown(publication, { error: errorCode(error) }, this.#now());
+        publication = markUnknown(publication, { error: errorCodeOf(error) }, this.#now());
       }
       input.persist(publication);
       return publication;
@@ -119,8 +111,13 @@ export class PublishRunner {
     const current = input.post.publication;
     if (!current) throw new Error('PUBLICATION_MISSING');
     if (current.phase === 'published' || current.phase === 'failed') return current;
-    const adapter = this.#adapter(input.credentials);
-    const outcome = await adapter.reconcile(current.remote_ref, input.credentials, this.#now());
+    const destination = this.#destinationFor(input.post.channel.platform, input.credentials);
+    const outcome = await destination.reconcile(
+      current.remote_ref,
+      input.post,
+      input.credentials,
+      this.#now(),
+    );
     const next = this.#applyReconcile(current, outcome);
     if (next !== current) input.persist(next);
     return next;
@@ -135,13 +132,18 @@ export class PublishRunner {
           scheduled_for: outcome.scheduled_for,
           remote_post_id: outcome.remote_post_id,
           remote_url: outcome.remote_url,
+          privacy: outcome.privacy,
         },
         now,
       );
     if (outcome.kind === 'published')
       return markPublished(
         publication,
-        { remote_post_id: outcome.remote_post_id, remote_url: outcome.remote_url },
+        {
+          remote_post_id: outcome.remote_post_id,
+          remote_url: outcome.remote_url,
+          privacy: outcome.privacy,
+        },
         now,
       );
     if (outcome.kind === 'unknown') return markUnknown(publication, { error: outcome.error }, now);
@@ -150,13 +152,17 @@ export class PublishRunner {
 
   #applyReconcile(current: Publication, outcome: ReconcileOutcome): Publication {
     const now = this.#now();
-    // An upload that never reached finish cannot have created a post: anything but a confirmed
+    // An upload that never reached submit cannot have created a post: anything but a confirmed
     // publish/schedule is a definite interruption, so the user can retry instead of being stuck.
     if (current.phase === 'uploading') {
       if (outcome.kind === 'published')
         return markPublished(
           markSubmitted(current, now),
-          { remote_post_id: outcome.remote_post_id, remote_url: outcome.remote_url },
+          {
+            remote_post_id: outcome.remote_post_id,
+            remote_url: outcome.remote_url,
+            privacy: outcome.privacy,
+          },
           now,
         );
       if (outcome.kind === 'scheduled')
@@ -166,6 +172,7 @@ export class PublishRunner {
             scheduled_for: outcome.scheduled_for ?? current.scheduled_for ?? now,
             remote_post_id: outcome.remote_post_id,
             remote_url: outcome.remote_url,
+            privacy: outcome.privacy,
           },
           now,
         );
@@ -174,7 +181,11 @@ export class PublishRunner {
     if (outcome.kind === 'published')
       return markPublished(
         current,
-        { remote_post_id: outcome.remote_post_id, remote_url: outcome.remote_url },
+        {
+          remote_post_id: outcome.remote_post_id,
+          remote_url: outcome.remote_url,
+          privacy: outcome.privacy,
+        },
         now,
       );
     if (outcome.kind === 'scheduled') {
@@ -185,6 +196,7 @@ export class PublishRunner {
           scheduled_for: outcome.scheduled_for ?? current.scheduled_for ?? now,
           remote_post_id: outcome.remote_post_id,
           remote_url: outcome.remote_url,
+          privacy: outcome.privacy,
         },
         now,
       );

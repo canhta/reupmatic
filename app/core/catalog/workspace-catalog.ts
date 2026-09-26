@@ -95,6 +95,7 @@ export class WorkspaceCatalog {
       'export_id',
       'link_ids',
       'planned',
+      'options',
     ]);
     const library_id = identifier(value.library_id);
     const export_id = identifier(value.export_id);

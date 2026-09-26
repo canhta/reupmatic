@@ -40,6 +40,7 @@ const draft = {
   export_id: exported.link_id,
   link_ids: [affiliate.id],
   planned: null,
+  options: { youtube: { self_declared_made_for_kids: false, contains_synthetic_media: false } },
 };
 const query = { search: '', view: 'all', offset: 0, limit: 25 };
 async function resolveExport(contentId, exportId) {
@@ -92,7 +93,12 @@ test('SC-09/10: per-channel count, retry conflict and cancellation never rewrite
   try {
     catalog.saveChannel({ ...channel, id: 'channel_002', platform: 'facebook_page' });
     const post = await catalog.createPost(draft);
-    await catalog.createPost({ ...draft, id: 'post_0002', channel_id: 'channel_002' });
+    await catalog.createPost({
+      ...draft,
+      id: 'post_0002',
+      channel_id: 'channel_002',
+      options: { youtube: null },
+    });
     await assert.rejects(catalog.createPost(draft), /REVISION_CONFLICT/);
     assert.equal(catalog.snapshot(true).link_usage[affiliate.id], 2);
     catalog.editPost({
@@ -101,6 +107,7 @@ test('SC-09/10: per-channel count, retry conflict and cancellation never rewrite
       title: post.title,
       body: post.body,
       planned: null,
+      options: draft.options,
       state: 'cancelled',
     });
     assert.equal(catalog.listPosts({ ...query, link_id: affiliate.id }).total, 2);
@@ -118,6 +125,7 @@ test('SC-09/10: per-channel count, retry conflict and cancellation never rewrite
           title: 'Stale',
           body: '',
           planned: null,
+          options: draft.options,
           state: 'draft',
         }),
       /REVISION_CONFLICT/,
@@ -205,6 +213,7 @@ test('SC-10/14: planned instants retain explicit timezone and do not publish', a
           title: 'Title',
           body: '',
           planned,
+          options: draft.options,
           state: 'published',
         }),
       /INVALID_REQUEST/,

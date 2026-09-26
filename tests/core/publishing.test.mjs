@@ -9,6 +9,7 @@ import {
   FACEBOOK_CAPABILITIES,
   facebookPreflight,
 } from '../../dist-core/distribution/publishing/facebook.js';
+import { parsePostOptions } from '../../dist-core/distribution/publishing/options.js';
 import {
   canStartAttempt,
   markFailed,
@@ -18,6 +19,11 @@ import {
   markUnknown,
   startAttempt,
 } from '../../dist-core/distribution/publishing/publication.js';
+import {
+  YOUTUBE_CAPABILITIES,
+  youtubePreflight,
+} from '../../dist-core/distribution/publishing/youtube.js';
+import { operations } from '../../dist-core/host-bridge/operations.js';
 
 const attempt = (now = 1000) =>
   startAttempt(null, { attempt_id: 'attempt_0001', remote_ref: 'v1', now });
@@ -132,6 +138,89 @@ test('caption composition is body then one line per affiliate link, clipped only
   assert.equal(long.clipped, true);
 });
 
+test('YouTube preflight enforces the verified upload and schedule window', () => {
+  const post = { title: 'Hi', body: 'Body', links: [], planned: null };
+  const good = { duration_ms: 30_000, width: 1080, height: 1920, size_bytes: 10_000_000 };
+  assert.deepEqual(youtubePreflight(post, good, 0), []);
+  const codes = (media, planned, now) =>
+    youtubePreflight({ ...post, planned }, media, now)
+      .filter((problem) => problem.severity === 'blocking')
+      .map((problem) => problem.code);
+  assert.deepEqual(codes({ ...good, duration_ms: 500 }, null, 0), ['PUBLISH_MEDIA_TOO_SHORT']);
+  assert.deepEqual(codes({ ...good, width: 0, height: 0 }, null, 0), ['PUBLISH_MEDIA_RESOLUTION']);
+  assert.deepEqual(
+    codes({ ...good, size_bytes: YOUTUBE_CAPABILITIES.media.max_bytes + 1 }, null, 0),
+    ['PUBLISH_MEDIA_TOO_LARGE'],
+  );
+  // Any aspect is accepted, unlike Facebook Reels.
+  assert.deepEqual(codes({ ...good, width: 1920, height: 1080 }, null, 0), []);
+  const now = 1_000_000;
+  assert.deepEqual(codes(good, { instant: now + 30 * 1000, timezone: 'UTC' }, now), [
+    'PUBLISH_SCHEDULE_TOO_SOON',
+  ]);
+  assert.deepEqual(
+    codes(good, { instant: now + 366 * 24 * 60 * 60 * 1000, timezone: 'UTC' }, now),
+    ['PUBLISH_SCHEDULE_TOO_FAR'],
+  );
+});
+
+test('a YouTube post must declare made-for-kids explicitly; other platforms carry no options', () => {
+  const kids = { self_declared_made_for_kids: true, contains_synthetic_media: false };
+  assert.deepEqual(parsePostOptions({ youtube: kids }, 'youtube'), { youtube: kids });
+  assert.throws(() => parsePostOptions({ youtube: null }, 'youtube'), /INVALID_REQUEST/);
+  assert.throws(
+    () => parsePostOptions({ youtube: { self_declared_made_for_kids: true } }, 'youtube'),
+    /INVALID_REQUEST/,
+  );
+  assert.throws(
+    () => parsePostOptions({ youtube: { ...kids, self_declared_made_for_kids: 'yes' } }, 'youtube'),
+    /INVALID_REQUEST/,
+  );
+  assert.deepEqual(parsePostOptions({ youtube: null }, 'facebook_page'), { youtube: null });
+  assert.throws(() => parsePostOptions({ youtube: kids }, 'facebook_page'), /INVALID_REQUEST/);
+  assert.throws(
+    () => parsePostOptions({ youtube: null, tiktok: null }, 'youtube'),
+    /INVALID_REQUEST/,
+  );
+});
+
+test('YouTube capabilities carry title 100 and body 5000 as the caption limits', () => {
+  assert.equal(YOUTUBE_CAPABILITIES.caption.title_max, 100);
+  assert.equal(YOUTUBE_CAPABILITIES.caption.body_max, 5000);
+  assert.notEqual(YOUTUBE_CAPABILITIES.native_schedule, null);
+  assert.equal(YOUTUBE_CAPABILITIES.media.aspect, 'any');
+});
+
+test('an honest privacy is recorded on the published outcome', () => {
+  const uploading = attempt();
+  const forced = markPublished(
+    markSubmitted(uploading, 2),
+    { remote_post_id: 'v1', remote_url: 'https://youtu.be/v1', privacy: 'private' },
+    3,
+  );
+  assert.equal(forced.privacy, 'private');
+  assert.equal(forced.phase, 'published');
+});
+
+test('publishing operations validate their channel and post ids', () => {
+  assert.equal(operations['post-publish'].rendererMethod, 'postPublish');
+  assert.equal(operations['post-reconcile'].rendererMethod, 'postReconcile');
+  assert.equal(operations['channel-connect'].rendererMethod, 'channelConnect');
+  assert.equal(operations['channel-connect-start'].rendererMethod, 'channelConnectStart');
+  assert.equal(operations['channel-disconnect'].rendererMethod, 'channelDisconnect');
+  assert.deepEqual(operations['post-publish'].validate({ id: 'post_0001' }), { id: 'post_0001' });
+  assert.deepEqual(operations['post-reconcile'].toRequest('post_0001'), { id: 'post_0001' });
+  assert.deepEqual(operations['channel-connect'].toRequest('channel_0001'), {
+    id: 'channel_0001',
+  });
+  assert.throws(() => operations['post-publish'].validate({ id: '../escape' }), /INVALID_REQUEST/);
+  assert.throws(() => operations['channel-connect'].validate({}), /INVALID_REQUEST/);
+  assert.throws(
+    () => operations['channel-connect'].validate({ id: 'channel_0001', extra: true }),
+    /INVALID_REQUEST/,
+  );
+});
+
 const channel = {
   id: 'channel_001',
   expected_revision: null,
@@ -158,6 +247,7 @@ const draft = {
   export_id: exported.link_id,
   link_ids: [],
   planned: null,
+  options: { youtube: null },
 };
 async function resolveExport(contentId, exportId) {
   if (contentId !== exported.library_id || exportId !== exported.link_id)
@@ -199,6 +289,46 @@ test('SC-16: a new post has no publication, and the published view reads publica
   } finally {
     catalog.close();
     rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('SC-16: a YouTube draft without a made-for-kids choice is refused', async () => {
+  const catalog = new WorkspaceCatalog(':memory:', resolveExport);
+  try {
+    catalog.saveChannel({ ...channel, id: 'channel_yt', platform: 'youtube' });
+    await assert.rejects(
+      catalog.createPost({
+        ...draft,
+        id: 'post_yt01',
+        channel_id: 'channel_yt',
+        options: { youtube: null },
+      }),
+      /INVALID_REQUEST/,
+    );
+    const created = await catalog.createPost({
+      ...draft,
+      id: 'post_yt01',
+      channel_id: 'channel_yt',
+      options: {
+        youtube: { self_declared_made_for_kids: true, contains_synthetic_media: false },
+      },
+    });
+    assert.deepEqual(created.options.youtube, {
+      self_declared_made_for_kids: true,
+      contains_synthetic_media: false,
+    });
+    const edited = catalog.editPost({
+      id: created.id,
+      expected_revision: created.revision,
+      title: created.title,
+      body: created.body,
+      planned: null,
+      options: { youtube: { self_declared_made_for_kids: true, contains_synthetic_media: true } },
+      state: 'draft',
+    });
+    assert.equal(edited.options.youtube.contains_synthetic_media, true);
+  } finally {
+    catalog.close();
   }
 });
 

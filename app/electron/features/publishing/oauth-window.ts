@@ -2,6 +2,23 @@ import { randomBytes } from 'node:crypto';
 import { type BrowserWindow, BrowserWindow as ElectronBrowserWindow } from 'electron';
 import { buildAuthorizationUrl, FACEBOOK_REDIRECT_URI, readAuthorizationCode } from './oauth.js';
 
+/** Opens a provider consent page in a throwaway sandboxed session; returns a close function. */
+export function openConsentWindow(url: string, parent?: BrowserWindow): () => void {
+  const partition = `publish-consent-${randomBytes(8).toString('hex')}`;
+  const window = new ElectronBrowserWindow({
+    ...(parent ? { parent } : {}),
+    modal: true,
+    width: 520,
+    height: 720,
+    autoHideMenuBar: true,
+    webPreferences: { partition, contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  void window.loadURL(url);
+  return () => {
+    if (!window.isDestroyed()) window.destroy();
+  };
+}
+
 // A throwaway session partition (never persist:douyin) so a Facebook login cannot touch the
 // app's Douyin cookies, and the window is destroyed as soon as the redirect is seen.
 export async function openFacebookLogin(

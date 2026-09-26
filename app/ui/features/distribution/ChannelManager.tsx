@@ -132,7 +132,8 @@ export function ChannelManager({
   }
   function connectMessage(reason: unknown, fallback: string): string {
     const code = reason instanceof Error ? reason.message : '';
-    if (code === 'PUBLISHING_NOT_CONFIGURED') return t('channelNotConfigured');
+    if (code === 'PUBLISHING_NOT_CONFIGURED' || code === 'PUBLISH_CONFIG_MISSING')
+      return t('channelNotConfigured');
     if (code === 'CHANNEL_NO_PAGES') return t('channelNoPages');
     return t(fallback);
   }
@@ -177,6 +178,18 @@ export function ChannelManager({
       await catalog.reload();
     } catch (reason) {
       setConnectError(connectMessage(reason, 'channelDisconnectFailed'));
+    } finally {
+      setConnecting(false);
+    }
+  }
+  async function connectYouTube() {
+    setConnecting(true);
+    setConnectError('');
+    try {
+      await unwrap(window.reupmatic.channelConnect(draft.id));
+      await catalog.reload();
+    } catch (reason) {
+      setConnectError(connectMessage(reason, 'channelConnectFailed'));
     } finally {
       setConnecting(false);
     }
@@ -432,6 +445,44 @@ export function ChannelManager({
                       <Text type="supporting">{t('channelConnectHelp')}</Text>
                     )}
                   </>
+                )}
+                {connectError && (
+                  <Text as="p" type="body" className="inline-error" role="alert">
+                    {connectError}
+                  </Text>
+                )}
+              </VStack>
+            )}
+            {draft.expected_revision !== null && draft.platform === 'youtube' && (
+              <VStack gap={2}>
+                <Text type="body">
+                  {t('channelConnection')}:{' '}
+                  {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
+                </Text>
+                {savedChannel?.account_name && (
+                  <Text type="supporting">
+                    {t('channelConnectedAs', { name: savedChannel.account_name })}
+                  </Text>
+                )}
+                <HStack gap={2} vAlign="center" wrap="wrap">
+                  <Button
+                    label={
+                      savedChannel?.connection === 'connected'
+                        ? t('channelDisconnect')
+                        : savedChannel?.connection === 'reauthorize'
+                          ? t('channelReconnect')
+                          : t('channelConnect')
+                    }
+                    isDisabled={disabled || connecting}
+                    onClick={() =>
+                      void (savedChannel?.connection === 'connected'
+                        ? disconnect()
+                        : connectYouTube())
+                    }
+                  />
+                </HStack>
+                {savedChannel?.connection !== 'connected' && (
+                  <Text type="supporting">{t('channelConnectGoogleHelp')}</Text>
                 )}
                 {connectError && (
                   <Text as="p" type="body" className="inline-error" role="alert">

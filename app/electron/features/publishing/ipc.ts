@@ -1,28 +1,42 @@
 import { randomUUID } from 'node:crypto';
 import { type BrowserWindow, shell } from 'electron';
-import type { Post } from '../../../core/distribution/distribution-contracts.js';
+import type { DiagnosticRecorder } from '../../../core/diagnostics/recorder.js';
+import type { Platform, Post } from '../../../core/distribution/distribution-contracts.js';
 import type {
+  DestinationCredentials,
   Publication,
   PublicationMedia,
 } from '../../../core/distribution/publishing/contracts.js';
 import { facebookPreflight } from '../../../core/distribution/publishing/facebook.js';
+import { youtubePreflight } from '../../../core/distribution/publishing/youtube.js';
 import type { IpcWire } from '../../runtime/ipc.js';
 import type { PublishingConfig } from './config.js';
+import { requireGoogleClientId, requireMeta } from './config.js';
 import type { ChannelCredentialStore } from './credential-store.js';
-import { DEFAULT_GRAPH_BASE_URL, DEFAULT_UPLOAD_BASE_URL } from './facebook-adapter.js';
+import { publishingDiagnostics } from './diagnostics.js';
+import {
+  DEFAULT_GRAPH_BASE_URL,
+  DEFAULT_UPLOAD_BASE_URL,
+  FacebookDestination,
+} from './facebook-adapter.js';
 import {
   type ConnectedPage,
   DEFAULT_OAUTH_BASE_URL,
   exchangeCodeForUserToken,
   listPages,
 } from './oauth.js';
+import { GOOGLE_TOKEN_ENDPOINT, refreshAccessToken } from './oauth-loopback.js';
 import { openFacebookLogin } from './oauth-window.js';
-import { PublishRunner } from './publish-runner.js';
+import { PublishingService } from './publish-service.js';
+import { errorCodeOf } from './publishing-error.js';
+import { YOUTUBE_UPLOAD_ENDPOINT, YouTubeDestination } from './youtube-adapter.js';
+import { connectYouTubeChannel } from './youtube-connect.js';
 
 export interface PublishingHost {
   wire: IpcWire;
   credentials: ChannelCredentialStore;
   getPost(id: string): Post;
+  getChannel(id: string): { name: string; platform: Platform } | undefined;
   setPublication(id: string, publication: Publication): Post;
   getWindow(): BrowserWindow | undefined;
   probeMedia(path: string): Promise<PublicationMedia>;
@@ -31,40 +45,89 @@ export interface PublishingHost {
   graphBaseUrl?: string;
   uploadBaseUrl?: string;
   oauthBaseUrl?: string;
+  youtubeUploadEndpoint?: string;
+  youtubeTokenEndpoint?: string;
   fetch?: typeof fetch;
+  diagnostics?: DiagnosticRecorder;
 }
 
-function namedCode(error: unknown): string {
-  return error instanceof Error && /^[A-Z_]+$/.test(error.message)
-    ? error.message
-    : 'PUBLISH_FAILED';
-}
+const REMOTE_URL =
+  /^https:\/\/(?:www\.facebook\.com\/reel\/[A-Za-z0-9_-]+|(?:www\.)?youtube\.com\/watch\?v=[A-Za-z0-9_-]+|youtu\.be\/[A-Za-z0-9_-]+)$/;
 
 export function installPublishing(host: PublishingHost) {
   const pending = new Map<string, { pages: ConnectedPage[] }>();
-  // One publish per post at the IPC boundary; the runner enforces the same lock underneath.
-  const inFlight = new Set<string>();
-  const runner = new PublishRunner({
-    graphBaseUrl: host.graphBaseUrl ?? DEFAULT_GRAPH_BASE_URL,
-    uploadBaseUrl: host.uploadBaseUrl ?? DEFAULT_UPLOAD_BASE_URL,
-    fetch: host.fetch,
+  const diagnostics = publishingDiagnostics(host.diagnostics);
+  // One platform-agnostic service; each attempt builds its own adapter.
+  const service = new PublishingService({
+    destinationFor: (platform, credentials) => {
+      if (platform === 'facebook_page')
+        return new FacebookDestination({
+          pageId: credentials.account_id,
+          accessToken: credentials.access_token,
+          graphBaseUrl: host.graphBaseUrl ?? DEFAULT_GRAPH_BASE_URL,
+          uploadBaseUrl: host.uploadBaseUrl ?? DEFAULT_UPLOAD_BASE_URL,
+          fetch: host.fetch,
+        });
+      if (platform === 'youtube')
+        return new YouTubeDestination({
+          uploadEndpoint: host.youtubeUploadEndpoint ?? YOUTUBE_UPLOAD_ENDPOINT,
+          fetchImpl: host.fetch,
+          diagnostics,
+        });
+      throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
+    },
   });
 
   function requireConfig(): PublishingConfig {
     if (!host.config) throw new Error('PUBLISHING_NOT_CONFIGURED');
     return host.config;
   }
-  function facebookPost(id: string): Post {
-    const post = host.getPost(id);
-    if (post.channel.platform !== 'facebook_page') throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
-    return post;
-  }
   function send(channel: string, message: unknown): void {
     const window = host.getWindow();
     if (window && !window.isDestroyed()) window.webContents.send(`reupmatic:${channel}`, message);
   }
-  async function markReauthorizeIfNeeded(post: Post, code: string): Promise<void> {
-    if (code === 'CHANNEL_REAUTHORIZE') await host.credentials.markReauthorize(post.channel.id);
+  function preflightFor(post: Post, media: PublicationMedia) {
+    if (post.channel.platform === 'youtube') return youtubePreflight(post, media, Date.now());
+    if (post.channel.platform === 'facebook_page')
+      return facebookPreflight(post, media, Date.now());
+    throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
+  }
+  /** Refreshes an expired Google access token before any network phase; page tokens never expire. */
+  async function freshCredentials(post: Post): Promise<DestinationCredentials> {
+    const stored = await host.credentials.credential(post.channel.id);
+    if (!stored) throw new Error('CHANNEL_NOT_CONNECTED');
+    const expiring = stored.expires_at !== null && stored.expires_at <= Date.now() + 60_000;
+    if (post.channel.platform !== 'youtube' || !expiring)
+      return { account_id: stored.account_id, access_token: stored.access_token };
+    if (!stored.refresh_token) {
+      await host.credentials.markReauthorize(post.channel.id);
+      throw new Error('CHANNEL_REAUTHORIZE');
+    }
+    try {
+      const tokens = await refreshAccessToken({
+        clientId: requireGoogleClientId(host.config),
+        refreshToken: stored.refresh_token,
+        tokenEndpoint: host.youtubeTokenEndpoint ?? GOOGLE_TOKEN_ENDPOINT,
+        fetchImpl: host.fetch,
+      });
+      await host.credentials.updateTokens(post.channel.id, {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token ?? stored.refresh_token,
+        expires_at: tokens.expires_at,
+      });
+      return { account_id: stored.account_id, access_token: tokens.access_token };
+    } catch (error) {
+      if (errorCodeOf(error) === 'CHANNEL_REAUTHORIZE')
+        await host.credentials.markReauthorize(post.channel.id);
+      throw error;
+    }
+  }
+  async function publishable(id: string): Promise<{ post: Post; media: PublicationMedia }> {
+    const post = host.getPost(id);
+    const media = await host.probeMedia(post.export.path);
+    if (preflightFor(post, media).some((problem) => problem.severity === 'blocking'))
+      throw new Error('PUBLISH_PREFLIGHT_FAILED');
+    return { post, media };
   }
 
   host.wire('channel-connect-start', async (input) => {
@@ -72,10 +135,14 @@ export function installPublishing(host: PublishingHost) {
     const window = host.getWindow();
     if (!window) throw new Error('WINDOW_UNAVAILABLE');
     const code = await openFacebookLogin(window, {
-      appId: config.metaAppId,
+      appId: requireMeta(config).metaAppId,
       oauthBaseUrl: host.oauthBaseUrl ?? DEFAULT_OAUTH_BASE_URL,
     });
-    const userToken = await exchangeCodeForUserToken(code, config.brokerUrl, host.fetch);
+    const userToken = await exchangeCodeForUserToken(
+      code,
+      requireMeta(config).brokerUrl,
+      host.fetch,
+    );
     const pages = await listPages(userToken, host.graphBaseUrl, host.fetch);
     if (!pages.length) throw new Error('CHANNEL_NO_PAGES');
     pending.set(input.id, { pages });
@@ -97,70 +164,76 @@ export function installPublishing(host: PublishingHost) {
     return { account_name: page.name };
   });
 
+  host.wire('channel-connect', async (input) => {
+    const channel = host.getChannel(input.id);
+    if (!channel) throw new Error('CHANNEL_NOT_FOUND');
+    if (channel.platform !== 'youtube') throw new Error('PUBLISH_PLATFORM_UNSUPPORTED');
+    const tokens = await connectYouTubeChannel({
+      window: host.getWindow(),
+      clientId: requireGoogleClientId(host.config),
+      tokenEndpoint: host.youtubeTokenEndpoint,
+      fetchImpl: host.fetch,
+    });
+    await host.credentials.save(input.id, {
+      account_id: input.id,
+      account_name: channel.name,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expires_at: tokens.expires_at,
+    });
+    host.changed();
+    return { account_name: channel.name };
+  });
+
   host.wire('channel-disconnect', async (input) => {
     await host.credentials.remove(input.id);
     pending.delete(input.id);
     host.changed();
-    return { disconnected: true };
+    return { disconnected: true } as const;
   });
 
   host.wire('post-preflight', async (input) => {
-    const post = facebookPost(input.id);
+    const post = host.getPost(input.id);
     const media = await host.probeMedia(post.export.path);
-    return facebookPreflight(post, media, Date.now());
+    return preflightFor(post, media);
   });
 
   host.wire('post-publish', async (input) => {
-    if (inFlight.has(input.id)) throw new Error('PUBLISH_IN_PROGRESS');
-    inFlight.add(input.id);
+    const { post, media } = await publishable(input.id);
+    const credentials = await freshCredentials(post);
+    const attempt_id = randomUUID();
     try {
-      const post = facebookPost(input.id);
-      const credentials = await host.credentials.credentials(post.channel.id);
-      if (!credentials) throw new Error('CHANNEL_NOT_CONNECTED');
-      const media = await host.probeMedia(post.export.path);
-      const blocking = facebookPreflight(post, media, Date.now()).filter(
-        (problem) => problem.severity === 'blocking',
-      );
-      if (blocking.length) throw new Error('PUBLISH_PREFLIGHT_FAILED');
-      const attempt_id = randomUUID();
-      try {
-        await runner.publish({
-          post,
-          attempt_id,
-          credentials,
-          media,
-          persist: (publication) => {
-            host.setPublication(input.id, publication);
-          },
-          onProgress: (fraction) =>
-            send('publish-progress', {
-              post_id: input.id,
-              attempt_id,
-              phase: 'uploading',
-              fraction,
-            }),
-        });
-      } catch (error) {
-        const code = namedCode(error);
-        await markReauthorizeIfNeeded(post, code);
-        host.changed();
-        throw new Error(code);
-      }
-      const updated = host.getPost(input.id);
-      await markReauthorizeIfNeeded(post, updated.publication?.error ?? '');
+      await service.publish({
+        post,
+        attempt_id,
+        credentials,
+        media,
+        persist: (publication) => {
+          host.setPublication(input.id, publication);
+        },
+        onProgress: (fraction) =>
+          send('publish-progress', {
+            post_id: input.id,
+            attempt_id,
+            phase: 'uploading',
+            fraction,
+          }),
+      });
+    } catch (error) {
+      const code = errorCodeOf(error);
+      if (code === 'CHANNEL_REAUTHORIZE') await host.credentials.markReauthorize(post.channel.id);
       host.changed();
-      return updated;
-    } finally {
-      inFlight.delete(input.id);
+      throw new Error(code);
     }
+    host.changed();
+    return host.getPost(input.id);
   });
 
   host.wire('post-reconcile', async (input) => {
-    const post = facebookPost(input.id);
-    const credentials = await host.credentials.credentials(post.channel.id);
-    if (!credentials) throw new Error('CHANNEL_NOT_CONNECTED');
+    const post = host.getPost(input.id);
+    const credentials = await freshCredentials(post);
     try {
-      await runner.reconcile({
+      await service.reconcile({
         post,
         credentials,
         persist: (publication) => {
@@ -168,21 +241,18 @@ export function installPublishing(host: PublishingHost) {
         },
       });
     } catch (error) {
-      const code = namedCode(error);
-      await markReauthorizeIfNeeded(post, code);
+      const code = errorCodeOf(error);
+      if (code === 'CHANNEL_REAUTHORIZE') await host.credentials.markReauthorize(post.channel.id);
       host.changed();
       throw new Error(code);
     }
-    const updated = host.getPost(input.id);
-    await markReauthorizeIfNeeded(post, updated.publication?.error ?? '');
     host.changed();
-    return updated;
+    return host.getPost(input.id);
   });
 
   host.wire('post-open-remote', async (input) => {
-    const url = facebookPost(input.id).publication?.remote_url;
-    if (!url || !/^https:\/\/www\.facebook\.com\/reel\/[A-Za-z0-9_-]+$/.test(url))
-      throw new Error('PUBLICATION_MISSING');
+    const url = host.getPost(input.id).publication?.remote_url;
+    if (!url || !REMOTE_URL.test(url)) throw new Error('PUBLICATION_MISSING');
     await shell.openExternal(url);
     return { opened: true } as const;
   });

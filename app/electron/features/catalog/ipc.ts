@@ -102,6 +102,12 @@ export async function installCatalog(host: Host) {
     getPost(id: string): Post {
       return context.catalog().getPost(id);
     },
+    getChannel(id: string) {
+      return context
+        .catalog()
+        .listChannels()
+        .find((channel) => channel.id === id);
+    },
     setPublication(id: string, publication: Publication): Post {
       return context.catalog().setPublication(id, publication);
     },

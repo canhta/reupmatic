@@ -1,5 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { HStack } from '@astryxdesign/core/HStack';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
@@ -55,6 +56,11 @@ export function PostEditor({
   const selectedExport = exports.find((item) => item.export_id === draft.export_id);
   const channels = catalog.snapshot?.channels.filter((channel) => !channel.archived) ?? [];
   const links = catalog.snapshot?.links.filter((link) => !link.archived) ?? [];
+  const selectedChannel =
+    channels.find((channel) => channel.id === draft.channel_id) ?? draft.saved?.channel;
+  const isYouTube = selectedChannel?.platform === 'youtube';
+  const youtubeOptions = draft.options.youtube;
+  const validOptions = !isYouTube || youtubeOptions !== null;
   let validPlan = true;
   try {
     readPlanDraft(draft.plan);
@@ -62,8 +68,21 @@ export function PostEditor({
     validPlan = false;
   }
 
+  function setYouTube(patch: Partial<NonNullable<typeof youtubeOptions>>) {
+    setDraft({
+      ...draft,
+      options: {
+        youtube: {
+          self_declared_made_for_kids: youtubeOptions?.self_declared_made_for_kids ?? false,
+          contains_synthetic_media: youtubeOptions?.contains_synthetic_media ?? false,
+          ...patch,
+        },
+      },
+    });
+  }
+
   async function save() {
-    if (!validPlan || (!draft.saved && !selectedExport)) return;
+    if (!validPlan || !validOptions || (!draft.saved && !selectedExport)) return;
     const planned = readPlanDraft(draft.plan);
     const identity = {
       id: draft.id,
@@ -71,6 +90,7 @@ export function PostEditor({
       title: draft.title,
       body: draft.body,
       planned,
+      options: draft.options,
     };
     const result = await catalog.mutate(() => {
       if (draft.saved) return window.reupmatic.postEdit({ ...identity, state: draft.state });
@@ -100,7 +120,9 @@ export function PostEditor({
               isDisabled={disabled}
               placeholder={t('postChooseChannel')}
               options={channels.map((channel) => ({ value: channel.id, label: channel.name }))}
-              onChange={(channel_id) => setDraft({ ...draft, channel_id })}
+              onChange={(channel_id) =>
+                setDraft({ ...draft, channel_id, options: { youtube: null } })
+              }
             />
             <Selector
               label={t('postExport')}
@@ -194,6 +216,35 @@ export function PostEditor({
         onChange={(plan) => setDraft({ ...draft, plan })}
         disabled={disabled}
       />
+      {isYouTube && (
+        <VStack gap={2}>
+          <Selector
+            label={t('postMadeForKids')}
+            value={
+              youtubeOptions ? (youtubeOptions.self_declared_made_for_kids ? 'yes' : 'no') : ''
+            }
+            isDisabled={disabled}
+            placeholder={t('postMadeForKidsChoose')}
+            options={[
+              { value: 'no', label: t('postMadeForKidsNo') },
+              { value: 'yes', label: t('postMadeForKidsYes') },
+            ]}
+            onChange={(choice) => setYouTube({ self_declared_made_for_kids: choice === 'yes' })}
+          />
+          <Text as="p" type="supporting">
+            {t('postMadeForKidsHelp')}
+          </Text>
+          <CheckboxInput
+            label={t('postSyntheticMedia')}
+            value={youtubeOptions?.contains_synthetic_media ?? false}
+            isDisabled={disabled || !youtubeOptions}
+            onChange={(contains_synthetic_media) => setYouTube({ contains_synthetic_media })}
+          />
+          <Text as="p" type="supporting">
+            {t('postSyntheticMediaHelp')}
+          </Text>
+        </VStack>
+      )}
       {draft.saved && (
         <Selector
           label={t('postState')}
@@ -214,6 +265,7 @@ export function PostEditor({
             disabled ||
             !draft.title.trim() ||
             !validPlan ||
+            !validOptions ||
             (!draft.saved &&
               (!channels.some((channel) => channel.id === draft.channel_id) || !selectedExport)) ||
             (!form.dirty && !!draft.saved)

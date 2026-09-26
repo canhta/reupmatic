@@ -235,11 +235,13 @@ const publishing = installPublishing({
   wire,
   credentials: channelCredentials,
   getPost: (id) => catalogApi.getPost(id),
+  getChannel: (id) => catalogApi.getChannel(id),
   setPublication: (id, publication) => catalogApi.setPublication(id, publication),
   getWindow: () => win,
   probeMedia: (filename) => media.probeVideoFile(filename),
   changed: notifyCatalogChanged,
   config: readPublishingConfig(),
+  diagnostics,
   // Dev/test only: point the adapter at a local fake Graph. A packaged build always uses defaults.
   graphBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_GRAPH_BASE_URL,
   uploadBaseUrl: app.isPackaged ? undefined : process.env.REUPMATIC_META_UPLOAD_BASE_URL,

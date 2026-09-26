@@ -6,6 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { readPublishingConfig } from '../../dist-node/electron/features/publishing/config.js';
 import { ChannelCredentialStore } from '../../dist-node/electron/features/publishing/credential-store.js';
+import { FacebookDestination } from '../../dist-node/electron/features/publishing/facebook-adapter.js';
 import {
   buildAuthorizationUrl,
   exchangeCodeForUserToken,
@@ -13,7 +14,7 @@ import {
   listPages,
   readAuthorizationCode,
 } from '../../dist-node/electron/features/publishing/oauth.js';
-import { PublishRunner } from '../../dist-node/electron/features/publishing/publish-runner.js';
+import { PublishingService } from '../../dist-node/electron/features/publishing/publish-service.js';
 
 function fakeEncryption({ available = true } = {}) {
   const KEY = 0x5a;
@@ -155,6 +156,19 @@ async function fakeGraph(routes) {
   };
 }
 
+function makeRunner(graph, now = () => 1) {
+  return new PublishingService({
+    now,
+    destinationFor: (_platform, credentials) =>
+      new FacebookDestination({
+        pageId: credentials.account_id,
+        accessToken: credentials.access_token,
+        graphBaseUrl: graph.graphBaseUrl,
+        uploadBaseUrl: graph.uploadBaseUrl,
+      }),
+  });
+}
+
 test('a Reel is uploaded and published: reference and phases persist before the calls that need them', async () => {
   const directory = await tempDir();
   const file = path.join(directory, 'video.mp4');
@@ -180,7 +194,7 @@ test('a Reel is uploaded and published: reference and phases persist before the 
   try {
     const persisted = [];
     const progress = [];
-    const runner = new PublishRunner({ ...graph, now: () => 1000 });
+    const runner = makeRunner(graph, () => 1000);
     const publication = await runner.publish({
       post: { ...POST, export: { ...POST.export, path: file } },
       attempt_id: 'attempt_0001',
@@ -232,7 +246,7 @@ test('a planned Reel uses SCHEDULED with the planned instant; Graph refusals map
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const runner = makeRunner(graph, () => 1);
     const publication = await runner.publish({
       post: { ...POST, planned: plan, export: { ...POST.export, path: file } },
       attempt_id: 'attempt_0002',
@@ -275,7 +289,7 @@ test('rate limiting maps to PUBLISH_RATE_LIMITED and reconcile resolves a submit
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const runner = makeRunner(graph, () => 1);
     const failed = await runner.publish({
       post: { ...POST, export: { ...POST.export, path: file } },
       attempt_id: 'attempt_0003',
@@ -414,7 +428,7 @@ test('a publish refuses a new attempt before begin touches the platform', async 
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const runner = makeRunner(graph, () => 1);
     const submitted = {
       ...POST,
       export: { ...POST.export, path: '/nonexistent' },
@@ -469,7 +483,7 @@ test('two concurrent publishes of one post create exactly one Reel', async () =>
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 1 });
+    const runner = makeRunner(graph, () => 1);
     const base = {
       post: { ...POST, export: { ...POST.export, path: file } },
       credentials: { account_id: '1', access_token: 't' },
@@ -535,7 +549,7 @@ test('only a definite Graph refusal after finish is failed; everything else is u
       },
     ]);
     try {
-      const runner = new PublishRunner({ ...graph, now: () => 1 });
+      const runner = makeRunner(graph, () => 1);
       const publication = await runner.publish({
         post: { ...POST, export: { ...POST.export, path: file } },
         attempt_id: 'attempt_finish',
@@ -561,7 +575,7 @@ test('a stuck uploading post reconciles to failed so the user can retry', async 
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 10 });
+    const runner = makeRunner(graph, () => 10);
     const uploading = {
       ...POST,
       publication: {
@@ -597,7 +611,7 @@ test('an uploading post the platform reports published resolves to published', a
     },
   ]);
   try {
-    const runner = new PublishRunner({ ...graph, now: () => 10 });
+    const runner = makeRunner(graph, () => 10);
     const uploading = {
       ...POST,
       publication: {

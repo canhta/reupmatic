@@ -21,8 +21,12 @@ TikTok follow on the same seam. Issues: #16 (YouTube, Facebook), #17 (TikTok), #
    planned post goes out with the app closed. TikTok has no scheduling API; its planned posts need
    the app-driven runner of #18.
 5. **Never publish twice.** Every attempt persists the platform reference *before* the call that
-   can create a post. An interrupted or ambiguous outcome becomes `unknown` and is reconciled by
-   querying the platform; the create call is never retried automatically.
+   can create a post. Publishing is serialised per post, and `canStartAttempt` is checked on the
+   freshly read post before any remote call opens an upload session. Once the create-equivalent call
+   is sent, only a definite refusal mapped to a named code is `failed`; 5xx, timeouts, unparseable
+   bodies and unmapped codes become `unknown` and are reconciled by querying the platform — the
+   create call is never retried automatically. A crash before submit reconciles to
+   `PUBLISH_UPLOAD_INTERRUPTED` so the user can retry.
 6. **Publication only on an explicit user action** on a concrete post — never from import, render,
    navigation, batch or folder automation.
 
@@ -73,22 +77,32 @@ interface Publication {
   remote_post_id: string | null;
   remote_url: string | null;
   scheduled_for: number | null;
+  privacy: 'public' | 'private' | 'unlisted' | null;  // as granted, not as requested
   error: string | null;        // named code, e.g. PUBLISH_RATE_LIMITED, CHANNEL_REAUTHORIZE
   updated_at: number;
 }
+
+// Per-post platform choices. YouTube's made-for-kids declaration is required with no default; a
+// YouTube post without one is refused rather than guessed.
+interface YouTubeOptions {
+  self_declared_made_for_kids: boolean;
+  contains_synthetic_media: boolean;
+}
+interface PostOptions { youtube: YouTubeOptions | null }
 ```
 
-`Post` gains `publication: Publication | null`; `state` stays `draft | cancelled`. A new attempt is
-allowed only when `publication` is null or `failed`. `unknown` and `submitted` resolve only through
-`reconcile`. The `published` view of the post list reads `publication.phase`.
+`Post` gains `publication: Publication | null` and `options: PostOptions`; `state` stays
+`draft | cancelled`. A new attempt is allowed only when `publication` is null or `failed`. `unknown`
+and `submitted` resolve only through `reconcile`. The `published` view of the post list reads
+`publication.phase`.
 
 Host adapter per platform. Adapters return platform outcomes; the host applies the core transition
 functions, so an adapter cannot skip the never-publish-twice policy:
 
 ```ts
 type SubmitOutcome =
-  | { kind: 'scheduled'; scheduled_for: number; remote_post_id: string | null; remote_url: string | null }
-  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null }
+  | { kind: 'scheduled'; scheduled_for: number; remote_post_id: string | null; remote_url: string | null; privacy: 'public' | 'private' | 'unlisted' | null }
+  | { kind: 'published'; remote_post_id: string | null; remote_url: string | null; privacy: 'public' | 'private' | 'unlisted' | null }
   | { kind: 'failed'; error: string }   // definite refusal: nothing was created
   | { kind: 'unknown'; error: string }; // ambiguous after finish → reconcile only
 
@@ -98,7 +112,7 @@ interface Destination {
   begin(post, credentials): Promise<{ remote_ref }>;       // persisted before upload
   upload(remote_ref, file, onProgress, signal): Promise<void>;
   submit(remote_ref, post, plan): Promise<SubmitOutcome>;  // the one call that can create a post
-  reconcile(remote_ref, credentials, now): Promise<SubmitOutcome | { kind: 'unknown'; error }>;
+  reconcile(remote_ref, post, credentials, now): Promise<SubmitOutcome | { kind: 'unknown'; error }>;
 }
 ```
 
@@ -126,3 +140,13 @@ A Meta app (type Business) with Facebook Login; redirect URI
 `https://www.facebook.com/connect/login_success.html`; the three permissions above; App ID in the
 desktop build config; `META_APP_ID` and `META_APP_SECRET` as Vercel environment variables for the
 broker. Development mode suffices for the owner's own Pages.
+
+## Owner prerequisites for YouTube
+
+A Google Cloud project with an OAuth client of type Desktop app; the
+`https://www.googleapis.com/auth/youtube.upload` scope enabled and the YouTube Data API v3 enabled;
+the client id baked into the build config as `REUPMATIC_GOOGLE_CLIENT_ID` (see
+`scripts/generate-publishing-config.mjs`). The loopback redirect `http://127.0.0.1:<ephemeral port>`
+is registered implicitly by Google for Desktop clients, so no redirect URI needs entering. No client
+secret is used, so no broker is required. Until the project passes YouTube's audit, every upload is
+forced private, which the outcome reports honestly.

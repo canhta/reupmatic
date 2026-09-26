@@ -1,4 +1,4 @@
-import type { Publication, PublicationPhase } from './contracts.js';
+import type { Publication, PublicationPhase, PublicationPrivacy } from './contracts.js';
 
 const ALLOWED_TRANSITIONS: Record<PublicationPhase, readonly PublicationPhase[]> = {
   uploading: ['submitted', 'failed', 'unknown'],
@@ -21,7 +21,8 @@ export function startAttempt(
 ): Publication {
   if (!canStartAttempt(previous)) throw new Error('PUBLICATION_ALREADY_ATTEMPTED');
   if (!/^[a-zA-Z0-9_-]{8,128}$/.test(input.attempt_id)) throw new Error('INVALID_REQUEST');
-  if (!input.remote_ref || input.remote_ref.length > 512) throw new Error('INVALID_REQUEST');
+  // Google's resumable session URIs exceed 512 characters.
+  if (!input.remote_ref || input.remote_ref.length > 4096) throw new Error('INVALID_REQUEST');
   return {
     attempt_id: input.attempt_id,
     phase: 'uploading',
@@ -29,6 +30,7 @@ export function startAttempt(
     remote_post_id: null,
     remote_url: null,
     scheduled_for: null,
+    privacy: null,
     error: null,
     updated_at: input.now,
   };
@@ -60,18 +62,23 @@ export function markScheduled(
     scheduled_for: number;
     remote_post_id: string | null;
     remote_url: string | null;
+    privacy?: PublicationPrivacy | null;
   },
   now: number,
 ): Publication {
-  return advance(publication, 'scheduled', input, now);
+  return advance(publication, 'scheduled', { ...input, privacy: input.privacy ?? null }, now);
 }
 
 export function markPublished(
   publication: Publication,
-  input: { remote_post_id: string | null; remote_url: string | null },
+  input: {
+    remote_post_id: string | null;
+    remote_url: string | null;
+    privacy?: PublicationPrivacy | null;
+  },
   now: number,
 ): Publication {
-  return advance(publication, 'published', input, now);
+  return advance(publication, 'published', { ...input, privacy: input.privacy ?? null }, now);
 }
 
 export function markFailed(
