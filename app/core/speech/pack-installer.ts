@@ -1,7 +1,17 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdir, readdir, rename, rm, rmdir, stat, statfs } from 'node:fs/promises';
+import {
+  mkdir,
+  readdir,
+  readlink,
+  realpath,
+  rename,
+  rm,
+  rmdir,
+  stat,
+  statfs,
+} from 'node:fs/promises';
 import path from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -66,6 +76,28 @@ async function extractTarGz(archive: string, destination: string): Promise<void>
 
 function assertActive(signal: AbortSignal | undefined): void {
   if (signal?.aborted) throw new RemoteError('CANCELLED');
+}
+
+function contained(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+// The archive is ours and hash-verified, but extraction still must not write or link outside
+// staging: reject any entry whose real target escapes, symlinks included.
+async function assertContained(root: string, directory: string): Promise<void> {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const full = path.join(directory, entry.name);
+    if (entry.isSymbolicLink()) {
+      const target = path.resolve(directory, await readlink(full));
+      if (!contained(root, target)) throw new RemoteError('PACK_EXTRACT_FAILED');
+      const real = await realpath(full).catch(() => null);
+      if (real && !contained(root, real)) throw new RemoteError('PACK_EXTRACT_FAILED');
+      continue;
+    }
+    if (!contained(root, await realpath(full))) throw new RemoteError('PACK_EXTRACT_FAILED');
+    if (entry.isDirectory()) await assertContained(root, full);
+  }
 }
 
 export function installedPackDirectory(
@@ -143,6 +175,8 @@ export async function installRuntimePack(options: PackInstallOptions): Promise<P
     await mkdir(staging, { recursive: true });
     await extract(archive, staging);
     if ((await readdir(staging)).length === 0) throw new RemoteError('PACK_EXTRACT_FAILED');
+    const realStaging = await realpath(staging);
+    await assertContained(realStaging, realStaging);
 
     assertActive(signal);
     await rm(finalDirectory, { recursive: true, force: true });
