@@ -33,6 +33,14 @@ export async function registeredMediaResponse(
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'no-store',
   });
+  // A crossOrigin="anonymous" media element may issue a Range preflight; allow it so
+  // Chromium can create VideoFrames instead of refusing a tainted source.
+  if (request.method === 'OPTIONS') {
+    headers.set('Access-Control-Allow-Methods', 'GET, HEAD');
+    headers.set('Access-Control-Allow-Headers', 'Range');
+    headers.set('Access-Control-Max-Age', '86400');
+    return new Response(null, { status: 204, headers });
+  }
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     headers.set('Allow', 'GET, HEAD');
     return new Response(null, { status: 405, headers });

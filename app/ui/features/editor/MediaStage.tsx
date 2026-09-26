@@ -185,6 +185,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
             <video
               ref={resultVideo}
               data-monitor-video="result"
+              crossOrigin="anonymous"
               src={result.url}
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}
@@ -249,6 +250,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                       }
                       ref={editor.video}
                       data-monitor-video="source"
+                      crossOrigin="anonymous"
                       className="geometry-video"
                       src={editor.sourceUrl}
                       style={{
@@ -299,6 +301,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                 }
                 ref={editor.video}
                 data-monitor-video="source"
+                crossOrigin="anonymous"
                 src={editor.sourceUrl}
                 style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
                 onLoadedMetadata={editor.onSourceMetadata}

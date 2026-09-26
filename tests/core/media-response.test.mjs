@@ -55,3 +55,26 @@ test('registered file response serves actual ranges, HEAD, misses and cancel saf
     await rm(folder, { recursive: true, force: true });
   }
 });
+test('media responses allow the app origin so JASSUB can read untainted frames', async () => {
+  const folder = await mkdtemp(path.join(tmpdir(), 'reupmatic-cors-'));
+  const filename = path.join(folder, 'clip.mp4');
+  await writeFile(filename, '0123456789');
+  const request = (headers = {}, method = 'GET') =>
+    new Request('https://local/video', {
+      headers: { Origin: 'app://ui', ...headers },
+      method,
+    });
+  try {
+    const get = await registeredMediaResponse(request(), filename);
+    assert.equal(get.headers.get('Access-Control-Allow-Origin'), 'app://ui');
+    assert.equal(get.headers.get('Cross-Origin-Resource-Policy'), 'cross-origin');
+    // An element with crossOrigin="anonymous" may send a Range preflight.
+    const preflight = await registeredMediaResponse(request({}, 'OPTIONS'), filename);
+    assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), 'app://ui');
+    assert.equal(preflight.headers.get('Access-Control-Allow-Methods'), 'GET, HEAD');
+    assert.equal(preflight.headers.get('Access-Control-Allow-Headers'), 'Range');
+  } finally {
+    await rm(folder, { recursive: true, force: true });
+  }
+});
