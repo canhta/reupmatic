@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Turn Douyin videos into ready-to-post videos — without uploading anything.</strong><br />
-  Batch import, subtitle and translate, dub with local voices, clean up on-screen text, and export.
+  Batch import, subtitle and translate, dub with local voices, cover original subtitles, and export.
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 Reupmatic is a desktop app for re-uploading Douyin content at scale. It keeps the whole pipeline on
 your machine: a local library of originals, editable subtitle and translation layers, voice
-synthesis in Vietnamese or English, OCR-based cleanup of burned-in text, and batch or
+synthesis in Vietnamese or English, a subtitle cover band that hides burned-in text, and batch or
 folder-watching jobs that run unattended. Nothing is sent to a server, and no paid API is required
 to get a post out.
 
@@ -32,8 +32,8 @@ to get a post out.
 - **Local by default.** Video, audio and text never leave the device; models run on your CPU.
 - **Text that ships translated.** Source transcript, translation, spoken text and displayed
   subtitles are separate editable tracks, not one overwritten caption file.
-- **Cleanup built in.** OCR detects burned-in text and reconstructs the region behind it before
-  export.
+- **Cover band built in.** A solid band hides the original burned-in subtitles under your new ones,
+  in the same output geometry as the rendered video.
 - **Your files stay yours.** Originals are referenced, never rewritten; outputs are explicit saves.
 
 ## Features
@@ -44,7 +44,7 @@ to get a post out.
 | **Editing** | Timeline, cue table with undo, subtitle styling, per-clip enable/disable |
 | **Language** | Speech recognition, translation, and editable text layers in both locales |
 | **Voice** | Local TTS with review-before-save; no cloud fallback |
-| **Vision** | OCR read, subtitle removal and inpainting samples |
+| **Vision** | OCR read of on-screen text, with a cover band for burned-in subtitles |
 | **Export** | Sample or full render with authoritative FFmpeg/libass output |
 | **Queue** | One durable job queue shared by Editor, batch and Automation |
 | **Interface** | English and Vietnamese, light and dark |
