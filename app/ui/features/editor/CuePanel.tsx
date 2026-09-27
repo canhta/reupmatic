@@ -28,6 +28,7 @@ import {
   type TextLanguage,
   textLayerNames,
 } from '../../../core/subtitles/layers/document';
+import { type CueSyncState, translatedCueSync } from '../../../core/subtitles/layers/sync';
 import { cueQcFlags, type QcFlag } from '../../../core/subtitles/qc';
 import { SpeechReview } from '../speech/SpeechGenerator';
 import { TranslateReview } from '../speech/translation/TranslateGenerator';
@@ -111,6 +112,11 @@ export function CuePanel() {
   }));
 
   const indexById = useMemo(() => new Map(cues.map((cue, index) => [cue.id, index])), [cues]);
+  // A translated line's drift from its source is deliberate, so it is surfaced, never corrected.
+  const cueSync = useMemo(() => {
+    if (activeTextLayer !== 'translated') return new Map<string, CueSyncState>();
+    return new Map(translatedCueSync(editor.textSnapshot).map((entry) => [entry.id, entry.state]));
+  }, [activeTextLayer, editor.textSnapshot]);
 
   if (review) {
     return (
@@ -239,6 +245,13 @@ export function CuePanel() {
                   const index = indexById.get(cue.id) ?? 0;
                   const isSelected = cue.id === selected;
                   const flags = cueQcFlags(cue);
+                  const syncState = cueSync.get(cue.id);
+                  const syncLabel =
+                    syncState === 'deviated'
+                      ? t('cueSyncDeviated')
+                      : syncState === 'detached'
+                        ? t('cueSyncDetached')
+                        : '';
                   return (
                     <TableRow key={cue.id}>
                       {}
@@ -258,6 +271,9 @@ export function CuePanel() {
                                 label={qcLabel(t, flags)}
                                 tooltip={qcLabel(t, flags)}
                               />
+                            )}
+                            {syncLabel && (
+                              <StatusDot variant="warning" label={syncLabel} tooltip={syncLabel} />
                             )}
                           </HStack>
                           {isSelected ? (

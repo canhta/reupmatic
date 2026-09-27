@@ -18,12 +18,15 @@ import {
   type TextLayerName,
   textLayerNames,
 } from '../../../core/subtitles/layers/document';
+import { translatedSourceLayer } from '../../../core/subtitles/layers/sync';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
 import { useEditor } from './EditorContext';
 import { MEDIA_DRAG_TYPE } from './media-drag';
 
 // react-timeline-editor sizes lanes by raw inline style, not a CSS custom property.
 const LANE_ROW_HEIGHT = 24;
+// A thin source lane shows the original cues the translation must stay synced to.
+const SOURCE_LANE_HEIGHT = 16;
 const RULER_HEIGHT = 42;
 const ZOOM_STEP = 0.25;
 const ZOOM_MIN = 0.5;
@@ -69,6 +72,13 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
     return [{ clip: primaryClip, start_ms: 0, end_ms: duration }];
   }, [composition, media, primaryClip, duration]);
   const spokenCues = useMemo(() => getTextLayer(textSnapshot, 'spoken').cues, [textSnapshot]);
+  const translatedSource = useMemo(() => {
+    if (!getTextLayer(textSnapshot, 'translated').cues.length) return null;
+    const name = translatedSourceLayer(textSnapshot);
+    if (!name) return null;
+    const cues = getTextLayer(textSnapshot, name).cues;
+    return cues.length ? cues : null;
+  }, [textSnapshot]);
   const bandRef = useRef<HTMLDivElement>(null);
   const [bandWidth, setBandWidth] = useState(0);
   const [drop, setDrop] = useState<{ index: number; x: number } | null>(null);
@@ -216,12 +226,21 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
     if (media) list.push({ id: 'original', height: LANE_ROW_HEIGHT });
     if (voiceTrack) list.push({ id: 'voice', height: LANE_ROW_HEIGHT });
     if (soundtrack) list.push({ id: 'music', height: LANE_ROW_HEIGHT });
-    for (const name of textLayerNames)
+    for (const name of textLayerNames) {
+      if (name === 'translated' && translatedSource)
+        list.push({ id: 'sync-source', height: SOURCE_LANE_HEIGHT });
       if (getTextLayer(textSnapshot, name).cues.length)
         list.push({ id: `subtitles:${name}`, height: LANE_ROW_HEIGHT });
+    }
     return list;
-  }, [media, voiceTrack, soundtrack, textSnapshot]);
+  }, [media, voiceTrack, soundtrack, textSnapshot, translatedSource]);
   function renderLaneHeader(id: string): ReactNode {
+    if (id === 'sync-source')
+      return (
+        <Text as="span" type="supporting" className="timeline-lane-name">
+          {t('laneSyncSource')}
+        </Text>
+      );
     if (id === 'clips')
       return (
         <Text as="span" type="supporting" className="timeline-lane-name">
@@ -341,22 +360,35 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
                         movable: false,
                       },
                     ]
-                  : lane.id.startsWith('subtitles:')
-                    ? getTextLayer(
-                        textSnapshot,
-                        lane.id.slice('subtitles:'.length) as TextLayerName,
-                      ).cues.map((cue) => ({
-                        id: cue.id,
+                  : lane.id === 'sync-source'
+                    ? (translatedSource ?? []).map((cue) => ({
+                        id: `source:${cue.id}`,
                         start: cue.start_ms / 1000,
                         end: cue.end_ms / 1000,
-                        effectId: 'subtitle',
-                        minStart: 0,
-                        maxEnd: duration / 1000,
+                        effectId: 'source',
+                        flexible: false,
+                        movable: false,
                       }))
-                    : [];
-        return { id: lane.id, actions };
+                    : lane.id.startsWith('subtitles:')
+                      ? getTextLayer(
+                          textSnapshot,
+                          lane.id.slice('subtitles:'.length) as TextLayerName,
+                        ).cues.map((cue) => ({
+                          id: cue.id,
+                          start: cue.start_ms / 1000,
+                          end: cue.end_ms / 1000,
+                          effectId: 'subtitle',
+                          minStart: 0,
+                          maxEnd: duration / 1000,
+                        }))
+                      : [];
+        return {
+          id: lane.id,
+          actions,
+          ...(lane.id === 'sync-source' ? { rowHeight: SOURCE_LANE_HEIGHT } : {}),
+        };
       }),
-    [laneLayout, spans, duration, voiceTrack, soundtrack, textSnapshot],
+    [laneLayout, spans, duration, voiceTrack, soundtrack, textSnapshot, translatedSource],
   );
   const scaleCount = Math.max(4, Math.ceil(duration / 5000));
   const fitScaleWidth = bandWidth > 0 ? bandWidth / scaleCount : BASE_SCALE_WIDTH;
@@ -412,6 +444,7 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
               original: { id: 'original', name: t('laneOriginal') },
               voice: { id: 'voice', name: t('laneVoice') },
               music: { id: 'music', name: t('laneMusic') },
+              source: { id: 'source', name: t('laneSyncSource') },
             }}
             scale={5}
             scaleWidth={scaleWidth}
@@ -516,13 +549,21 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
                       row.id.slice('subtitles:'.length) as TextLayerName,
                     ).cues.find((cue) => cue.id === action.id)?.text
                   : undefined;
+              const sourceText =
+                action.effectId === 'source'
+                  ? translatedSource?.find((cue) => `source:${cue.id}` === action.id)?.text
+                  : undefined;
               return (
-                <span className="timeline-action-label">
+                <span
+                  className={`timeline-action-label${action.effectId === 'source' ? ' timeline-action-source' : ''}`}
+                >
                   {action.effectId === 'subtitle'
                     ? subtitleText
-                    : action.effectId === 'music'
-                      ? (soundtrack?.source.name ?? '')
-                      : (voiceLabels.get(action.id) ?? '')}
+                    : action.effectId === 'source'
+                      ? sourceText
+                      : action.effectId === 'music'
+                        ? (soundtrack?.source.name ?? '')
+                        : (voiceLabels.get(action.id) ?? '')}
                 </span>
               );
             }}

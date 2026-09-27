@@ -361,6 +361,12 @@
   outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
   outline-offset: calc(-1 * var(--focus-outline-width));
 }
+.timeline-action-source {
+  font-size: var(--font-size-xs);
+  line-height: 1;
+  color: var(--color-text-secondary);
+  cursor: default;
+}
 
 .export-steps-summary {
   margin: 0;

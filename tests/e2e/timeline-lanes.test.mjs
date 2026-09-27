@@ -95,12 +95,19 @@ const COPY = {
     laneVoice: 'Voice',
     laneMusic: 'Music',
     laneClips: 'Clips',
+    laneSyncSource: 'Source lines',
+    moreCueActions: 'More cue actions',
+    copyTitle: 'Copy layer…',
+    copyFrom: 'Copy from',
+    copyPreview: 'Preview replacement',
+    copyApply: 'Replace layer',
     muteMusic: 'Mute music',
     unmuteMusic: 'Unmute music',
     showLayer: (layer) => `Show ${layer}`,
     hideLayer: (layer) => `Hide ${layer}`,
     layerDisplayed: 'Displayed subtitles',
     layerTranscript: 'Transcript',
+    layerTranslated: 'Translated text',
     layerSpoken: 'Spoken text',
     displayedLayer: /^Displayed subtitles/,
     burnedIn: 'Burned in',
@@ -137,12 +144,19 @@ const COPY = {
     laneVoice: 'Giọng đọc',
     laneMusic: 'Nhạc nền',
     laneClips: 'Đoạn phim',
+    laneSyncSource: 'Câu gốc',
+    moreCueActions: 'Thêm thao tác câu',
+    copyTitle: 'Sao chép lớp…',
+    copyFrom: 'Sao chép từ',
+    copyPreview: 'Xem trước thay thế',
+    copyApply: 'Thay lớp',
     muteMusic: 'Tắt tiếng nhạc nền',
     unmuteMusic: 'Bật tiếng nhạc nền',
     showLayer: (layer) => `Hiện ${layer}`,
     hideLayer: (layer) => `Ẩn ${layer}`,
     layerDisplayed: 'Phụ đề hiển thị',
     layerTranscript: 'Bản chép lời',
+    layerTranslated: 'Bản dịch',
     layerSpoken: 'Nội dung đọc',
     displayedLayer: /^Phụ đề hiển thị/,
     burnedIn: 'Gắn cứng',
@@ -436,6 +450,30 @@ for (const locale of ['en', 'vi']) {
           .getByRole('button', { name: copy.showLayer(copy.layerDisplayed), exact: true })
           .click();
         await burnedDots().waitFor();
+
+        // A translated layer shows a thin source lane just above it so drift is visible.
+        await openSourcePanel(page, 'cues');
+        await page.getByRole('combobox', { name: copy.editingLayer, exact: true }).click();
+        await page.getByRole('option', { name: copy.layerTranslated }).click();
+        await page.getByRole('button', { name: copy.moreCueActions, exact: true }).click();
+        await page.getByRole('menuitem', { name: copy.copyTitle, exact: true }).click();
+        await page.getByRole('combobox', { name: copy.copyFrom, exact: true }).click();
+        await page.getByRole('option', { name: copy.layerDisplayed }).click();
+        await page.getByRole('button', { name: copy.copyPreview, exact: true }).click();
+        await page.getByRole('button', { name: copy.copyApply, exact: true }).click();
+        await headers.getByText(copy.laneSyncSource, { exact: true }).waitFor();
+        const sourceAction = page
+          .locator('.timeline-editor-action .timeline-action-source')
+          .first();
+        await sourceAction.waitFor();
+        assert.ok(
+          (await sourceAction.innerText()).includes(CUE.text2),
+          'the source lane shows the original cue text above the translation',
+        );
+        await page.setViewportSize({ width: 1420, height: 900 });
+        await page.screenshot({
+          path: path.join(artifacts, `timeline-sync-source-${locale}-1420x900.png`),
+        });
 
         for (const [width, height] of SIZES) await shot(page, 'lanes', width, height);
         await page.setViewportSize({ width: 1050, height: 700 });
