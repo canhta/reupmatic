@@ -147,4 +147,20 @@ export const editorOperations = {
     validate: () => undefined,
     toRequest: () => undefined,
   }),
+  'recent-remove': operation<{ id: string }, RecentEntry[]>()({
+    rendererMethod: 'recentRemove',
+    validate: (input) => {
+      const value = requestRecord(input, ['id']);
+      if (
+        typeof value.id !== 'string' ||
+        !value.id.trim() ||
+        value.id.length > 4096 ||
+        value.id.includes('\0')
+      ) {
+        throw new Error('INVALID_REQUEST');
+      }
+      return { id: value.id };
+    },
+    toRequest: (id: string) => ({ id }),
+  }),
 } as const;

@@ -4,8 +4,10 @@ import type { DropdownMenuItemData, DropdownMenuOption } from '@astryxdesign/cor
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { unwrap } from '../../bridge/client';
+import { useNotifications } from '../../shell/NotificationsProvider';
 import { refreshRecentItems, useRecentItems } from '../projects/recent/useRecentItems';
 import { refreshRecoveryDrafts, useRecoveryDrafts } from '../projects/recovery/useRecoveryDrafts';
 import { useEditor } from './EditorContext';
@@ -37,6 +39,38 @@ export function EditorProjectHeader() {
       void refreshRecentItems();
     }
   }, [isOpen]);
+
+  const { raise, dismiss } = useNotifications();
+  const announcedMissing = useRef<string | null>(null);
+  useEffect(() => {
+    const path = editor.missingProject;
+    if (!path) {
+      announcedMissing.current = null;
+      return;
+    }
+    if (path === announcedMissing.current) return;
+    announcedMissing.current = path;
+    let id = '';
+    const remove = async () => {
+      dismiss(id);
+      await unwrap(window.reupmatic.recentRemove(path)).catch(() => undefined);
+      void refreshRecentItems();
+      editor.clearMissingProject();
+    };
+    const locate = () => {
+      dismiss(id);
+      editor.clearMissingProject();
+      void editor.openProject();
+    };
+    id = raise(t('projectMissing'), {
+      kind: 'error',
+      uniqueID: `project-missing-${path}`,
+      actions: [
+        { label: t('recentLocate'), onClick: locate, variant: 'primary' },
+        { label: t('recentRemove'), onClick: () => void remove() },
+      ],
+    });
+  }, [editor, raise, dismiss, t]);
 
   function beginRename() {
     setDraft(editor.projectName);

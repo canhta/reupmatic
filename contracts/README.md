@@ -76,11 +76,13 @@ The renderer preallocates a unique `request_id` before invoking `reupmatic:rende
 
 Empty display cues skip `subtitles.save`. A trusted batch caller may pass a previously registered SRT ID as a separate coordinator argument, mutually exclusive with edited cues; the renderer cannot inject that argument. Actual output/input limits remain in the worker. The public desktop render request still has the same fields and version.
 
-[project.schema.json](project.schema.json) defines the bounded project file: `format`, `version`, original source path/hash and edited display cues. `.reupmatic.json` is UTF-8 JSON with a 2 MiB exercise safety limit. Reject unsupported versions and unknown fields; parse and validate completely before replacing UI state. Cross-field validation uses the shared cue validator and explicit time checks. Loading a file is never permission to execute instructions, download models, upload media or publish.
+[project.schema.json](project.schema.json) defines the bounded project file: `format`, the required `name`, original source path/hash and the edited display cues, plus optional line-length, media, processing, soundtrack, voice-track, composition and text-layer sections. `.reupmatic.json` is UTF-8 JSON with a 2 MiB exercise safety limit. Reject unsupported versions and unknown fields; parse and validate completely before replacing UI state. Cross-field validation uses the shared cue validator and explicit time checks. Loading a file is never permission to execute instructions, download models, upload media or publish.
 
 A native file picker authorizes the project, then a second native choice identifies the original video (the stored path is only a hint). Worker registration checks its hash against the project; a moved file with the same contents works. Invalid/mismatched input leaves the existing editor untouched. Project save takes an immutable snapshot and the caller revision. A successful save only clears dirty state if that edit revision is still current; edits made during the dialog remain unsaved.
 
-Save uses a temporary file in the destination directory, file sync and rename without first deleting the destination. Same path, symlink and detectable hardlink references to protected originals are refused. No folder/retention policy, source deletion, autosave, undo-history persistence, saved render cache, multi-clip timeline or reusable profile is implemented by this contract. Directory fsync/power-loss guarantees and target-OS filesystem behavior need separate testing.
+Reopen policy: the one **Open project** action always asks for the project file and then its source video, treating the stored source path only as a picker hint. **Open Recent** is a shortcut over host-recorded paths: it reopens the project file and source from their stored paths without pickers, refuses by name (`PROJECT_MISSING`, `SOURCE_MISSING`) when either is gone, and prunes the dead Recent entry. The renderer never names a project path; the host authorises every saved path through its own pickers or a prior open.
+
+Save uses a temporary file in the destination directory, file sync and rename without first deleting the destination. Same path, symlink and detectable hardlink references to protected originals are refused. The editor keeps a host-local recovery draft in SQLite (capped, evicted oldest-first) so unsaved work survives a crash; a draft is not the project file and is dropped once its work is saved. No folder/retention policy, source deletion, undo-history persistence, saved render cache or reusable profile is implemented by this contract. Directory fsync/power-loss guarantees and target-OS filesystem behavior need separate testing.
 
 ## Local manual batch
 [Batch submit schema](batch-submit.schema.json) and [example](examples/batch-submit.json) describe the renderer admission request. Native picker results provide video/subtitle/output IDs; no renderer-supplied source path, destination path, shell argument, URL, provider or credit operation is admitted. Contracts live in `app/core/batch/batch-contracts.ts`; the allowlisted IPC verbs are defined in `app/electron/features/batch/ipc.ts` and preload. `BatchQueue` owns the current SQLite journal, restart reconciliation, and restoration of protected input paths; host and CLI callers supply the database path plus worker/render adapters without constructing the store.
@@ -192,8 +194,8 @@ and passed to libass as `fontsdir`, while the live monitor loads the same files 
 so the preview and the burn resolve one font file. An older project that names a system font fails
 loudly on load, like any unsupported format; there is no fallback.
 
-Current first-party Library schema is 6; current project schema is 6. These are
-current contracts only, not promises to read prior data. Unsupported data fails
+The current project schema is `reupmatic.project` v8; first-party stores are current-format
+only. These are current contracts only, not promises to read prior data. Unsupported data fails
 without a migration, reset or deletion.
 
 

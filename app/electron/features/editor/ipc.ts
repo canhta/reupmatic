@@ -8,9 +8,16 @@ import { outputFrame } from '../../../core/editing/geometry-preview.js';
 import { parseProjectMedia } from '../../../core/editing/project-media.js';
 import type { Soundtrack } from '../../../core/editing/soundtrack.js';
 import { saveChosenExport } from '../../../core/media/files.js';
-import { createProject, loadProject, saveProject } from '../../../core/projects/project.js';
+import {
+  authorizedProjectPath,
+  createProject,
+  loadProject,
+  normalizeProjectFilename,
+  saveProject,
+} from '../../../core/projects/project.js';
 import type { RecentEntry } from '../../../core/projects/recent.js';
 import type { RenderCoordinator, RenderInput } from '../../../core/rendering/render-coordinator.js';
+import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track.js';
 import { assertCues } from '../../../core/subtitles/cues.js';
 import { parseLineLengthSettings } from '../../../core/subtitles/split.js';
 import { parseSubtitleStyle } from '../../../core/subtitles/style.js';
@@ -40,6 +47,7 @@ interface Host {
   library: Awaited<ReturnType<typeof installLibrary>>;
   workspace: string;
   savePath(name: string): string;
+  verifyVoice?(track: VoiceTrack): Promise<unknown>;
   onRecentChanged?(): void;
 }
 
@@ -56,16 +64,24 @@ function previewCanvas(value: unknown): { width: number; height: number } {
   return { width: record.width as number, height: record.height as number };
 }
 
-export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]> } {
+export function installEditor(host: Host): {
+  recentList(): Promise<RecentEntry[]>;
+  requestSessionAction(action: 'save' | 'discard'): Promise<boolean>;
+} {
   const { wire, worker, media } = host;
   installAudio(host);
   installComposition(host);
   const recent = new RecentStore(path.join(host.workspace, 'recent.json'));
-  async function recordRecent(entry: RecentEntry) {
-    await recent.record(entry);
+  // Resolved project paths the host has authorised through its own pickers or a prior open.
+  const authorizedProjects = new Set<string>();
+  function notifyRecentChanged() {
     const window = host.getWindow();
     if (!window.isDestroyed()) window.webContents.send('reupmatic:recent-changed');
     host.onRecentChanged?.();
+  }
+  async function recordRecent(entry: RecentEntry) {
+    await recent.record(entry);
+    notifyRecentChanged();
   }
   wire('hello', () => worker.request('hello', {}).result);
   wire('open', async () => {
@@ -87,6 +103,11 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     return media.publicVideo(video);
   });
   wire('recent-list', () => recent.list());
+  wire('recent-remove', async (input) => {
+    const list = await recent.remove(input.id);
+    notifyRecentChanged();
+    return list;
+  });
   // One dialog for all Project media kinds; the chosen extension decides the kind.
   wire('import-media', async (input) => {
     const kind = (input as { kind?: unknown } | undefined)?.kind;
@@ -312,17 +333,11 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
         filters: [{ name: 'Reupmatic project', extensions: ['json'] }],
       });
       if (chosen.canceled || !chosen.filePath) return null;
-      filePath = chosen.filePath;
+      // A name the native dialog returns is normalised and authorised for future saves.
+      filePath = normalizeProjectFilename(chosen.filePath);
+      authorizedProjects.add(path.resolve(filePath));
     } else {
-      if (
-        typeof value.path !== 'string' ||
-        !value.path ||
-        value.path.length > 4096 ||
-        value.path.includes('\0')
-      ) {
-        throw new Error('INVALID_REQUEST');
-      }
-      filePath = value.path;
+      filePath = authorizedProjectPath(value.path, authorizedProjects);
     }
     await saveProject(filePath, project, media.originalPaths);
     await recordRecent({
@@ -352,6 +367,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       filters: [{ name: 'Reupmatic project', extensions: ['json'] }],
     });
     if (chosen.canceled) return null;
+    authorizedProjects.add(path.resolve(chosen.filePaths[0]));
     const project = await loadProject(chosen.filePaths[0]);
     const video = await dialog.showOpenDialog(host.getWindow(), {
       title:
@@ -373,6 +389,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       project,
       source,
       host.getLanguage(),
+      host.verifyVoice,
     );
     if (!snapshot) return null;
     await recordRecent({
@@ -387,14 +404,39 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
   });
   // Reopens straight from stored paths; missing files fail loudly, no fallback pickers.
   wire('open-project-path', async (input) => {
-    const project = await loadProject(input.path);
-    const source = await media.registerVideo(project.source.path);
+    const entry = (await recent.list()).find(
+      (item) => item.kind === 'project' && item.path === input.path,
+    );
+    if (!entry && !authorizedProjects.has(path.resolve(input.path)))
+      throw new Error('INVALID_REQUEST');
+    let project: Awaited<ReturnType<typeof loadProject>>;
+    try {
+      project = await loadProject(input.path);
+    } catch (error) {
+      // A dead Recent entry is pruned and reported by name, never as a generic failure.
+      if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        await recent.remove(input.path);
+        notifyRecentChanged();
+        throw new Error('PROJECT_MISSING');
+      }
+      throw error;
+    }
+    authorizedProjects.add(path.resolve(input.path));
+    let source: Awaited<ReturnType<typeof media.registerVideo>>;
+    try {
+      source = await media.registerVideo(project.source.path);
+    } catch (error) {
+      if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT')
+        throw new Error('SOURCE_MISSING');
+      throw error;
+    }
     const snapshot = await restoreProjectSnapshot(
       media,
       host.getWindow(),
       project,
       source,
       host.getLanguage(),
+      host.verifyVoice,
     );
     if (!snapshot) return null;
     await recordRecent({
@@ -507,5 +549,28 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       ...(exportId ? { export_id: exportId } : {}),
     };
   });
-  return { recentList: () => recent.list() };
+  // The quit dialog asks the renderer to save or drop its draft; false means stay open.
+  let pendingSession: { id: string; finish(ok: boolean): void } | undefined;
+  wire('session-close-result', (input) => {
+    if (!pendingSession || input.request_id !== pendingSession.id)
+      throw new Error('INVALID_REQUEST');
+    pendingSession.finish(input.completed);
+    return null;
+  });
+  function requestSessionAction(action: 'save' | 'discard'): Promise<boolean> {
+    const window = host.getWindow();
+    if (window.isDestroyed() || pendingSession) return Promise.resolve(false);
+    return new Promise((resolve) => {
+      const id = randomUUID();
+      const finish = (ok: boolean) => {
+        clearTimeout(timer);
+        if (pendingSession?.id === id) pendingSession = undefined;
+        resolve(ok);
+      };
+      const timer = setTimeout(() => finish(false), 120000);
+      pendingSession = { id, finish };
+      window.webContents.send('reupmatic:session-close-request', { request_id: id, action });
+    });
+  }
+  return { recentList: () => recent.list(), requestSessionAction };
 }

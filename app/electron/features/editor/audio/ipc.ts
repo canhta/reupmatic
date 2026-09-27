@@ -24,9 +24,11 @@ export async function restoreProjectAudio(
   media: MediaRegistry,
   window: BrowserWindow,
   soundtrack: Soundtrack | undefined,
+  language = 'en',
 ): Promise<Soundtrack | null | undefined> {
   if (!soundtrack) return undefined;
   const chosen = await dialog.showOpenDialog(window, {
+    title: language === 'vi' ? 'Chọn nhạc nền của project' : 'Choose the project soundtrack',
     properties: ['openFile'],
     filters: audioFilters,
     defaultPath: soundtrack.source.path.startsWith('\\\\') ? undefined : soundtrack.source.path,
