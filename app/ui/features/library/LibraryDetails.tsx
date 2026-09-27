@@ -1,4 +1,3 @@
-import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -38,23 +37,18 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
 
   return (
     <Section variant="transparent" padding={0} aria-label={t('libraryDetails')}>
-      <HStack gap={2} vAlign="center" wrap="wrap">
-        {}
-        {openable && (
-          <Button
-            label={t('libraryOpen')}
-            tooltip={t('libraryOpen')}
-            variant="primary"
-            isDisabled={busy}
-            onClick={() => void onAction(() => onOpen(current.id))}
-          />
-        )}
-      </HStack>
-      {}
+      {openable && (
+        <Button
+          label={t('libraryOpen')}
+          tooltip={t('libraryOpen')}
+          variant="primary"
+          isDisabled={busy}
+          onClick={() => void onAction(() => onOpen(current.id))}
+        />
+      )}
       <div className="library-detail-facts">
         <MetadataList label={{ position: 'start' }}>
           <MetadataListItem label={t('libraryDuration')}>
-            {}
             {duration === null ? (
               '—'
             ) : (
@@ -77,7 +71,6 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
           <MetadataListItem label={t('libraryStorage')}>
             {t(item.storage === 'copy' ? 'libraryCopy' : 'libraryReference')}
           </MetadataListItem>
-          {}
           <MetadataListItem label={t('libraryOrigin')}>
             {t(`libraryFilterOrigin_${item.origin.kind}`)}
           </MetadataListItem>
@@ -90,14 +83,7 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
           )}
           <MetadataListItem label={t('libraryStatus')}>
             <div className="library-detail-state">
-              {needsAttention ? (
-                <Badge
-                  variant={item.availability === 'missing' ? 'error' : 'warning'}
-                  label={t(`libraryAvailability_${item.availability}`)}
-                />
-              ) : (
-                t(`libraryAvailability_${item.availability}`)
-              )}
+              <Text type="body">{t(`libraryAvailability_${item.availability}`)}</Text>
               {needsAttention && (
                 <Button
                   label={t('libraryRelink')}
@@ -119,9 +105,9 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
           </MetadataListItem>
         </MetadataList>
       </div>
-      {item.links.length > 0 ? (
+      {item.links.length > 0 && (
         <>
-          <Heading level={5}>{t('libraryRelated')}</Heading>
+          <Heading level={4}>{t('libraryRelated')}</Heading>
           <Text as="p" type="body">
             {t('libraryPage', {
               from: 1,
@@ -130,34 +116,30 @@ export function LibraryDetails({ item, busy, onAction, onOpen }: Props) {
             })}
           </Text>
         </>
-      ) : (
-        <Text as="p" type="supporting">
-          {t('libraryNoLinks')}
-        </Text>
       )}
-      <Collapsible trigger={t('libraryMoreActions')} defaultIsOpen={false}>
-        <div className="library-detail-more">
-          <Button
-            label={t('libraryReveal')}
-            tooltip={t('libraryReveal')}
-            isDisabled={busy}
-            onClick={() =>
-              void onAction(async () => {
-                await unwrap(window.reupmatic.libraryReveal(current.id));
-              })
-            }
-          />
-          <Collapsible trigger={t('libraryHash')} defaultIsOpen={false}>
-            <code>{item.sha256}</code>
-          </Collapsible>
-          <Button
-            label={t('libraryForget')}
-            tooltip={t('libraryForget')}
-            variant="destructive"
-            isDisabled={busy}
-            onClick={() => void onAction(forget)}
-          />
-        </div>
+      <HStack gap={2} vAlign="center" wrap="wrap">
+        <Button
+          label={t('libraryReveal')}
+          tooltip={t('libraryReveal')}
+          isDisabled={busy}
+          onClick={() =>
+            void onAction(async () => {
+              await unwrap(window.reupmatic.libraryReveal(current.id));
+            })
+          }
+        />
+        <Button
+          label={t('libraryForget')}
+          tooltip={t('libraryForget')}
+          variant="destructive"
+          isDisabled={busy}
+          onClick={() => void onAction(forget)}
+        />
+      </HStack>
+      <Collapsible trigger={t('libraryHash')} defaultIsOpen={false}>
+        <Text as="p" type="body" className="numeric">
+          {item.sha256}
+        </Text>
       </Collapsible>
     </Section>
   );

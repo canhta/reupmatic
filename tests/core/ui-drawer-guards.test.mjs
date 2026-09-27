@@ -53,18 +53,11 @@ const ALLOWED = {
   'shell/LocaleSelect.tsx': 'not a drawer surface',
   'shell/NotificationsButton.tsx': 'not a drawer surface',
   'shell/WorkspaceStatusBar.tsx': 'not a drawer surface',
-  // The drawer refactor's own in-progress files, cleared by slice 12 and 13.
+  // Picker contents other slices own.
+  'features/profiles/ProfilePicker.tsx': 'profile picker lands in slices 3-11 (#50)',
+  'features/taxonomy/LabelPicker.tsx': 'label picker lands in slices 3-11 (#50)',
+  // The drawer refactor's own in-progress files, cleared by slice 13.
   'features/batch/': 'batch & jobs land in slice 13 (#50)',
-  'features/distribution/AffiliateManager.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/distribution/ChannelManager.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/distribution/PostEditor.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/distribution/PostPlanFields.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/distribution/PostPublication.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/distribution/TikTokPostOptions.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/library/LibraryDetails.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/library/SourcesWorkspace.tsx': 'detail drawers land in slice 12 (#50)',
-  'features/profiles/': 'detail drawers land in slice 12 (#50)',
-  'features/taxonomy/': 'detail drawers land in slice 12 (#50)',
 };
 
 function isAllowed(relative) {

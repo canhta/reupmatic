@@ -1,7 +1,6 @@
 @import "./base.css";
 @import "./features/catalog/catalog.css" layer(app);
 @import "./design-system/side-panel.css" layer(app);
-@import "./design-system/detail-surface.css" layer(app);
 @import "./features/processing/processing.css";
 @import "./shell/workspace.css" layer(app);
 @import "./features/editor/editor.css" layer(app);

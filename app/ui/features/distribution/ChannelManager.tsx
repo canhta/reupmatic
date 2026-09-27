@@ -32,7 +32,7 @@ import type {
   SaveChannel,
 } from '../../../core/distribution/distribution-contracts';
 import { unwrap } from '../../bridge/client';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
 import { LabelPicker } from '../taxonomy/LabelPicker';
@@ -67,7 +67,7 @@ function ChannelSchedule({ channelId }: { channelId: string }) {
     };
   }, [channelId]);
   if (nearest === undefined) return null;
-  if (!nearest) return <Text type="supporting">{t('channelNoUpcoming')}</Text>;
+  if (!nearest) return <Text type="body">{t('channelNoUpcoming')}</Text>;
   return (
     <Text type="body">
       {t('channelUpcomingAt', {
@@ -239,11 +239,14 @@ export function ChannelManager({
       sortable: true,
       renderCell: (channel) => (
         <>
-          <button type="button" className="business-row-open" onClick={() => openChannel(channel)}>
-            {channel.name}
-          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            label={channel.name}
+            onClick={() => openChannel(channel)}
+          />
           {channel.archived && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('catalogArchived')}
             </Text>
           )}
@@ -329,7 +332,7 @@ export function ChannelManager({
             }
             endContent={
               <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
-                <Text type="supporting">{t('channelsCount', { count: sortedData.length })}</Text>
+                <Text type="body">{t('channelsCount', { count: sortedData.length })}</Text>
                 <Button
                   label={t('channelNew')}
                   variant="primary"
@@ -344,7 +347,7 @@ export function ChannelManager({
             }
           />
           {!all.length ? (
-            <EmptyState title={t('channelsEmpty')} description={t('channelsEmptyHelp')} />
+            <EmptyState title={t('channelsEmpty')} />
           ) : (
             <Table
               density="compact"
@@ -366,7 +369,7 @@ export function ChannelManager({
             />
           )}
         </div>
-        <DetailSurface
+        <SidePanel
           open={editing}
           label={t(draft.expected_revision ? 'channelEdit' : 'channelNew')}
           onClose={() => void closeDetail()}
@@ -415,7 +418,7 @@ export function ChannelManager({
                   {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
                 </Text>
                 {savedChannel?.account_name && (
-                  <Text type="supporting">
+                  <Text type="body">
                     {t('channelConnectedAs', { name: savedChannel.account_name })}
                   </Text>
                 )}
@@ -431,33 +434,27 @@ export function ChannelManager({
                     <HStack gap={2} vAlign="center" wrap="wrap">
                       <Button
                         label={t('channelConnectPage')}
-                        variant="primary"
                         isDisabled={disabled || connecting || !pageId}
                         onClick={() => void completeConnect()}
                       />
                     </HStack>
                   </VStack>
                 ) : (
-                  <>
-                    <HStack gap={2} vAlign="center" wrap="wrap">
-                      <Button
-                        label={
-                          savedChannel?.connection === 'connected'
-                            ? t('channelDisconnect')
-                            : savedChannel?.connection === 'reauthorize'
-                              ? t('channelReconnect')
-                              : t('channelConnect')
-                        }
-                        isDisabled={disabled || connecting}
-                        onClick={() =>
-                          void (savedChannel?.connection === 'connected' ? disconnect() : connect())
-                        }
-                      />
-                    </HStack>
-                    {savedChannel?.connection !== 'connected' && (
-                      <Text type="supporting">{t('channelConnectHelp')}</Text>
-                    )}
-                  </>
+                  <HStack gap={2} vAlign="center" wrap="wrap">
+                    <Button
+                      label={
+                        savedChannel?.connection === 'connected'
+                          ? t('channelDisconnect')
+                          : savedChannel?.connection === 'reauthorize'
+                            ? t('channelReconnect')
+                            : t('channelConnect')
+                      }
+                      isDisabled={disabled || connecting}
+                      onClick={() =>
+                        void (savedChannel?.connection === 'connected' ? disconnect() : connect())
+                      }
+                    />
+                  </HStack>
                 )}
                 {connectError && (
                   <Text as="p" type="body" className="inline-error" role="alert">
@@ -473,7 +470,7 @@ export function ChannelManager({
                   {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
                 </Text>
                 {savedChannel?.account_name && (
-                  <Text type="supporting">
+                  <Text type="body">
                     {t('channelConnectedAs', { name: savedChannel.account_name })}
                   </Text>
                 )}
@@ -494,9 +491,6 @@ export function ChannelManager({
                     }
                   />
                 </HStack>
-                {savedChannel?.connection !== 'connected' && (
-                  <Text type="supporting">{t('channelConnectGoogleHelp')}</Text>
-                )}
                 {connectError && (
                   <Text as="p" type="body" className="inline-error" role="alert">
                     {connectError}
@@ -511,7 +505,7 @@ export function ChannelManager({
                   {t(`connection_${savedChannel?.connection ?? 'not_connected'}`)}
                 </Text>
                 {savedChannel?.account_name && (
-                  <Text type="supporting">
+                  <Text type="body">
                     {t('channelConnectedAs', { name: savedChannel.account_name })}
                   </Text>
                 )}
@@ -532,9 +526,6 @@ export function ChannelManager({
                     }
                   />
                 </HStack>
-                {savedChannel?.connection !== 'connected' && (
-                  <Text type="supporting">{t('channelConnectHelpTikTok')}</Text>
-                )}
                 {connectError && (
                   <Text as="p" type="body" className="inline-error" role="alert">
                     {connectError}
@@ -553,9 +544,6 @@ export function ChannelManager({
               isDisabled={disabled}
               onChange={(archived) => setDraft({ ...draft, archived })}
             />
-            <Text as="p" type="supporting">
-              {t('channelArchiveHelp')}
-            </Text>
             <HStack gap={2} vAlign="center" wrap="wrap">
               <Button
                 label={t('catalogSave')}
@@ -570,10 +558,10 @@ export function ChannelManager({
                 isDisabled={disabled || !dirty}
                 onClick={() => void form.reset()}
               />
-              {dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
+              {dirty && <Text type="body">{t('catalogUnsaved')}</Text>}
             </HStack>
           </VStack>
-        </DetailSurface>
+        </SidePanel>
       </div>
     </div>
   );

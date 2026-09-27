@@ -13,7 +13,7 @@ import { hasContentFilters } from '../../../core/library/content-filters';
 import type { ContentEntry } from '../../../core/library/library-contracts';
 import { unwrap } from '../../bridge/client';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useEditor } from '../editor/EditorContext';
 import { ContentLabels } from '../taxonomy/ContentLabels';
@@ -155,7 +155,6 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
             <Banner
               status="error"
               title={t(libraryErrorKey(library.error))}
-              description={<code>{library.error}</code>}
               endContent={
                 <Button
                   label={t('retryLoad')}
@@ -244,7 +243,7 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
                   <EmptyState title={t('libraryEmpty')} />
                 )}
                 {page && page.items.length > 0 && filtersActive && (
-                  <Text as="p" type="supporting" role="status">
+                  <Text as="p" type="body" role="status">
                     {t('libraryFilterMatch', { count: page.total })}
                   </Text>
                 )}
@@ -267,7 +266,7 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
                   />
                 )}
               </div>
-              <DetailSurface
+              <SidePanel
                 open={Boolean(active)}
                 label={active?.name ?? ''}
                 onClose={() => library.setActiveId('')}
@@ -281,7 +280,6 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
                       onOpen={open}
                     />
                     <ContentLabels item={active} disabled={disabled} />
-                    {}
                     <Collapsible trigger={t('assetRelated')} defaultIsOpen={false}>
                       <LibraryAssetBrowser
                         key={active.id}
@@ -292,7 +290,7 @@ export function SourcesWorkspace({ batchBusy, onBatch, onEditor }: Props) {
                     </Collapsible>
                   </>
                 )}
-              </DetailSurface>
+              </SidePanel>
             </div>
           </div>
         </div>

@@ -22,7 +22,7 @@ import type {
   PostSortKey,
 } from '../../../core/distribution/distribution-contracts';
 import { unwrap } from '../../bridge/client';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { toSortQuery } from '../../design-system/table-sort';
 import { registerMenuCommand } from '../../shell/menuCommands';
 import { useCatalog } from '../catalog/CatalogProvider';
@@ -121,9 +121,7 @@ export function PostBrowser({
       width: proportional(2),
       sortable: true,
       renderCell: (post) => (
-        <button type="button" className="business-row-open" onClick={() => openPost(post)}>
-          {post.title}
-        </button>
+        <Button variant="ghost" size="sm" label={post.title} onClick={() => openPost(post)} />
       ),
     },
     {
@@ -250,7 +248,6 @@ export function PostBrowser({
           ) : !page.items.length && !search ? (
             <EmptyState
               title={t(filter.view === 'published' ? 'postsPublishedEmpty' : 'postsEmpty')}
-              description={filter.view === 'published' ? undefined : t('postsEmptyHelp')}
             />
           ) : (
             <Table
@@ -277,7 +274,7 @@ export function PostBrowser({
             </Text>
           )}
         </div>
-        <DetailSurface
+        <SidePanel
           open={editing}
           label={t(form.value.saved ? 'postEdit' : 'postNew')}
           onClose={() => void closeDetail()}
@@ -289,7 +286,7 @@ export function PostBrowser({
               setEditing(false);
             }}
           />
-        </DetailSurface>
+        </SidePanel>
       </div>
     </div>
   );

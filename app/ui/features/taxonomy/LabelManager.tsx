@@ -25,7 +25,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Label, SaveLabel } from '../../../core/taxonomy/taxonomy-contracts';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
 
@@ -103,11 +103,9 @@ export function LabelManager() {
       sortable: true,
       renderCell: (label) => (
         <>
-          <button type="button" className="business-row-open" onClick={() => openLabel(label)}>
-            {label.name}
-          </button>
+          <Button variant="ghost" size="sm" label={label.name} onClick={() => openLabel(label)} />
           {label.archived && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('catalogArchived')}
             </Text>
           )}
@@ -182,7 +180,7 @@ export function LabelManager() {
             }
             endContent={
               <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
-                <Text type="supporting">{t('labelsCount', { count: sortedData.length })}</Text>
+                <Text type="body">{t('labelsCount', { count: sortedData.length })}</Text>
                 <Button
                   label={t('labelCreate')}
                   variant="primary"
@@ -216,7 +214,7 @@ export function LabelManager() {
             />
           )}
         </div>
-        <DetailSurface
+        <SidePanel
           open={editing}
           label={t(draft.expected_revision ? 'labelEdit' : 'labelCreate')}
           onClose={() => void closeDetail()}
@@ -258,10 +256,10 @@ export function LabelManager() {
                 isDisabled={disabled || !form.dirty}
                 onClick={() => void form.reset()}
               />
-              {form.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
+              {form.dirty && <Text type="body">{t('catalogUnsaved')}</Text>}
             </HStack>
           </VStack>
-        </DetailSurface>
+        </SidePanel>
       </div>
     </div>
   );

@@ -52,7 +52,7 @@ test('Library rows carry every command in a context menu, by pointer and by keyb
       await row.click({ button: 'right' });
       const menu = page.getByRole('menu');
       await menu.waitFor();
-      for (const command of ['Open in Editor', 'Show in folder', 'Remove library listing']) {
+      for (const command of ['Open in Editor', 'Reveal', 'Remove']) {
         assert.equal(
           await menu.getByRole('menuitem', { name: command, exact: true }).count(),
           1,
@@ -60,7 +60,7 @@ test('Library rows carry every command in a context menu, by pointer and by keyb
         );
       }
       assert.equal(
-        await menu.getByRole('menuitem', { name: 'Locate moved source', exact: true }).count(),
+        await menu.getByRole('menuitem', { name: 'Relink', exact: true }).count(),
         0,
         'relink is offered for a source that is not missing or changed',
       );

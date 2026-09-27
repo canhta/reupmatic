@@ -22,7 +22,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProcessingProfile, SaveProfile } from '../../../core/profiles/profile-contracts';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { useNotifications } from '../../shell/NotificationsProvider';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
@@ -111,11 +111,14 @@ export function ProfileManager() {
       sortable: true,
       renderCell: (profile) => (
         <>
-          <button type="button" className="business-row-open" onClick={() => openProfile(profile)}>
-            {profile.name}
-          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            label={profile.name}
+            onClick={() => openProfile(profile)}
+          />
           {profile.archived && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('catalogArchived')}
             </Text>
           )}
@@ -219,7 +222,7 @@ export function ProfileManager() {
             endContent={
               <HStack gap={2} vAlign="center" wrap="wrap">
                 {all.length > 0 && (
-                  <Text type="supporting">{t('profilesCount', { count: sortedData.length })}</Text>
+                  <Text type="body">{t('profilesCount', { count: sortedData.length })}</Text>
                 )}
                 <Button
                   label={t('profileNew')}
@@ -264,7 +267,7 @@ export function ProfileManager() {
             />
           )}
         </div>
-        <DetailSurface
+        <SidePanel
           open={editing}
           label={t(value.expected_revision ? 'profileEdit' : 'profileNew')}
           onClose={() => void closeDetail()}
@@ -304,10 +307,10 @@ export function ProfileManager() {
                 isDisabled={disabled || !draft.dirty}
                 onClick={() => void draft.reset()}
               />
-              {draft.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
+              {draft.dirty && <Text type="body">{t('catalogUnsaved')}</Text>}
             </HStack>
           </VStack>
-        </DetailSurface>
+        </SidePanel>
       </div>
     </div>
   );

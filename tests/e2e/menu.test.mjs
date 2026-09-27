@@ -220,7 +220,7 @@ test('Menu > Channels > New Post switches tabs and opens the same create-draft f
       await waitForEditorReady(page);
       await clickMenuItem(application, 'Channels', 'New Post…');
       await page.getByRole('button', { name: 'Channels & Affiliate', exact: true }).waitFor();
-      await page.getByRole('button', { name: 'Create destination draft', exact: true }).waitFor();
+      await page.getByRole('button', { name: 'New post', exact: true }).waitFor();
       await page.getByRole('textbox', { name: 'Post title', exact: true }).waitFor();
     },
   );

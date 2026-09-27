@@ -23,7 +23,7 @@ import type {
   AffiliateLink,
   SaveAffiliate,
 } from '../../../core/distribution/distribution-contracts';
-import { DetailSurface } from '../../design-system/DetailSurface';
+import { SidePanel } from '../../design-system/SidePanel';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
 import { LabelPicker } from '../taxonomy/LabelPicker';
@@ -86,11 +86,9 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
       sortable: true,
       renderCell: (link) => (
         <>
-          <button type="button" className="business-row-open" onClick={() => openLink(link)}>
-            {link.name}
-          </button>
+          <Button variant="ghost" size="sm" label={link.name} onClick={() => openLink(link)} />
           {link.archived && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('catalogArchived')}
             </Text>
           )}
@@ -158,9 +156,7 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
           }
           endContent={
             <HStack gap={2} vAlign="center" wrap="wrap" hAlign="between">
-              <Text type="supporting">
-                {t('affiliateLinksCount', { count: sortedData.length })}
-              </Text>
+              <Text type="body">{t('affiliateLinksCount', { count: sortedData.length })}</Text>
               <Button
                 label={t('affiliateNew')}
                 variant="primary"
@@ -196,7 +192,7 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
           />
         )}
       </div>
-      <DetailSurface
+      <SidePanel
         open={editing}
         label={t(draft.expected_revision ? 'affiliateEdit' : 'affiliateNew')}
         onClose={() => void closeDetail()}
@@ -216,9 +212,6 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
               onChange={(url) => setDraft({ ...draft, url })}
             />
           </FormLayout>
-          <Text as="p" type="supporting">
-            {t('affiliateUrlHelp')}
-          </Text>
           <LabelPicker
             value={draft.label_ids}
             disabled={disabled}
@@ -230,9 +223,6 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
             isDisabled={disabled}
             onChange={(archived) => setDraft({ ...draft, archived })}
           />
-          <Text as="p" type="supporting">
-            {t('affiliateSnapshotHelp')}
-          </Text>
           <HStack gap={2} vAlign="center" wrap="wrap">
             <Button
               label={t('catalogSave')}
@@ -250,10 +240,10 @@ export function AffiliateManager({ onPosts }: { onPosts(id: string): void }) {
               isDisabled={disabled || !dirty}
               onClick={() => void form.reset()}
             />
-            {dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
+            {dirty && <Text type="body">{t('catalogUnsaved')}</Text>}
           </HStack>
         </VStack>
-      </DetailSurface>
+      </SidePanel>
     </div>
   );
 }

@@ -137,11 +137,11 @@ export function TikTokPostOptions({
                 : t('tiktokDisclosurePromotional')}
             </Text>
           ) : (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('tiktokDisclosureRequired')}
             </Text>
           )}
-          <Text as="p" type="supporting">
+          <Text as="p" type="body">
             {t('tiktokDisclosureConsent')}{' '}
             <Link href={MUSIC_USAGE_URL} isExternalLink>
               {t('tiktokMusicUsage')}
@@ -157,7 +157,7 @@ export function TikTokPostOptions({
             )}
           </Text>
           {options.brand_content_toggle && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('tiktokPrivacyBrandedBlocked')}
             </Text>
           )}

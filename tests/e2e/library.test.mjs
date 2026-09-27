@@ -119,17 +119,13 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       const surfaceA = page.getByRole('complementary', { name: 'vacation-clip.mp4' });
       await surfaceA.waitFor();
       await surfaceA.getByRole('button', { name: 'Open in Editor', exact: true }).waitFor();
-      // Focus is rAF-deferred by DetailSurface, so poll rather than assume it landed.
-      await page.waitForFunction(() => document.activeElement?.closest('.detail-surface') !== null);
+      // Focus is rAF-deferred by SidePanel, so poll rather than assume it landed.
+      await page.waitForFunction(() => document.activeElement?.closest('.side-panel') !== null);
 
-      await surfaceA
-        .getByText('Open in Editor and save a file to link it here.', { exact: false })
-        .waitFor();
       assert.equal(await surfaceA.getByText('0–0 of 0 items', { exact: true }).count(), 0);
 
-      await surfaceA.getByRole('button', { name: 'More actions', exact: true }).click();
-      await surfaceA.getByRole('button', { name: 'Show in folder', exact: true }).waitFor();
-      await surfaceA.getByRole('button', { name: 'Remove library listing', exact: true }).waitFor();
+      await surfaceA.getByRole('button', { name: 'Reveal', exact: true }).waitFor();
+      await surfaceA.getByRole('button', { name: 'Remove', exact: true }).waitFor();
 
       assert.equal(
         await surfaceA.getByRole('tab', { name: 'Assets', exact: true }).count(),
@@ -152,7 +148,7 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       await page.getByRole('cell', { name: 'vacation-clip.mp4', exact: true }).click();
       const drawerA = page.getByRole('complementary', { name: 'vacation-clip.mp4' });
       await drawerA.waitFor();
-      const drawerScroll = page.locator('.detail-surface-scroll');
+      const drawerScroll = page.locator('.side-panel-content');
       await drawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });
@@ -187,7 +183,7 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
         },
         path.join(temp, 'product-demo-moved.mp4'),
       );
-      await surfaceB.getByRole('button', { name: 'Locate moved source', exact: true }).click();
+      await surfaceB.getByRole('button', { name: 'Relink', exact: true }).click();
       await surfaceB.getByText('Verified at last access', { exact: true }).waitFor();
       await surfaceB.getByRole('button').first().focus();
       await page.keyboard.press('Escape');
@@ -202,13 +198,10 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       await page.getByRole('cell', { name: 'vacation-clip.mp4', exact: true }).click();
       const vietnameseSurface = page.getByRole('complementary', { name: 'vacation-clip.mp4' });
       await vietnameseSurface.waitFor();
-      await vietnameseSurface
-        .getByText('Mở trong Editor rồi lưu file để liên kết vào đây.', { exact: false })
-        .waitFor();
       assert.equal(await vietnameseSurface.getByText('0–0 trên 0 mục', { exact: true }).count(), 0);
 
       await page.setViewportSize({ width: 1050, height: 700 });
-      const vietnameseDrawerScroll = page.locator('.detail-surface-scroll');
+      const vietnameseDrawerScroll = page.locator('.side-panel-content');
       await vietnameseDrawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });

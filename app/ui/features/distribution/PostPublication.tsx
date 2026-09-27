@@ -22,10 +22,12 @@ export function PostPublication({
   post,
   onUpdated,
   disabled,
+  isDirty = false,
 }: {
   post: Post;
   onUpdated(post: Post): void;
   disabled: boolean;
+  isDirty?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const catalog = useCatalog();
@@ -130,7 +132,7 @@ export function PostPublication({
       </HStack>
 
       {post.publication?.privacy && (phase === 'published' || phase === 'scheduled') && (
-        <Text as="p" type="supporting">
+        <Text as="p" type="body">
           {t('postPrivacy')}: {t(PRIVACY_KEYS[post.publication.privacy])}
         </Text>
       )}
@@ -140,7 +142,7 @@ export function PostPublication({
         </Text>
       )}
       {!channel.can_publish && phase === null && (
-        <Text as="p" type="supporting">
+        <Text as="p" type="body">
           {t('postConnectionRequired')}
         </Text>
       )}
@@ -158,7 +160,7 @@ export function PostPublication({
             label={t('postPublication')}
             hasValueLabel
           />
-          <Text as="p" type="supporting">
+          <Text as="p" type="body">
             {progress !== null && progress < 1
               ? t('postPublishUploading', { percent: Math.round(progress * 100) })
               : t('postPublishFinishing')}
@@ -167,7 +169,7 @@ export function PostPublication({
       )}
 
       {showPublish && problems === null && (
-        <Text as="p" type="supporting">
+        <Text as="p" type="body">
           {t('postPreflightLoading')}
         </Text>
       )}
@@ -190,7 +192,9 @@ export function PostPublication({
               post.planned && platform !== 'tiktok' ? t('postPublishScheduled') : t('postPublish')
             }
             variant="primary"
-            isDisabled={disabled || publishing || blocking.length > 0 || problems === null}
+            isDisabled={
+              disabled || publishing || blocking.length > 0 || problems === null || isDirty
+            }
             onClick={() => void publish()}
           />
         </HStack>

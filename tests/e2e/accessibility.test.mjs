@@ -18,7 +18,7 @@ test('Vietnamese IME composition commits diacritics in a search field and a reco
     assert.equal(await search.inputValue(), 'Việt Nam');
 
     await page.getByRole('button', { name: 'Channels & Affiliate', exact: true }).click();
-    await page.getByRole('button', { name: 'Add channel configuration', exact: true }).click();
+    await page.getByRole('button', { name: 'Add channel', exact: true }).click();
     const name = page.getByRole('textbox', { name: 'Name', exact: true });
     await name.waitFor();
     await composeText(page, name, 'Kênh Tiếng Việt — Đà Nẵng');
@@ -61,10 +61,10 @@ test('Full keyboard tab order traverses sidebar, toolbar and a record workspace 
       await page.getByRole('textbox', { name: 'Search', exact: true }).focus();
       await page.keyboard.press('ArrowRight');
       const toolbarAction = await page.evaluate(() => document.activeElement?.textContent?.trim());
-      assert.equal(toolbarAction, 'Add channel configuration');
+      assert.equal(toolbarAction, 'Add channel');
 
-      await page.getByRole('button', { name: 'Add channel configuration', exact: true }).click();
-      const surface = page.getByRole('complementary', { name: 'Add channel configuration' });
+      await page.getByRole('button', { name: 'Add channel', exact: true }).click();
+      const surface = page.getByRole('complementary', { name: 'Add channel' });
       await surface.waitFor();
       for (let i = 0; i < 6; i += 1) {
         await page.keyboard.press('Tab');

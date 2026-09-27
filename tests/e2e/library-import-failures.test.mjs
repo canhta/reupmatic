@@ -131,10 +131,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
       await page.getByRole('cell', { name: 'linked-clip.mp4', exact: true }).click();
       const inUseSurface = page.getByRole('complementary', { name: 'linked-clip.mp4' });
       await inUseSurface.waitFor();
-      await inUseSurface.getByRole('button', { name: 'More actions', exact: true }).click();
-      await inUseSurface
-        .getByRole('button', { name: 'Remove library listing', exact: true })
-        .click();
+      await inUseSurface.getByRole('button', { name: 'Remove', exact: true }).click();
       const inUseConfirm = page.getByRole('alertdialog', { name: 'Remove item?', exact: true });
       await inUseConfirm.waitFor();
       await inUseConfirm.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -145,9 +142,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
       assert.equal(snapshotAfterBlock.data.items.length, 1);
       assert.equal(snapshotAfterBlock.data.items[0].state, 'queued');
 
-      await inUseSurface
-        .getByRole('button', { name: 'Remove library listing', exact: true })
-        .click();
+      await inUseSurface.getByRole('button', { name: 'Remove', exact: true }).click();
       await inUseConfirm.waitFor();
       await inUseConfirm.getByRole('button', { name: 'Cancel', exact: true }).click();
       await inUseConfirm.waitFor({ state: 'hidden' });
@@ -161,10 +156,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
       await page.getByRole('cell', { name: 'standalone-clip.mp4', exact: true }).click();
       const standaloneSurface = page.getByRole('complementary', { name: 'standalone-clip.mp4' });
       await standaloneSurface.waitFor();
-      await standaloneSurface.getByRole('button', { name: 'More actions', exact: true }).click();
-      await standaloneSurface
-        .getByRole('button', { name: 'Remove library listing', exact: true })
-        .click();
+      await standaloneSurface.getByRole('button', { name: 'Remove', exact: true }).click();
       const standaloneConfirm = page.getByRole('alertdialog', {
         name: 'Remove item?',
         exact: true,
@@ -174,9 +166,7 @@ test('forgetting a Library item in a queued batch job is blocked; cancelling a f
       await standaloneConfirm.waitFor({ state: 'hidden' });
       await page.getByRole('cell', { name: 'standalone-clip.mp4', exact: true }).waitFor();
 
-      await standaloneSurface
-        .getByRole('button', { name: 'Remove library listing', exact: true })
-        .click();
+      await standaloneSurface.getByRole('button', { name: 'Remove', exact: true }).click();
       await standaloneConfirm.waitFor();
       await standaloneConfirm.getByRole('button', { name: 'Remove', exact: true }).click();
       await page.getByRole('cell', { name: 'standalone-clip.mp4', exact: true }).waitFor({

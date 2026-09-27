@@ -200,9 +200,6 @@ export function PostEditor({
                 : t('postNoLinks')}
             </MetadataListItem>
           </MetadataList>
-          <Text as="p" type="supporting">
-            {t('postSnapshotHelp')}
-          </Text>
           <Button
             label={t('batchShowOutput')}
             isDisabled={disabled}
@@ -211,6 +208,7 @@ export function PostEditor({
           <PostPublication
             post={draft.saved}
             disabled={disabled}
+            isDirty={form.dirty}
             onUpdated={(updated) => form.replace(postDraft(updated))}
           />
         </>
@@ -247,18 +245,12 @@ export function PostEditor({
             ]}
             onChange={(choice) => setYouTube({ self_declared_made_for_kids: choice === 'yes' })}
           />
-          <Text as="p" type="supporting">
-            {t('postMadeForKidsHelp')}
-          </Text>
           <CheckboxInput
             label={t('postSyntheticMedia')}
             value={youtubeOptions?.contains_synthetic_media ?? false}
             isDisabled={disabled || !youtubeOptions}
             onChange={(contains_synthetic_media) => setYouTube({ contains_synthetic_media })}
           />
-          <Text as="p" type="supporting">
-            {t('postSyntheticMediaHelp')}
-          </Text>
         </VStack>
       )}
       {isTikTok && (
@@ -301,7 +293,7 @@ export function PostEditor({
           isDisabled={disabled || !form.dirty}
           onClick={() => void form.reset()}
         />
-        {form.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
+        {form.dirty && <Text type="body">{t('catalogUnsaved')}</Text>}
       </HStack>
     </VStack>
   );

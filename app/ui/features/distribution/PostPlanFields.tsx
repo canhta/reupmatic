@@ -2,10 +2,13 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateTimeInput, type ISODateTimeString } from '@astryxdesign/core/DateTimeInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import { type PlanDraft, plannedCandidates } from '../../../core/distribution/post-schedule';
+
+const TIME_ZONES = (
+  Intl as unknown as { supportedValuesOf(key: string): string[] }
+).supportedValuesOf('timeZone');
 
 export function PostPlanFields({
   value,
@@ -16,7 +19,7 @@ export function PostPlanFields({
   onChange(value: PlanDraft): void;
   disabled: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   let candidates: number[] = [];
   let error = '';
   if (value.enabled && value.local) {
@@ -57,10 +60,12 @@ export function PostPlanFields({
             isDisabled={disabled}
             onChange={(local) => change({ ...value, local: local ?? '' })}
           />
-          <TextInput
+          <Selector
             label={t('postPlanZone')}
             value={value.timezone}
             isDisabled={disabled}
+            hasSearch
+            options={TIME_ZONES.map((zone) => ({ value: zone, label: zone }))}
             onChange={(timezone) => change({ ...value, timezone })}
           />
           {candidates.length > 1 && (
@@ -71,7 +76,9 @@ export function PostPlanFields({
               isDisabled={disabled}
               options={candidates.map((instant) => ({
                 value: String(instant),
-                label: new Date(instant).toISOString(),
+                label: new Date(instant).toLocaleString(i18n.language, {
+                  timeZone: value.timezone,
+                }),
               }))}
               onChange={(instant) => onChange({ ...value, instant })}
             />
@@ -83,12 +90,13 @@ export function PostPlanFields({
           )}
           {value.instant && !error && (
             <Text as="p" type="body">
-              {t('postPlanInstant', { instant: new Date(Number(value.instant)).toISOString() })}
+              {t('postPlanInstant', {
+                instant: new Date(Number(value.instant)).toLocaleString(i18n.language, {
+                  timeZone: value.timezone,
+                }),
+              })}
             </Text>
           )}
-          <Text as="p" type="supporting">
-            {t('postPlanHelp')}
-          </Text>
         </>
       )}
     </VStack>

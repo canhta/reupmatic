@@ -60,11 +60,14 @@ export function WorkflowList({
       sortable: true,
       renderCell: (workflow) => (
         <>
-          <button type="button" className="business-row-open" onClick={() => onEdit(workflow)}>
-            {workflow.name}
-          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            label={workflow.name}
+            onClick={() => onEdit(workflow)}
+          />
           {workflow.archived && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('catalogArchived')}
             </Text>
           )}
