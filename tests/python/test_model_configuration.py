@@ -29,10 +29,23 @@ class ModelConfigurationTests(unittest.TestCase):
         self.weights.write_bytes(b"test artifact, not a real model")
         self.manifest = self.root / "local.json"
         self.value = {
-            "inpainting": {
-                "model": {
-                    "path": "model.onnx",
-                    "sha256": hashlib.sha256(self.weights.read_bytes()).hexdigest(),
+            "ocr": {
+                "en": {
+                    "det": {
+                        "path": "model.onnx",
+                        "sha256": hashlib.sha256(self.weights.read_bytes()).hexdigest(),
+                    },
+                    "rec": {
+                        "path": "model.onnx",
+                        "sha256": hashlib.sha256(self.weights.read_bytes()).hexdigest(),
+                    },
+                    "keys": {
+                        "path": "model.onnx",
+                        "sha256": hashlib.sha256(self.weights.read_bytes()).hexdigest(),
+                    },
+                    "det_version": "PP-OCRv4",
+                    "rec_version": "PP-OCRv4",
+                    "rec_height": 48,
                 }
             },
         }
@@ -47,10 +60,10 @@ class ModelConfigurationTests(unittest.TestCase):
     def test_valid_manifest_is_normalized_and_retained_without_copying_weights(self):
         result = self.configure()
         saved = json.loads((self.host.workspace / "local-models.json").read_text())
-        self.assertEqual(saved["inpainting"]["model"]["path"], str(self.weights))
+        self.assertEqual(saved["ocr"]["en"]["det"]["path"], str(self.weights))
         self.assertEqual(self.host.models.manifest, self.host.workspace / "local-models.json")
         self.assertTrue(self.weights.is_file())
-        self.assertFalse(result["models"]["inpainting"]["verified"])
+        self.assertFalse(result["models"]["ocr"]["verified"])
 
     def test_bad_checksum_keeps_previous_configuration(self):
         self.configure()
@@ -98,7 +111,7 @@ class ModelConfigurationTests(unittest.TestCase):
         self.assertFalse(target.exists())
         self.assertFalse(result["configured"])
 
-    def _ocr_manifest(self):
+    def _ocr_manifest(self, language="vi"):
         ocr_dir = self.root / "ocr"
         ocr_dir.mkdir()
         files = {}
@@ -111,7 +124,7 @@ class ModelConfigurationTests(unittest.TestCase):
             json.dumps(
                 {
                     "ocr": {
-                        "vi": {
+                        language: {
                             "det": {"path": "ocr/det.onnx", "sha256": files["det.onnx"]},
                             "rec": {"path": "ocr/rec.onnx", "sha256": files["rec.onnx"]},
                             "keys": {"path": "ocr/keys.txt", "sha256": files["keys.txt"]},
@@ -132,13 +145,13 @@ class ModelConfigurationTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             result = merge_models(self.host, {"id": "merge", "params": {"path": str(manifest)}})
         saved = json.loads((self.host.workspace / "local-models.json").read_text())
-        self.assertIn("inpainting", saved, "the earlier capability survives the merge")
-        self.assertIn("ocr", saved)
+        self.assertIn("en", saved["ocr"], "the earlier capability survives the merge")
+        self.assertIn("vi", saved["ocr"])
         self.assertTrue(result["configured"])
         unconfigure_models(self.host, {"params": {"directory": str(ocr_dir)}})
         remaining = json.loads((self.host.workspace / "local-models.json").read_text())
-        self.assertNotIn("ocr", remaining)
-        self.assertIn("inpainting", remaining)
+        self.assertNotIn("vi", remaining["ocr"])
+        self.assertIn("en", remaining["ocr"])
 
 
 if __name__ == "__main__":

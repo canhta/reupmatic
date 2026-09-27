@@ -112,6 +112,7 @@ export const editorEn = {
   exportStepsSummary: 'Steps in this render',
   exportStepSubtitles: 'Burn in subtitles',
   exportStepOcr: 'Recognise on-screen text',
+  exportStepCover: 'Cover original subtitles',
   exportStepTrim: 'Trim',
   exportStepCrop: 'Crop',
   exportStepSpeed: 'Change speed',

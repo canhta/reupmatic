@@ -1,6 +1,7 @@
-// Opt-in suite: the full Editor flow against the real installed speech, translation and
-// inpainting models. It copies the owner's model configuration into an isolated temp workspace,
-// runs the staged interpreter (`python/`) and never uploads or publishes anything.
+// Opt-in suite: the full Editor flow against the real installed speech and translation models.
+// It copies the owner's model configuration into an isolated temp workspace, runs the staged
+// interpreter (`python/`) and never uploads or publishes anything. The export hides the burned-in
+// text with the subtitle cover band.
 //
 // Run it only on request: `npm run test:e2e:models`. It skips itself with a clear message when
 // the staged interpreter or the installed model configuration is absent.
@@ -15,6 +16,7 @@ import { createTempWorkspace, root, runElectronTest } from '../helpers/electron-
 import { addMediaToProject, waitForEditorReady } from '../ui-actions.mjs';
 
 const CONFIGS = ['local-speech.json', 'local-models.json', 'local-translation.json'];
+const SHOTS_DIR = path.join(root, '.test-artifacts');
 const stagedPython =
   process.platform === 'win32'
     ? path.join(root, 'python', 'python.exe')
@@ -192,7 +194,7 @@ async function captureRenderDiagnostics(page) {
   });
 }
 
-test('Editor with real models: recognise, apply, translate and export with object removal', {
+test('Editor with real models: recognise, apply, translate and export with a cover band', {
   timeout: 900000,
 }, async (t) => {
   const missing = missingPrerequisites();
@@ -273,20 +275,34 @@ test('Editor with real models: recognise, apply, translate and export with objec
       );
       await applyTranslation.click();
 
-      // Object removal is export-only; include the fixed rectangle in the render.
-      await page.getByRole('tab', { name: 'Clean up', exact: true }).click();
-      const cleanUp = page.locator('#panel-clean-up');
-      await cleanUp.waitFor({ state: 'visible' });
-      await cleanUp.getByRole('checkbox', { name: 'Include in render', exact: true }).check();
+      // Cover the burned-in original subtitles with the cover band on the render.
+      await page.getByRole('tab', { name: 'Style', exact: true }).click();
+      const style = page.locator('#panel-style');
+      await style.waitFor({ state: 'visible' });
+      await style.getByRole('checkbox', { name: 'Cover original subtitles', exact: true }).check();
 
-      // Export the whole video with the object-removal step.
+      // Export the whole video with the cover band step.
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
       const dialog = page.getByRole('dialog');
-      await dialog.getByText('Remove on-screen text', { exact: true }).waitFor();
+      await dialog.getByText('Cover original subtitles', { exact: true }).waitFor();
       await dialog.getByRole('button', { name: 'Export', exact: true }).click();
       const artifactId = await waitForExport(page, 600000);
-      const exported = await stat(path.join(workspace, 'renders', artifactId, 'output.mp4'));
+      const output = path.join(workspace, 'renders', artifactId, 'output.mp4');
+      const exported = await stat(output);
       assert.ok(exported.size > 1000, 'the export is a real file, never published anywhere');
+      await mkdir(SHOTS_DIR, { recursive: true });
+      execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
+        '-v',
+        'error',
+        '-ss',
+        '0.5',
+        '-i',
+        output,
+        '-frames:v',
+        '1',
+        '-y',
+        path.join(SHOTS_DIR, 'models-exported-frame.png'),
+      ]);
     },
   );
 });

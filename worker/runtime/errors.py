@@ -47,7 +47,6 @@ KNOWN_CODES: frozenset[str] = frozenset(
         "MODEL_NETWORK_DISABLED",
         "MODEL_OUTPUT_INVALID",
         "MODEL_RUNTIME_MISSING",
-        "MODEL_SHAPE_UNSUPPORTED",
         "NO_AUDIO",
         "NO_VIDEO",
         "OUTPUT_DURATION",

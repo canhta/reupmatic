@@ -207,7 +207,6 @@ class VisionService:
                     "RUNTIME_PACK_MISSING",
                     "MODEL_INFERENCE_FAILED",
                     "MODEL_NETWORK_DISABLED",
-                    "MODEL_SHAPE_UNSUPPORTED",
                     "MODEL_OUTPUT_INVALID",
                     "VISION_FRAME_INVALID",
                     "VISION_RESULT_TOO_LARGE",

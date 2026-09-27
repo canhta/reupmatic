@@ -188,7 +188,7 @@ for (const locale of ['en', 'vi']) {
   });
 }
 
-test('Editor tool rail has exactly seven items, keyboard-operable', {
+test('Editor tool rail has exactly six items, keyboard-operable', {
   timeout: 60000,
 }, async () => {
   const { temp, userData } = await createTempWorkspace('reupmatic-e2e-');
@@ -221,19 +221,19 @@ test('Editor tool rail has exactly seven items, keyboard-operable', {
       await tabs.evaluateAll((elements) =>
         elements.map((element) => element.getAttribute('aria-label')),
       ),
-      ['Transcribe', 'Translate', 'Voice', 'Style', 'Clean up', 'Audio', 'Edit'],
+      ['Transcribe', 'Translate', 'Voice', 'Style', 'Audio', 'Edit'],
     );
     assert.deepEqual(
       await tabs.evaluateAll((elements) => elements.map((element) => element.textContent?.trim())),
-      ['', '', '', '', '', '', ''],
+      ['', '', '', '', '', ''],
     );
     const tablist = page.locator('.editor-tool-rail[role="tablist"]');
     assert.equal(await tablist.count(), 1);
     assert.equal(await tablist.getAttribute('aria-orientation'), 'vertical');
     assert.equal(await page.getByRole('tablist').count(), 2);
 
-    const cleanUp = page.getByRole('tab', { name: 'Clean up', exact: true });
-    await cleanUp.focus();
+    const style = page.getByRole('tab', { name: 'Style', exact: true });
+    await style.focus();
     await page.keyboard.press('ArrowDown');
     const audio = page.getByRole('tab', { name: 'Audio', exact: true });
     assert.equal(
@@ -260,8 +260,8 @@ test('Editor tool rail has exactly seven items, keyboard-operable', {
     await audioPanel.waitFor({ state: 'detached' });
     await page.getByRole('tab', { name: 'Style', exact: true }).click();
     await page.locator('#panel-style').waitFor({ state: 'visible' });
-    await page.getByRole('tab', { name: 'Clean up', exact: true }).click();
-    await page.locator('#panel-clean-up').waitFor({ state: 'visible' });
+    await page.getByRole('tab', { name: 'Audio', exact: true }).click();
+    await page.locator('#panel-audio').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#panel-style').count(), 0);
   });
 });
@@ -368,9 +368,12 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
         'a cue block on the timeline must have a real fill, not a transparent/unstyled box',
       );
 
-      const cleanUpTab = page.getByRole('tab', { name: 'Clean up', exact: true });
-      await cleanUpTab.click();
-      const lastControl = page.getByRole('spinbutton', { name: 'Height (%)', exact: true });
+      const styleTab = page.getByRole('tab', { name: 'Style', exact: true });
+      await styleTab.click();
+      const lastControl = page.getByRole('checkbox', {
+        name: 'Cover original subtitles',
+        exact: true,
+      });
       await lastControl.scrollIntoViewIfNeeded();
       const lastControlBox = await lastControl.boundingBox();
       const panelBox = await page.locator('.editor-tool-panel').boundingBox();
@@ -378,9 +381,8 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
       assert.ok(
         lastControlBox.y >= panelBox.y - 1 &&
           lastControlBox.y + lastControlBox.height <= panelBox.y + panelBox.height + 1,
-        'the Clean up panel last control must scroll fully into view within the tool panel',
+        'the Style panel last control must scroll fully into view within the tool panel',
       );
-      await page.getByRole('tab', { name: 'Style', exact: true }).click();
 
       const cuePanel = page.locator('.cue-panel');
       await content.waitFor();
@@ -398,7 +400,7 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
         await tabs.evaluateAll((elements) =>
           elements.map((element) => element.getAttribute('aria-label')),
         ),
-        ['Transcribe', 'Translate', 'Voice', 'Style', 'Clean up', 'Audio', 'Edit'],
+        ['Transcribe', 'Translate', 'Voice', 'Style', 'Audio', 'Edit'],
       );
       assert.deepEqual(
         await page
@@ -436,15 +438,7 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
         'the cue Content column must not be clipped at 1050x700',
       );
 
-      for (const label of [
-        'Transcribe',
-        'Translate',
-        'Voice',
-        'Style',
-        'Clean up',
-        'Audio',
-        'Edit',
-      ]) {
+      for (const label of ['Transcribe', 'Translate', 'Voice', 'Style', 'Audio', 'Edit']) {
         const tabOption = page.getByRole('tab', { name: label, exact: true });
         await tabOption.waitFor({ timeout: 5000 });
         const box = await tabOption.boundingBox({ timeout: 5000 });

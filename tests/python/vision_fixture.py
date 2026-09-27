@@ -68,7 +68,7 @@ class InferenceSession:
             "rec_height": 48,
         }
         manifest = self.root / "manifest.json"
-        manifest.write_text(json.dumps({"ocr": {"en": entry}, "inpainting": {"model": artifact}}))
+        manifest.write_text(json.dumps({"ocr": {"en": entry}}))
         self.env = {**os.environ, "REUPMATIC_MODEL_MANIFEST": str(manifest), "PYTHONPATH": str(sdk)}
         self.source = self.root / "video nguồn.mp4"
         subprocess.run(
@@ -112,12 +112,3 @@ class InferenceSession:
             "asset_id"
         ]
         return session, aid
-
-    def inpaint(self, aid, target="manual"):
-        p = {"asset_id": aid, "start_ms": 0, "end_ms": 1000, "target": target, "padding_px": 0}
-        p.update(
-            {"region": {"x": 0.25, "y": 0.2, "width": 0.5, "height": 0.4}}
-            if target == "manual"
-            else {"language": "en"}
-        )
-        return p

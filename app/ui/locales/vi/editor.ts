@@ -114,6 +114,7 @@ export const editorVi = {
   exportStepsSummary: 'Các bước sẽ render',
   exportStepSubtitles: 'Gắn cứng phụ đề',
   exportStepOcr: 'Nhận dạng chữ trên hình',
+  exportStepCover: 'Che phụ đề gốc',
   exportStepTrim: 'Cắt bớt',
   exportStepCrop: 'Cắt khung hình',
   exportStepSpeed: 'Đổi tốc độ',

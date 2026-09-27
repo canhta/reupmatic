@@ -50,7 +50,7 @@ class VisionContracts(unittest.TestCase):
                 with self.assertRaises(WorkerError):
                     parse_options("media.ocr.extract", params | changed)
 
-    def test_manual_and_text_inpainting_have_distinct_requirements(self):
+    def test_object_removal_is_no_longer_a_request_the_contract_admits(self):
         common = {"asset_id": "known-asset", "start_ms": 0, "end_ms": 1000, "padding_px": 4}
         manual = common | {
             "target": "manual",
@@ -58,10 +58,9 @@ class VisionContracts(unittest.TestCase):
         }
         text = common | {"target": "text", "language": "en"}
         for params in (manual, text):
-            self.assertTrue(self.valid("media.inpaint", params))
-            self.assertEqual(parse_options("media.inpaint", params), params)
-        self.assertFalse(self.valid("media.inpaint", manual | {"language": "en"}))
-        self.assertFalse(self.valid("media.inpaint", text | {"region": manual["region"]}))
+            self.assertFalse(self.valid("media.inpaint", params))
+            with self.assertRaises(WorkerError):
+                parse_options("media.inpaint", params)
 
     def test_relational_time_bounds_remain_runtime_validation(self):
         params = {

@@ -94,7 +94,6 @@ export function parseVisionInput(value: unknown): VisionInput {
   )
     throw new RemoteError('INVALID_REQUEST');
   if (p.start_ms !== 0) throw new RemoteError('INVALID_REQUEST');
-  if (Number(p.end_ms) - Number(p.start_ms) > 120000) throw new RemoteError('VISION_LIMIT');
   if (
     !integer(p.sample_ms, 100, 2000) ||
     typeof p.min_confidence !== 'number' ||

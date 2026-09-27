@@ -264,7 +264,6 @@ const TOOLS = [
   { id: 'translate', en: 'Translate', vi: 'Dịch' },
   { id: 'voice', en: 'Voice', vi: 'Giọng đọc' },
   { id: 'style', en: 'Style', vi: 'Kiểu chữ' },
-  { id: 'clean-up', en: 'Clean up', vi: 'Xoá chữ' },
   { id: 'audio', en: 'Audio', vi: 'Âm thanh' },
   { id: 'edit', en: 'Edit', vi: 'Chỉnh sửa' },
 ];
@@ -493,7 +492,6 @@ for (const locale of ['en', 'vi']) {
           }
           await assertNoEngineeringCopy(panel, `#panel-${tool.id}`);
           await shot(page, locale, `panel-${tool.id}`);
-          if (tool.id === 'clean-up') await shot(page, locale, 'error');
           await page.getByRole('tab', { name: tool[locale], exact: true }).click();
           await page.locator(`#panel-${tool.id}`).waitFor({ state: 'detached' });
         }
@@ -709,7 +707,7 @@ for (const locale of ['en', 'vi']) {
             };
           });
         });
-        assert.equal(rail.length, 7, 'seven rail items');
+        assert.equal(rail.length, 6, 'six rail items');
         for (const item of rail) {
           assert.ok(item.name, 'every rail item has an accessible name');
           assert.equal(item.text, '', `rail item "${item.name}" shows no label text`);
@@ -889,7 +887,7 @@ for (const locale of ['en', 'vi']) {
     const { temp, userData } = await createTempWorkspace(`reupmatic-setup-${locale}-`);
     const video = path.join(temp, 'setup-cut.mp4');
     makePlainVideo(video, 4);
-    const tools = ['transcribe', 'translate', 'voice', 'clean-up'];
+    const tools = ['transcribe', 'translate', 'voice'];
 
     await runElectronTest(
       { temp, userData, screenshotName: `visual-${locale}-setup-failure.png` },

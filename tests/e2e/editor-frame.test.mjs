@@ -15,6 +15,7 @@ import {
   addMediaToProject,
   chooseLocale,
   openSourcePanel,
+  settleAnimations,
   waitForEditorReady,
 } from './ui-actions.mjs';
 
@@ -63,7 +64,7 @@ test('no start screen: the full region frame is present at launch, empty', {
         assert.ok(box && box.width > 0 && box.height > 0, `${selector} must render empty`);
       }
       const tabs = page.locator('.editor-tool-rail [role="tab"]');
-      assert.equal(await tabs.count(), 7, 'the rail always shows its seven items');
+      assert.equal(await tabs.count(), 6, 'the rail always shows its six items');
       for (const tab of await tabs.all()) {
         assert.equal(await tab.isDisabled(), true, 'every rail item is disabled with no media');
       }
@@ -124,8 +125,8 @@ test('region order and proportions at 1420x900 and 1050x700 defaults', {
 });
 
 const RAIL_LABELS = {
-  en: ['Transcribe', 'Translate', 'Voice', 'Style', 'Clean up', 'Audio', 'Edit'],
-  vi: ['Nhận dạng', 'Dịch', 'Giọng đọc', 'Kiểu chữ', 'Xoá chữ', 'Âm thanh', 'Chỉnh sửa'],
+  en: ['Transcribe', 'Translate', 'Voice', 'Style', 'Audio', 'Edit'],
+  vi: ['Nhận dạng', 'Dịch', 'Giọng đọc', 'Kiểu chữ', 'Âm thanh', 'Chỉnh sửa'],
 };
 
 test('tool rail items and labels fit unclipped at 1420x900 and 1050x700 in English and Vietnamese', {
@@ -176,7 +177,7 @@ test('tool rail items and labels fit unclipped at 1420x900 and 1050x700 in Engli
                 .map((child) => child.getAttribute('role'))
                 .filter((role) => role !== null),
             ),
-            Array(7).fill('tab'),
+            Array(6).fill('tab'),
             `${label}: the tablist owns only tab roles`,
           );
           assert.equal(
@@ -195,7 +196,7 @@ test('tool rail items and labels fit unclipped at 1420x900 and 1050x700 in Engli
             `${label}: a closed rail exposes no aria-controls`,
           );
           const tabs = page.locator('.editor-tool-rail [role="tab"]');
-          assert.equal(await tabs.count(), 7, `${label}: exactly seven rail items`);
+          assert.equal(await tabs.count(), 6, `${label}: exactly six rail items`);
           assert.deepEqual(
             await tabs.evaluateAll((elements) =>
               elements.map((element) => element.getAttribute('aria-label')),
@@ -637,7 +638,7 @@ test('tool rail is static, starts disabled with no media, and the active item co
       await waitForEditorReady(page);
       await page.setViewportSize({ width: 1420, height: 900 });
       const tabs = page.locator('.editor-tool-rail [role="tab"]');
-      assert.equal(await tabs.count(), 7);
+      assert.equal(await tabs.count(), 6);
       for (const tab of await tabs.all()) {
         assert.equal(await tab.isDisabled(), true, 'no media: every item is disabled');
       }
@@ -672,7 +673,7 @@ test('tool rail is static, starts disabled with no media, and the active item co
         viewerBox.x + viewerBox.width >= railBox2.x - 1,
         'collapsed: the video sits against the rail',
       );
-      assert.equal(await tabs.count(), 7, 'the rail never collapses');
+      assert.equal(await tabs.count(), 6, 'the rail never collapses');
     },
   );
 });
@@ -689,8 +690,8 @@ test('tool rail keyboard: arrows move, Enter opens, Tab enters the panel, Escape
       await openRealVideo(application, page, video);
       await page.setViewportSize({ width: 1420, height: 900 });
 
-      const cleanUp = page.getByRole('tab', { name: 'Clean up', exact: true });
-      await cleanUp.focus();
+      const style = page.getByRole('tab', { name: 'Style', exact: true });
+      await style.focus();
       await page.keyboard.press('ArrowDown');
       const audio = page.getByRole('tab', { name: 'Audio', exact: true });
       assert.equal(
@@ -700,7 +701,7 @@ test('tool rail keyboard: arrows move, Enter opens, Tab enters the panel, Escape
       );
       await page.keyboard.press('ArrowUp');
       assert.equal(
-        await cleanUp.evaluate((element) => element === document.activeElement),
+        await style.evaluate((element) => element === document.activeElement),
         true,
         'ArrowUp moves focus back',
       );
@@ -732,7 +733,7 @@ test('tool rail keyboard: arrows move, Enter opens, Tab enters the panel, Escape
       await audio.focus();
       await page.keyboard.press('Escape');
       await page.locator('#panel-audio').waitFor({ state: 'detached' });
-      assert.equal(await page.locator('.editor-tool-rail [role="tab"]').count(), 7);
+      assert.equal(await page.locator('.editor-tool-rail [role="tab"]').count(), 6);
     },
   );
 });
@@ -822,10 +823,10 @@ test('tool panel width drags and resets on double-click', {
   );
 });
 
-const RAIL_TOOL_IDS = ['transcribe', 'translate', 'voice', 'style', 'clean-up', 'audio', 'edit'];
+const RAIL_TOOL_IDS = ['transcribe', 'translate', 'voice', 'style', 'audio', 'edit'];
 const RAIL_SCREENSHOT_LABELS = {
-  en: ['Transcribe', 'Translate', 'Voice', 'Style', 'Clean up', 'Audio', 'Edit'],
-  vi: ['Nhận dạng', 'Dịch', 'Giọng đọc', 'Kiểu chữ', 'Xoá chữ', 'Âm thanh', 'Chỉnh sửa'],
+  en: ['Transcribe', 'Translate', 'Voice', 'Style', 'Audio', 'Edit'],
+  vi: ['Nhận dạng', 'Dịch', 'Giọng đọc', 'Kiểu chữ', 'Âm thanh', 'Chỉnh sửa'],
 };
 const RAIL_SHOT_SIZES = [
   [1420, 900],
@@ -901,3 +902,65 @@ test('Audio source mute persists to the document and across tool switches', {
     },
   );
 });
+
+function makeBurnedInVideo(temp, name = 'burned-in.mp4') {
+  const video = path.join(temp, name);
+  execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
+    '-v',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc2=size=640x360:rate=30:duration=4',
+    '-vf',
+    "drawtext=text='PHU DE GOC':fontsize=40:fontcolor=white:x=(w-tw)/2:y=h-80:box=1:boxcolor=black",
+    '-c:v',
+    'libx264',
+    '-threads',
+    '2',
+    '-n',
+    video,
+  ]);
+  return video;
+}
+
+const COVER_LABEL = {
+  en: { tab: 'Style', cover: 'Cover original subtitles' },
+  vi: { tab: 'Kiểu chữ', cover: 'Che phụ đề gốc' },
+};
+
+// One locale per launch: chooseLocale finds the Settings nav by its English name.
+async function captureCoverScreenshots(locale) {
+  const { temp, userData } = await createTempWorkspace(`reupmatic-cover-shots-${locale}-`);
+  const video = makeBurnedInVideo(temp);
+  await mkdir(SHOTS_DIR, { recursive: true });
+  await runElectronTest({ temp, userData }, async ({ application, page }) => {
+    await waitForEditorReady(page);
+    if (locale === 'vi') {
+      await chooseLocale(application, page, 'vi');
+      await page.getByRole('button', { name: 'Editor', exact: true }).click();
+    }
+    await openRealVideo(application, page, video);
+    await page.setViewportSize({ width: 1420, height: 900 });
+    await page.getByRole('tab', { name: COVER_LABEL[locale].tab, exact: true }).click();
+    const style = page.locator('#panel-style');
+    await style.waitFor({ state: 'visible' });
+    await style.getByRole('checkbox', { name: COVER_LABEL[locale].cover, exact: true }).check();
+    await settleAnimations(page);
+    await page.screenshot({ path: path.join(SHOTS_DIR, `cover-${locale}.png`) });
+    await page
+      .locator('.video-tray')
+      .screenshot({ path: path.join(SHOTS_DIR, `cover-monitor-${locale}.png`) });
+    // The band is drawn over the burned-in text in the monitor, under the subtitle overlay.
+    const band = await page.locator('[data-cover-band="true"]').boundingBox();
+    assert.ok(band && band.width > 0 && band.height > 0, 'the cover band renders on the monitor');
+  });
+}
+
+for (const locale of ['en', 'vi']) {
+  test(`cover band screenshots (${locale})`, {
+    timeout: 150000,
+  }, async () => {
+    await captureCoverScreenshots(locale);
+  });
+}

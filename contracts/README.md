@@ -44,7 +44,7 @@ All cue times are **integer milliseconds**, not rounded UI seconds. Intervals ar
 
 | Method | Parameters | Result / boundary |
 |---|---|---|
-| `hello` | Empty | Protocol version; actual availability of FFmpeg/pysubs2; OCR/inpainting report configured local availability, not verified inference; durable worker jobs remain false. |
+| `hello` | Empty | Protocol version; actual availability of FFmpeg/pysubs2; OCR reports configured local availability, not verified inference; durable worker jobs remain false. |
 | `asset.register` | Absolute `path`; `kind: video|audio|subtitle` | `asset_id`, basename, SHA-256, kind. Internal host command only. Subtitle import accepts UTF-8 SRT/ASS in this exercise. |
 | `media.probe` | Registered video ID | Duration, width, height, has-audio. Missing/invalid input is a real failure. |
 | `media.peaks` | Registered video ID | Up to 1,000 normalized peaks and duration, or empty peaks without audio. Native audio decoding; one-hour exercise limit, not a product limit. |
@@ -100,25 +100,24 @@ Snapshots contain monotonic per-host `version`, `paused`, active job ID, recover
 
 
 ## Local vision
-`models.status {}` reports local OCR/inpainting availability with `verified: false`.
-`media.ocr.extract` and `media.inpaint` use the existing envelope, queue and cancellation.
+`models.status {}` reports local OCR availability with `verified: false`.
+`media.ocr.extract` uses the existing envelope, queue and cancellation.
 See `worker-request.schema.json`, `app/core/vision/vision.ts` for bounds and exact request/result behavior. OCR observations
 are evidence, not editor instructions. Draft application is a separate explicit,
 revision-checked operation. The manifest, model weights and private paths are not
-accepted from renderer IPC.
+accepted from renderer IPC. Burned-in text is hidden with the subtitle cover band, not a separate cleanup pass.
 
 
 ## Local processing recipes
-`processing.schema.json` defines version 1 recipes with optional OCR/inpainting,
+`processing.schema.json` defines version 1 recipes with optional OCR and editing,
 at least one enabled step, exact known fields, language and bounded numeric
-parameters. Manual rectangles and automatic text targets have distinct shapes.
-Cross-field geometry and OCR-vs-existing-subtitle conflicts are checked at runtime.
+parameters. OCR-vs-existing-subtitle conflicts are checked at runtime.
 The same recipe shape is embedded in project, batch, folder and worker schemas;
 the parity regression test rejects divergence.
 
 `models.resolve {processing}` is an internal host-to-worker request through the
 existing queue. It verifies required local model artifacts and returns exact
-fingerprints keyed by `inpainting` and/or `ocr_<language>`. It is neither inference
+fingerprints keyed by `ocr_<language>`. It is neither inference
 nor a download and is not an arbitrary renderer command.
 
 `media.process` takes registered source and optional subtitle IDs,
@@ -130,12 +129,11 @@ batch/folder supply their saved pins. Unmatched pins fail
 uses the original cancellation envelope. `media.render` retains its strict shape.
 
 Processing results have the existing media artifact fields plus `processing`:
-`recipe`, `model_fingerprints`, `ocr_cue_count` and `inpaint_frame_count` (null when
-that step is absent). OCR text is burned into the video, not exposed as a sidecar
+`recipe`, `model_fingerprints` and `ocr_cue_count` (null when that step is absent).
+OCR text is burned into the video, not exposed as a sidecar
 or assigned to the Editor track. Progress phases are `processingModels`,
-`processingOcr`, `processingInpaint`, `processingJoining`, `processingEncoding` and
-`processingVerifying`. Fractions are local to a named stage, not fabricated
-whole-job completion estimates.
+`processingOcr`, `processingEncoding` and `processingVerifying`. Fractions are local
+to a named stage, not fabricated whole-job completion estimates.
 
 Batch/folder public admission accepts an optional recipe, never model paths or
 fingerprint overrides. Trusted host admission resolves and pins required models.

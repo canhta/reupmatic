@@ -21,10 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class RecipeTests(unittest.TestCase):
     def setUp(self):
-        self.recipe = {
-            "ocr": {"language": "vi", "sample_ms": 500, "min_confidence": 0.5},
-            "inpaint": {"target": "text", "language": "en", "padding_px": 4},
-        }
+        self.recipe = {"ocr": {"language": "vi", "sample_ms": 500, "min_confidence": 0.5}}
 
     def test_strict_recipe_and_independent_snapshot(self):
         canonical = parse_recipe(self.recipe)
@@ -37,6 +34,7 @@ class RecipeTests(unittest.TestCase):
             {**self.recipe, "shell": "command"},
             {**self.recipe, "ocr": {**self.recipe["ocr"], "sample_ms": True}},
             {**self.recipe, "ocr": {**self.recipe["ocr"], "min_confidence": float("nan")}},
+            {"inpaint": {"target": "text", "language": "en", "padding_px": 4}},
             {"inpaint": {"target": "manual", "padding_px": 4}},
         ]:
             with self.subTest(bad=bad), self.assertRaisesRegex(WorkerError, "INVALID_PROCESSING"):
@@ -45,10 +43,10 @@ class RecipeTests(unittest.TestCase):
     def test_subtitle_conflict_and_model_snapshots_are_exact(self):
         with self.assertRaisesRegex(WorkerError, "PROCESSING_SUBTITLE_CONFLICT"):
             parse_recipe(self.recipe, has_subtitles=True)
-        self.assertEqual(required_models(self.recipe), ["inpainting", "ocr_en", "ocr_vi"])
+        self.assertEqual(required_models(self.recipe), ["ocr_vi"])
         pins = {key: "a" * 64 for key in required_models(self.recipe)}
         self.assertEqual(parse_fingerprints(pins, self.recipe), pins)
-        for value in [{}, {**pins, "unexpected": "a" * 64}, {**pins, "ocr_en": "bad"}]:
+        for value in [{}, {**pins, "unexpected": "a" * 64}, {**pins, "ocr_vi": "bad"}]:
             with self.assertRaisesRegex(WorkerError, "INVALID_PROCESSING_MODELS"):
                 parse_fingerprints(value, self.recipe)
 
@@ -70,7 +68,7 @@ class ChunkCompositionTests(unittest.TestCase):
     def test_progress_does_not_regress_when_decode_inference_and_encode_phases_restart(self):
         events = []
         host = SimpleNamespace(emit=lambda req, event, data: events.append(data))
-        emit = progress_for(host, {}, "processingInpaint", 10000, 20000, 0, 30000)
+        emit = progress_for(host, {}, "processingOcr", 10000, 20000, 0, 30000)
         for fraction in [None, 0.5, 0.1, float("nan"), None, 1]:
             emit({"fraction": fraction})
         fractions = [event["fraction"] for event in events]
@@ -158,7 +156,7 @@ class ProcessingSchemaTests(unittest.TestCase):
 
         def find_recipe(value):
             if isinstance(value, dict):
-                if {"ocr", "inpaint"} <= value.get("properties", {}).keys():
+                if {"ocr", "subtitle_style"} <= value.get("properties", {}).keys():
                     yield value
                 for child in value.values():
                     yield from find_recipe(child)

@@ -122,7 +122,7 @@ test('Electron Settings: category navigation, default folder, and honest model s
       assert.equal(await processingTab.getAttribute('aria-current'), 'true');
       await assertExactlyOneSelectedTab(categories);
       await assertContentClearsHeader(settings, processing);
-      assert.equal(await processing.getByText('Object removal', { exact: true }).count(), 1);
+      assert.equal(await processing.getByText('OCR', { exact: true }).count(), 1);
       assert.equal(
         await settings.getByText('Nothing downloads or runs yet', { exact: false }).count(),
         0,

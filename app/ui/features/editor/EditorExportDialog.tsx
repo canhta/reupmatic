@@ -45,6 +45,7 @@ export function EditorExportDialog() {
   const steps = [
     editor.cues.length > 0 && t('exportStepSubtitles'),
     editor.processing?.ocr && t('exportStepOcr'),
+    editor.processing?.subtitle_style?.cover && t('exportStepCover'),
     editor.processing?.editing?.trim && t('exportStepTrim'),
     editor.processing?.editing?.crop && t('exportStepCrop'),
     editor.processing?.editing?.speed &&
