@@ -40,6 +40,7 @@ export function CompositionPanel() {
   const disabled = editor.opening || editor.busy;
 
   const select = useCallback((clip: CompositionClip | undefined) => {
+    keepId.current = null;
     setDraft(clip ? structuredClone(clip) : null);
     setBaseline(JSON.stringify(clip ?? null));
     setCaptured(compositionRef.current);
