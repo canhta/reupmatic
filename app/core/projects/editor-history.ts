@@ -25,6 +25,8 @@ export function changeEditor(
   if (!next.soundtrack) delete next.soundtrack;
   if (!next.line_length) delete next.line_length;
   if (!next.media?.length) delete next.media;
+  if (!next.voice_track) delete next.voice_track;
+  if (!next.text_layers) delete next.text_layers;
   if (JSON.stringify(history.present) === JSON.stringify(next)) return history;
   return { past: [...history.past, history.present].slice(-60), present: next, future: [] };
 }
