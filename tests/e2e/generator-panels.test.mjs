@@ -198,8 +198,11 @@ const COPY = {
     sourceLayer: 'Source layer',
     displayedLayer: 'Displayed subtitles',
     sourceLanguage: 'Displayed subtitles language',
+    rulesTrigger: 'Literal replacements',
+    ruleAdd: 'Add replacement',
+    ruleFind: 'Find',
+    ruleRemove: 'Remove rule 1',
     translationStart: 'Create draft',
-    translationReview: 'Review',
     translationResult: 'Xin chào bạn',
   },
   vi: {
@@ -208,7 +211,7 @@ const COPY = {
     translateTab: 'Dịch',
     speechSection: 'Nhận dạng giọng nói',
     ocrSection: 'Trích chữ',
-    language: 'Ngôn ngữ lớp Bản chép lời',
+    language: 'Ngôn ngữ Bản chép lời',
     spokenLanguage: 'Tiếng Việt',
     english: 'Tiếng Anh',
     start: 'Nhận dạng giọng nói',
@@ -218,9 +221,12 @@ const COPY = {
     addMedia: 'Thêm…',
     sourceLayer: 'Lớp nguồn',
     displayedLayer: 'Phụ đề hiển thị',
-    sourceLanguage: 'Ngôn ngữ lớp Phụ đề hiển thị',
+    sourceLanguage: 'Ngôn ngữ Phụ đề hiển thị',
+    rulesTrigger: 'Thay thế nguyên văn',
+    ruleAdd: 'Thêm thay thế',
+    ruleFind: 'Tìm',
+    ruleRemove: 'Xóa quy tắc 1',
     translationStart: 'Tạo bản nháp',
-    translationReview: 'Duyệt',
     translationResult: 'Xin chào bạn',
   },
 };
@@ -352,14 +358,22 @@ for (const locale of ['en', 'vi']) {
           });
         }
         await page.setViewportSize({ width: 1420, height: 900 });
+        await translate.getByText(copy.rulesTrigger, { exact: true }).click();
+        await translate.getByRole('button', { name: copy.ruleAdd, exact: true }).click();
+        const ruleFind = translate.getByRole('textbox', { name: copy.ruleFind, exact: true });
+        await ruleFind.waitFor();
+        for (const [width, height] of SIZES) {
+          await page.setViewportSize({ width, height });
+          await page.screenshot({
+            path: path.join(screenshots, `translation-rules-${locale}-${width}x${height}.png`),
+          });
+        }
+        await page.setViewportSize({ width: 1420, height: 900 });
+        await ruleFind.fill('the');
+        await translate.getByRole('button', { name: copy.ruleRemove, exact: true }).click();
         await translate.getByRole('button', { name: copy.translationStart, exact: true }).click();
-        await page
-          .getByRole('button', { name: copy.translationReview, exact: true })
-          .waitFor({ timeout: 90000 });
-        await page.getByRole('button', { name: copy.translationReview, exact: true }).click();
-        await page.getByRole('button', { name: copy.translationReview, exact: true }).click();
         const translationRows = cuePanel.locator('.review-rows');
-        await translationRows.waitFor({ timeout: 30000 });
+        await translationRows.waitFor({ timeout: 90000 });
         for (const [width, height] of SIZES) {
           await page.setViewportSize({ width, height });
           await assertReviewFits(cuePanel, copy.translationResult);

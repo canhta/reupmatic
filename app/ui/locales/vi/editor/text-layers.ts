@@ -11,7 +11,7 @@ export const textLayersVi = {
   textEditingLayer: 'Lớp',
   textLayerLanguage: 'Ngôn ngữ',
   textLanguageUnknown: 'Chưa khai báo',
-  setLayerLanguage: 'Ngôn ngữ lớp {{layer}}',
+  setLayerLanguage: 'Ngôn ngữ {{layer}}',
   textLayerStale: 'Lớp nguồn đã đổi',
   textLayerStaleHelp: 'Văn bản của bạn vẫn được giữ — xem lại trước khi thay.',
   textCopyTitle: 'Sao chép lớp…',

@@ -125,7 +125,7 @@ const COPY = {
     start: (n) => `Bắt đầu (s) ${n}`,
     end: (n) => `Kết thúc (s) ${n}`,
     voiceTab: 'Giọng đọc',
-    setSpokenLanguage: 'Ngôn ngữ lớp Nội dung đọc',
+    setSpokenLanguage: 'Ngôn ngữ Nội dung đọc',
     vietnamese: 'Tiếng Việt',
     voice: 'Giọng đọc',
     controlled: 'Controlled voice',

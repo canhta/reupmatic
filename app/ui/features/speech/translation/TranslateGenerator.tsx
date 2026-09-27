@@ -2,11 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Section } from '@astryxdesign/core/Section';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -144,9 +140,16 @@ export function TranslateReview() {
   if (!draft) return null;
   const busy = Boolean(job.active) || job.settingUp;
   return (
-    <TranslationDraftReview draft={draft} disabled={busy} onDiscard={() => job.consume(draft)} />
+    <TranslationDraftReview
+      key={draft.input.request_id}
+      draft={draft}
+      disabled={busy}
+      onDiscard={() => job.consume(draft)}
+    />
   );
 }
+
+type ReviewedTranslation = { value: TranslationPreview; revision: number } | { error: string };
 
 function TranslationDraftReview({
   draft,
@@ -160,49 +163,43 @@ function TranslationDraftReview({
   const { t } = useTranslation();
   const editor = useEditor();
   const [policy, setPolicy] = useState<TranslationPolicy>('keep-existing');
-  const [preview, setPreview] = useState<{ value: TranslationPreview; revision: number } | null>(
-    null,
-  );
   const [confirmed, setConfirmed] = useState(false);
-  const [error, setError] = useState('');
   const p = draft.input.params;
-  const fresh =
-    preview && preview.revision === editor.revision && draft.documentId === editor.documentId;
-  const before = new Map(preview?.value.before.map((cue) => [cue.id, cue]) ?? []);
-  const source = new Map(p.cues.map((cue) => [cue.id, cue]));
-  const generated = new Map(draft.result.cues.map((cue) => [cue.id, cue]));
-  const after = new Map(preview?.value.cues.map((cue) => [cue.id, cue]) ?? []);
-  const ids = [...new Set([...source.keys(), ...before.keys()])];
-  const requiresConfirmation = policy === 'replace-all' && Boolean(preview?.value.before.length);
 
-  function review() {
-    setPreview(null);
-    setConfirmed(false);
+  function compute(nextPolicy: TranslationPolicy): ReviewedTranslation {
     try {
       if (draft.documentId !== editor.documentId) throw new Error('STALE_OPERATION');
-      setPreview({
-        value: previewTranslation(editor.textSnapshot, draft.input, draft.result, policy),
+      return {
+        value: previewTranslation(editor.textSnapshot, draft.input, draft.result, nextPolicy),
         revision: editor.getRevision(),
-      });
-      setError('');
+      };
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'STALE_OPERATION');
+      return { error: reason instanceof Error ? reason.message : 'STALE_OPERATION' };
     }
+  }
+
+  // The comparison is pure, so it renders with the draft instead of behind a second Review step.
+  const [reviewed, setReviewed] = useState<ReviewedTranslation>(() => compute('keep-existing'));
+  const preview = 'value' in reviewed ? reviewed.value : null;
+  const error = 'error' in reviewed ? reviewed.error : '';
+  const fresh =
+    'value' in reviewed &&
+    reviewed.revision === editor.revision &&
+    draft.documentId === editor.documentId;
+  const before = new Map(preview?.before.map((cue) => [cue.id, cue]) ?? []);
+  const source = new Map(p.cues.map((cue) => [cue.id, cue]));
+  const generated = new Map(draft.result.cues.map((cue) => [cue.id, cue]));
+  const after = new Map(preview?.cues.map((cue) => [cue.id, cue]) ?? []);
+  const ids = [...new Set([...source.keys(), ...before.keys()])];
+  const requiresConfirmation = policy === 'replace-all' && Boolean(preview?.before.length);
+
+  function review() {
+    setReviewed(compute(policy));
+    setConfirmed(false);
   }
 
   return (
     <VStack gap={3}>
-      <HStack gap={2} vAlign="center" hAlign="between">
-        <Heading level={5}>{t('translationDraft')}</Heading>
-        <IconButton
-          label={t('cancel')}
-          tooltip={t('cancel')}
-          size="sm"
-          variant="ghost"
-          icon={<Icon icon="close" size="sm" />}
-          onClick={onDiscard}
-        />
-      </HStack>
       <Text as="p" display="block" type="body">
         {t('translationCaptured', {
           source: t(`textLayer_${p.source_layer}`),
@@ -213,45 +210,42 @@ function TranslationDraftReview({
           engine: engineName(draft.result.runtime),
         })}
       </Text>
-      <Text as="p" display="block" type="supporting">
+      <Text as="p" display="block" type="body">
         {t('translationCapturedHelp')}
       </Text>
-      <RadioList
+      <Selector
         label={t('translationPolicy')}
         value={policy}
+        width="100%"
+        isDisabled={disabled}
+        options={[
+          {
+            value: 'keep-existing',
+            label: t('translationKeep'),
+            description: t('translationKeepHelp'),
+          },
+          {
+            value: 'replace-all',
+            label: t('translationReplace'),
+            description: t('translationReplaceHelp'),
+          },
+        ]}
         onChange={(value) => {
-          if (value === 'keep-existing' || value === 'replace-all') {
-            setPolicy(value);
-            setPreview(null);
-            setConfirmed(false);
-          }
+          if (value !== 'keep-existing' && value !== 'replace-all') return;
+          setPolicy(value);
+          setReviewed(compute(value));
+          setConfirmed(false);
         }}
-      >
-        <RadioListItem
-          value="keep-existing"
-          label={t('translationKeep')}
-          description={t('translationKeepHelp')}
-        />
-        <RadioListItem
-          value="replace-all"
-          label={t('translationReplace')}
-          description={t('translationReplaceHelp')}
-        />
-      </RadioList>
-      <Button
-        label={t('translationReview')}
-        isDisabled={disabled || editor.opening}
-        onClick={review}
       />
       {error && <Banner status="error" title={t(translationErrorKey(error))} />}
       {preview && (
         <>
           <Text as="p" type="body" role="status">
             {t('translationCounts', {
-              kept: preview.value.kept,
-              added: preview.value.added,
-              replaced: preview.value.replaced,
-              removed: preview.value.removed,
+              kept: preview.kept,
+              added: preview.added,
+              replaced: preview.replaced,
+              removed: preview.removed,
             })}
           </Text>
           {!fresh && (
@@ -304,26 +298,34 @@ function TranslationDraftReview({
               onChange={setConfirmed}
             />
           )}
-          <HStack gap={2} vAlign="center" wrap="wrap">
-            <Button label={t('translationDiscard')} onClick={onDiscard} />
-            <Button
-              label={t('translationApply')}
-              variant="primary"
-              isDisabled={
-                !fresh || disabled || editor.opening || (requiresConfirmation && !confirmed)
-              }
-              onClick={() => {
-                try {
-                  editor.applyTranslation(preview.value, preview.revision);
-                  onDiscard();
-                } catch (reason) {
-                  setError(reason instanceof Error ? reason.message : 'STALE_OPERATION');
-                }
-              }}
-            />
-          </HStack>
         </>
       )}
+      <HStack gap={2} vAlign="center" wrap="wrap">
+        <Button label={t('translationDiscard')} onClick={onDiscard} />
+        {!fresh && (
+          <Button
+            label={t('translationReview')}
+            isDisabled={disabled || editor.opening}
+            onClick={review}
+          />
+        )}
+        <Button
+          label={t('translationApply')}
+          variant="primary"
+          isDisabled={!fresh || disabled || editor.opening || (requiresConfirmation && !confirmed)}
+          onClick={() => {
+            if (!('value' in reviewed)) return;
+            try {
+              editor.applyTranslation(reviewed.value, reviewed.revision);
+              onDiscard();
+            } catch (reason) {
+              setReviewed({
+                error: reason instanceof Error ? reason.message : 'STALE_OPERATION',
+              });
+            }
+          }}
+        />
+      </HStack>
     </VStack>
   );
 }

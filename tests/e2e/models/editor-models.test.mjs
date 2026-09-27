@@ -301,19 +301,11 @@ test('Editor with real models: recognise, apply, translate and export with a cov
       const createDraft = translate.getByRole('button', { name: 'Create draft', exact: true });
       await createDraft.waitFor({ timeout: 120000 });
       await createDraft.click();
-      const reviewTranslation = await waitForOutcome(
-        page,
-        translate,
-        page.getByRole('button', { name: 'Review', exact: true }),
-        300000,
-        'Translation',
-      );
-      await reviewTranslation.click();
       const applyTranslation = await waitForOutcome(
         page,
         translate,
         page.getByRole('button', { name: 'Apply', exact: true }),
-        120000,
+        300000,
         'Translation review',
       );
       await applyTranslation.click();
@@ -419,19 +411,11 @@ test('Editor with real models: OCR a burned-in line, translate and export it', {
       const createDraft = translate.getByRole('button', { name: 'Create draft', exact: true });
       await createDraft.waitFor({ timeout: 120000 });
       await createDraft.click();
-      const reviewTranslation = await waitForOutcome(
-        page,
-        translate,
-        page.getByRole('button', { name: 'Review', exact: true }),
-        300000,
-        'Translation',
-      );
-      await reviewTranslation.click();
       const applyTranslation = await waitForOutcome(
         page,
         translate,
         page.getByRole('button', { name: 'Apply', exact: true }),
-        120000,
+        300000,
         'Translation review',
       );
       await applyTranslation.click();
