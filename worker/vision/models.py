@@ -17,6 +17,8 @@ VERSIONS = {"PP-OCRv3", "PP-OCRv4", "PP-OCRv5"}
 
 
 def runtime_available(packages: tuple[str, ...]) -> bool:
+    # A pack directory is on PYTHONPATH before it exists; find_spec caches that miss.
+    importlib.invalidate_caches()
     try:
         return all(importlib.util.find_spec(name) is not None for name in packages)
     except (ImportError, ValueError):

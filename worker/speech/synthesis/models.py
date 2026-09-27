@@ -67,6 +67,8 @@ _NANO_DIRECTORIES: tuple[str, ...] = ()
 
 
 def turbo_runtime_code() -> str | None:
+    # A pack directory is on PYTHONPATH before it exists; find_spec caches that miss.
+    importlib.invalidate_caches()
     try:
         if importlib.metadata.version("vieneu") != SDK_VERSION:
             return "SYNTHESIS_RUNTIME_VERSION"
@@ -81,6 +83,7 @@ def turbo_runtime_code() -> str | None:
 
 
 def clone_runtime_code() -> str | None:
+    importlib.invalidate_caches()
     try:
         if importlib.metadata.version("vieneu") != SDK_VERSION:
             return "SYNTHESIS_RUNTIME_VERSION"
@@ -102,6 +105,7 @@ def clone_runtime_code() -> str | None:
 
 
 def nano_runtime_code() -> str | None:
+    importlib.invalidate_caches()
     try:
         if importlib.metadata.version("vieneu") != SDK_VERSION:
             return "SYNTHESIS_RUNTIME_VERSION"

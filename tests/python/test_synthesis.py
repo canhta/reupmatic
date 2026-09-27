@@ -25,6 +25,45 @@ from speech.synthesis.models import (
 from synthesis_fixture import bundle, nano_bundle, params, sdk
 
 
+class RuntimePackProbeTests(unittest.TestCase):
+    def test_a_synthesis_pack_installed_after_start_is_detected(self):
+        import importlib
+        import importlib.util
+
+        from speech.synthesis.models import SDK_VERSION, nano_runtime_code
+
+        if importlib.util.find_spec("vieneu") is not None:
+            self.skipTest("a real vieneu runtime is installed")
+        if importlib.util.find_spec("onnxruntime") is not None:
+            self.skipTest("a real onnxruntime runtime is installed")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            # `vieneu` resolves from a directory that exists; the pack directory that will hold
+            # `onnxruntime` is on PYTHONPATH but does not exist when the worker first probes.
+            runtime = root / "runtime"
+            vieneu = runtime / "vieneu"
+            vieneu.mkdir(parents=True)
+            (vieneu / "__init__.py").write_text("")
+            metadata = runtime / f"vieneu-{SDK_VERSION}.dist-info"
+            metadata.mkdir()
+            (metadata / "METADATA").write_text(
+                f"Metadata-Version: 2.1\nName: vieneu\nVersion: {SDK_VERSION}\n"
+            )
+            pack = root / "packs"
+            sys.path.insert(0, str(pack))
+            sys.path.insert(0, str(runtime))
+            try:
+                self.assertEqual(nano_runtime_code(), "RUNTIME_PACK_MISSING")
+                onnxruntime = pack / "onnxruntime"
+                onnxruntime.mkdir(parents=True)
+                (onnxruntime / "__init__.py").write_text("")
+                self.assertIsNone(nano_runtime_code())
+            finally:
+                sys.path.remove(str(runtime))
+                sys.path.remove(str(pack))
+                importlib.invalidate_caches()
+
+
 class SynthesisContractTests(unittest.TestCase):
     def test_strict_spoken_input(self):
         p = params("a" * 64)

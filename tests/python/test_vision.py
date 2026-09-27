@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import sys
 import tempfile
@@ -162,6 +163,25 @@ class BoundaryRefinementTests(unittest.TestCase):
         black = self.frames([0])[0]
         flat = lambda start, end, region: [(start, black), (end, black)]  # noqa: E731
         self.assertEqual(refine_boundaries(self.group(), flat, 160, 90), (1000, 2000))
+
+
+class RuntimeAvailabilityTests(unittest.TestCase):
+    def test_a_pack_installed_after_start_is_detected_on_the_next_probe(self):
+        from vision.models import runtime_available
+
+        with tempfile.TemporaryDirectory() as directory:
+            pack = Path(directory) / "packs"
+            # The host puts the pack directory on PYTHONPATH before it exists.
+            sys.path.insert(0, str(pack))
+            try:
+                self.assertFalse(runtime_available(("latepack",)))
+                package = pack / "latepack"
+                package.mkdir(parents=True)
+                (package / "__init__.py").write_text("")
+                self.assertTrue(runtime_available(("latepack",)))
+            finally:
+                sys.path.remove(str(pack))
+                importlib.invalidate_caches()
 
 
 class ModelRegistryTests(unittest.TestCase):
