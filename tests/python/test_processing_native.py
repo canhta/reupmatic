@@ -1,5 +1,6 @@
 """Native media integration with controlled doubles; not real-model quality."""
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -128,11 +129,30 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
 
     def test_changed_pinned_model_is_rejected_and_does_not_poison_next_job(self):
         session, aid = self.session()
-        pins = session.call("models.resolve", {"processing": self.recipe()})
-        pins["ocr_en"] = "a" * 64
+        recipe = {"ocr": {"language": "en", "sample_ms": 500, "min_confidence": 0.5}}
+        pins = session.call("models.resolve", {"processing": recipe})
+        self.assertEqual(list(pins), ["ocr_en"])
+        # Reconfigure the same model slot with a different artifact, as an owner would: replace the
+        # weights and point the manifest at the new hash. The pinned fingerprint no longer matches.
+        model = self.root / "fixture.onnx"
+        model.write_bytes(b"CONTROLLED TEST ARTIFACT. NOT MODEL WEIGHTS. v2")
+        digest = hashlib.sha256(model.read_bytes()).hexdigest()
+        manifest = json.loads((self.root / "manifest.json").read_text())
+        for key in ("det", "rec", "keys"):
+            manifest["ocr"]["en"][key]["sha256"] = digest
+        (self.root / "manifest.json").write_text(json.dumps(manifest))
         with self.assertRaisesRegex(RuntimeError, "PROCESSING_MODELS_CHANGED"):
-            session.call("media.process", self.request(aid, model_fingerprints=pins))
+            session.call(
+                "media.process",
+                {
+                    "asset_id": aid,
+                    "encoding": "review",
+                    "processing": recipe,
+                    "model_fingerprints": pins,
+                },
+            )
         self.assertFalse(list((self.workspace / "renders").glob("*/output.mp4")))
+        # The failed job must not poison the next plain render.
         self.assertTrue(
             session.call("media.render", {"asset_id": aid, "encoding": "review"})["has_audio"]
         )
