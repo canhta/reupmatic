@@ -4,8 +4,18 @@ import uuid
 from runtime.errors import WorkerError
 from runtime.protocol import bounded_int, exact
 
+from subtitles.animation import event_text, literal_ass
 from subtitles.style import DEFAULT_STYLE, ass_style
 from subtitles.validation import validate_cues
+
+__all__ = [
+    "canvas_size",
+    "cue_document",
+    "literal_ass",
+    "srt_text",
+    "style_srt",
+    "subtitle_library",
+]
 
 
 def subtitle_library():
@@ -24,18 +34,6 @@ def canvas_size(value=None):
     return bounded_int(value["width"], 2, 16384), bounded_int(value["height"], 2, 16384)
 
 
-def literal_ass(text):
-    # Break user-authored escape sequences; only our newlines become ASS tags.
-    return (
-        text.replace("\\", "\\\u2060")
-        .replace("{", r"\{")
-        .replace("}", r"\}")
-        .replace("\r\n", "\n")
-        .replace("\r", "\n")
-        .replace("\n", r"\N")
-    )
-
-
 def cue_document(cues, style=None, canvas=None, styled=True):
     validate_cues(cues)
     lib = subtitle_library()
@@ -49,17 +47,18 @@ def cue_document(cues, style=None, canvas=None, styled=True):
             "WrapStyle": "0",
         }
     )
-    subs.styles["Default"] = ass_style(
-        lib, DEFAULT_STYLE if style is None else style, width, height
-    )
+    default_style = DEFAULT_STYLE if style is None else style
+    subs.styles["Default"] = ass_style(lib, default_style, width, height)
     for index, cue in enumerate(cues):
         name = "Default"
+        effective = default_style
         if styled and "style" in cue:
             name = f"Cue{index}"
-            subs.styles[name] = ass_style(lib, cue["style"], width, height)
+            effective = cue["style"]
+            subs.styles[name] = ass_style(lib, effective, width, height)
         event = lib.SSAEvent(start=cue["start_ms"], end=cue["end_ms"], style=name)
         if styled:
-            event.text = literal_ass(cue["text"])
+            event.text = event_text(cue, effective, width, height)
         else:
             event.plaintext = cue["text"]
         subs.append(event)

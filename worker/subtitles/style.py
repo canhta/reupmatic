@@ -20,10 +20,40 @@ DEFAULT_STYLE = {
     "spacing_pct": 0,
     "bold": False,
     "italic": False,
+    "uppercase": False,
+    "accent_color": "#FFD400",
+    "animation": {
+        "in": {"preset": "none", "duration_ms": 200},
+        "out": {"preset": "none", "duration_ms": 200},
+        "emphasis": {"preset": "none"},
+    },
     "cover": None,
 }
 
+IN_PRESETS = ("none", "fade", "pop", "slide-up", "slide-left", "typewriter", "blur")
+OUT_PRESETS = ("none", "fade", "pop-out", "slide-down")
+EMPHASIS_PRESETS = ("none", "karaoke", "color", "pop", "appear", "one-at-a-time")
 COVER_KEYS = ("x_pct", "y_pct", "width_pct", "height_pct", "color", "opacity")
+
+
+def _animation(value):
+    if not isinstance(value, dict) or set(value) != {"in", "out", "emphasis"}:
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    for key, presets in (("in", IN_PRESETS), ("out", OUT_PRESETS), ("emphasis", EMPHASIS_PRESETS)):
+        part = value[key]
+        with_duration = key != "emphasis"
+        keys = {"preset", "duration_ms"} if with_duration else {"preset"}
+        if not isinstance(part, dict) or set(part) != keys or part["preset"] not in presets:
+            raise WorkerError("INVALID_SUBTITLE_STYLE")
+        if with_duration and (
+            type(part["duration_ms"]) is not int or not 0 <= part["duration_ms"] <= 3000
+        ):
+            raise WorkerError("INVALID_SUBTITLE_STYLE")
+    return {
+        "in": dict(value["in"]),
+        "out": dict(value["out"]),
+        "emphasis": dict(value["emphasis"]),
+    }
 
 
 def parse_style(value):
@@ -35,9 +65,10 @@ def parse_style(value):
         or font not in FONT_FAMILIES
         or type(value["bold"]) is not bool
         or type(value["italic"]) is not bool
+        or type(value["uppercase"]) is not bool
     ):
         raise WorkerError("INVALID_SUBTITLE_STYLE")
-    for key in ("text_color", "outline_color", "box_color"):
+    for key in ("text_color", "outline_color", "box_color", "accent_color"):
         if not isinstance(value[key], str) or not re.fullmatch(r"#[a-fA-F0-9]{6}", value[key]):
             raise WorkerError("INVALID_SUBTITLE_STYLE")
     ranges = {
@@ -63,7 +94,11 @@ def parse_style(value):
     return {
         **value,
         "font_family": font.strip(),
-        **{key: value[key].upper() for key in ("text_color", "outline_color", "box_color")},
+        **{
+            key: value[key].upper()
+            for key in ("text_color", "outline_color", "box_color", "accent_color")
+        },
+        "animation": _animation(value["animation"]),
         "cover": _cover(value["cover"]),
     }
 

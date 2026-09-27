@@ -19,6 +19,9 @@
     "position",
     "bold",
     "italic",
+    "uppercase",
+    "accent_color",
+    "animation",
     "cover"
   ],
   "properties": {
@@ -85,6 +88,60 @@
     },
     "italic": {
       "type": "boolean"
+    },
+    "uppercase": {
+      "type": "boolean"
+    },
+    "accent_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "out", "emphasis"],
+      "properties": {
+        "in": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset", "duration_ms"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "fade", "pop", "slide-up", "slide-left", "typewriter", "blur"]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3000
+            }
+          }
+        },
+        "out": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset", "duration_ms"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "fade", "pop-out", "slide-down"]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3000
+            }
+          }
+        },
+        "emphasis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "karaoke", "color", "pop", "appear", "one-at-a-time"]
+            }
+          }
+        }
+      }
     },
     "cover": {
       "oneOf": [

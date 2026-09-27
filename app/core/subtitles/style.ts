@@ -11,6 +11,38 @@ export interface CoverBand {
   opacity: number;
 }
 
+export const ANIMATION_IN_PRESETS = [
+  'none',
+  'fade',
+  'pop',
+  'slide-up',
+  'slide-left',
+  'typewriter',
+  'blur',
+] as const;
+export const ANIMATION_OUT_PRESETS = ['none', 'fade', 'pop-out', 'slide-down'] as const;
+export const ANIMATION_EMPHASIS_PRESETS = [
+  'none',
+  'karaoke',
+  'color',
+  'pop',
+  'appear',
+  'one-at-a-time',
+] as const;
+export type AnimationIn = (typeof ANIMATION_IN_PRESETS)[number];
+export type AnimationOut = (typeof ANIMATION_OUT_PRESETS)[number];
+export type AnimationEmphasis = (typeof ANIMATION_EMPHASIS_PRESETS)[number];
+export interface SubtitleAnimation {
+  in: { preset: AnimationIn; duration_ms: number };
+  out: { preset: AnimationOut; duration_ms: number };
+  emphasis: { preset: AnimationEmphasis };
+}
+export const defaultSubtitleAnimation: Readonly<SubtitleAnimation> = Object.freeze({
+  in: { preset: 'none', duration_ms: 200 },
+  out: { preset: 'none', duration_ms: 200 },
+  emphasis: { preset: 'none' },
+} as const);
+
 export interface SubtitleStyle {
   font_family: string;
   font_size_pct: number;
@@ -26,6 +58,9 @@ export interface SubtitleStyle {
   spacing_pct: number;
   bold: boolean;
   italic: boolean;
+  uppercase: boolean;
+  accent_color: string;
+  animation: SubtitleAnimation;
   cover: CoverBand | null;
 }
 
@@ -44,6 +79,9 @@ export const defaultSubtitleStyle: Readonly<SubtitleStyle> = Object.freeze({
   spacing_pct: 0,
   bold: false,
   italic: false,
+  uppercase: false,
+  accent_color: '#FFD400',
+  animation: defaultSubtitleAnimation,
   cover: null,
 });
 
@@ -77,6 +115,38 @@ const STYLE_RANGES: Record<string, [number, number]> = {
   margin_y_pct: [0, 40],
   spacing_pct: [-0.2, 2],
 };
+
+function animationPartInvalid(
+  raw: unknown,
+  presets: readonly string[],
+  withDuration: boolean,
+): boolean {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return true;
+  const entry = raw as Record<string, unknown>;
+  const keys = withDuration ? ['preset', 'duration_ms'] : ['preset'];
+  if (Object.keys(entry).length !== keys.length || keys.some((key) => !(key in entry))) return true;
+  if (typeof entry.preset !== 'string' || !presets.includes(entry.preset)) return true;
+  return (
+    withDuration &&
+    (!Number.isInteger(entry.duration_ms) ||
+      Number(entry.duration_ms) < 0 ||
+      Number(entry.duration_ms) > 3000)
+  );
+}
+
+function animationInvalid(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return true;
+  const animation = value as Record<string, unknown>;
+  return (
+    Object.keys(animation).length !== 3 ||
+    !('in' in animation) ||
+    !('out' in animation) ||
+    !('emphasis' in animation) ||
+    animationPartInvalid(animation.in, ANIMATION_IN_PRESETS, true) ||
+    animationPartInvalid(animation.out, ANIMATION_OUT_PRESETS, true) ||
+    animationPartInvalid(animation.emphasis, ANIMATION_EMPHASIS_PRESETS, false)
+  );
+}
 
 function coverBandInvalid(value: unknown): boolean {
   if (value === null) return false;
@@ -114,9 +184,15 @@ function coverBandInvalid(value: unknown): boolean {
 export function subtitleStyleFieldInvalid(key: keyof SubtitleStyle, value: unknown): boolean {
   // Only the bundled families may be named, so live and export resolve the same font file.
   if (key === 'font_family') return typeof value !== 'string' || !isBundledFontFamily(value);
-  if (key === 'bold' || key === 'italic') return typeof value !== 'boolean';
+  if (key === 'bold' || key === 'italic' || key === 'uppercase') return typeof value !== 'boolean';
   if (key === 'cover') return coverBandInvalid(value);
-  if (key === 'text_color' || key === 'outline_color' || key === 'box_color')
+  if (key === 'animation') return animationInvalid(value);
+  if (
+    key === 'text_color' ||
+    key === 'outline_color' ||
+    key === 'box_color' ||
+    key === 'accent_color'
+  )
     return typeof value !== 'string' || !HEX_COLOR.test(value);
   if (key === 'position')
     return typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 9;
@@ -149,6 +225,8 @@ export function parseSubtitleStyle(value: unknown): SubtitleStyle {
     text_color: String(input.text_color).toUpperCase(),
     outline_color: String(input.outline_color).toUpperCase(),
     box_color: String(input.box_color).toUpperCase(),
+    accent_color: String(input.accent_color).toUpperCase(),
+    animation: structuredClone(input.animation as SubtitleAnimation),
     cover: cover === null ? null : { ...cover, color: cover.color.toUpperCase() },
   } as unknown as SubtitleStyle;
 }
