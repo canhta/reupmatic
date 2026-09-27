@@ -10,10 +10,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  type CompositionCommand,
-  editComposition,
-} from '../../../core/editing/composition/commands';
+import type { CompositionCommand } from '../../../core/editing/composition/commands';
 import {
   type Composition,
   type CompositionClip,
@@ -497,13 +494,14 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       if (captured !== rev.current) throw new Error('STALE_OPERATION');
       assertAdmitted(rev.current, captured, renderingPublic.busy || openingRef.current);
       const current = document.getSnapshot();
-      const before: Composition = composition ?? { canvas: value.canvas, clips: [primary] };
-      const edited = editComposition(before, current.cues, {
-        kind: 'insert',
-        index,
-        clip: value.placed,
-      });
-      document.change(compositionSnapshot(current, edited.composition, edited.cues));
+      // The first placement creates the composition; every later placement is one command so
+      // text layers and the voice track remap through the same path as any other edit.
+      const base = composition
+        ? current
+        : compositionSnapshot(current, { canvas: value.canvas, clips: [primary] }, current.cues);
+      document.change(
+        editCompositionSnapshot(base, [{ kind: 'insert', index, clip: value.placed }]),
+      );
     } catch (reason) {
       report(reason);
     }

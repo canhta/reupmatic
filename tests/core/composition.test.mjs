@@ -390,6 +390,37 @@ test('reordering clips carries a voice line to the new output clock through the 
   );
 });
 
+test('inserting a clip at index 0 carries every text layer and the voice track, not only the displayed cues', async () => {
+  const { editCompositionSnapshot } = await import(
+    '../../dist-core/editing/composition/snapshot.js'
+  );
+  const { editTextLayer } = await import('../../dist-core/subtitles/layers/commands.js');
+  let snapshot = editTextLayer({ cues: [cue], composition: composition() }, 'spoken', [cue]);
+  snapshot = editTextLayer(snapshot, 'translated', [cue]);
+  const track = voiceTrack([voiceLine('cue-a', 500, 1000, 800)]);
+  track.origin = { kind: 'copy', layer: 'spoken', token: snapshot.text_layers.spoken.token };
+  snapshot = { ...snapshot, voice_track: track };
+  const next = editCompositionSnapshot(snapshot, [
+    { kind: 'insert', index: 0, clip: clip('clip-new', 'c') },
+  ]);
+  assert.deepEqual(
+    next.cues.map((c) => [c.start_ms, c.end_ms]),
+    [[2500, 3500]],
+  );
+  assert.deepEqual(
+    next.text_layers.spoken.cues.map((c) => [c.start_ms, c.end_ms]),
+    [[2500, 3500]],
+  );
+  assert.deepEqual(
+    next.text_layers.translated.cues.map((c) => [c.start_ms, c.end_ms]),
+    [[2500, 3500]],
+  );
+  assert.deepEqual(
+    next.voice_track.plan.lines.map((line) => [line.cue_id, line.offset_ms, line.slot_ms]),
+    [['cue-a', 2500, 1000]],
+  );
+});
+
 test('splitting a clip carries a voice line whose span the cut crosses', async () => {
   const { editCompositionSnapshot } = await import(
     '../../dist-core/editing/composition/snapshot.js'
