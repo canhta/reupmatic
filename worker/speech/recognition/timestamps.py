@@ -1,4 +1,8 @@
-"""Convert adapter segment seconds into bounded source-clock cues."""
+"""Convert adapter segment seconds into bounded source-clock cues.
+
+Recognition returns one cue per adapter segment, each carrying the measured word timings it
+computed. Sizing the cues for reading speed and layout belongs to the core splitter, not here.
+"""
 
 import json
 import math
@@ -6,22 +10,12 @@ from collections.abc import Callable, Iterable
 
 from runtime.errors import WorkerError
 
-# Subtitle sizing for short-form video. Product policy: pending owner confirmation.
-MAX_CUE_CHARS = 42
-MAX_CUE_MS = 3500
-
 
 def _seconds(value: object) -> bool:
     # faster-whisper returns NumPy float64 for segment and word clocks; `bool` is not a clock.
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
     return math.isfinite(value)
-
-
-def _cue_text(tokens: list[str]) -> str:
-    # Adapter word tokens carry their own leading space, so joining preserves Latin spacing and
-    # does not insert gaps into scripts that have none.
-    return "".join(tokens).strip()
 
 
 def _word_spans(segment, offset_ms: int, end_ms: int) -> list[tuple[str, int, int]]:
@@ -55,33 +49,13 @@ def _word_spans(segment, offset_ms: int, end_ms: int) -> list[tuple[str, int, in
     return spans
 
 
-def _sized_piece(tokens: list[tuple[str, int, int]]) -> tuple[int, int, str, list[dict]]:
-    text = _cue_text([token[0] for token in tokens])
-    words = [{"text": token[0], "start_ms": token[1], "end_ms": token[2]} for token in tokens]
-    # `_cue_text` trims the outer whitespace, so the word texts must trim the same edges to rejoin.
+def _cue_words(spans: list[tuple[str, int, int]]) -> list[dict]:
+    words = [{"text": token, "start_ms": begin, "end_ms": last} for token, begin, last in spans]
+    # The cue text trims its outer whitespace, so the word texts trim the same edges to rejoin.
     words[0]["text"] = words[0]["text"].lstrip()
     words[-1]["text"] = words[-1]["text"].rstrip()
-    return tokens[0][1], tokens[-1][2], text, [word for word in words if word["text"]]
-
-
-def _size_words(spans: list[tuple[str, int, int]]) -> list[tuple[int, int, str, list[dict]]]:
-    """Split words under the cue character and duration limits, keeping word timings."""
-    cues: list[tuple[int, int, str, list[dict]]] = []
-    tokens: list[tuple[str, int, int]] = []
-    begin = 0
-    for text, start, finish in spans:
-        if tokens and (
-            len(_cue_text([*[token[0] for token in tokens], text])) > MAX_CUE_CHARS
-            or finish - begin > MAX_CUE_MS
-        ):
-            cues.append(_sized_piece(tokens))
-            tokens = []
-        if not tokens:
-            begin = start
-        tokens.append((text, start, finish))
-    if tokens:
-        cues.append(_sized_piece(tokens))
-    return cues
+    kept = [word for word in words if word["text"]]
+    return kept if kept and "".join(word["text"] for word in kept) else []
 
 
 def timed_segments(
@@ -116,19 +90,23 @@ def timed_segments(
         if first < previous or last <= first:
             raise WorkerError("SPEECH_TIMING_INVALID")
         spans = _word_spans(segment, start_ms, end_ms)
-        pieces = _size_words(spans) if spans else [(first, last, text.strip(), [])]
-        for piece_first, piece_last, piece_text, piece_words in pieces:
-            cue = {
-                "id": f"stt-{len(cues) + 1}",
-                "start_ms": piece_first,
-                "end_ms": piece_last,
-                "text": piece_text,
-            }
-            if piece_words:
-                cue["words"] = piece_words
-            size += len(json.dumps(cue, ensure_ascii=False).encode("utf-8"))
-            if size > 900000:
-                raise WorkerError("SPEECH_RESULT_TOO_LARGE")
-            cues.append(cue)
+        words = _cue_words(spans) if spans else []
+        if words:
+            piece_first, piece_last = words[0]["start_ms"], words[-1]["end_ms"]
+            piece_text = "".join(word["text"] for word in words)
+        else:
+            piece_first, piece_last, piece_text = first, last, text.strip()
+        cue = {
+            "id": f"stt-{len(cues) + 1}",
+            "start_ms": piece_first,
+            "end_ms": piece_last,
+            "text": piece_text,
+        }
+        if words:
+            cue["words"] = words
+        size += len(json.dumps(cue, ensure_ascii=False).encode("utf-8"))
+        if size > 900000:
+            raise WorkerError("SPEECH_RESULT_TOO_LARGE")
+        cues.append(cue)
         previous = last
     return cues

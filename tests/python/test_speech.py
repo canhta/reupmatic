@@ -258,9 +258,7 @@ class SpeechServiceTests(unittest.TestCase):
         )
         self.assertEqual(cues[1]["text"], "你好")
 
-    def test_word_timestamps_split_a_segment_on_the_source_clock(self):
-        from speech.recognition.timestamps import MAX_CUE_CHARS, timed_segments
-
+    def test_word_timestamps_are_kept_on_one_segment_cue(self):
         words = [
             SimpleNamespace(start=index * 0.25, end=(index + 1) * 0.25, word=f" {name}")
             for index, name in enumerate(
@@ -274,19 +272,14 @@ class SpeechServiceTests(unittest.TestCase):
             words=words,
         )
         cues = timed_segments([segment], 5000, 8000, lambda _: None)
-        self.assertEqual(
-            [cue["text"] for cue in cues],
-            ["one two three four five six seven eight", "nine ten"],
-        )
-        self.assertEqual(
-            [(cue["start_ms"], cue["end_ms"]) for cue in cues], [(5000, 7000), (7000, 7500)]
-        )
-        self.assertTrue(all(len(cue["text"]) <= MAX_CUE_CHARS for cue in cues))
-        self.assertEqual([cue["id"] for cue in cues], ["stt-1", "stt-2"])
+        self.assertEqual(len(cues), 1)
+        self.assertEqual(cues[0]["text"], "one two three four five six seven eight nine ten")
+        self.assertEqual((cues[0]["start_ms"], cues[0]["end_ms"]), (5000, 7500))
+        self.assertEqual("".join(word["text"] for word in cues[0]["words"]), cues[0]["text"])
+        self.assertEqual(len(cues[0]["words"]), 10)
+        self.assertEqual(cues[0]["words"][0], {"text": "one", "start_ms": 5000, "end_ms": 5250})
 
-    def test_word_timestamps_split_a_cue_that_runs_too_long(self):
-        from speech.recognition.timestamps import MAX_CUE_MS, timed_segments
-
+    def test_a_long_segment_is_one_cue_for_the_core_splitter_to_size(self):
         words = [
             SimpleNamespace(start=0.0, end=1.0, word=" one"),
             SimpleNamespace(start=1.0, end=2.0, word=" two"),
@@ -295,8 +288,8 @@ class SpeechServiceTests(unittest.TestCase):
         ]
         segment = SimpleNamespace(start=0.0, end=4.5, text=" one two three four", words=words)
         cues = timed_segments([segment], 0, 5000, lambda _: None)
-        self.assertEqual([cue["text"] for cue in cues], ["one two three", "four"])
-        self.assertTrue(all(cue["end_ms"] - cue["start_ms"] <= MAX_CUE_MS for cue in cues))
+        self.assertEqual([cue["text"] for cue in cues], ["one two three four"])
+        self.assertEqual((cues[0]["start_ms"], cues[0]["end_ms"]), (0, 4500))
 
     def test_a_segment_without_words_stays_one_cue(self):
         from speech.recognition.timestamps import timed_segments
