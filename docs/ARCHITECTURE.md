@@ -50,6 +50,10 @@ Each public capability exposes one small interface and keeps its store private. 
 import React, React DOM or Electron. Host modules translate a seam (IPC, NDJSON, SQLite, a native
 API) — core policy is not an adapter.
 
+The renderer has one drawer frame: `app/ui/design-system/SidePanel.tsx`, built from Astryx `Layout`.
+The editor regions, the detail drawers and Batch & jobs compose it; feature code does not hand-build
+a drawer header, scroll area or footer.
+
 The base Python bundle carries only the worker, faster-whisper and CTranslate2 translation. Vision
 (RapidOCR/OpenCV) and VieNeu synthesis are **runtime packs** the user installs with a model that
 needs them: the host installs a pack into `userData/runtime-packs/<name>/<version>` and appends the

@@ -732,7 +732,7 @@ async function activeInfo(page) {
       role: element.getAttribute('role'),
       label: element.getAttribute('aria-label'),
       text: (element.textContent || '').trim().slice(0, 48),
-      inPanel: Boolean(element.closest('.editor-side-panel-body')),
+      inPanel: Boolean(element.closest('.side-panel-content')),
     };
   });
 }

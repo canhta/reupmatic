@@ -9,7 +9,6 @@ export const editorVi = {
   setUp: 'Thiết lập…',
   toolRailLabel: 'Công cụ',
   sourceRailLabel: 'Nguồn',
-  closePanel: 'Đóng bảng',
   toolTranscribe: 'Nhận dạng',
   toolTranslate: 'Dịch',
   toolVoice: 'Giọng đọc',

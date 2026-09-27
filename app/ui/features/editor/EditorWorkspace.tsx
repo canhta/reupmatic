@@ -127,7 +127,7 @@ function EditorStudio() {
     containerRef: studioBodyRef,
     autoSaveId: 'editor.regions.toolPanelWidth',
     defaultSize: REGION_DEFAULTS.toolPanel,
-    minSize: 280,
+    minSize: 340,
     maxSize: percent(28, { min: pixel(360) }),
     collapsible: true,
     collapsedSize: 44,

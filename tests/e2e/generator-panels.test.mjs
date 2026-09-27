@@ -301,7 +301,7 @@ for (const locale of ['en', 'vi']) {
             path: path.join(screenshots, `transcribe-ocr-section-${locale}-${width}x${height}.png`),
           });
           await page.evaluate(() => {
-            const body = document.querySelector('.editor-side-panel-body');
+            const body = document.querySelector('.side-panel-content');
             if (body) body.scrollTo({ top: 0 });
           });
         }

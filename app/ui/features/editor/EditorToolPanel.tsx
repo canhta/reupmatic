@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SidePanel } from '../../design-system/SidePanel';
 import { SpeechSetup } from '../speech/SpeechGenerator';
 import { TranslateSetup } from '../speech/translation/TranslateGenerator';
 import { OcrSetup } from '../vision/OcrExtractGenerator';
@@ -6,7 +7,6 @@ import { AudioPanel } from './audio-tools/AudioPanel';
 import { VoicePanel } from './audio-tools/VoicePanel';
 import { ClipsPanel } from './composition/ClipsPanel';
 import { useEditor } from './EditorContext';
-import { EditorSidePanel } from './EditorSidePanel';
 import { TOOL_LABEL_KEY, type ToolId, useEditorTools } from './EditorToolContext';
 import { SubtitleStylesPanel } from './subtitle-styles/SubtitleStylesPanel';
 
@@ -15,15 +15,15 @@ export function EditorToolPanel({ onClose }: { onClose: () => void }) {
   const { activeTool } = useEditorTools();
   if (!activeTool) return null;
   return (
-    <EditorSidePanel
+    <SidePanel
       id={`panel-${activeTool}`}
       tabId={`tab-${activeTool}`}
-      title={t(TOOL_LABEL_KEY[activeTool])}
+      label={t(TOOL_LABEL_KEY[activeTool])}
       onClose={onClose}
       className="editor-tool-panel"
     >
       <ToolPanelContent activeTool={activeTool} />
-    </EditorSidePanel>
+    </SidePanel>
   );
 }
 

@@ -7,7 +7,6 @@ export const editorEn = {
   setUp: 'Set up…',
   toolRailLabel: 'Tools',
   sourceRailLabel: 'Sources',
-  closePanel: 'Close panel',
   toolTranscribe: 'Transcribe',
   toolTranslate: 'Translate',
   toolVoice: 'Voice',

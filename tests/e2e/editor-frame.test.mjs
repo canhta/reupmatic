@@ -395,7 +395,7 @@ test('region layout holds across window widths 1050-1920 and heights 700-900', {
             );
 
             const headerTops = await Promise.all(
-              ['.monitor-header', '.editor-side-panel-header'].map(async (selector) => {
+              ['.monitor-header', '.side-panel-header'].map(async (selector) => {
                 const box = await page.locator(selector).boundingBox();
                 return box?.y ?? null;
               }),

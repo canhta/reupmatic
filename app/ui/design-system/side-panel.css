@@ -1,0 +1,17 @@
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-panel);
+}
+
+.side-panel-header {
+  min-width: 0;
+}
+
+.side-panel-footer {
+  min-width: 0;
+}

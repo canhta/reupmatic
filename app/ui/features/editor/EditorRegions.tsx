@@ -2,14 +2,14 @@ import type { ResizableRegion } from '@astryxdesign/core/Resizable';
 import { ResizeHandle } from '@astryxdesign/core/Resizable';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
+import { SidePanel } from '../../design-system/SidePanel';
 import { CuePanel } from './CuePanel';
-import { EditorSidePanel } from './EditorSidePanel';
 import { SOURCE_LABEL_KEY, useEditorSources } from './EditorSourceContext';
 import { EditorToolPanel } from './EditorToolPanel';
 import { ProjectMediaSection } from './ProjectMediaSection';
 
 const SOURCE_DEFAULT_WIDTH = 330;
-const TOOL_PANEL_DEFAULT_WIDTH = 300;
+const TOOL_PANEL_DEFAULT_WIDTH = 360;
 
 export function EditorSourceRegion({ region }: { region: ResizableRegion }) {
   const { t } = useTranslation();
@@ -17,14 +17,14 @@ export function EditorSourceRegion({ region }: { region: ResizableRegion }) {
   if (!activeSource) return null;
   return (
     <VStack className="editor-source-region" width={region.size}>
-      <EditorSidePanel
+      <SidePanel
         id={`panel-${activeSource}`}
         tabId={`tab-${activeSource}`}
-        title={t(SOURCE_LABEL_KEY[activeSource])}
+        label={t(SOURCE_LABEL_KEY[activeSource])}
         onClose={collapseSource}
       >
         {activeSource === 'media' ? <ProjectMediaSection /> : <CuePanel />}
-      </EditorSidePanel>
+      </SidePanel>
     </VStack>
   );
 }

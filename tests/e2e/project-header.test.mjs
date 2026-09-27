@@ -180,7 +180,7 @@ for (const locale of ['en', 'vi']) {
         );
         const menuBox = await page.getByRole('menu').boundingBox();
         assert.ok(menuBox, 'the menu has a box');
-        const headerBox = await page.locator('.editor-side-panel-header').boundingBox();
+        const headerBox = await page.locator('.side-panel-header').boundingBox();
         assert.ok(headerBox, 'the open panel has a header');
         const intersects = !(
           menuBox.x + menuBox.width <= headerBox.x ||
