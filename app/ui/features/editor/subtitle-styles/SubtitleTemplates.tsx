@@ -2,7 +2,7 @@ import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import JASSUB from 'jassub';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { defaultSubtitleStyle, type SubtitleStyle } from '../../../../core/subtitles/style';
 import {
@@ -12,10 +12,15 @@ import {
   subtitleTemplates,
 } from '../../../../core/subtitles/templates';
 import { unwrap } from '../../../bridge/client';
+import { recordRendererDiagnostic } from '../../../shell/diagnostics';
 import { useEditor } from '../EditorContext';
 
 const SAMPLE_TEXT = 'Bold words win';
 const SAMPLE_DURATION_MS = 1400;
+/** A time at which every preset shows its fully-shown state. */
+const STATIC_TIME_MS = 800;
+/** A canvas-only renderer needs a few frames before the static frame is composited. */
+const STATIC_FRAMES = 12;
 const SAMPLE_CUE = {
   id: 'template-sample',
   start_ms: 0,
@@ -28,15 +33,43 @@ const SAMPLE_CUE = {
   ],
 };
 
-/** Renders the worker's real ASS for one template on a small canvas, looping the motion. */
-function TemplateThumbnail({ template }: { template: SubtitleTemplate }) {
+function reasonMessage(reason: unknown): string {
+  return reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason);
+}
+
+/** Renders the worker's real ASS for one template on a small canvas: static, motion on demand. */
+function TemplateThumbnail({
+  template,
+  disabled,
+  onSelect,
+}: {
+  template: SubtitleTemplate;
+  disabled: boolean;
+  onSelect(): void;
+}) {
+  const { t } = useTranslation();
   const editor = useEditor();
   const canvas = useRef<HTMLCanvasElement>(null);
+  const instance = useRef<JASSUB | null>(null);
+  const frame = useRef(0);
   const [assText, setAssText] = useState('');
+  const [failed, setFailed] = useState(false);
+  const [active, setActive] = useState(false);
   const { asset_id } = editor.media ?? { asset_id: '' };
   const { width, height } = editor.subtitleCanvas;
   const style = applySubtitleTemplate(defaultSubtitleStyle, template);
   const styleKey = JSON.stringify(style);
+  const name = t(`styleTemplate_${template.id}`);
+
+  const fail = useCallback(
+    (reason: unknown) => {
+      setFailed(true);
+      recordRendererDiagnostic('warn', 'editor.template-thumbnail-failed', reasonMessage(reason), {
+        template: template.id,
+      });
+    },
+    [template.id],
+  );
 
   useEffect(() => {
     if (!asset_id) return;
@@ -52,66 +85,128 @@ function TemplateThumbnail({ template }: { template: SubtitleTemplate }) {
       .then((value) => {
         if (alive) setAssText(value.ass_text);
       })
-      .catch(() => undefined);
+      .catch((reason) => {
+        if (alive) fail(reason);
+      });
     return () => {
       alive = false;
     };
-  }, [asset_id, editor.revision, styleKey]);
+  }, [asset_id, editor.revision, styleKey, fail]);
 
   useEffect(() => {
     const element = canvas.current;
     if (!element || !assText) return;
-    let instance: JASSUB;
     let alive = true;
-    let frame = 0;
+    let renderer: JASSUB;
     try {
-      instance = new JASSUB({
+      renderer = new JASSUB({
         canvas: element,
         subContent: '[Script Info]\nScriptType: v4.00+\n',
         queryFonts: false,
       });
-    } catch {
+    } catch (reason) {
+      fail(reason);
       return;
     }
-    const sized = instance as unknown as { _videoWidth: number; _videoHeight: number };
+    const sized = renderer as unknown as { _videoWidth: number; _videoHeight: number };
     sized._videoWidth = width;
     sized._videoHeight = height;
-    void instance.ready
+    instance.current = renderer;
+    void renderer.ready
       .then(async () => {
         if (!alive) return;
-        await instance.renderer.setTrack(assText);
-        await instance.resize(true);
-        const started = performance.now();
-        const loop = () => {
+        await renderer.renderer.setTrack(assText);
+        await renderer.resize(true);
+        // A canvas-only renderer needs a few frames before the static frame is composited.
+        let ticks = 0;
+        const still = () => {
           if (!alive) return;
-          const elapsed = (performance.now() - started) % SAMPLE_DURATION_MS;
-          void instance.manualRender(
+          void renderer.manualRender(
             {
               expectedDisplayTime: performance.now(),
               width,
               height,
-              mediaTime: elapsed / 1000,
+              mediaTime: STATIC_TIME_MS / 1000,
             },
             true,
           );
-          frame = requestAnimationFrame(loop);
+          ticks += 1;
+          if (ticks < STATIC_FRAMES) frame.current = requestAnimationFrame(still);
         };
-        loop();
+        still();
       })
-      .catch(() => undefined);
+      .catch((reason) => {
+        if (alive) fail(reason);
+      });
     return () => {
       alive = false;
-      cancelAnimationFrame(frame);
-      void instance.destroy();
+      cancelAnimationFrame(frame.current);
+      instance.current = null;
+      void renderer.destroy();
     };
-  }, [assText, width, height]);
+  }, [assText, width, height, fail]);
 
+  useEffect(() => {
+    cancelAnimationFrame(frame.current);
+    if (!active) {
+      const renderer = instance.current;
+      if (!renderer) return;
+      let ticks = 0;
+      const still = () => {
+        void renderer.manualRender(
+          {
+            expectedDisplayTime: performance.now(),
+            width,
+            height,
+            mediaTime: STATIC_TIME_MS / 1000,
+          },
+          true,
+        );
+        ticks += 1;
+        if (ticks < STATIC_FRAMES) frame.current = requestAnimationFrame(still);
+      };
+      still();
+      return;
+    }
+    const started = performance.now();
+    const loop = () => {
+      const renderer = instance.current;
+      if (renderer) {
+        void renderer.manualRender(
+          {
+            expectedDisplayTime: performance.now(),
+            width,
+            height,
+            mediaTime: ((performance.now() - started) % SAMPLE_DURATION_MS) / 1000,
+          },
+          true,
+        );
+      }
+      frame.current = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => cancelAnimationFrame(frame.current);
+  }, [active, width, height]);
+
+  if (failed) return null;
   return (
-    <canvas
-      ref={canvas}
-      className="template-thumbnail"
-      style={{ aspectRatio: `${width} / ${height}` }}
-    />
+    <button
+      type="button"
+      className="template-thumbnail-wrap"
+      aria-label={name}
+      disabled={disabled}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onFocus={() => setActive(true)}
+      onBlur={() => setActive(false)}
+      onClick={onSelect}
+    >
+      <canvas
+        ref={canvas}
+        className="template-thumbnail"
+        style={{ aspectRatio: `${width} / ${height}` }}
+      />
+    </button>
   );
 }
 
@@ -138,12 +233,15 @@ export function SubtitleTemplates({
           align="center"
           density="compact"
           isDisabled={disabled}
-          aria-current={current === template.id ? 'true' : undefined}
-          label={<TemplateThumbnail template={template} />}
+          isSelected={current === template.id}
+          label={
+            <TemplateThumbnail
+              template={template}
+              disabled={disabled}
+              onSelect={() => onChange(applySubtitleTemplate(effective, template))}
+            />
+          }
           description={t(`styleTemplate_${template.id}`)}
-          onClick={() => {
-            if (!disabled) onChange(applySubtitleTemplate(effective, template));
-          }}
         />
       ))}
     </VStack>

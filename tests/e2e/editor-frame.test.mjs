@@ -877,6 +877,79 @@ for (const locale of ['en', 'vi']) {
   });
 }
 
+/** Counts pixels that differ from the tile's top-left background, via Electron's nativeImage. */
+async function paintedPixels(application, buffer) {
+  return application.evaluate(({ nativeImage }, base64) => {
+    const image = nativeImage.createFromBuffer(Buffer.from(base64, 'base64'));
+    const bitmap = image.toBitmap();
+    const [b0, g0, r0] = [bitmap[0], bitmap[1], bitmap[2]];
+    let count = 0;
+    for (let index = 0; index < bitmap.length; index += 4) {
+      if (
+        Math.abs(bitmap[index] - b0) +
+          Math.abs(bitmap[index + 1] - g0) +
+          Math.abs(bitmap[index + 2] - r0) >
+        60
+      )
+        count += 1;
+    }
+    return count;
+  }, buffer.toString('base64'));
+}
+
+const THUMBNAIL_STYLE_TAB = { en: 'Style', vi: 'Kiểu chữ' };
+for (const locale of ['en', 'vi']) {
+  test(`Style template thumbnails paint their sample and animate on hover (${locale})`, {
+    timeout: 150000,
+  }, async () => {
+    const { temp, userData } = await createTempWorkspace(`reupmatic-template-thumbs-${locale}-`);
+    const video = makeTestVideo(temp);
+    await runElectronTest(
+      { temp, userData, screenshotName: `template-thumbs-${locale}-failure.png` },
+      async ({ application, page }) => {
+        await waitForEditorReady(page);
+        if (locale !== 'en') {
+          await chooseLocale(application, page, locale);
+          await page.getByRole('button', { name: 'Editor', exact: true }).click();
+        }
+        await openRealVideo(application, page, video);
+        await page.getByRole('tab', { name: THUMBNAIL_STYLE_TAB[locale], exact: true }).click();
+        const tiles = page.locator('.template-thumbnail');
+        await tiles.first().waitFor({ timeout: 30000 });
+        assert.equal(await tiles.count(), 4, 'one thumbnail per template');
+        for (let index = 0; index < 4; index += 1) {
+          const tile = tiles.nth(index);
+          const deadline = Date.now() + 30000;
+          let painted = 0;
+          while (Date.now() < deadline) {
+            painted = await paintedPixels(application, await tile.screenshot());
+            if (painted > 30) break;
+            await page.waitForTimeout(300);
+          }
+          assert.ok(painted > 30, `thumbnail ${index} paints its sample line (${painted} px)`);
+        }
+        const first = tiles.first();
+        const before = await first.screenshot();
+        await first.hover();
+        const hoverDeadline = Date.now() + 10000;
+        let changed = false;
+        while (Date.now() < hoverDeadline) {
+          if (!(await first.screenshot()).equals(before)) {
+            changed = true;
+            break;
+          }
+          await page.waitForTimeout(120);
+        }
+        assert.ok(changed, 'hovering a thumbnail plays the motion');
+        await mkdir(SHOTS_DIR, { recursive: true });
+        await page
+          .locator('#panel-style')
+          .screenshot({ path: path.join(SHOTS_DIR, `style-thumbnails-${locale}.png`) });
+      },
+    );
+  });
+}
+
 test('Audio source mute persists to the document and across tool switches', {
   timeout: 60000,
 }, async () => {

@@ -193,10 +193,18 @@
   z-index: 1;
 }
 /* Selection hints: the worker's real ASS rendered on a small canvas per template. */
-.template-thumbnail {
+.template-thumbnail-wrap {
   display: block;
   width: 100%;
   max-width: 160px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.template-thumbnail {
+  display: block;
+  width: 100%;
   background: var(--bg-nav);
   border-radius: var(--radius-sm);
 }
