@@ -61,6 +61,28 @@ export interface LineLengthLimits {
   maxDuration_ms: number;
 }
 
+export function parseLineLengthSettings(value: unknown): LineLengthSettings {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw new Error('INVALID_LINE_LENGTH');
+  const input = value as Record<string, unknown>;
+  const keys = ['mode', 'cps', 'max_lines', 'max_chars'];
+  if (Object.keys(input).length !== keys.length || keys.some((key) => !(key in input)))
+    throw new Error('INVALID_LINE_LENGTH');
+  const { mode, cps, max_lines, max_chars } = input;
+  if (mode !== 'auto' && mode !== 'custom') throw new Error('INVALID_LINE_LENGTH');
+  if (max_lines !== 1 && max_lines !== 2) throw new Error('INVALID_LINE_LENGTH');
+  if (!(cps === null || (typeof cps === 'number' && Number.isFinite(cps) && cps > 0 && cps <= 100)))
+    throw new Error('INVALID_LINE_LENGTH');
+  if (
+    !(
+      max_chars === null ||
+      (Number.isInteger(max_chars) && Number(max_chars) >= 1 && Number(max_chars) <= 500)
+    )
+  )
+    throw new Error('INVALID_LINE_LENGTH');
+  return { mode, cps, max_lines, max_chars } as LineLengthSettings;
+}
+
 /** The character budget and the duration budget derived from reading speed, at least 5/6 s. */
 export function lineLengthLimits(
   text: string,

@@ -10,12 +10,14 @@ import { type ProcessingRecipe, parseProcessingRecipe } from '../processing/reci
 import { parseVoiceTrack, type VoiceTrack } from '../speech/synthesis/voice-track.js';
 import { assertCues, type Cue } from '../subtitles/cues.js';
 import { parseTextLayers, type TextLayers } from '../subtitles/layers/document.js';
+import { type LineLengthSettings, parseLineLengthSettings } from '../subtitles/split.js';
 import { validateProjectTimeline } from './editor-timeline.js';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 export interface EditorSnapshot {
   name?: string;
   text_layers?: TextLayers;
+  line_length?: LineLengthSettings;
   composition?: Composition;
   soundtrack?: Soundtrack;
   voice_track?: VoiceTrack;
@@ -61,6 +63,7 @@ export function assertEditorSnapshot(value: unknown): asserts value is EditorSna
       ...('soundtrack' in value ? ['soundtrack'] : []),
       ...('composition' in value ? ['composition'] : []),
       ...('text_layers' in value ? ['text_layers'] : []),
+      ...('line_length' in value ? ['line_length'] : []),
       ...('voice_track' in value ? ['voice_track'] : []),
       ...('media' in value ? ['media'] : []),
     ])
@@ -68,6 +71,7 @@ export function assertEditorSnapshot(value: unknown): asserts value is EditorSna
     throw new Error('INVALID_PROJECT');
   if ('name' in value) projectName(value.name);
   assertCues(value.cues);
+  if ('line_length' in value) parseLineLengthSettings(value.line_length);
   if ('media' in value) parseProjectMedia(value.media);
   if ('text_layers' in value) parseTextLayers(value.text_layers);
   if ('composition' in value) parseComposition(value.composition);
@@ -95,6 +99,7 @@ export function parseProject(value: unknown): ProjectFile {
       ...('soundtrack' in value ? ['soundtrack'] : []),
       ...('composition' in value ? ['composition'] : []),
       ...('text_layers' in value ? ['text_layers'] : []),
+      ...('line_length' in value ? ['line_length'] : []),
       ...('voice_track' in value ? ['voice_track'] : []),
       ...('media' in value ? ['media'] : []),
     ])
@@ -123,6 +128,7 @@ export function parseProject(value: unknown): ProjectFile {
     ...('soundtrack' in value ? { soundtrack: value.soundtrack } : {}),
     ...('composition' in value ? { composition: value.composition } : {}),
     ...('text_layers' in value ? { text_layers: value.text_layers } : {}),
+    ...('line_length' in value ? { line_length: value.line_length } : {}),
     ...('voice_track' in value ? { voice_track: value.voice_track } : {}),
     ...('media' in value ? { media: value.media } : {}),
   });

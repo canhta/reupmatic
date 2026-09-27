@@ -1,10 +1,13 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -15,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { speechDraftFresh } from '../../../core/speech/draft-freshness';
 import { offeredSpeechEngines } from '../../../core/speech/engine-capability';
 import { getTextLayer } from '../../../core/subtitles/layers/document';
+import { CHINESE_CPS, LATIN_CPS, type LineLengthSettings } from '../../../core/subtitles/split';
 import { InspectorPanelSection } from '../../design-system/InspectorPanelSection';
 import { useEditor } from '../editor/EditorContext';
 import { useEditorGenerators } from '../editor/EditorGeneratorContext';
@@ -150,8 +154,100 @@ export function SpeechSetup() {
             }}
           />
         </HStack>
+        <LineLengthSection />
       </Stack>
     </InspectorPanelSection>
+  );
+}
+
+function LineLengthSection() {
+  const { t } = useTranslation();
+  const editor = useEditor();
+  const { speech: job } = useEditorGenerators();
+  const transcript = getTextLayer(editor.textSnapshot, 'transcript');
+  const settings = editor.lineLength;
+  const busy = Boolean(job.active) || job.settingUp;
+  const update = (patch: Partial<LineLengthSettings>) =>
+    editor.changeLineLength({ ...settings, ...patch });
+  const defaultCps = transcript.language === 'zh' ? CHINESE_CPS : LATIN_CPS;
+  return (
+    <Collapsible trigger={t('lineLengthTitle')} defaultIsOpen={false}>
+      <VStack gap={2} paddingBlock={2}>
+        <Selector
+          label={t('lineLengthMode')}
+          value={settings.mode}
+          isDisabled={busy}
+          options={[
+            { value: 'auto', label: t('lineLengthModeAuto') },
+            { value: 'custom', label: t('lineLengthModeCustom') },
+          ]}
+          onChange={(value) => update({ mode: value === 'custom' ? 'custom' : 'auto' })}
+        />
+        {settings.mode === 'custom' && (
+          <>
+            <NumberInput
+              label={t('lineLengthCps')}
+              value={settings.cps ?? defaultCps}
+              min={1}
+              max={100}
+              step={1}
+              isIntegerOnly
+              isWheelEnabled={false}
+              isDisabled={busy}
+              onChange={(value) => update({ cps: value })}
+            />
+            <Selector
+              label={t('lineLengthMaxLines')}
+              value={String(settings.max_lines)}
+              isDisabled={busy}
+              options={[
+                { value: '1', label: '1' },
+                { value: '2', label: '2' },
+              ]}
+              onChange={(value) => update({ max_lines: value === '2' ? 2 : 1 })}
+            />
+            <CheckboxInput
+              label={t('lineLengthAutoChars')}
+              value={settings.max_chars === null}
+              isDisabled={busy}
+              onChange={(checked) => update({ max_chars: checked ? null : 42 })}
+            />
+            {settings.max_chars !== null && (
+              <NumberInput
+                label={t('lineLengthMaxChars')}
+                value={settings.max_chars}
+                min={1}
+                max={500}
+                step={1}
+                isIntegerOnly
+                isWheelEnabled={false}
+                isDisabled={busy}
+                onChange={(value) => update({ max_chars: value })}
+              />
+            )}
+          </>
+        )}
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Button
+            size="sm"
+            label={t('lineLengthResplit')}
+            isDisabled={busy || editor.opening || !transcript.cues.length}
+            onClick={() => {
+              try {
+                editor.resplitTranscript();
+              } catch (reason) {
+                job.report(reason);
+              }
+            }}
+          />
+          {editor.transcriptNeedsResplit && (
+            <Text as="p" type="supporting">
+              {t('lineLengthStale')}
+            </Text>
+          )}
+        </HStack>
+      </VStack>
+    </Collapsible>
   );
 }
 

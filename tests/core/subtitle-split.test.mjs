@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createProject, parseProject } from '../../dist-core/projects/project.js';
 import {
   CHINESE_CPS,
   defaultLineLengthSettings,
   LATIN_CPS,
   lineLengthLimits,
   MIN_ON_SCREEN_MS,
+  parseLineLengthSettings,
   splitCue,
   splitCues,
 } from '../../dist-core/subtitles/split.js';
@@ -133,4 +135,36 @@ test('splitCue keeps a fitting cue untouched and splits one that does not fit', 
     latinFrame,
   );
   assert.deepEqual(noWords, [{ text: 'x', start_ms: 10, end_ms: 20, words: [] }]);
+});
+
+test('line-length settings are strict and survive a project round trip', () => {
+  assert.deepEqual(parseLineLengthSettings(defaultLineLengthSettings), defaultLineLengthSettings);
+  assert.deepEqual(
+    parseLineLengthSettings({ mode: 'custom', cps: 12.5, max_lines: 1, max_chars: 30 }),
+    { mode: 'custom', cps: 12.5, max_lines: 1, max_chars: 30 },
+  );
+  for (const bad of [
+    { mode: 'auto', cps: null, max_lines: 3, max_chars: null },
+    { mode: 'custom', cps: 0, max_lines: 2, max_chars: null },
+    { mode: 'custom', cps: null, max_lines: 2, max_chars: 0 },
+    { mode: 'custom', cps: null, max_lines: 2, max_chars: 501 },
+    { mode: 'custom', cps: 1, max_lines: 2 },
+    { mode: 'custom', cps: 1, max_lines: 2, max_chars: null, extra: true },
+  ]) {
+    assert.throws(() => parseLineLengthSettings(bad), /INVALID_LINE_LENGTH/);
+  }
+  const line_length = { mode: 'custom', cps: 14, max_lines: 1, max_chars: 28 };
+  const project = createProject(
+    { path: '/source.mp4', sha256: 'a'.repeat(64) },
+    { cues: [], line_length },
+  );
+  assert.deepEqual(parseProject(JSON.parse(JSON.stringify(project))).line_length, line_length);
+  assert.throws(
+    () =>
+      createProject(
+        { path: '/source.mp4', sha256: 'a'.repeat(64) },
+        { cues: [], line_length: { ...line_length, max_lines: 4 } },
+      ),
+    /INVALID_LINE_LENGTH/,
+  );
 });

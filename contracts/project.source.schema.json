@@ -146,6 +146,43 @@
         "additionalProperties": false
       }
     },
+    "line_length": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "cps", "max_lines", "max_chars"],
+      "properties": {
+        "mode": {
+          "enum": ["auto", "custom"]
+        },
+        "cps": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_lines": {
+          "enum": [1, 2]
+        },
+        "max_chars": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "media": {
       "type": "array",
       "maxItems": 64,

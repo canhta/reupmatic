@@ -72,6 +72,12 @@ import {
   type TextLayerName,
   visibleTextLayer,
 } from '../../../core/subtitles/layers/document';
+import {
+  defaultLineLengthSettings,
+  type LineLengthSettings,
+  splitCue,
+} from '../../../core/subtitles/split';
+import { defaultSubtitleStyle } from '../../../core/subtitles/style';
 import type { OcrResult } from '../../../core/vision/vision';
 import { type Capabilities, unwrap } from '../../bridge/client';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
@@ -117,6 +123,10 @@ export interface EditorSession {
   visibleLayer: TextLayerName | null;
   changeLayerVisibility: (name: TextLayerName, visible: boolean) => void;
   activeLayer: TextLayer;
+  lineLength: LineLengthSettings;
+  changeLineLength: (value: LineLengthSettings) => void;
+  resplitTranscript: () => boolean;
+  transcriptNeedsResplit: boolean;
   changeLayerCues: (
     next: Cue[],
     name?: TextLayerName,
@@ -231,11 +241,35 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   const { cues, processing, soundtrack, voice_track } = snapshot;
   const voiceTrack = voice_track;
   const activeLayer = getTextLayer(snapshot, activeTextLayer);
+  const lineLength = snapshot.line_length ?? defaultLineLengthSettings;
+  const frameSize = () => ({ width: media?.width ?? 1920, height: media?.height ?? 1080 });
+  function splitTranscriptCues(cues: Cue[]): Cue[] {
+    const style = processing?.subtitle_style ?? defaultSubtitleStyle;
+    const frame = frameSize();
+    return cues.flatMap((cue) => {
+      const pieces = splitCue(cue, lineLength, style, frame);
+      if (pieces.length <= 1) return [cue];
+      return pieces.map((piece, index) => ({
+        id: index === 0 ? cue.id : crypto.randomUUID(),
+        start_ms: piece.start_ms,
+        end_ms: piece.end_ms,
+        text: piece.text,
+        ...(piece.words.length ? { words: piece.words } : {}),
+      }));
+    });
+  }
   const visibleLayer = useMemo(() => visibleTextLayer(snapshot), [snapshot]);
   const burnCues = useMemo(
     () => (visibleLayer ? getTextLayer(snapshot, visibleLayer).cues : []),
     [snapshot, visibleLayer],
   );
+  const transcriptNeedsResplit = useMemo(() => {
+    const style = processing?.subtitle_style ?? defaultSubtitleStyle;
+    const frame = { width: media?.width ?? 1920, height: media?.height ?? 1080 };
+    return getTextLayer(snapshot, 'transcript').cues.some(
+      (cue) => Boolean(cue.words?.length) && splitCue(cue, lineLength, style, frame).length > 1,
+    );
+  }, [snapshot, processing?.subtitle_style, media?.width, media?.height, lineLength]);
   const compositionKey = JSON.stringify(snapshot.composition);
   const composition = useMemo(
     () => (compositionKey ? parseComposition(JSON.parse(compositionKey)) : undefined),
@@ -457,6 +491,15 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     document.change(setLayerVisibility(document.getSnapshot(), name, visible));
   }
 
+  function changeLineLength(value: LineLengthSettings) {
+    document.change({ line_length: value });
+  }
+
+  function resplitTranscript(): boolean {
+    const transcript = getTextLayer(document.getSnapshot(), 'transcript');
+    return changeLayerCues(splitTranscriptCues(transcript.cues), 'transcript');
+  }
+
   function applyLayerCopy(preview: LayerCopyPreview, expectedRevision: number) {
     assertAdmitted(rev.current, expectedRevision, openingRef.current);
     const next = applyTextCopy(document.getSnapshot(), preview);
@@ -486,7 +529,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     // Freshness is the caller's target-layer check; unrelated edits must not block an apply.
     if (result.asset_id !== media?.asset_id || composition || openingRef.current)
       throw new Error('STALE_OPERATION');
-    return changeLayerCues(result.cues, 'transcript', {
+    return changeLayerCues(splitTranscriptCues(result.cues), 'transcript', {
       language: result.language,
       origin: {
         kind: 'stt',
@@ -965,6 +1008,10 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     visibleLayer,
     changeLayerVisibility,
     activeLayer,
+    lineLength,
+    changeLineLength,
+    resplitTranscript,
+    transcriptNeedsResplit,
     changeLayerCues,
     applyLayerCopy,
     reviewLayerSource,
