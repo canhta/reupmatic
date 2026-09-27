@@ -87,3 +87,12 @@ with its source text beside it, so the user can shorten the wording. The window 
   instead of a heuristic.
 - Drift shows on the applied translated layer, not in the draft review; that is correct, since a
   draft cannot drift.
+
+### S6. Place the cover band over the original subtitles automatically (added 2026-09-27)
+
+The cover band (remove-inpaint) defaults to a bottom strip. On real Douyin videos the burned-in
+subtitle often sits higher, so the default does not cover it and the user has to drag it into place.
+Once OCR has run (S1/S2 already compute each original cue's text boxes), offer **Fit to original
+subtitles**: set the band to the union of the detected boxes across the video, padded by a named
+margin, in output-frame coordinates. If boxes jump between two distinct positions, report the
+positions and cover the dominant one rather than one huge band. The user can still adjust by hand.
