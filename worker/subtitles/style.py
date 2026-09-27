@@ -3,8 +3,10 @@ import re
 
 from runtime.errors import WorkerError
 
+from subtitles.fonts import FONT_FAMILIES
+
 DEFAULT_STYLE = {
-    "font_family": "Arial",
+    "font_family": "Be Vietnam Pro",
     "font_size_pct": 4.5,
     "text_color": "#FFFFFF",
     "outline_color": "#000000",
@@ -30,9 +32,7 @@ def parse_style(value):
     font = value["font_family"]
     if (
         not isinstance(font, str)
-        or not 1 <= len(font) <= 80
-        or not font.strip()
-        or any(not (c.isalnum() or c in " _.-") for c in font)
+        or font not in FONT_FAMILIES
         or type(value["bold"]) is not bool
         or type(value["italic"]) is not bool
     ):

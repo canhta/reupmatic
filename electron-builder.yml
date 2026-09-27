@@ -37,6 +37,9 @@ extraResources:
       - "!runtime-packs/**"
   - from: ffmpeg
     to: ffmpeg
+  # The one bundled font set; libass (export) and JASSUB (live) both read it.
+  - from: fonts
+    to: fonts
 mac:
   category: public.app-category.video
   target:

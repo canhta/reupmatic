@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { unwrap } from '../../bridge/client';
 import { useEditor } from './EditorContext';
+import { jassubFontOptions } from './jassub-fonts';
 
 export function useMediaAdapters() {
   const { media, composition, video, ass, getRevision, report } = useEditor();
@@ -17,6 +18,7 @@ export function useMediaAdapters() {
       instance = new JASSUB({
         video: video.current,
         subContent: '[Script Info]\nScriptType: v4.00+\n',
+        ...jassubFontOptions(),
         queryFonts: false,
       });
     } catch {

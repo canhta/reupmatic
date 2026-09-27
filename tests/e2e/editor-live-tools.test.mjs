@@ -53,25 +53,29 @@ test('Editor tool panels apply live, validate in place and hide empty actions', 
       await addMediaToProject(page);
       await page.locator('video[data-monitor-video="source"]').waitFor();
 
-      // Style: invalid fields are marked inline and never applied; valid edits apply live.
+      // Style: the font is chosen from the bundled families only; invalid fields are marked
+      // inline and never applied; valid edits apply live.
       await page.getByRole('tab', { name: 'Style', exact: true }).click();
       await page.locator('#panel-style').waitFor({ state: 'visible' });
-      const font = page.getByRole('textbox', { name: 'Installed font family', exact: true });
-      const fontError = page
+      const font = page.getByRole('combobox', { name: 'Installed font family', exact: true });
+      await font.click();
+      await page.getByRole('option', { name: 'Be Vietnam Pro', exact: true }).click();
+      const color = page.getByRole('textbox', { name: 'Text color', exact: true }).first();
+      const colorError = page
         .locator('#panel-style')
-        .getByText('Enter an installed font name.', { exact: true })
+        .getByText('Use a 6-digit hex like #FFFFFF.', { exact: true })
         .first();
-      await font.fill('Arial,10');
-      await font.blur();
-      await fontError.waitFor();
+      await color.fill('red');
+      await color.blur();
+      await colorError.waitFor();
       assert.equal(
         await page.getByRole('button', { name: 'Apply appearance', exact: true }).count(),
         0,
         'the style panel must not keep an Apply action',
       );
-      await font.fill('DejaVu Sans');
-      await font.blur();
-      await fontError.waitFor({ state: 'hidden' });
+      await color.fill('#FF00FF');
+      await color.blur();
+      await colorError.waitFor({ state: 'hidden' });
 
       // Audio: Remove is hidden until a track exists, and there is no Apply/Revert pair.
       await page.getByRole('tab', { name: 'Audio', exact: true }).click();

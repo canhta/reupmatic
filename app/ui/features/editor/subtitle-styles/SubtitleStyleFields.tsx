@@ -10,6 +10,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { fontFamilies } from '../../../../core/subtitles/fonts';
 import {
   defaultCoverBand,
   type SubtitleStyle,
@@ -82,15 +83,11 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
   return (
     <VStack gap={3}>
       <FormLayout direction="vertical">
-        <TextInput
+        <Selector
           label={t('styleFontFamily')}
           value={value.font_family}
           isDisabled={disabled}
-          status={
-            subtitleStyleFieldInvalid('font_family', value.font_family)
-              ? { type: 'error', message: t('styleFontInvalid') }
-              : undefined
-          }
+          options={fontFamilies.map((family) => ({ value: family, label: family }))}
           onChange={(font_family) => onChange({ ...value, font_family })}
         />
         <NumberInput

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { bundledFontFiles } from '../subtitles/fonts.js';
 
 export interface RuntimePathInput {
   packaged: boolean;
@@ -14,6 +15,8 @@ export interface RuntimePaths {
   worker: string;
   ffmpeg: string;
   ffprobe: string;
+  /** The bundled font directory libass and JASSUB both read. */
+  fonts: string;
 }
 
 const executable = (platform: NodeJS.Platform, name: string): string =>
@@ -31,6 +34,7 @@ export function resolveRuntimePaths(input: RuntimePathInput): RuntimePaths {
       worker: path.join(input.resources, 'worker', 'main.py'),
       ffmpeg: path.join(input.resources, 'ffmpeg', executable(input.platform, 'ffmpeg')),
       ffprobe: path.join(input.resources, 'ffmpeg', executable(input.platform, 'ffprobe')),
+      fonts: path.join(input.resources, 'fonts'),
     };
   }
   const venv = path.join(
@@ -45,6 +49,7 @@ export function resolveRuntimePaths(input: RuntimePathInput): RuntimePaths {
     worker: path.join(input.repo, 'worker', 'main.py'),
     ffmpeg: input.env.FFMPEG_PATH || 'ffmpeg',
     ffprobe: input.env.FFPROBE_PATH || 'ffprobe',
+    fonts: path.join(input.repo, 'fonts'),
   };
 }
 
@@ -53,5 +58,8 @@ export function missingBundledPaths(
   paths: RuntimePaths,
   exists: (file: string) => boolean,
 ): string[] {
-  return [paths.python, paths.worker, paths.ffmpeg, paths.ffprobe].filter((file) => !exists(file));
+  const fonts = bundledFontFiles().map((font) => path.join(paths.fonts, font.file));
+  return [paths.python, paths.worker, paths.ffmpeg, paths.ffprobe, ...fonts].filter(
+    (file) => !exists(file),
+  );
 }

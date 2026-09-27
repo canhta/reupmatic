@@ -4,6 +4,12 @@ import { parseProcessingRecipe, requiredModels } from '../../dist-core/processin
 import { createProject } from '../../dist-core/projects/project.js';
 import { assertCues, splitCue } from '../../dist-core/subtitles/cues.js';
 import {
+  bundledFontFiles,
+  bundledFontUrl,
+  defaultFontFamily,
+  fontFamilies,
+} from '../../dist-core/subtitles/fonts.js';
+import {
   applyCueStyle,
   defaultSubtitleStyle,
   firstInvalidSubtitleStyleField,
@@ -12,10 +18,30 @@ import {
 } from '../../dist-core/subtitles/style.js';
 
 const cue = { id: 'first', start_ms: 0, end_ms: 2000, text: 'Tiếng Việt {not markup}' };
+test('one bundled font family is the default and the only selectable name', () => {
+  assert.equal(defaultSubtitleStyle.font_family, 'Be Vietnam Pro');
+  assert.equal(defaultFontFamily, 'Be Vietnam Pro');
+  assert.deepEqual(fontFamilies, ['Be Vietnam Pro']);
+  assert.equal(subtitleStyleFieldInvalid('font_family', 'Be Vietnam Pro'), false);
+  for (const other of ['Arial', 'DejaVu Sans', 'Helvetica', 'Be Vietnam Pro Bold']) {
+    assert.equal(subtitleStyleFieldInvalid('font_family', other), true, other);
+  }
+  assert.deepEqual(
+    bundledFontFiles().map((font) => [font.id, font.file]),
+    [
+      ['font-be-vietnam-pro-regular', 'BeVietnamPro-Regular.ttf'],
+      ['font-be-vietnam-pro-bold', 'BeVietnamPro-Bold.ttf'],
+    ],
+  );
+  assert.equal(
+    bundledFontUrl('font-be-vietnam-pro-regular'),
+    'media://local/font-be-vietnam-pro-regular',
+  );
+});
 test('global and cue-specific subtitle styles survive project, processing and split boundaries', () => {
   const style = parseSubtitleStyle({
     ...defaultSubtitleStyle,
-    font_family: 'DejaVu Sans',
+    font_family: 'Be Vietnam Pro',
     position: 8,
   });
   const processing = parseProcessingRecipe({ subtitle_style: style });
@@ -55,7 +81,8 @@ test('style validation rejects ASS injection, invalid opacity, unsupported keys 
   assert.throws(() => applyCueStyle([cue], ['missing'], defaultSubtitleStyle), /INVALID_CUES/);
 });
 test('each field names its own failure so the form can mark it inline', () => {
-  assert.equal(subtitleStyleFieldInvalid('font_family', 'DejaVu Sans'), false);
+  assert.equal(subtitleStyleFieldInvalid('font_family', 'Be Vietnam Pro'), false);
+  assert.equal(subtitleStyleFieldInvalid('font_family', 'DejaVu Sans'), true);
   assert.equal(subtitleStyleFieldInvalid('font_family', 'Arial,10'), true);
   assert.equal(subtitleStyleFieldInvalid('font_family', ''), true);
   assert.equal(subtitleStyleFieldInvalid('text_color', '#A1B2C3'), false);

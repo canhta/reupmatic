@@ -18,6 +18,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { mkdir, realpath, stat } from 'node:fs/promises';
 import { WorkerClient } from '../core/worker/worker-client.js';
+import { bundledFontFiles } from '../core/subtitles/fonts.js';
 import { missingBundledPaths, resolveRuntimePaths } from '../core/worker/runtime-paths.js';
 import { RenderCoordinator } from '../core/rendering/render-coordinator.js';
 import { renderArtifactPath } from '../core/media/render-artifact.js';
@@ -147,6 +148,8 @@ if (app.isPackaged) {
 // Set before the worker spawns so the bundled FFmpeg is the only one used.
 if (!process.env.FFMPEG_PATH) process.env.FFMPEG_PATH = runtimePaths.ffmpeg;
 if (!process.env.FFPROBE_PATH) process.env.FFPROBE_PATH = runtimePaths.ffprobe;
+// libass resolves the bundled family from this directory, never a system font.
+if (!process.env.REUPMATIC_FONTS_DIR) process.env.REUPMATIC_FONTS_DIR = runtimePaths.fonts;
 const runtimePackSupport = createRuntimePackSupport(
   { repo, userData: app.getPath('userData'), platform: process.platform, arch: process.arch },
   await loadRuntimePackManifest(repo),
@@ -159,6 +162,10 @@ const client = new WorkerClient(
   runtimePackSupport.searchDirectories(),
 );
 const media = new MediaRegistry(client);
+// The bundled fonts are app-owned read-only files; the renderer reads them through media://.
+for (const font of bundledFontFiles()) {
+  media.registerAppFile(font.id, path.join(runtimePaths.fonts, font.file));
+}
 // Installed before Douyin sources so downloads reuse its default download folder.
 const settings = await installSettings({
   wire, getWindow: () => win, worker: client, workspace, diagnostics, getLanguage,

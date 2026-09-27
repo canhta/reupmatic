@@ -262,6 +262,25 @@ class EditingNativeTests(unittest.TestCase):
         self.assertTrue(faded["has_audio"])
         self.assertEqual(faded["duration_ms"], 4000)
 
+    def test_a_subtitle_burn_without_the_bundled_fonts_fails_loudly(self):
+        subtitles = self.root / "captions.srt"
+        subtitles.write_text("1\n00:00:00,000 --> 00:00:01,000\nXin chào\n", encoding="utf-8")
+        broken = Session(self.root / "workspace-no-fonts", env={"REUPMATIC_FONTS_DIR": ""})
+        try:
+            asset = broken.call("asset.register", {"path": str(self.source), "kind": "video"})[
+                "asset_id"
+            ]
+            broken_sid = broken.call(
+                "asset.register", {"path": str(subtitles), "kind": "subtitle"}
+            )["asset_id"]
+            with self.assertRaisesRegex(RuntimeError, "SUBTITLE_FONT_MISSING"):
+                broken.call(
+                    "media.render",
+                    {"asset_id": asset, "encoding": "review", "subtitle_id": broken_sid},
+                )
+        finally:
+            broken.close()
+
     def test_subtitles_follow_source_time_before_speed_change(self):
         subtitles = self.root / "captions.srt"
         subtitles.write_text(

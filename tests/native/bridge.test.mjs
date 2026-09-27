@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { WorkerClient } from '../../dist-core/worker/worker-client.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// The host always sets this; a subtitle burn with no bundled fonts must fail, not fall back.
+process.env.REUPMATIC_FONTS_DIR ??= path.join(root, 'fonts');
 test('real TypeScript -> Python -> FFmpeg bridge and one failed batch item', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'bridge-'));
   const media = path.join(dir, 'video tiếng Việt.mp4'),

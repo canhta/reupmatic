@@ -59,6 +59,7 @@ export const editorEn = {
   stale: 'Out of date',
   staleHelp: 'Subtitle settings changed since this preview was built.',
   missing: "The subtitle component isn't installed yet.",
+  subtitleFontMissing: 'The bundled subtitle font is missing.',
   failed: 'Operation failed',
   ready: 'Ready',
   queued: 'Queued',

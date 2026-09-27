@@ -11,6 +11,8 @@ import { WorkerClient } from '../../dist-core/worker/worker-client.js';
 import { pythonExecutable } from '../../scripts/python.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// The host always sets this; a subtitle burn with no bundled fonts must fail, not fall back.
+process.env.REUPMATIC_FONTS_DIR ??= path.join(root, 'fonts');
 test('real shared coordinator: no-subtitle render, imported SRT, cache and failed-item isolation', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'reupmatic-native-'));
   const video = path.join(dir, 'video Việt.mp4');

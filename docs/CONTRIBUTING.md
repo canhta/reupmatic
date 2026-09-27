@@ -109,6 +109,14 @@ into an isolated workspace (the same files the exploratory crawl reads). It skip
 what is missing, when the staged interpreter or those configuration files are absent, and it never
 uploads or publishes.
 
+Native Python tests use two different FFmpeg builds:
+
+- `tests/python/test_subtitle_sync_native.py` (S1/S2 OCR boundaries) needs `drawtext` and a working
+  fontconfig, which the Homebrew `ffmpeg-full` from `.env.local` provides — the shipped static build
+  does not have them.
+- `tests/python/test_font_burn_native.py` (F2 bundled font) needs the **staged** static build at
+  `ffmpeg/ffmpeg`, the one packaging ships; it resolves that path directly and ignores `.env.local`.
+
 The e2e launcher refuses every Douyin host from `fetch` and from each Electron session, so no test
 reaches Douyin. Tests use synthetic local fixtures and isolated application data; only native
 file-picker choices are controlled — media and render results are not mocked.

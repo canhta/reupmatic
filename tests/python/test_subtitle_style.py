@@ -2,6 +2,7 @@
 
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,18 +11,43 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from processing.recipe import parse_recipe, required_models
 from runtime.errors import WorkerError
 from subtitles.document import cue_document, literal_ass, srt_text
+from subtitles.fonts import FONT_FAMILIES, require_fonts_dir
 from subtitles.style import DEFAULT_STYLE, ass_style, parse_style
 from subtitles.validation import validate_cues
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class BundledFontTests(unittest.TestCase):
+    def test_the_bundled_font_directory_is_required(self):
+        self.assertEqual(FONT_FAMILIES, ("Be Vietnam Pro",))
+        self.assertEqual(require_fonts_dir(ROOT / "fonts"), ROOT / "fonts")
+        for bad in ("", None, str(ROOT / "missing-fonts")):
+            with (
+                self.subTest(bad=bad),
+                self.assertRaisesRegex(WorkerError, "SUBTITLE_FONT_MISSING"),
+            ):
+                require_fonts_dir(bad)
+
+    def test_a_directory_missing_one_bundled_file_is_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            partial = Path(directory)
+            (partial / "BeVietnamPro-Regular.ttf").write_bytes(b"not a font")
+            with self.assertRaisesRegex(WorkerError, "SUBTITLE_FONT_MISSING"):
+                require_fonts_dir(partial)
+
+
 class SubtitleStyleTests(unittest.TestCase):
     def test_styles_are_strict_and_style_only_recipe_has_no_models(self):
+        self.assertEqual(DEFAULT_STYLE["font_family"], "Be Vietnam Pro")
         style = parse_style({**DEFAULT_STYLE, "text_color": "#ab12cd"})
         self.assertEqual(style["text_color"], "#AB12CD")
+        self.assertEqual(style["font_family"], "Be Vietnam Pro")
         self.assertEqual(required_models(parse_recipe({"subtitle_style": style})), [])
         for patch in (
+            {"font_family": "Arial"},
+            {"font_family": "Helvetica"},
+            {"font_family": "DejaVu Sans"},
             {"font_family": "Arial,10"},
             {"font_family": "Arial\nOverride"},
             {"text_color": "red"},
@@ -76,6 +102,7 @@ class SubtitleSerializationTests(unittest.TestCase):
         )
         text = document.to_string("ass")
         self.assertEqual(document.info["PlayResX"], "720")
+        self.assertEqual(document.styles["Default"].fontname, "Be Vietnam Pro")
         self.assertEqual(document.styles["Default"].fontsize, 64)
         self.assertEqual(document[1].style, "Cue1")
         self.assertTrue(document.styles["Cue1"].bold)

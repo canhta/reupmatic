@@ -13,8 +13,9 @@ def main() -> None:
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--ffmpeg", default=os.environ.get("FFMPEG_PATH", "ffmpeg"))
     parser.add_argument("--ffprobe", default=os.environ.get("FFPROBE_PATH", "ffprobe"))
+    parser.add_argument("--fonts", default=os.environ.get("REUPMATIC_FONTS_DIR", ""))
     args = parser.parse_args()
-    worker = Worker(args.workspace, args.ffmpeg, args.ffprobe)
+    worker = Worker(args.workspace, args.ffmpeg, args.ffprobe, args.fonts)
     try:
         while line := sys.stdin.buffer.readline(MAX_LINE + 1):
             if len(line) > MAX_LINE:

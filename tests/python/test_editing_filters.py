@@ -6,8 +6,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from media.editing.filters import (  # noqa: E402
     audio_fade_filters,
     audio_filters,
+    filter_path,
     geometry_filters,
     logo_overlay,
+    subtitle_filter,
     video_fade_filters,
 )
 from media.editing.recipe import parse_editing, resolve_window  # noqa: E402
@@ -113,6 +115,26 @@ class FadeFilterTests(unittest.TestCase):
     def test_fade_longer_than_the_window_is_clamped_to_the_end(self):
         edit = parse_editing({"fade": {"in_ms": 0, "out_ms": 900, "audio": False}})
         self.assertEqual(video_fade_filters(edit, 500), ["fade=t=out:st=0.000:d=0.900"])
+
+
+class SubtitleFilterTests(unittest.TestCase):
+    def test_filter_paths_use_forward_slashes_and_escape_the_option_separator(self):
+        self.assertEqual(filter_path("/Users/x/fonts"), "'/Users/x/fonts'")
+        # A Windows drive colon must survive as part of the value, not split the option.
+        self.assertEqual(filter_path("C:\\Users\\x\\fonts"), "'C\\:/Users/x/fonts'")
+        self.assertEqual(filter_path("/tmp/fo:nts"), "'/tmp/fo\\:nts'")
+        self.assertEqual(filter_path("it's"), "'it\\'s'")
+
+    def test_the_subtitles_filter_passes_the_bundled_font_directory(self):
+        self.assertEqual(
+            subtitle_filter("track.ass", "/app/fonts"),
+            "subtitles='track.ass':fontsdir='/app/fonts'",
+        )
+        self.assertEqual(subtitle_filter("track.ass"), "subtitles='track.ass'")
+        self.assertEqual(
+            subtitle_filter("track.ass", "C:\\app\\fonts"),
+            "subtitles='track.ass':fontsdir='C\\:/app/fonts'",
+        )
 
 
 class LogoOverlayTests(unittest.TestCase):

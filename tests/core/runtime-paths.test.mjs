@@ -19,6 +19,7 @@ test('a packaged app resolves the bundled interpreter, worker and media tools', 
     worker: path.join(RES, 'worker', 'main.py'),
     ffmpeg: path.join(RES, 'ffmpeg', 'ffmpeg'),
     ffprobe: path.join(RES, 'ffmpeg', 'ffprobe'),
+    fonts: path.join(RES, 'fonts'),
   });
 
   // Windows keeps the .exe suffixes and the flat python path.
@@ -61,6 +62,7 @@ test('a dev run uses the repo venv, source and PATH tools', () => {
     worker: path.join(REPO, 'worker', 'main.py'),
     ffmpeg: 'ffmpeg',
     ffprobe: 'ffprobe',
+    fonts: path.join(REPO, 'fonts'),
   });
 
   // No venv: fall back to the platform's interpreter name, or an explicit PYTHON.

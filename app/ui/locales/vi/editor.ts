@@ -61,6 +61,7 @@ export const editorVi = {
   stale: 'Chưa cập nhật',
   staleHelp: 'Thiết lập phụ đề đã thay đổi kể từ lần dựng bản xem trước này.',
   missing: 'Chưa cài thành phần phụ đề.',
+  subtitleFontMissing: 'Thiếu font phụ đề đi kèm.',
   failed: 'Thao tác thất bại',
   ready: 'Sẵn sàng',
   queued: 'Đang chờ',

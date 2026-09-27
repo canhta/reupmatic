@@ -2,9 +2,16 @@ import shutil
 from pathlib import Path
 
 from subtitles.document import style_srt
+from subtitles.fonts import require_fonts_dir
 
 from media.audio.mixing import audio_arguments_from, audio_filter_graph
-from media.editing.filters import cover_drawbox, geometry_filters, logo_overlay, video_fade_filters
+from media.editing.filters import (
+    cover_drawbox,
+    geometry_filters,
+    logo_overlay,
+    subtitle_filter,
+    video_fade_filters,
+)
 from media.editing.recipe import parse_editing
 from media.probe import probe_file
 
@@ -70,6 +77,8 @@ def encode_video(
     if subtitle_style:
         filters += cover_drawbox(subtitle_style.get("cover"), dimensions)
     if subtitle:
+        # The bundled font is required; a missing directory must fail, not fall back to a system font.
+        fonts_dir = require_fonts_dir(host.fonts)
         if subtitle.suffix.lower() == ".srt" and subtitle_style:
             track = working / "track.ass"
             style_srt(subtitle, track, subtitle_style, dimensions)
@@ -77,7 +86,7 @@ def encode_video(
             track = working / ("track.ass" if subtitle.suffix.lower() == ".ass" else "track.srt")
             if subtitle.resolve() != track.resolve():
                 shutil.copyfile(subtitle, track)
-        filters += [f"subtitles={track.name}"]
+        filters += [subtitle_filter(track.name, fonts_dir)]
     # Subtitle times belong to the source. Burn before changing the playback clock.
     filters += [f"setpts=(PTS-STARTPTS)/{speed:.9f}"]
     filters += video_fade_filters(edit, render_ms)

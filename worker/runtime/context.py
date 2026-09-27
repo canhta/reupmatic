@@ -14,6 +14,7 @@ class WorkerContext(Protocol):
     cache: Path
     ffmpeg: str
     ffprobe: str
+    fonts: str
     runtime_identity: str
     assets: "AssetRegistry"
     process: "ProcessRunner"

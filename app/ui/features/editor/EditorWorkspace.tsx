@@ -44,6 +44,7 @@ const errorKeys: Record<string, string> = {
   COMPOSITION_PROCESSING_UNAVAILABLE: 'compositionAiUnavailable',
   ...editingErrors,
   INVALID_SUBTITLE_STYLE: 'styleInvalid',
+  SUBTITLE_FONT_MISSING: 'subtitleFontMissing',
   INVALID_SOUNDTRACK: 'soundtrackInvalid',
   SOUNDTRACK_UNAUTHORIZED: 'soundtrackInvalid',
   NO_AUDIO: 'soundtrackInvalid',

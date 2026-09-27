@@ -1,4 +1,5 @@
 import type { Cue } from './cues.js';
+import { defaultFontFamily, isBundledFontFamily } from './fonts.js';
 
 /** A solid rectangle drawn under the subtitles to hide burned-in originals. */
 export interface CoverBand {
@@ -29,7 +30,7 @@ export interface SubtitleStyle {
 }
 
 export const defaultSubtitleStyle: Readonly<SubtitleStyle> = Object.freeze({
-  font_family: 'Arial',
+  font_family: defaultFontFamily,
   font_size_pct: 4.5,
   text_color: '#FFFFFF',
   outline_color: '#000000',
@@ -65,7 +66,6 @@ export function defaultCoverBand(
   };
 }
 
-const FONT_FAMILY = /^[\p{L}\p{N} _.-]{1,80}$/u;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const STYLE_RANGES: Record<string, [number, number]> = {
   font_size_pct: [1, 15],
@@ -112,8 +112,8 @@ function coverBandInvalid(value: unknown): boolean {
 
 /** True when one field's value is outside its own type, format or numeric range. */
 export function subtitleStyleFieldInvalid(key: keyof SubtitleStyle, value: unknown): boolean {
-  if (key === 'font_family')
-    return typeof value !== 'string' || !FONT_FAMILY.test(value) || !value.trim();
+  // Only the bundled families may be named, so live and export resolve the same font file.
+  if (key === 'font_family') return typeof value !== 'string' || !isBundledFontFamily(value);
   if (key === 'bold' || key === 'italic') return typeof value !== 'boolean';
   if (key === 'cover') return coverBandInvalid(value);
   if (key === 'text_color' || key === 'outline_color' || key === 'box_color')

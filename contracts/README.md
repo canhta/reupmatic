@@ -186,6 +186,12 @@ callers decide source vs output clock explicitly. Render burns source-time cues
 before playback speed; output subtitle export retimes first and supplies output
 geometry. ASS timestamps are centiseconds; SRT does not retain appearance.
 
+`font_family` may name only a bundled family (today Be Vietnam Pro); core rejects any other
+name, and the default style uses it. The bundled directory is shipped under `resources/fonts`
+and passed to libass as `fontsdir`, while the live monitor loads the same files through `media://`,
+so the preview and the burn resolve one font file. An older project that names a system font fails
+loudly on load, like any unsupported format; there is no fallback.
+
 Current first-party Library schema is 6; current project schema is 6. These are
 current contracts only, not promises to read prior data. Unsupported data fails
 without a migration, reset or deletion.

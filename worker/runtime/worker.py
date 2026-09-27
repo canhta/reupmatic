@@ -48,12 +48,19 @@ from runtime.protocol import MAX_JOBS, PROTOCOL, bounded_int, exact, string
 
 
 class Worker:
-    def __init__(self, workspace: Path, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe"):
+    def __init__(
+        self,
+        workspace: Path,
+        ffmpeg: str = "ffmpeg",
+        ffprobe: str = "ffprobe",
+        fonts: str = "",
+    ):
         self.workspace = workspace.resolve()
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.cache = self.workspace / "renders"
         self.cache.mkdir(exist_ok=True)
         self.ffmpeg, self.ffprobe = ffmpeg, ffprobe
+        self.fonts = fonts
         self.assets = AssetRegistry()
         self.jobs: queue.Queue = queue.Queue(maxsize=MAX_JOBS)
         self.cancel_flags: dict[str, threading.Event] = {}

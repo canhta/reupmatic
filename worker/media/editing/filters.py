@@ -52,6 +52,25 @@ def geometry_filters(edit, info):
     return filters, (width, height)
 
 
+def filter_path(value):
+    """Escape a path for an FFmpeg filter option: forward slashes, single-quoted, `:` escaped.
+
+    FFmpeg splits filter options on `:` even inside a Windows drive letter, so a quoted `C\\:` is
+    required; forward slashes keep the value identical on macOS and Windows.
+    """
+    text = str(value).replace("\\", "/")
+    text = text.replace("'", "\\'").replace(":", "\\:")
+    return f"'{text}'"
+
+
+def subtitle_filter(track, fonts_dir=None):
+    """The `subtitles` filter with the bundled font directory, so libass never falls back."""
+    parts = [f"subtitles={filter_path(track)}"]
+    if fonts_dir:
+        parts.append(f"fontsdir={filter_path(fonts_dir)}")
+    return ":".join(parts)
+
+
 def cover_drawbox(cover, dimensions):
     """The opaque cover band, in final output pixels, drawn before the subtitle burn."""
     if not cover:

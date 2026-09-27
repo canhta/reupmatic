@@ -224,6 +224,11 @@ export class MediaRegistry {
     };
   }
 
+  /** An app-owned read-only file (a bundled font) served via media://, not file:. */
+  registerAppFile(id: string, filename: string): void {
+    this.paths.set(id, filename);
+  }
+
   /** Publishes a cover via media://; idempotent, re-registered on each listing. */
   registerCover(contentId: string, filename: string): string {
     const id = libraryCoverAssetId(contentId);

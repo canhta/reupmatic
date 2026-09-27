@@ -43,7 +43,6 @@ export const subtitleStyleEn = {
   stylePosition_9: 'Top right',
   styleInherit: 'Inherit',
   styleSrtHelp: "SRT export won't keep this style.",
-  styleFontInvalid: 'Enter an installed font name.',
   styleColorInvalid: 'Use a 6-digit hex like #FFFFFF.',
   styleNumberInvalid: 'Outside the allowed range.',
 } as const;

@@ -45,7 +45,6 @@ export const subtitleStyleVi = {
   stylePosition_9: 'Trên phải',
   styleInherit: 'Kế thừa',
   styleSrtHelp: 'Xuất SRT sẽ mất định dạng này.',
-  styleFontInvalid: 'Nhập tên font đã cài trên máy.',
   styleColorInvalid: 'Dùng mã hex 6 ký tự, ví dụ #FFFFFF.',
   styleNumberInvalid: 'Ngoài giới hạn cho phép.',
 } satisfies Record<keyof typeof subtitleStyleEn, string>;

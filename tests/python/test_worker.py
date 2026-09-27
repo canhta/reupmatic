@@ -41,6 +41,8 @@ class Session:
             **os.environ,
             "FFMPEG_PATH": resolve_binary("FFMPEG_PATH", "ffmpeg"),
             "FFPROBE_PATH": resolve_binary("FFPROBE_PATH", "ffprobe"),
+            # The host always sets this (dev resolves the repo fonts); a burn requires it.
+            "REUPMATIC_FONTS_DIR": str(ROOT / "fonts"),
             **(env or {}),
         }
         self.proc = subprocess.Popen(
