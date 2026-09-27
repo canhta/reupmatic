@@ -269,3 +269,9 @@ embeds that in the project schema, and adds the three methods to the worker tran
 layers are one current shape. Source changes reject old drafts; reviewed target merges are
 pure core logic. No old project/text schema reader or reset is retained. Full
 operating semantics and compatibility limits are unchanged.
+
+Every translated cue records the source cue it came from (`source_cue_id`) and keeps that
+source cue's exact `start_ms`/`end_ms`; core and worker reject a result that moves the window
+or changes the link, and never retime a translation when its source layer changes — the derived
+layer is marked stale instead. Hand retiming a translated cue is a deliberate, visible
+deviation from its source.

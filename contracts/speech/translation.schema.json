@@ -244,9 +244,15 @@
                 "minLength": 1,
                 "maxLength": 10000,
                 "pattern": "^[^\\u0000]+$"
+              },
+              "source_cue_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[^\\u0000]+$"
               }
             },
-            "required": ["id", "start_ms", "end_ms", "text"],
+            "required": ["id", "start_ms", "end_ms", "text", "source_cue_id"],
             "additionalProperties": false
           }
         },

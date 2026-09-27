@@ -138,6 +138,26 @@ test('splitCue keeps a fitting cue untouched and splits one that does not fit', 
   assert.deepEqual(noWords, [{ text: 'x', start_ms: 10, end_ms: 20, words: [] }]);
 });
 
+test('re-splitting never touches a translated cue without measured words', () => {
+  // A2 re-splitting applies to recognition/transcript layers only. Translated cues carry no
+  // measured words, so they keep their source window even when the text exceeds every budget.
+  const translated = {
+    id: 't',
+    start_ms: 0,
+    end_ms: 9000,
+    text: 'Một câu dịch rất dài nhưng giữ đúng cửa sổ gốc. '.repeat(10),
+  };
+  assert.deepEqual(
+    splitCue(
+      translated,
+      settings({ mode: 'custom', cps: 1, max_chars: 5 }),
+      defaultSubtitleStyle,
+      latinFrame,
+    ),
+    [{ text: translated.text, start_ms: 0, end_ms: 9000, words: [] }],
+  );
+});
+
 test('the output frame is the subtitle canvas after rotate, crop and output scale', () => {
   const source = { width: 1080, height: 1920 };
   assert.deepEqual(outputFrame({}, source), { width: 1080, height: 1920 });

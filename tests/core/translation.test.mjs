@@ -20,6 +20,7 @@ import {
   reviewLayerSource,
 } from '../../dist-core/subtitles/layers/commands.js';
 import { getTextLayer, parseTextLayers } from '../../dist-core/subtitles/layers/document.js';
+import { translatedCueSync } from '../../dist-core/subtitles/layers/sync.js';
 import { defaultSubtitleStyle } from '../../dist-core/subtitles/style.js';
 
 const model = 'a'.repeat(64);
@@ -49,7 +50,12 @@ function result(request) {
     kind: 'translation',
     ...request.params,
     runtime: 'controlled-test',
-    cues: request.params.cues.map((c, index) => ({ ...c, text: index ? 'Thế giới' : 'Kính chào' })),
+    // A translated cue keeps its source identity and window; only the text changes.
+    cues: request.params.cues.map((c, index) => ({
+      ...c,
+      text: index ? 'Thế giới' : 'Kính chào',
+      source_cue_id: c.id,
+    })),
   };
 }
 
@@ -98,6 +104,10 @@ test('translation responses cannot change source correlation, IDs, timing, count
     { cues: [] },
     { cues: [...good.cues].reverse() },
     { cues: good.cues.map((c) => ({ ...c, end_ms: c.end_ms + 1 })) },
+    { cues: good.cues.map((c) => ({ ...c, source_cue_id: 'foreign' })) },
+    {
+      cues: good.cues.map(({ source_cue_id: _source_cue_id, ...rest }) => rest),
+    },
     { cues: good.cues.map((c) => ({ ...c, style: {} })) },
     { command: 'download' },
   ]) {
@@ -105,6 +115,21 @@ test('translation responses cannot change source correlation, IDs, timing, count
       () => validateTranslationResult({ ...good, ...patch }, request),
       /INVALID_WORKER_RESPONSE/,
     );
+  }
+});
+
+test('every translated cue records its source cue and keeps the exact source window', () => {
+  const doc = document(),
+    request = input(doc);
+  const next = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const source = new Map(request.params.cues.map((c) => [c.id, c]));
+  const translated = getTextLayer(next, 'translated').cues;
+  assert.equal(translated.length, source.size);
+  for (const cue of translated) {
+    const origin = source.get(cue.source_cue_id);
+    assert.ok(origin, `cue ${cue.id} records a real source cue`);
+    assert.equal(cue.start_ms, origin.start_ms);
+    assert.equal(cue.end_ms, origin.end_ms);
   }
 });
 
@@ -125,7 +150,7 @@ test('preview is pure; default apply retains every existing translation and othe
   const next = applyTranslation(doc, preview);
   assert.deepEqual(getTextLayer(next, 'translated').cues, [
     cue('one', 'Sửa tay'),
-    cue('two', 'Thế giới', 1000),
+    { ...cue('two', 'Thế giới', 1000), source_cue_id: 'two' },
     cue('extra', 'Giữ đoạn riêng', 2000),
   ]);
   for (const name of ['displayed', 'spoken', 'transcript'])
@@ -204,6 +229,51 @@ test('translation rejects a source derived from translated text and prevents mix
       }),
     /TEXT_LAYER_CYCLE/,
   );
+});
+
+test('translated cues report drift against their source and hand-retiming is a deliberate deviation', () => {
+  const doc = document(),
+    request = input(doc);
+  let next = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  assert.deepEqual(
+    translatedCueSync(next).map((cue) => [cue.id, cue.state]),
+    [
+      ['one', 'linked'],
+      ['two', 'linked'],
+    ],
+  );
+  // Hand-retiming a translated cue is allowed and shows as a deliberate deviation.
+  next = editTextLayer(
+    next,
+    'translated',
+    next.text_layers.translated.cues.map((cue) =>
+      cue.id === 'two' ? { ...cue, start_ms: cue.start_ms + 250 } : cue,
+    ),
+  );
+  assert.equal(translatedCueSync(next).find((cue) => cue.id === 'two')?.state, 'deviated');
+  // Deleting the source cue detaches its translation instead of retiming it silently.
+  const withoutSource = editTextLayer(next, 'transcript', [cue('one', 'Hello')]);
+  assert.equal(translatedCueSync(withoutSource).find((cue) => cue.id === 'two')?.state, 'detached');
+});
+
+test('a source retime or delete marks the translation stale without retiming its cues', () => {
+  const doc = document(),
+    request = input(doc);
+  const applied = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const translated = structuredClone(applied.text_layers.translated.cues);
+  const retimed = editTextLayer(
+    applied,
+    'transcript',
+    [{ ...cue('one', 'Hello'), end_ms: 1500 }, cue('two', 'World', 1000)],
+    { language: 'en' },
+  );
+  assert.equal(retimed.text_layers.translated.stale, true);
+  assert.deepEqual(retimed.text_layers.translated.cues, translated);
+  const deleted = editTextLayer(applied, 'transcript', [cue('two', 'World', 1000)], {
+    language: 'en',
+  });
+  assert.equal(deleted.text_layers.translated.stale, true);
+  assert.deepEqual(deleted.text_layers.translated.cues, translated);
 });
 
 test('translation provenance roundtrips current projects; unsupported text/project formats fail', () => {
@@ -480,7 +550,7 @@ test('displayed source strips presentation and style-only edits do not invalidat
     ...request.params,
     kind: 'translation',
     runtime: 'controlled@1',
-    cues: request.params.cues.map((c) => ({ ...c, text: 'Xin chào' })),
+    cues: request.params.cues.map((c) => ({ ...c, text: 'Xin chào', source_cue_id: c.id })),
   };
   const translated = applyTranslation(doc, previewTranslation(doc, request, output));
   assert.equal(translated.cues[0].style.font_size_pct, 4.4);

@@ -171,14 +171,15 @@ export function plainCues(cues: Cue[]): Cue[] {
   return cues.map(({ id, start_ms, end_ms, text }) => ({ id, start_ms, end_ms, text }));
 }
 
-/** A non-display layer keeps measured words but never visual style. */
+/** A non-display layer keeps measured words and its source link but never visual style. */
 export function layerCues(cues: Cue[]): Cue[] {
-  return cues.map(({ id, start_ms, end_ms, text, words }) => ({
+  return cues.map(({ id, start_ms, end_ms, text, words, source_cue_id }) => ({
     id,
     start_ms,
     end_ms,
     text,
     ...(words ? { words: structuredClone(words) } : {}),
+    ...(source_cue_id ? { source_cue_id } : {}),
   }));
 }
 

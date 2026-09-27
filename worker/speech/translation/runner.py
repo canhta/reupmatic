@@ -64,7 +64,8 @@ def run(job: dict, progress: Path) -> dict:
                 # Do not treat a max-length partial hypothesis as a complete translation.
                 raise WorkerError("TRANSLATION_TRUNCATED")
             text = apply_rules(target.decode(hypothesis[:-1]), p["rules"])
-            cues.append({**cue, "text": text})
+            # The translated line keeps its source cue's identity and window; only the text changes.
+            cues.append({**cue, "text": text, "source_cue_id": cue["id"]})
         if len(json.dumps(cues, ensure_ascii=False).encode()) > MAX_RESULT - 10000:
             raise WorkerError("TRANSLATION_RESULT_TOO_LARGE")
         atomic_json(progress, {"completed": len(cues), "total": len(p["cues"])})

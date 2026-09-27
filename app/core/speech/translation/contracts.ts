@@ -142,6 +142,7 @@ export function validateTranslationResult(
         cue.id !== source.id ||
         cue.start_ms !== source.start_ms ||
         cue.end_ms !== source.end_ms ||
+        cue.source_cue_id !== source.id ||
         'style' in cue ||
         !cue.text.trim() ||
         cue.text.length > 10000

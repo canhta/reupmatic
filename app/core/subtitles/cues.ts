@@ -13,8 +13,10 @@ export interface Cue {
   style?: SubtitleStyle;
   /** Word timings measured from speech; absent means render-time estimation. */
   words?: CueWord[];
+  /** The source cue a translated line was produced from, so drift stays visible. */
+  source_cue_id?: string;
 }
-const CUE_KEYS = ['id', 'start_ms', 'end_ms', 'text', 'style', 'words'];
+const CUE_KEYS = ['id', 'start_ms', 'end_ms', 'text', 'style', 'words', 'source_cue_id'];
 const WORD_KEYS = ['text', 'start_ms', 'end_ms'];
 const MAX_CUE_WORDS = 2000;
 
@@ -85,6 +87,14 @@ export function assertCues(cues: unknown): asserts cues is Cue[] {
       throw new Error('INVALID_CUES');
     if ('style' in c) parseSubtitleStyle(c.style);
     if ('words' in c && !wordsJoin(c.text, c.start_ms, c.end_ms, c.words))
+      throw new Error('INVALID_CUES');
+    if (
+      'source_cue_id' in c &&
+      (typeof c.source_cue_id !== 'string' ||
+        !c.source_cue_id ||
+        c.source_cue_id.length > 128 ||
+        c.source_cue_id.includes('\0'))
+    )
       throw new Error('INVALID_CUES');
     seen.add(c.id);
   }

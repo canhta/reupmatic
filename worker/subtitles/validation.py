@@ -43,9 +43,11 @@ def validate_cues(cues: Any) -> list[dict]:
         raise WorkerError("INVALID_CUES")
     ids: set[str] = set()
     for cue in cues:
-        exact(cue, {"id", "start_ms", "end_ms", "text"}, {"style", "words"})
+        exact(cue, {"id", "start_ms", "end_ms", "text"}, {"style", "words", "source_cue_id"})
         if "style" in cue:
             parse_style(cue["style"])
+        if "source_cue_id" in cue:
+            string(cue["source_cue_id"], 128)
         cid = string(cue["id"], 128)
         if cid in ids:
             raise WorkerError("INVALID_CUES")

@@ -129,7 +129,16 @@ class TranslationNativeTests(unittest.TestCase):
     def test_real_worker_child_keeps_ids_times_languages_rules_and_runtime(self):
         session, params = self.session()
         result = session.call("speech.translate", params, revision=19)
-        self.assertEqual(result["cues"], [{**params["cues"][0], "text": "Kính chào Việt Nam"}])
+        self.assertEqual(
+            result["cues"],
+            [
+                {
+                    **params["cues"][0],
+                    "text": "Kính chào Việt Nam",
+                    "source_cue_id": "segment-1",
+                }
+            ],
+        )
         for key in (
             "source_token",
             "model_id",

@@ -105,6 +105,7 @@ def validate_output(value: object, params: dict) -> dict:
     for source, cue in zip(params["cues"], value["cues"]):
         if (
             any(cue[key] != source[key] for key in ("id", "start_ms", "end_ms"))
+            or cue.get("source_cue_id") != source["id"]
             or "style" in cue
             or not cue["text"].strip()
             or units(cue["text"]) > 10000

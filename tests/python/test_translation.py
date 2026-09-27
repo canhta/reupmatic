@@ -16,6 +16,7 @@ from speech.translation.models import (
     configure_translation,
     unconfigure_translation,
 )
+from subtitles.validation import validate_cues
 
 
 def options():
@@ -64,20 +65,42 @@ class TranslationValidationTests(unittest.TestCase):
 
     def test_response_preserves_segment_identity_and_timing(self):
         request = options()
+        translated = {**request["cues"][0], "text": "Xin chào", "source_cue_id": "one"}
         output = {
-            "cues": [{**request["cues"][0], "text": "Xin chào"}],
+            "cues": [translated],
             "runtime": "controlled-test",
         }
         self.assertEqual(validate_output(output, request), output)
         for change in [
             {"cues": []},
             {"runtime": ""},
-            {"cues": [{**output["cues"][0], "id": "foreign"}]},
-            {"cues": [{**output["cues"][0], "end_ms": 2001}]},
+            {"cues": [{**translated, "id": "foreign"}]},
+            {"cues": [{**translated, "end_ms": 2001}]},
+            {"cues": [{**translated, "source_cue_id": "foreign"}]},
+            {"cues": [{k: v for k, v in translated.items() if k != "source_cue_id"}]},
             {"remote": True},
         ]:
             with self.assertRaises(WorkerError):
                 validate_output({**output, **change}, request)
+
+    def test_cue_validation_accepts_an_optional_source_link_only(self):
+        linked = {
+            "id": "one",
+            "start_ms": 0,
+            "end_ms": 1000,
+            "text": "Hello",
+            "source_cue_id": "one",
+        }
+        validate_cues([linked])
+        for bad in [
+            {**linked, "source_cue_id": ""},
+            {**linked, "source_cue_id": "x" * 129},
+            {**linked, "source_cue_id": "a\x00b"},
+            {**linked, "source_cue_id": 1},
+            {**linked, "extra": True},
+        ]:
+            with self.subTest(bad=bad), self.assertRaises(WorkerError):
+                validate_cues([bad])
 
 
 class TranslationManifestTests(unittest.TestCase):

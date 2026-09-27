@@ -50,8 +50,12 @@ class TranslationContracts(unittest.TestCase):
 
     def test_plain_result_and_lightweight_status_are_explicit(self):
         result = {**options(), "kind": "translation", "runtime": "controlled@1"}
+        result["cues"] = [{**result["cues"][0], "source_cue_id": "one"}]
         self.validator(self.defs["result"]).validate(result)
         result["cues"][0]["style"] = {}
+        self.assertFalse(self.validator(self.defs["result"]).is_valid(result))
+        del result["cues"][0]["style"]
+        del result["cues"][0]["source_cue_id"]
         self.assertFalse(self.validator(self.defs["result"]).is_valid(result))
         status = {
             "available": True,
