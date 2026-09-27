@@ -32,7 +32,7 @@ test('studio shell keeps navigation and shared jobs available at the minimum win
     await jobs.click();
     const tray = page.getByRole('complementary', { name: 'Batch & jobs' });
     await tray.waitFor();
-    const close = tray.getByRole('button', { name: 'Close jobs' });
+    const close = tray.getByRole('button', { name: 'Close Batch & jobs' });
     assert.equal(await close.evaluate((element) => document.activeElement === element), true);
     await page.keyboard.press('Escape');
     assert.equal(await jobs.evaluate((element) => document.activeElement === element), true);
