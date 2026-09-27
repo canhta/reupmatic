@@ -142,7 +142,7 @@ export interface EditorSession {
   reviewLayerSource: (preview: LayerCopyPreview, expectedRevision: number) => void;
   applyTranslation: (preview: TranslationPreview, expectedRevision: number) => void;
   applySpeech: (result: SpeechResult, requestId: string) => boolean;
-  applyOcr: (result: OcrResult, expectedRevision: number) => boolean;
+  applyOcr: (result: OcrResult, expectedLayerToken: string) => boolean;
   textSnapshot: EditorSnapshot;
   documentId: string;
   autosave: ReturnType<typeof useAutosave>;
@@ -597,12 +597,13 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     });
   }
 
-  function applyOcr(result: OcrResult, expectedRevision: number) {
+  function applyOcr(result: OcrResult, expectedLayerToken: string) {
+    // Freshness is the displayed layer's token, so a style or crop edit during a scan still applies.
     if (
-      expectedRevision !== rev.current ||
       result.asset_id !== media?.asset_id ||
       composition ||
-      openingRef.current
+      openingRef.current ||
+      getTextLayer(document.getSnapshot(), 'displayed').token !== expectedLayerToken
     )
       return false;
     const regions = result.regions;

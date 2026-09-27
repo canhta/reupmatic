@@ -11,14 +11,17 @@ export interface VisionContext {
   assetId: string;
   revision: number;
   duration: number;
+  /** The displayed layer token when the scan starts; unrelated edits keep it stable. */
+  layerToken: string;
 }
 export interface Captured<T> {
   data: T;
-  revision: number;
+  token: string;
 }
 interface Active {
   id: string;
   revision: number;
+  token: string;
   phase: string;
   fraction: number | null;
 }
@@ -75,7 +78,7 @@ export function useVisionJob(context: VisionContext) {
         return;
       }
       if (message.data.asset_id !== current.current.assetId) return;
-      setDraft({ data: message.data, revision: request.revision });
+      setDraft({ data: message.data, token: request.token });
     });
     const offModels = window.reupmatic.onModelsChanged(() => {
       void refresh();
@@ -96,9 +99,9 @@ export function useVisionJob(context: VisionContext) {
     const id = crypto.randomUUID();
     let admitted = false;
     try {
-      const { assetId, revision, duration } = current.current;
+      const { assetId, revision, duration, layerToken } = current.current;
       if (!Number.isInteger(duration) || duration < 1) throw new Error('INVALID_REQUEST');
-      const request = { id, revision, phase: 'queued', fraction: null };
+      const request = { id, revision, token: layerToken, phase: 'queued', fraction: null };
       operation.current = request;
       admitted = true;
       setActive(request);

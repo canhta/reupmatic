@@ -40,6 +40,7 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     assetId: media?.asset_id ?? '',
     revision: editor.revision,
     duration: media?.duration_ms ?? 0,
+    layerToken: getTextLayer(editor.textSnapshot, 'displayed').token,
   });
   const translation = useTranslationJob({
     documentId: editor.documentId,

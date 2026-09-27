@@ -70,10 +70,10 @@ test('object removal is no longer a request this coordinator admits', () => {
   const p = { asset_id: 'a', start_ms: 0, end_ms: 1000, target: 'manual', padding_px: 2 };
   assert.throws(() => parseVisionInput({ ...input(), method: 'media.inpaint', params: p }));
 });
-test('OCR draft cannot replace edits or follow a different source', () => {
-  assert.equal(canApplyOcr(output(), 4, 'video-1', 4), true);
-  assert.equal(canApplyOcr(output(), 4, 'video-1', 5), false);
-  assert.equal(canApplyOcr(output(), 4, 'video-2', 4), false);
+test('OCR draft follows the displayed layer token and the source, not the revision', () => {
+  assert.equal(canApplyOcr(output(), 'layer-token-1', 'video-1', 'layer-token-1'), true);
+  assert.equal(canApplyOcr(output(), 'layer-token-1', 'video-1', 'layer-token-2'), false);
+  assert.equal(canApplyOcr(output(), 'layer-token-1', 'video-2', 'layer-token-1'), false);
 });
 test('vision completion uses public ID and original revision', async () => {
   const worker = new WorkerDouble(),

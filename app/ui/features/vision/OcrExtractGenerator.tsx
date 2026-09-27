@@ -163,8 +163,9 @@ export function OcrReview() {
   const [savedSrt, setSavedSrt] = useState('');
   const busy = Boolean(job.active);
   const draft = job.draft;
+  const displayedToken = getTextLayer(editor.textSnapshot, 'displayed').token;
   const draftCurrent = Boolean(
-    draft && media && canApplyOcr(draft.data, draft.revision, media.asset_id, editor.getRevision()),
+    draft && media && canApplyOcr(draft.data, draft.token, media.asset_id, displayedToken),
   );
   if (!draft) return null;
 
@@ -193,7 +194,7 @@ export function OcrReview() {
       }))
     )
       return;
-    if (editor.applyOcr(draft.data, draft.revision)) {
+    if (editor.applyOcr(draft.data, draft.token)) {
       job.consumeDraft(draft);
     }
   }
