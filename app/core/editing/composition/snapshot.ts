@@ -173,7 +173,9 @@ export function editCompositionSnapshot(
     let voice = before.voice_track;
     if (voice) {
       voice = remapCompositionVoice(composition, edited.composition, voice, edited.ancestry);
-      if (
+      // A trim can remove every line; an empty track has no audio to place, so it goes with them.
+      if (!voice.plan.lines.length) voice = undefined;
+      else if (
         layers &&
         voice.origin.kind === 'copy' &&
         voice.origin.token === before.text_layers?.[voice.origin.layer].token
@@ -181,15 +183,13 @@ export function editCompositionSnapshot(
         voice = { ...voice, origin: { ...voice.origin, token: layers[voice.origin.layer].token } };
       }
     }
-    next = compositionSnapshot(
-      {
-        ...before,
-        ...(layers ? { text_layers: layers } : {}),
-        ...(voice ? { voice_track: voice } : {}),
-      },
-      edited.composition,
-      edited.cues,
-    );
+    const merged: EditorSnapshot = {
+      ...before,
+      ...(layers ? { text_layers: layers } : {}),
+    };
+    if (voice) merged.voice_track = voice;
+    else delete merged.voice_track;
+    next = compositionSnapshot(merged, edited.composition, edited.cues);
     composition = edited.composition;
   }
   return next;

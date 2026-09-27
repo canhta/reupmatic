@@ -53,17 +53,20 @@ def resolve_voice(host, req, value):
     lines = p["lines"]
     if not isinstance(lines, list) or not 1 <= len(lines) <= 10000:
         raise WorkerError("INVALID_VOICE")
-    previous_end = 0
+    spans = []
     for line in lines:
         line = exact(line, {"offset_ms", "rate", "start_frame", "end_frame"})
         _number(line["offset_ms"], 0, 86400000)
         _number(line["rate"], 1, 100, integer=False)
         start = _number(line["start_frame"], 0, _MAX_FRAMES)
         end = _number(line["end_frame"], start + 1, _MAX_FRAMES)
-        # Plan spans are in cue order and never overlap.
-        if start < previous_end:
+        spans.append((start, end))
+    # The plan follows the output clock while the recording keeps its own frame order, so a
+    # reorder can present spans out of order. What must hold is that no two spans overlap.
+    spans.sort()
+    for previous, current in zip(spans, spans[1:]):
+        if current[0] < previous[1]:
             raise WorkerError("INVALID_VOICE")
-        previous_end = end
     _number(p["gain_db"], -60, 24, integer=False)
     _number(p["fade_in_ms"], 0, 86400000)
     _number(p["fade_out_ms"], 0, 86400000)

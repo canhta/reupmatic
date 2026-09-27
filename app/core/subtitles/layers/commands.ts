@@ -1,4 +1,5 @@
 import type { VoiceTrack, VoiceTrackSnapshot } from '../../speech/synthesis/voice-track.js';
+import { withoutVoiceTrack } from '../../speech/synthesis/voice-track.js';
 import { assertCues, type Cue } from '../cues.js';
 import {
   createTextLayers,
@@ -183,6 +184,8 @@ export function acceptStaleVoiceTrack<T extends TextSnapshot & VoiceTrackSnapsho
   ) {
     throw new Error('STALE_OPERATION');
   }
+  // Nothing is left to keep once the last line is gone; the track is removed instead.
+  if (!voice.plan.lines.length) return withoutVoiceTrack(snapshot);
   return {
     ...structuredClone(snapshot),
     voice_track: {

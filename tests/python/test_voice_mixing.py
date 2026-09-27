@@ -4,6 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from media.audio.mixing import audio_arguments  # noqa: E402
+from media.audio.voice import resolve_voice  # noqa: E402
+from runtime.errors import WorkerError  # noqa: E402
 
 
 def mix(*, track=None, voice=None, voice_index=None, has_source=True, edit=None):
@@ -173,6 +175,67 @@ class VoicePlacementExecutesThePlan(unittest.TestCase):
         value = graph(voice=voice, voice_index=1, has_source=False)
         self.assertIn("adelay=120:all=1", value)
         self.assertIn("atrim=start=0.000000000:end=0.500000000", value)
+
+
+class _Assets:
+    def verify(self, asset_id, kind, check):
+        return {"path": "/tmp/voice.wav", "sha256": "a" * 64}
+
+
+class _Host:
+    assets = _Assets()
+
+    def cancelled(self, req):
+        return False
+
+
+def voice_value(lines, **overrides):
+    value = {
+        "asset_id": "asset-12345678",
+        "sha256": "a" * 64,
+        "sample_rate": 48000,
+        "mode": "mix",
+        "gain_db": 0,
+        "fade_in_ms": 0,
+        "fade_out_ms": 0,
+        "lines": lines,
+        "muted": False,
+    }
+    value.update(overrides)
+    return value
+
+
+class VoiceResolution(unittest.TestCase):
+    def test_plan_order_need_not_match_the_recording_frame_order(self):
+        value = resolve_voice(
+            _Host(),
+            {},
+            voice_value(
+                [
+                    {"offset_ms": 2500, "rate": 1, "start_frame": 0, "end_frame": 38400},
+                    {"offset_ms": 500, "rate": 1, "start_frame": 38400, "end_frame": 57600},
+                ]
+            ),
+        )
+        self.assertEqual(value["lines"][0]["offset_ms"], 2500)
+
+    def test_overlapping_spans_are_refused_whatever_order_they_arrive(self):
+        for lines in (
+            [
+                {"offset_ms": 0, "rate": 1, "start_frame": 0, "end_frame": 38400},
+                {"offset_ms": 500, "rate": 1, "start_frame": 1000, "end_frame": 20000},
+            ],
+            [
+                {"offset_ms": 500, "rate": 1, "start_frame": 1000, "end_frame": 20000},
+                {"offset_ms": 0, "rate": 1, "start_frame": 0, "end_frame": 38400},
+            ],
+        ):
+            with self.assertRaises(WorkerError) as caught:
+                resolve_voice(_Host(), {}, voice_value(lines))
+            self.assertEqual(caught.exception.code, "INVALID_VOICE")
+
+    def test_muted_voice_is_absent_without_verifying_its_asset(self):
+        self.assertIsNone(resolve_voice(_Host(), {}, voice_value([], muted=True)))
 
 
 if __name__ == "__main__":

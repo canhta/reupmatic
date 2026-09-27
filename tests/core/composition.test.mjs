@@ -418,18 +418,43 @@ test('a speed change carries the voice anchor but marks the plan stale for the s
   );
 });
 
-test('a trim that removes the span a line sat in drops that line from plan and segments and stales the track', async () => {
+test('a trim that removes the span a line sat in drops the whole track', async () => {
   const { editCompositionSnapshot } = await import(
     '../../dist-core/editing/composition/snapshot.js'
   );
   const next = editCompositionSnapshot(voiced([voiceLine('cue-a', 500, 1000, 800)]), [
     { kind: 'update', id: 'clip-a', start_ms: 1000, end_ms: 2000, speed: 2 },
   ]);
-  assert.equal(next.voice_track.stale, true);
-  assert.deepEqual(next.voice_track.plan.lines, []);
-  assert.deepEqual(next.voice_track.segments, []);
+  // The last line is gone, so a stale empty track is removed rather than un-staled into the render.
+  assert.equal(next.voice_track, undefined);
   const project = createProject(projectSource, next);
   assert.deepEqual(parseProject(JSON.parse(JSON.stringify(project))), project);
+});
+
+test('a reorder keeps the plan in output order and the recording in frame order', async () => {
+  const { editCompositionSnapshot } = await import(
+    '../../dist-core/editing/composition/snapshot.js'
+  );
+  const { voiceMix } = await import('../../dist-core/rendering/voice-mix.js');
+  const cues = [cue, { ...cue, id: 'cue-b', start_ms: 2250, end_ms: 2750 }];
+  const before = voiced(
+    [voiceLine('cue-a', 500, 1750, 800), voiceLine('cue-b', 2250, 500, 400)],
+    cues,
+  );
+  const next = editCompositionSnapshot(before, [{ kind: 'move', id: 'clip-a', direction: 1 }]);
+  const plan = next.voice_track.plan.lines.map((line) => line.cue_id);
+  const frames = next.voice_track.segments.map((segment) => segment.cue_id);
+  assert.deepEqual(plan.slice().sort(), frames.slice().sort());
+  assert.notDeepEqual(
+    plan,
+    frames,
+    'the plan follows the output clock while the recording keeps its frame order',
+  );
+  // The mix maps each plan line back to its segment by cue id, so validation must not assume order.
+  assert.deepEqual(
+    voiceMix(next.voice_track).lines.map((line) => line.offset_ms),
+    next.voice_track.plan.lines.map((line) => line.offset_ms),
+  );
 });
 
 test('removing one clip drops only its voice line and keeps the others carried and stale', async () => {

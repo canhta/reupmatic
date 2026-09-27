@@ -76,6 +76,7 @@ export function voiceLineSchedule(track: VoiceTrack): LiveVoiceLine[] {
 
 export function voiceWindow(track: VoiceTrack): { start_ms: number; end_ms: number } {
   const lines = voiceLineSchedule(track);
+  if (!lines.length) return { start_ms: 0, end_ms: 0 };
   return {
     start_ms: Math.min(...lines.map((line) => line.output_start_ms)),
     end_ms: Math.max(...lines.map((line) => line.output_end_ms)),
