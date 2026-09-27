@@ -337,11 +337,16 @@ async function confirmDialog(
 
 const batchQueue = batch as BatchQueue;
 const catalogWorkspace = catalog as NonNullable<typeof catalog>;
+// An application-level quit (Cmd+Q, shutdown, a harness) cannot answer a file dialog.
+let appQuitting = false;
+app.on('before-quit', () => {
+  appQuitting = true;
+});
 lifecycle = createWorkspaceLifecycle({
   wire,
   recoveryFlush: () => recovery.flush(),
   confirm: confirmDialog,
-  saveWorkspace: () => editorApi.requestSessionAction('save'),
+  saveWorkspace: () => editorApi.requestSessionAction('save', !appQuitting),
   discardWorkspace: () => editorApi.requestSessionAction('discard').then(() => undefined),
   // Rebuild on every locale change: the native menu has no live binding to i18next.
   onLanguageChange: () => void rebuildMenu(),

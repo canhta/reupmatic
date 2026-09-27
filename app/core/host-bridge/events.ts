@@ -54,7 +54,12 @@ export const events = {
   'models-changed': event<void>()({ rendererMethod: 'onModelsChanged' }),
   'recent-changed': event<void>()({ rendererMethod: 'onRecentChanged' }),
   'recovery-flush': event<{ request_id: string }>()({ rendererMethod: 'onRecoveryFlush' }),
-  'session-close-request': event<{ request_id: string; action: 'save' | 'discard' }>()({
+  'session-close-request': event<{
+    request_id: string;
+    action: 'save' | 'discard';
+    /** False during an application-level quit, when a file dialog cannot be answered. */
+    allow_dialog: boolean;
+  }>()({
     rendererMethod: 'onSessionCloseRequest',
   }),
   'publish-progress': event<PublishProgressEvent>()({ rendererMethod: 'onPublishProgress' }),

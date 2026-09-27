@@ -829,13 +829,19 @@ test('Autosave advances the recovery draft on every edit, not once per dirty str
       const latestRevision = () =>
         page.evaluate(async () => {
           const reply = await window.reupmatic.recoveryList();
-          return reply.ok === true && reply.data.length ? reply.data[0].revision : 0;
+          return reply.ok === true
+            ? reply.data.reduce((max, draft) => Math.max(max, draft.revision), 0)
+            : 0;
         });
-      const waitForRevision = (target) =>
-        page.waitForFunction(async (expected) => {
-          const reply = await window.reupmatic.recoveryList();
-          return reply.ok === true && reply.data.some((draft) => draft.revision >= expected);
-        }, target);
+      // recoveryList is async IPC, so poll from Node rather than a page predicate.
+      const waitForRevision = async (target) => {
+        const deadline = Date.now() + 30000;
+        while (Date.now() < deadline) {
+          if ((await latestRevision()) >= target) return;
+          await page.waitForTimeout(150);
+        }
+        throw new Error(`recovery draft never reached revision ${target}`);
+      };
 
       await page.getByRole('button', { name: 'autosave-source', exact: true }).click();
       let field = page.getByRole('textbox', { name: 'Project name', exact: true });

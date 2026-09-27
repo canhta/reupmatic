@@ -67,7 +67,7 @@ function previewCanvas(value: unknown): { width: number; height: number } {
 
 export function installEditor(host: Host): {
   recentList(): Promise<RecentEntry[]>;
-  requestSessionAction(action: 'save' | 'discard'): Promise<boolean>;
+  requestSessionAction(action: 'save' | 'discard', allowDialog?: boolean): Promise<boolean>;
 } {
   const { wire, worker, media } = host;
   installAudio(host);
@@ -555,7 +555,7 @@ export function installEditor(host: Host): {
     pendingSession.finish(input.completed);
     return null;
   });
-  function requestSessionAction(action: 'save' | 'discard'): Promise<boolean> {
+  function requestSessionAction(action: 'save' | 'discard', allowDialog = true): Promise<boolean> {
     const window = host.getWindow();
     if (window.isDestroyed() || pendingSession) return Promise.resolve(false);
     return new Promise((resolve) => {
@@ -567,7 +567,11 @@ export function installEditor(host: Host): {
       };
       const timer = setTimeout(() => finish(false), 120000);
       pendingSession = { id, finish };
-      window.webContents.send('reupmatic:session-close-request', { request_id: id, action });
+      window.webContents.send('reupmatic:session-close-request', {
+        request_id: id,
+        action,
+        allow_dialog: allowDialog,
+      });
     });
   }
   return { recentList: () => recent.list(), requestSessionAction };

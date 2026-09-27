@@ -328,21 +328,25 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     projectPath,
   });
   // The quit dialog's Save/Don't Save arrive here; a false reply keeps the app open.
-  const closeAction = useRef<(action: 'save' | 'discard') => Promise<boolean>>(async () => false);
-  closeAction.current = async (action) => {
+  const closeAction = useRef<
+    (action: 'save' | 'discard', allowDialog: boolean) => Promise<boolean>
+  >(async () => false);
+  closeAction.current = async (action, allowDialog) => {
     if (action === 'discard') {
       await autosave.discard();
       return true;
     }
     // Only a dirty project has anything to write; a clean or empty one quits as before.
     if (!media || !dirty) return true;
+    // During an application-level quit a file dialog cannot be answered: keep the draft.
+    if (!projectPath && !allowDialog) return true;
     return saveCurrentProject();
   };
   useEffect(
     () =>
-      window.reupmatic.onSessionCloseRequest(({ request_id, action }) => {
+      window.reupmatic.onSessionCloseRequest(({ request_id, action, allow_dialog }) => {
         void closeAction
-          .current(action)
+          .current(action, allow_dialog)
           .then((ok) => window.reupmatic.sessionCloseResult(request_id, ok))
           .catch(() =>
             window.reupmatic.sessionCloseResult(request_id, false).catch(() => undefined),
