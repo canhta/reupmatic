@@ -152,7 +152,6 @@ export const editorVi = {
   styleInvalid: 'Kiểu phụ đề không hợp lệ.',
   recentLocate: 'Tìm tệp…',
   recentRemove: 'Bỏ khỏi Gần đây',
-  cancelling: 'Đang hủy…',
   voiceTrackInvalid: 'Bản giọng đọc đã lưu không hợp lệ. Hãy tạo lại giọng.',
   modelLanguageUnavailable: 'Mô hình đã chọn không hỗ trợ ngôn ngữ này.',
 } satisfies Record<keyof typeof editorEn, string>;

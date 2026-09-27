@@ -150,7 +150,6 @@ export const editorEn = {
   styleInvalid: 'The subtitle style is invalid.',
   recentLocate: 'Locate…',
   recentRemove: 'Remove from Recent',
-  cancelling: 'Cancelling…',
   voiceTrackInvalid: 'The saved voice track is invalid. Generate the voice again.',
   modelLanguageUnavailable: "The selected model doesn't support this language.",
 } as const;
