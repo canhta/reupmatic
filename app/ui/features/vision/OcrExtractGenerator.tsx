@@ -8,7 +8,6 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -21,6 +20,7 @@ import { useConfirmation } from '../../design-system/ConfirmationProvider';
 import { InspectorPanelSection } from '../../design-system/InspectorPanelSection';
 import { useEditor } from '../editor/EditorContext';
 import { useEditorGenerators } from '../editor/EditorGeneratorContext';
+import { GeneratorFooter } from '../editor/GeneratorFooter';
 import { LayerLanguageField } from '../editor/text-layers/LayerLanguageField';
 import { ReviewRows } from '../editor/text-layers/ReviewRows';
 import { visionErrorKey } from './error-message';
@@ -96,55 +96,23 @@ export function OcrSetup() {
             />
           </HStack>
         </Collapsible>
-        {status && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {status}
-            </Text>
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {job.models && (!job.models.ocr.available || languageMissing) && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </HStack>
-          </>
-        )}
-        {job.active && (
-          <HStack gap={2} vAlign="center" role="status">
-            <ProgressBar
-              label={t(job.active.phase)}
-              max={1}
-              value={job.active.fraction ?? undefined}
-              isIndeterminate={job.active.fraction === null}
-            />
-            <Button
-              label={t('cancel')}
-              isDisabled={job.active.phase === 'cancelling'}
-              onClick={() => void job.cancel()}
-            />
-          </HStack>
-        )}
-        {job.error && (
-          <Banner
-            status="error"
-            title={t(visionErrorKey(job.error))}
-            description={<code>{job.error}</code>}
-          />
-        )}
-        <HStack gap={2} vAlign="center">
+        <GeneratorFooter
+          readiness={{
+            reason: status || undefined,
+            checking: job.checking,
+            canSetUp: Boolean(job.models && (!job.models.ocr.available || languageMissing)),
+            onSetUp: () => void editor.openSettings('processing'),
+            onRefresh: () => void job.refresh(),
+          }}
+          active={job.active}
+          error={job.error}
+          errorLabel={t(visionErrorKey(job.error))}
+          cancel={() => void job.cancel()}
+        >
           <Button
             label={t('visionExtractFull')}
             variant="primary"
+            width="100%"
             isDisabled={busy || !hasOcr || !language || Boolean(editor.composition)}
             onClick={() => {
               if (!language) return;
@@ -156,7 +124,7 @@ export function OcrSetup() {
               });
             }}
           />
-        </HStack>
+        </GeneratorFooter>
       </Stack>
     </InspectorPanelSection>
   );
@@ -279,13 +247,7 @@ export function OcrReview() {
           onClick={() => void apply()}
         />
       </HStack>
-      {job.error && (
-        <Banner
-          status="error"
-          title={t(visionErrorKey(job.error))}
-          description={<code>{job.error}</code>}
-        />
-      )}
+      {job.error && <Banner status="error" title={t(visionErrorKey(job.error))} />}
     </VStack>
   );
 }

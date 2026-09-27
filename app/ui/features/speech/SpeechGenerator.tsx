@@ -8,7 +8,6 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -22,6 +21,7 @@ import { CHINESE_CPS, LATIN_CPS, type LineLengthSettings } from '../../../core/s
 import { InspectorPanelSection } from '../../design-system/InspectorPanelSection';
 import { useEditor } from '../editor/EditorContext';
 import { useEditorGenerators } from '../editor/EditorGeneratorContext';
+import { GeneratorFooter } from '../editor/GeneratorFooter';
 import { LayerLanguageField } from '../editor/text-layers/LayerLanguageField';
 import { ReviewRows } from '../editor/text-layers/ReviewRows';
 import { engineName } from './engine-name';
@@ -83,60 +83,30 @@ export function SpeechSetup() {
             {t('speechEngineSingle', { engine: engines[0].engine })}
           </Text>
         )}
-        {(job.checking || !available) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : !language
-                  ? t('speechChooseLanguage')
-                  : t(speechErrorKey(problemCode(job.models, language)))}
-            </Text>
-            {}
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {job.models && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </HStack>
-          </>
-        )}
-        {job.active && (
-          <HStack gap={2} vAlign="center" role="status">
-            <ProgressBar
-              label={t(job.active.phase)}
-              max={1}
-              value={job.active.fraction ?? undefined}
-              isIndeterminate={job.active.fraction === null}
-            />
-            <Button
-              label={t('cancel')}
-              isDisabled={job.active.phase === 'cancelling'}
-              onClick={() => void job.cancel()}
-            />
-          </HStack>
-        )}
-        {job.error && (
-          <Banner
-            status="error"
-            title={t(speechErrorKey(job.error))}
-            description={<code>{job.error}</code>}
-          />
-        )}
-        <HStack gap={2} vAlign="center">
+        <GeneratorFooter
+          readiness={{
+            reason:
+              job.checking || !available
+                ? job.checking
+                  ? t('visionChecking')
+                  : !language
+                    ? t('speechChooseLanguage')
+                    : t(speechErrorKey(problemCode(job.models, language)))
+                : undefined,
+            checking: job.checking,
+            canSetUp: Boolean(job.models),
+            onSetUp: () => void editor.openSettings('processing'),
+            onRefresh: () => void job.refresh(),
+          }}
+          active={job.active}
+          error={job.error}
+          errorLabel={t(speechErrorKey(job.error))}
+          cancel={() => void job.cancel()}
+        >
           <Button
             label={t('speechStart')}
             variant="primary"
+            width="100%"
             isDisabled={
               busy ||
               editor.opening ||
@@ -153,7 +123,7 @@ export function SpeechSetup() {
               }
             }}
           />
-        </HStack>
+        </GeneratorFooter>
         <LineLengthSection />
       </Stack>
     </InspectorPanelSection>
@@ -338,13 +308,7 @@ export function SpeechReview() {
           </HStack>
         </>
       )}
-      {job.error && (
-        <Banner
-          status="error"
-          title={t(speechErrorKey(job.error))}
-          description={<code>{job.error}</code>}
-        />
-      )}
+      {job.error && <Banner status="error" title={t(speechErrorKey(job.error))} />}
     </VStack>
   );
 }

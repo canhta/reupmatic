@@ -1,8 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { HStack } from '@astryxdesign/core/HStack';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -13,6 +11,7 @@ import { getTextLayer } from '../../../../core/subtitles/layers/document';
 import { InspectorPanelSection } from '../../../design-system/InspectorPanelSection';
 import { useEditor } from '../../editor/EditorContext';
 import { useEditorGenerators } from '../../editor/EditorGeneratorContext';
+import { GeneratorFooter } from '../../editor/GeneratorFooter';
 import { LayerLanguageField } from '../../editor/text-layers/LayerLanguageField';
 import { synthesisErrorKey } from './error-message';
 import { SynthesisReview } from './SynthesisReview';
@@ -96,31 +95,6 @@ export function SynthesisPanel() {
             }}
           />
         </FormLayout>
-        {(job.checking || (!job.models?.available && !hasVoices)) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : t(synthesisErrorKey(job.models?.code || 'MODEL_MISSING'))}
-            </Text>
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {job.models && !job.models.available && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </HStack>
-          </>
-        )}
         {!available && hasVoices && (
           <Text as="p" display="block" type="body" role="status">
             {t('synthesisVoiceMissing')}
@@ -143,10 +117,28 @@ export function SynthesisPanel() {
         )}
         {source.stale && <Banner status="warning" title={t('textLayerStale')} />}
         {languageUnsupported && <Banner status="warning" title={t('synthesisLanguageMismatch')} />}
-        <HStack gap={2} vAlign="center">
+        <GeneratorFooter
+          readiness={{
+            reason:
+              job.checking || (!job.models?.available && !hasVoices)
+                ? job.checking
+                  ? t('visionChecking')
+                  : t(synthesisErrorKey(job.models?.code || 'MODEL_MISSING'))
+                : undefined,
+            checking: job.checking,
+            canSetUp: Boolean(job.models && !job.models.available),
+            onSetUp: () => void editor.openSettings('processing'),
+            onRefresh: () => void job.refresh(),
+          }}
+          active={job.active}
+          error={job.error}
+          errorLabel={t(synthesisErrorKey(job.error))}
+          cancel={() => void job.cancel()}
+        >
           <Button
             label={t('synthesisStart')}
             variant="primary"
+            width="100%"
             isDisabled={
               busy ||
               editor.opening ||
@@ -166,29 +158,7 @@ export function SynthesisPanel() {
               })
             }
           />
-        </HStack>
-        {job.active && (
-          <HStack gap={2} vAlign="center" role="status">
-            <ProgressBar
-              label={t(job.active.phase)}
-              max={1}
-              value={job.active.fraction ?? undefined}
-              isIndeterminate={job.active.fraction === null}
-            />
-            <Button
-              label={t('cancel')}
-              isDisabled={job.active.phase === 'cancelling'}
-              onClick={() => void job.cancel()}
-            />
-          </HStack>
-        )}
-        {job.error && (
-          <Banner
-            status="error"
-            title={t(synthesisErrorKey(job.error))}
-            description={<code>{job.error}</code>}
-          />
-        )}
+        </GeneratorFooter>
         {job.draft && (
           <SynthesisReview
             key={job.draft.input.request_id}

@@ -6,7 +6,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Section } from '@astryxdesign/core/Section';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -29,6 +28,7 @@ import { getTextLayer } from '../../../../core/subtitles/layers/document';
 import { cueQcFlags } from '../../../../core/subtitles/qc';
 import { useEditor } from '../../editor/EditorContext';
 import { useEditorGenerators } from '../../editor/EditorGeneratorContext';
+import { GeneratorFooter } from '../../editor/GeneratorFooter';
 import { LayerLanguageField } from '../../editor/text-layers/LayerLanguageField';
 import { ReviewRows } from '../../editor/text-layers/ReviewRows';
 import { engineName } from '../engine-name';
@@ -96,57 +96,28 @@ export function TranslateSetup() {
         )}
         {source.stale && <Banner status="warning" title={t('textLayerStale')} />}
         <TranslationRules rules={rules} onChange={setRules} disabled={busy} />
-        {(job.checking || !job.models?.available) && (
-          <>
-            <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))}
-            </Text>
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {job.models && !job.models.available && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  label={t('setUp')}
-                  onClick={() => void editor.openSettings('processing')}
-                />
-              )}
-              <Button
-                size="sm"
-                label={t('visionRefresh')}
-                isDisabled={busy || job.checking}
-                onClick={() => void job.refresh()}
-              />
-            </HStack>
-          </>
-        )}
-        {job.active && (
-          <HStack gap={2} vAlign="center" role="status">
-            <ProgressBar
-              label={t(job.active.phase)}
-              max={1}
-              value={job.active.fraction ?? undefined}
-              isIndeterminate={job.active.fraction === null}
-            />
-            <Button
-              label={t('cancel')}
-              isDisabled={job.active.phase === 'cancelling'}
-              onClick={() => void job.cancel()}
-            />
-          </HStack>
-        )}
-        {job.error && (
-          <Banner
-            status="error"
-            title={t(translationErrorKey(job.error))}
-            description={<code>{job.error}</code>}
-          />
-        )}
-        <HStack gap={2} vAlign="center">
+        <GeneratorFooter
+          readiness={{
+            reason:
+              job.checking || !job.models?.available
+                ? job.checking
+                  ? t('visionChecking')
+                  : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))
+                : undefined,
+            checking: job.checking,
+            canSetUp: Boolean(job.models && !job.models.available),
+            onSetUp: () => void editor.openSettings('processing'),
+            onRefresh: () => void job.refresh(),
+          }}
+          active={job.active}
+          error={job.error}
+          errorLabel={t(translationErrorKey(job.error))}
+          cancel={() => void job.cancel()}
+        >
           <Button
             label={t('translationStart')}
             variant="primary"
+            width="100%"
             isDisabled={
               busy || editor.opening || !pairAvailable || source.stale || !source.cues.length
             }
@@ -161,7 +132,7 @@ export function TranslateSetup() {
               });
             }}
           />
-        </HStack>
+        </GeneratorFooter>
       </Stack>
     </Section>
   );
@@ -272,13 +243,7 @@ function TranslationDraftReview({
         isDisabled={disabled || editor.opening}
         onClick={review}
       />
-      {error && (
-        <Banner
-          status="error"
-          title={t(translationErrorKey(error))}
-          description={<code>{error}</code>}
-        />
-      )}
+      {error && <Banner status="error" title={t(translationErrorKey(error))} />}
       {preview && (
         <>
           <Text as="p" type="body" role="status">
