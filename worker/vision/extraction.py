@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import tempfile
 import uuid
 from pathlib import Path
@@ -12,6 +13,26 @@ from processing.recipe import resolve_models
 from runtime.errors import WorkerError
 
 from vision.service import MAX_RESULT, parse_options
+
+# Retained OCR evidence is a debugging snapshot, never read back; bound it so scans cannot fill
+# the workspace. One analysis is already capped at 128 MB during the scan.
+EVIDENCE_TOTAL_BYTES = 512 * 1024**2
+
+
+def prune_analyses(analyses: Path, keep: str) -> None:
+    """Delete the oldest evidence directories beyond the total budget, never the newest."""
+    entries = []
+    for directory in analyses.iterdir():
+        if not directory.is_dir():
+            continue
+        size = sum(path.stat().st_size for path in directory.rglob("*") if path.is_file())
+        entries.append((directory.stat().st_mtime, size, directory))
+    entries.sort(key=lambda entry: entry[0], reverse=True)
+    total = 0
+    for _, size, directory in entries:
+        total += size
+        if total > EVIDENCE_TOTAL_BYTES and directory.name != keep:
+            shutil.rmtree(directory, ignore_errors=True)
 
 
 def extract_ocr(host, req):
@@ -73,4 +94,5 @@ def extract_ocr(host, req):
             raise WorkerError("PROCESSING_MODELS_CHANGED")
         check()
         os.rename(staging, analyses / analysis_id)
+        prune_analyses(analyses, analysis_id)
         return result

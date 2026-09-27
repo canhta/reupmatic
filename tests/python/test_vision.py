@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
@@ -203,6 +204,69 @@ class BoundaryRefinementTests(unittest.TestCase):
         flat = lambda start, end, region: [(start, black), (end, black)]  # noqa: E731
         self.assertEqual(refine_boundaries(self.group(), flat, 160, 90), (1000, 2000))
 
+    def test_refined_edges_never_overrun_the_sample_window(self):
+        from vision.refine import refine_boundaries
+
+        black, white = self.frames([0])[0], self.frames([255])[0]
+
+        def sampler(start_ms, end_ms, region):
+            if start_ms == 500:
+                # The strongest change sits on the extra frame past the window's end.
+                return [(500, black), (900, black), (1100, white)]
+            return [(1500, white), (2100, black)]
+
+        # Clamped to the OCR sample times: group.first.start_ms and group.next.start_ms.
+        self.assertEqual(refine_boundaries(self.group(), sampler, 160, 90), (1000, 2000))
+
+    def test_refine_groups_keeps_adjacent_cues_from_overlapping(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        import numpy as np
+        from vision.refine import refine_groups
+
+        def observation(start, text, x):
+            return {
+                "start_ms": start,
+                "end_ms": start + 500,
+                "detections": [{"text": text, "confidence": 0.9, "box": [x, 40, x + 90, 70]}],
+            }
+
+        first = SimpleNamespace(
+            start_ms=0,
+            end_ms=1000,
+            prev=None,
+            next=None,
+            first=observation(0, "A", 10),
+            last=observation(500, "A", 10),
+        )
+        second = SimpleNamespace(
+            start_ms=1000,
+            end_ms=2000,
+            prev=observation(500, "A", 10),
+            next=None,
+            first=observation(1000, "B", 50),
+            last=observation(1500, "B", 50),
+        )
+        first.next = second.first
+        second.prev = first.last
+
+        black = np.zeros((30, 90, 3), dtype=np.uint8)
+        white = np.full((30, 90, 3), 255, dtype=np.uint8)
+
+        def sampler(start_ms, end_ms, region):
+            # The first cue's end snaps late; the second cue's start snaps early.
+            if region[0] < 20:
+                return [(500, black), (1000, white)]
+            return [(500, black), (600, white)]
+
+        with (
+            patch("vision.refine._source_fps", return_value=24),
+            patch("vision.refine.frame_sampler", return_value=sampler),
+        ):
+            refine_groups(SimpleNamespace(), {"id": "x"}, "video.mp4", 160, 90, [first, second])
+        self.assertLessEqual(first.end_ms, second.start_ms)
+
 
 class RegionCollectorTests(unittest.TestCase):
     def test_regions_are_capped_at_32_most_frequent_first(self):
@@ -224,6 +288,27 @@ class RegionCollectorTests(unittest.TestCase):
                 }
             )
         self.assertEqual(len(collector.finish()), MAX_REGIONS)
+
+
+class EvidenceRetentionTests(unittest.TestCase):
+    def test_evidence_is_pruned_to_a_total_budget_newest_first(self):
+        from unittest.mock import patch
+
+        from vision import extraction
+
+        with tempfile.TemporaryDirectory() as directory:
+            analyses = Path(directory)
+            for index in range(4):
+                folder = analyses / f"analysis-{index}"
+                folder.mkdir()
+                (folder / "chunk.json").write_bytes(b"x" * 100)
+                os.utime(folder, (index, index))
+            with patch.object(extraction, "EVIDENCE_TOTAL_BYTES", 250):
+                extraction.prune_analyses(analyses, "analysis-3")
+            self.assertEqual(
+                sorted(path.name for path in analyses.iterdir()),
+                ["analysis-2", "analysis-3"],
+            )
 
 
 class RuntimeAvailabilityTests(unittest.TestCase):

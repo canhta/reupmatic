@@ -8,6 +8,7 @@ import type {
 import { unwrap } from '../../bridge/client';
 
 export interface VisionContext {
+  documentId: string;
   assetId: string;
   revision: number;
   duration: number;
@@ -93,6 +94,22 @@ export function useVisionJob(context: VisionContext) {
       if (request) void window.reupmatic.visionCancel(request.id).catch(() => undefined);
     };
   }, [refresh]);
+
+  // Opening another video leaves the previous scan running; cancel it when the source changes.
+  const source = useRef({ documentId: context.documentId, assetId: context.assetId });
+  useEffect(() => {
+    if (
+      source.current.documentId === context.documentId &&
+      source.current.assetId === context.assetId
+    )
+      return;
+    source.current = { documentId: context.documentId, assetId: context.assetId };
+    const request = operation.current;
+    if (!request) return;
+    operation.current = null;
+    setActive(null);
+    void window.reupmatic.visionCancel(request.id).catch(() => undefined);
+  }, [context.documentId, context.assetId]);
 
   async function start(method: VisionInput['method'], settings: Partial<VisionParams>) {
     if (operation.current) return;

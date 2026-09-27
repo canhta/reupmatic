@@ -37,6 +37,7 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     targetCues: JSON.stringify(getTextLayer(editor.textSnapshot, 'transcript').cues),
   });
   const vision = useVisionJob({
+    documentId: editor.documentId,
     assetId: media?.asset_id ?? '',
     revision: editor.revision,
     duration: media?.duration_ms ?? 0,

@@ -65,7 +65,8 @@ export interface CoverFit {
 /**
  * The band over the dominant position, in output-frame percentages. Rotation, crop and the output
  * scale are mapped through the same geometry the burn uses; other positions are reported so the
- * user can see why one band cannot cover them all.
+ * user can see why one band cannot cover them all. The band is a snapshot of the scan: a later
+ * crop or rotation change does not re-fit it, the user fits again.
  */
 export function fitCoverBand(
   regions: TextRegion[],

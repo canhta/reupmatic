@@ -60,20 +60,26 @@ def change_index(frames: list[Any], threshold: float = REGION_DIFF_MIN) -> int |
 def refine_boundaries(group: Any, sampler: Any, width: int, height: int) -> tuple[int, int]:
     """Refine one merged cue's edges with a sampler(start_ms, end_ms, region) -> [(time, frame)]."""
     start_ms, end_ms = group.start_ms, group.end_ms
+
+    # The sampler decodes one extra frame past the sample, so clamp its choice back to the window
+    # the change was observed in; it can never cross the neighbouring OCR sample.
+    def clamp(value: int, low: int, high: int) -> int:
+        return max(low, min(high, value))
+
     if group.prev is not None:
         region = region_of(summarize(group.first)[2], REGION_PADDING_PX, width, height)
         if region is not None:
             frames = sampler(group.prev["start_ms"], group.first["start_ms"], region)
             index = change_index([frame for _, frame in frames])
             if index is not None:
-                start_ms = frames[index][0]
+                start_ms = clamp(frames[index][0], group.prev["start_ms"], group.first["start_ms"])
     if group.next is not None:
         region = region_of(summarize(group.last)[2], REGION_PADDING_PX, width, height)
         if region is not None:
             frames = sampler(group.last["start_ms"], group.next["start_ms"], region)
             index = change_index([frame for _, frame in frames])
             if index is not None:
-                end_ms = frames[index][0]
+                end_ms = clamp(frames[index][0], group.last["start_ms"], group.next["start_ms"])
     return start_ms, end_ms
 
 
@@ -177,13 +183,18 @@ def refine_groups(
     sampler = frame_sampler(host, req, source_path, width, height, fps, stats)
     refined = 0
     total = len(groups)
+    previous_end: int | None = None
     for index, group in enumerate(groups, 1):
         before = (group.start_ms, group.end_ms)
         start_ms, end_ms = refine_boundaries(group, sampler, width, height)
+        # Two cues refine their shared edge independently; keep them ordered so they never overlap.
+        if previous_end is not None and start_ms < previous_end:
+            start_ms = previous_end
         if start_ms < end_ms:
             group.start_ms, group.end_ms = start_ms, end_ms
         if (group.start_ms, group.end_ms) != before:
             refined += 1
+        previous_end = group.end_ms
         if on_progress is not None:
             on_progress(index / total)
     return {
