@@ -241,6 +241,20 @@ export function withoutVoiceTrack<T extends VoiceTrackSnapshot>(snapshot: T): T 
   return next;
 }
 
+/**
+ * The lines a per-cue generate keeps: the track's own cues that still exist in the spoken layer.
+ * The panel adds the newly selected cue to this list, so a one-line generate re-mixes the line
+ * that already exists instead of discarding the rest of the track.
+ */
+export function retainedVoiceCueIds(
+  track: VoiceTrack | undefined,
+  available: readonly string[],
+): string[] {
+  if (!track) return [];
+  const known = new Set(available);
+  return track.plan.lines.map((line) => line.cue_id).filter((cueId) => known.has(cueId));
+}
+
 export interface VoiceTrackSettings {
   readonly engine: string;
   readonly mode: 'replace' | 'mix';

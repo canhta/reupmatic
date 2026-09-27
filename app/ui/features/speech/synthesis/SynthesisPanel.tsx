@@ -8,6 +8,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { retainedVoiceCueIds } from '../../../../core/speech/synthesis/voice-track';
 import { getTextLayer } from '../../../../core/subtitles/layers/document';
 import { InspectorPanelSection } from '../../../design-system/InspectorPanelSection';
 import { useEditor } from '../../editor/EditorContext';
@@ -32,8 +33,23 @@ export function SynthesisPanel() {
     (language === 'en' || language === 'vi') && job.voices.some((value) => value.id === voice);
   const languageUnsupported = language !== null && language !== 'en' && language !== 'vi';
   const selectedVoice = job.voices.find((value) => value.id === voice);
-  const runCues =
-    scope === 'selected' ? source.cues.filter((cue) => cue.id === editor.selected) : source.cues;
+  // A selected-cue generate re-mixes the cues the track already survives with, so line-by-line
+  // generation keeps every earlier line.
+  const selectedIds =
+    scope === 'selected' && editor.selected
+      ? [
+          ...new Set([
+            ...retainedVoiceCueIds(
+              editor.voiceTrack,
+              source.cues.map((cue) => cue.id),
+            ),
+            editor.selected,
+          ]),
+        ]
+      : undefined;
+  const runCues = selectedIds
+    ? source.cues.filter((cue) => selectedIds.includes(cue.id))
+    : source.cues;
   const characters = runCues.reduce((total, cue) => total + cue.text.length, 0);
   const cloudShort = selectedVoice?.source === 'cloud' && characters < 50;
   const voiceLabel = (value: (typeof job.voices)[number]) =>
@@ -146,7 +162,7 @@ export function SynthesisPanel() {
               void job.start({
                 language,
                 voice_id: voice,
-                ...(scope === 'selected' ? { cue_ids: [editor.selected] } : {}),
+                ...(selectedIds ? { cue_ids: selectedIds } : {}),
               })
             }
           />

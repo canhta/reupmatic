@@ -5,7 +5,7 @@ export const synthesisEn = {
   synthesisChooseVoice: 'Choose a voice',
   synthesisScope: 'Cues to generate',
   synthesisAll: 'All spoken cues',
-  synthesisSelected: 'Selected cue only',
+  synthesisSelected: 'Selected cue',
   synthesisSelectionHelp: 'Select a cue in the editor first.',
   synthesisStart: 'Generate voice',
   synthesisRunning: 'Generating speech',
@@ -29,7 +29,7 @@ export const synthesisEn = {
   synthesisReviewed: 'I checked the text and listened for problems.',
   synthesisApply: 'Apply voice',
   synthesisApplyHelp:
-    'Adds the reviewed audio to the project; applying again replaces the current track.',
+    'Adds the reviewed audio to the project. Generating another line keeps the ones already applied.',
   synthesisApplied: 'Voice track added to the project.',
   synthesisSaveWav: 'Save WAV',
   synthesisSaveReceipt: 'Save JSON',

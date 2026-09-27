@@ -10,6 +10,14 @@ import {
   prepareSynthesis,
 } from '../../dist-core/speech/synthesis/review.js';
 import {
+  planVoiceTiming,
+  SHIPPED_VOICE_TIMING_POLICY,
+} from '../../dist-core/speech/synthesis/timing.js';
+import {
+  applyVoiceResult,
+  retainedVoiceCueIds,
+} from '../../dist-core/speech/synthesis/voice-track.js';
+import {
   applyLayerCopy,
   editTextLayer,
   previewLayerCopy,
@@ -215,4 +223,40 @@ test('synthesis readiness never pretends that status is hash/model-quality verif
   ]) {
     assert.throws(() => parseSynthesisStatus({ ...status, ...patch }), /INVALID_WORKER_RESPONSE/);
   }
+});
+
+test('generating the next line keeps the lines already applied to the track', () => {
+  const settings = {
+    engine: 'vieneu-v3-turbo-onnx',
+    mode: 'mix',
+    gain_db: 0,
+    fade_in_ms: 0,
+    fade_out_ms: 0,
+  };
+  const plan = (request) =>
+    planVoiceTiming({
+      cues: request.params.cues,
+      segments: result(request).segments,
+      sample_rate: result(request).sample_rate,
+      engine_targets_duration: false,
+      policy: SHIPPED_VOICE_TIMING_POLICY,
+    });
+  const doc = document();
+  const first = input(doc, ['one']);
+  const applied = applyVoiceResult(doc, first, result(first), plan(first), settings);
+  // The next selected-cue generate must retain the track's surviving cue, not replace it.
+  assert.deepEqual(
+    retainedVoiceCueIds(
+      applied.voice_track,
+      getTextLayer(doc, 'spoken').cues.map((entry) => entry.id),
+    ),
+    ['one'],
+  );
+  const second = input(applied, ['one', 'two']);
+  const merged = applyVoiceResult(applied, second, result(second), plan(second), settings);
+  assert.deepEqual(
+    merged.voice_track.plan.lines.map((line) => line.cue_id),
+    ['one', 'two'],
+  );
+  assert.equal(merged.voice_track.provenance.request_id, second.request_id);
 });

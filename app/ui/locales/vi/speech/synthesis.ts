@@ -7,7 +7,7 @@ export const synthesisVi = {
   synthesisChooseVoice: 'Chọn giọng',
   synthesisScope: 'Các câu cần tạo giọng',
   synthesisAll: 'Toàn bộ lớp nội dung đọc',
-  synthesisSelected: 'Chỉ câu đang chọn',
+  synthesisSelected: 'Câu đang chọn',
   synthesisSelectionHelp: 'Chọn một câu trong bảng biên tập trước.',
   synthesisStart: 'Tạo giọng',
   synthesisRunning: 'Đang tạo giọng nói',
@@ -30,7 +30,8 @@ export const synthesisVi = {
   synthesisPlayer: 'Âm thanh bản nháp giọng đọc',
   synthesisReviewed: 'Tôi đã đối chiếu nội dung và nghe kiểm tra.',
   synthesisApply: 'Áp dụng giọng',
-  synthesisApplyHelp: 'Thêm âm thanh đã duyệt vào dự án; áp dụng lại sẽ thay bản giọng hiện có.',
+  synthesisApplyHelp:
+    'Thêm âm thanh đã duyệt vào dự án. Tạo câu tiếp theo sẽ giữ các câu đã áp dụng.',
   synthesisApplied: 'Đã thêm bản giọng đọc vào dự án.',
   synthesisSaveWav: 'Lưu WAV',
   synthesisSaveReceipt: 'Lưu JSON',
