@@ -71,38 +71,14 @@ def box_overlap(
     return intersection / union if union > 0 else 0.0
 
 
-# A line joins the subtitle row while its vertical center stays within this multiple of the
-# dominant line's height; a distant banner stays out and a two-line subtitle stays in.
-ROW_CENTER_TOLERANCE = 1.5
-
-
-def select_subtitle_row(detections: list[dict]) -> list[dict]:
-    """The largest text line plus the lines on its row, excluding text elsewhere in the frame.
-
-    OCR reports every text in a frame. A persistent banner must not join a subtitle line, grow its
-    box, or widen the region that boundary refinement compares. The dominant line is the largest
-    by area, which for burned-in subtitles is the subtitle rather than a watermark or prompt.
-    """
-    lines = [d for d in detections if d["text"].strip()]
-    if len(lines) <= 1:
-        return lines
-    dominant = max(lines, key=lambda d: _area(d["box"]))
-    height = max(1, dominant["box"][3] - dominant["box"][1])
-    tolerance = height * ROW_CENTER_TOLERANCE
-    dominant_center = (dominant["box"][1] + dominant["box"][3]) / 2
-    left, right = dominant["box"][0], dominant["box"][2]
-    return [
-        line
-        for line in lines
-        if abs((line["box"][1] + line["box"][3]) / 2 - dominant_center) <= tolerance
-        and line["box"][2] > left
-        and line["box"][0] < right
-    ]
+# Two text lines belong to one on-screen row while their vertical centers stay this close.
+ROW_TOLERANCE_PCT = 6
+MAX_REGIONS = 32
 
 
 def summarize(observation: dict) -> tuple[str, str, tuple[int, int, int, int] | None, float]:
     """Display text, normalized text, union box and mean confidence of one sample."""
-    detections = select_subtitle_row(observation.get("detections", []))
+    detections = [d for d in observation.get("detections", []) if d["text"].strip()]
     lines = sorted(detections, key=lambda d: (d["box"][1], d["box"][0]))
     display = "\n".join(unicodedata.normalize("NFC", line["text"]).strip() for line in lines)
     if not display:
@@ -117,64 +93,86 @@ def summarize(observation: dict) -> tuple[str, str, tuple[int, int, int, int] | 
     return display, normalize(display), box, weight
 
 
-def merge_box(left: tuple[int, int, int, int], right: tuple[int, int, int, int]) -> tuple:
-    return (
-        min(left[0], right[0]),
-        min(left[1], right[1]),
-        max(left[2], right[2]),
-        max(left[3], right[3]),
-    )
+class _Row:
+    """One vertical text position across the scan, grouped independently of the others."""
+
+    def __init__(self, anchor_y: float):
+        self.anchor_y = anchor_y
+        self.top: int | None = None
+        self.bottom: int | None = None
+        self.left: int | None = None
+        self.right: int | None = None
+        self.count = 0
+        self.changes = 0
+        self.last_text = ""
+        self.grouper = CueGrouper()
+
+    def observe(self, start_ms: int, end_ms: int, detections: list[dict]) -> None:
+        self.grouper.add({"start_ms": start_ms, "end_ms": end_ms, "detections": detections})
+        for detection in detections:
+            box = detection["box"]
+            self.top = box[1] if self.top is None else min(self.top, box[1])
+            self.bottom = box[3] if self.bottom is None else max(self.bottom, box[3])
+            self.left = box[0] if self.left is None else min(self.left, box[0])
+            self.right = box[2] if self.right is None else max(self.right, box[2])
+        normalized = summarize({"detections": detections})[1]
+        if normalized:
+            self.count += 1
+            if self.last_text and similarity(self.last_text, normalized) < TEXT_SIMILARITY_MIN:
+                self.changes += 1
+            self.last_text = normalized
 
 
-# Two text boxes belong to one position while their centers stay this close, per axis.
-POSITION_TOLERANCE_X_PCT = 15
-POSITION_TOLERANCE_Y_PCT = 6
-MAX_REGIONS = 32
+class SubtitleRows:
+    """Cluster each sample's lines into vertical rows and group each row separately.
 
-
-class RegionCollector:
-    """Cluster each observation's text-box union into distinct on-screen positions.
-
-    Streaming, so a whole-source scan clusters every observation rather than a 20-sample preview.
-    Positions are most frequent first, in source-frame percentages, capped at MAX_REGIONS.
+    The subtitle row's text changes over time; a banner or title keeps the same text, however
+    large. Only that row is merged and fitted, so a persistent title never joins a cue or grows the
+    band. Rows are chosen over the whole scan, so later subtitles are not lost to a preview.
     """
 
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
-        self.clusters: list[dict] = []
+        self.rows: list[_Row] = []
 
     def add(self, observation: dict) -> None:
-        box = summarize(observation)[2]
-        if box is None:
-            return
-        center = ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
-        x_tolerance = self.width * POSITION_TOLERANCE_X_PCT / 100
-        y_tolerance = self.height * POSITION_TOLERANCE_Y_PCT / 100
-        for cluster in self.clusters:
-            anchor = cluster["anchor"]
-            if (
-                abs(center[0] - anchor[0]) <= x_tolerance
-                and abs(center[1] - anchor[1]) <= y_tolerance
-            ):
-                cluster["box"] = merge_box(cluster["box"], box)
-                cluster["count"] += 1
-                return
-        self.clusters.append({"anchor": center, "box": box, "count": 1})
+        assigned: list[list[dict]] = [[] for _ in self.rows]
+        tolerance = self.height * ROW_TOLERANCE_PCT / 100
+        for detection in observation.get("detections", []):
+            if not detection["text"].strip():
+                continue
+            center_y = (detection["box"][1] + detection["box"][3]) / 2
+            for index, row in enumerate(self.rows):
+                if abs(center_y - row.anchor_y) <= tolerance:
+                    assigned[index].append(detection)
+                    break
+            else:
+                self.rows.append(_Row(center_y))
+                assigned.append([detection])
+        for row, detections in zip(self.rows, assigned):
+            row.observe(observation["start_ms"], observation["end_ms"], detections)
 
-    def finish(self) -> list[dict]:
-        regions = [
-            {
-                "x_pct": cluster["box"][0] / self.width * 100,
-                "y_pct": cluster["box"][1] / self.height * 100,
-                "width_pct": (cluster["box"][2] - cluster["box"][0]) / self.width * 100,
-                "height_pct": (cluster["box"][3] - cluster["box"][1]) / self.height * 100,
-                "count": cluster["count"],
-            }
-            for cluster in self.clusters
+    def finish(self) -> tuple[list[Any], list[dict]]:
+        if not self.rows:
+            return [], []
+        # Most text changes wins; the lower row breaks a tie (a larger y is lower on screen).
+        subtitle = max(self.rows, key=lambda row: (row.changes, row.anchor_y))
+        regions = [self._region(row) for row in self.rows]
+        subtitle_index = self.rows.index(subtitle)
+        order = [subtitle_index] + [
+            index for index in range(len(self.rows)) if index != subtitle_index
         ]
-        regions.sort(key=lambda region: (-region["count"], region["y_pct"]))
-        return regions[:MAX_REGIONS]
+        return subtitle.grouper.finish(), [regions[index] for index in order][:MAX_REGIONS]
+
+    def _region(self, row: _Row) -> dict:
+        return {
+            "x_pct": row.left / self.width * 100,
+            "y_pct": row.top / self.height * 100,
+            "width_pct": (row.right - row.left) / self.width * 100,
+            "height_pct": (row.bottom - row.top) / self.height * 100,
+            "count": max(1, row.count),
+        }
 
 
 class _Group:

@@ -116,41 +116,72 @@ class TimedEvidenceTests(unittest.TestCase):
 
 class SubtitleRowTests(unittest.TestCase):
     def test_a_persistent_banner_is_not_joined_to_the_subtitle(self):
-        from vision.merge import timed_cues
+        from vision.merge import SubtitleRows
 
-        def sample(start, text):
-            return {
-                "start_ms": start,
-                "end_ms": start + 500,
-                "detections": [
-                    {"text": "Follow", "confidence": 0.9, "box": [10, 10, 100, 30]},
-                    {"text": text, "confidence": 0.9, "box": [100, 300, 500, 340]},
-                ],
-            }
-
-        cues = timed_cues([sample(0, "First"), sample(500, "First"), sample(1000, "Second")])
-        self.assertEqual([c["text"] for c in cues], ["First", "Second"])
-        self.assertTrue(all("\n" not in c["text"] for c in cues))
-
-    def test_regions_ignore_a_banner_elsewhere_in_the_frame(self):
-        from vision.merge import RegionCollector
-
-        collector = RegionCollector(640, 360)
-        for index in range(4):
-            collector.add(
+        rows = SubtitleRows(640, 360)
+        lines = ["Alpha", "Bravo", "Charlie", "Delta"]
+        for index, text in enumerate(lines):
+            rows.add(
                 {
                     "start_ms": index * 500,
                     "end_ms": index * 500 + 500,
                     "detections": [
                         {"text": "Follow", "confidence": 0.9, "box": [10, 10, 100, 30]},
-                        {"text": f"Line {index}", "confidence": 0.9, "box": [100, 300, 500, 340]},
+                        {"text": text, "confidence": 0.9, "box": [100, 300, 500, 340]},
                     ],
                 }
             )
-        regions = collector.finish()
-        self.assertEqual(len(regions), 1)
+        groups, regions = rows.finish()
+        self.assertEqual([group.text() for group in groups], lines)
+        self.assertTrue(all("\n" not in group.text() for group in groups))
+        # The subtitle row is first; the banner is reported after it.
         self.assertGreater(regions[0]["y_pct"], 70)
         self.assertLess(regions[0]["height_pct"], 20)
+        self.assertEqual(len(regions), 2)
+
+    def test_a_larger_persistent_title_is_not_the_subtitle_row(self):
+        from vision.merge import SubtitleRows
+
+        rows = SubtitleRows(640, 360)
+        title = {"text": "WATCH THE FULL VIDEO", "confidence": 0.9, "box": [20, 10, 620, 100]}
+        lines = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
+        for index, text in enumerate(lines):
+            rows.add(
+                {
+                    "start_ms": index * 500,
+                    "end_ms": index * 500 + 500,
+                    "detections": [
+                        title,
+                        {"text": text, "confidence": 0.9, "box": [150, 300, 500, 340]},
+                    ],
+                }
+            )
+        groups, regions = rows.finish()
+        # The title is larger, but its text never changes; the subtitle row wins.
+        self.assertEqual([group.text() for group in groups], lines)
+        self.assertGreater(regions[0]["y_pct"], 70)
+        self.assertLess(regions[0]["height_pct"], 20)
+
+    def test_regions_are_capped_at_32_with_the_subtitle_row_first(self):
+        from vision.merge import MAX_REGIONS, SubtitleRows
+
+        rows = SubtitleRows(1000, 1000)
+        for index in range(40):
+            rows.add(
+                {
+                    "start_ms": index * 500,
+                    "end_ms": index * 500 + 500,
+                    "detections": [
+                        {
+                            "text": "x",
+                            "confidence": 0.9,
+                            "box": [10, index * 100, 50, index * 100 + 20],
+                        }
+                    ],
+                }
+            )
+        _, regions = rows.finish()
+        self.assertEqual(len(regions), MAX_REGIONS)
 
 
 class BoundaryRefinementTests(unittest.TestCase):
@@ -266,28 +297,6 @@ class BoundaryRefinementTests(unittest.TestCase):
         ):
             refine_groups(SimpleNamespace(), {"id": "x"}, "video.mp4", 160, 90, [first, second])
         self.assertLessEqual(first.end_ms, second.start_ms)
-
-
-class RegionCollectorTests(unittest.TestCase):
-    def test_regions_are_capped_at_32_most_frequent_first(self):
-        from vision.merge import MAX_REGIONS, RegionCollector
-
-        collector = RegionCollector(1000, 1000)
-        for index in range(40):
-            collector.add(
-                {
-                    "start_ms": index * 500,
-                    "end_ms": index * 500 + 500,
-                    "detections": [
-                        {
-                            "text": "x",
-                            "confidence": 0.9,
-                            "box": [10, index * 100, 50, index * 100 + 20],
-                        }
-                    ],
-                }
-            )
-        self.assertEqual(len(collector.finish()), MAX_REGIONS)
 
 
 class EvidenceRetentionTests(unittest.TestCase):

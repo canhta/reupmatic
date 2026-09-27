@@ -177,7 +177,7 @@ class FrameAccurateSyncTests(SubtitleSyncFixture):
 @unittest.skipUnless(HAS_NATIVE, "native FFmpeg + NumPy/OpenCV required")
 class RefinementCostTests(unittest.TestCase):
     def test_refinement_time_cost_per_minute_of_video(self):
-        from vision.merge import CueGrouper
+        from vision.merge import SubtitleRows, summarize
         from vision.refine import refine_groups
 
         with tempfile.TemporaryDirectory(prefix="refine-cost-") as directory:
@@ -203,24 +203,28 @@ class RefinementCostTests(unittest.TestCase):
                 check=True,
             )
             # A typical density: one original line every two seconds, so 30 boundaries a minute.
-            # Every frame also carries a persistent banner; the subtitle row must be refined alone.
-            grouper = CueGrouper()
+            # Every frame also carries a large persistent title; only the subtitle row is refined.
+            rows = SubtitleRows(320, 180)
             step = 2000
             for index in range(30):
                 start = index * step
-                for offset, text in ((0, "Text"), (500, "Text")):
-                    grouper.add(
+                for offset in (0, 500):
+                    rows.add(
                         {
                             "start_ms": start + offset,
                             "end_ms": start + offset + 500,
                             "detections": [
-                                {"text": text, "confidence": 0.9, "box": [40, 100, 280, 150]},
-                                {"text": "Banner", "confidence": 0.9, "box": [10, 10, 60, 25]},
+                                {"text": "Text", "confidence": 0.9, "box": [40, 100, 280, 150]},
+                                {
+                                    "text": "WATCH THE FULL VIDEO",
+                                    "confidence": 0.9,
+                                    "box": [10, 5, 310, 40],
+                                },
                             ],
                         }
                     )
-                grouper.add({"start_ms": start + 1000, "end_ms": start + 1500, "detections": []})
-            groups = grouper.finish()
+                rows.add({"start_ms": start + 1000, "end_ms": start + 1500, "detections": []})
+            groups, _ = rows.finish()
 
             class Process:
                 def run(self, req, args, timeout=None, on_poll=None):
@@ -234,8 +238,6 @@ class RefinementCostTests(unittest.TestCase):
             )
             stats = refine_groups(host, {"id": "cost"}, video, 320, 180, groups)
             minute_cost = stats["elapsed_ms"]
-            from vision.merge import summarize
-
             region = summarize(groups[0].first)[2]
             print(
                 f"\nS1 refinement: {len(groups)} cues, {stats['decoded_frames']} frames, "
