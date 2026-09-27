@@ -56,6 +56,7 @@ import {
   applyTranslation as applyTranslatedDraft,
   type TranslationPreview,
 } from '../../../core/speech/translation/review';
+import { textRegions } from '../../../core/subtitles/cover-fit';
 import { assertCues, type Cue } from '../../../core/subtitles/cues';
 import {
   acceptStaleVoiceTrack as acceptVoiceTrackStale,
@@ -572,6 +573,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       openingRef.current
     )
       return false;
+    const regions = textRegions(result.observations, result.width, result.height);
     return changeLayerCues(result.cues, 'displayed', {
       language: result.language,
       origin: {
@@ -580,6 +582,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
         source_sha256: result.source_sha256,
         start_ms: result.start_ms,
         end_ms: result.end_ms,
+        ...(regions.length ? { regions } : {}),
       },
     });
   }

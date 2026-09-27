@@ -17,9 +17,10 @@ interface Props {
   inherited?: SubtitleStyle;
   disabled: boolean;
   onChange(value: SubtitleStyle | undefined): void;
+  onFitCover?: (current: SubtitleStyle) => { style: SubtitleStyle; others: number[] } | null;
 }
 
-export function SubtitleStyleForm({ value, inherited, disabled, onChange }: Props) {
+export function SubtitleStyleForm({ value, inherited, disabled, onChange, onFitCover }: Props) {
   const { t } = useTranslation();
   const effective = value ?? inherited ?? defaultSubtitleStyle;
   const applied = JSON.stringify(value ?? null);
@@ -41,7 +42,12 @@ export function SubtitleStyleForm({ value, inherited, disabled, onChange }: Prop
   }
   return (
     <VStack gap={3}>
-      <SubtitleStyleFields value={draft} disabled={disabled} onChange={change} />
+      <SubtitleStyleFields
+        value={draft}
+        disabled={disabled}
+        onChange={change}
+        onFitCover={onFitCover}
+      />
       <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('styleInherit')}

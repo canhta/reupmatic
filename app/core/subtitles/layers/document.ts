@@ -1,3 +1,4 @@
+import { parseTextRegions, type TextRegion } from '../cover-fit.js';
 import { assertCues, type Cue } from '../cues.js';
 import { type TranslationOrigin, validTranslationOrigin } from './translation-origin.js';
 
@@ -16,6 +17,8 @@ export type LayerOrigin =
       end_ms: number;
       model_id?: string;
       runtime?: string;
+      /** OCR only: detected subtitle positions in source-frame percentages. */
+      regions?: TextRegion[];
     };
 export interface LayerMetadata {
   token: string;
@@ -63,8 +66,18 @@ function validOrigin(value: unknown): boolean {
       textLayerNames.includes(value.layer as TextLayerName) &&
       token(value.token)
     );
+  const regions = value.kind === 'ocr' && 'regions' in value;
+  let regionsValid = true;
+  if (regions) {
+    try {
+      parseTextRegions(value.regions);
+    } catch {
+      regionsValid = false;
+    }
+  }
   return (
     (value.kind === 'stt' || value.kind === 'ocr') &&
+    regionsValid &&
     exact(value, [
       'kind',
       'request_id',
@@ -73,6 +86,7 @@ function validOrigin(value: unknown): boolean {
       'end_ms',
       ...('model_id' in value ? ['model_id'] : []),
       ...('runtime' in value ? ['runtime'] : []),
+      ...(regions ? ['regions'] : []),
     ]) &&
     token(value.request_id) &&
     hash(value.source_sha256) &&

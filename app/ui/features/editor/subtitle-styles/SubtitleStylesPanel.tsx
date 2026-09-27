@@ -4,7 +4,13 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { applyCueStyle, type SubtitleStyle } from '../../../../core/subtitles/style';
+import { fitCoverBand } from '../../../../core/subtitles/cover-fit';
+import { getTextLayer } from '../../../../core/subtitles/layers/document';
+import {
+  applyCueStyle,
+  defaultCoverBand,
+  type SubtitleStyle,
+} from '../../../../core/subtitles/style';
 import { useEditor } from '../EditorContext';
 import { SubtitleStyleForm } from './SubtitleStyleForm';
 
@@ -16,6 +22,23 @@ export function SubtitleStylesPanel() {
   const disabled = editor.busy || editor.opening;
   const globalStyle = editor.processing?.subtitle_style;
   const scope = customize && selected ? 'cue' : 'global';
+  const origin = getTextLayer(editor.textSnapshot, 'displayed').origin;
+  const regions = origin.kind === 'ocr' && origin.regions ? origin.regions : [];
+  const media = editor.media;
+  function fitCover(current: SubtitleStyle) {
+    if (!media || !regions.length) return null;
+    const fit = fitCoverBand(
+      regions,
+      editor.processing?.editing,
+      { width: media.width, height: media.height },
+      current.cover ?? defaultCoverBand(current),
+    );
+    if (!fit) return null;
+    return {
+      style: { ...current, cover: fit.band },
+      others: fit.others.map((r) => Math.round(r.y_pct)),
+    };
+  }
   function apply(style: SubtitleStyle | undefined) {
     if (scope === 'cue' && selected) {
       editor.change(applyCueStyle(editor.cues, [selected.id], style));
@@ -46,6 +69,7 @@ export function SubtitleStylesPanel() {
           inherited={scope === 'cue' ? globalStyle : undefined}
           disabled={disabled}
           onChange={apply}
+          onFitCover={regions.length ? fitCover : undefined}
         />
       </VStack>
     </Section>

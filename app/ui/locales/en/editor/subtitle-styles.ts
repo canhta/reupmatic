@@ -9,6 +9,8 @@ export const subtitleStyleEn = {
   styleShadowBackground: 'Shadow & background',
   styleCover: 'Cover original subtitles',
   styleCoverNote: 'The band is drawn under the subtitles for the whole video.',
+  styleCoverFit: 'Fit to original subtitles',
+  styleCoverFitOthers: 'Other original lines sit at {{positions}}% of the height.',
   style_cover_x_pct: 'Band left (% width)',
   style_cover_y_pct: 'Band top (% height)',
   style_cover_width_pct: 'Band width (% width)',

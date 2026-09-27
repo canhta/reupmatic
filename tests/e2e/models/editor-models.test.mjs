@@ -7,7 +7,7 @@
 // the staged interpreter or the installed model configuration is absent.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { copyFile, mkdir, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -61,6 +61,49 @@ function missingPrerequisites() {
     if (!existsSync(path.join(workspace, name))) missing.push(path.join(workspace, name));
   }
   return missing;
+}
+
+// The fixture burns one line in at 1–2 s; the OCR model's language picks the text and font.
+function ocrLanguage() {
+  try {
+    const config = JSON.parse(
+      readFileSync(path.join(realWorkspace(), 'local-models.json'), 'utf8'),
+    );
+    for (const language of ['zh', 'en', 'vi']) if (config.ocr?.[language]) return language;
+  } catch {
+    // No local OCR configuration.
+  }
+  return null;
+}
+
+function buildOcrMedia(temp, language) {
+  const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
+  const video = path.join(temp, 'ocr-e2e.mp4');
+  const text = language === 'zh' ? '你好世界' : 'HELLO';
+  const font = language === 'zh' ? ':fontfile=/System/Library/Fonts/PingFang.ttc' : '';
+  execFileSync(
+    ffmpeg,
+    [
+      '-y',
+      '-v',
+      'error',
+      '-f',
+      'lavfi',
+      '-i',
+      'color=black:s=360x640:r=24:d=3',
+      '-vf',
+      `drawtext=text='${text}'${font}:fontsize=72:fontcolor=white:x=(w-tw)/2:y=h-200:` +
+        "enable='between(t,1,2)'",
+      '-c:v',
+      'libx264',
+      '-pix_fmt',
+      'yuv420p',
+      '-an',
+      video,
+    ],
+    { stdio: 'ignore' },
+  );
+  return video;
 }
 
 function buildMedia(temp) {
@@ -303,6 +346,107 @@ test('Editor with real models: recognise, apply, translate and export with a cov
         '-y',
         path.join(SHOTS_DIR, 'models-exported-frame.png'),
       ]);
+    },
+  );
+});
+
+test('Editor with real models: OCR a burned-in line, translate and export it', {
+  timeout: 900000,
+}, async (t) => {
+  const language = ocrLanguage();
+  if (!language) {
+    t.skip('models e2e OCR needs a local OCR model in local-models.json');
+    return;
+  }
+  const missing = missingPrerequisites();
+  if (missing.length) {
+    t.skip(`models e2e needs: ${missing.join('; ')}`);
+    return;
+  }
+  const languageNames = { zh: 'Chinese', en: 'English', vi: 'Vietnamese' };
+  const { temp, userData } = await createTempWorkspace('reupmatic-models-ocr-');
+  const video = buildOcrMedia(temp, language);
+  const workspace = path.join(userData, 'integration-workspace');
+  await mkdir(workspace, { recursive: true });
+  for (const name of CONFIGS) {
+    await copyFile(path.join(realWorkspace(), name), path.join(workspace, name));
+  }
+
+  await runElectronTest(
+    {
+      temp,
+      userData,
+      env: { PYTHON: stagedPython },
+      screenshotName: 'models-ocr-failure.png',
+    },
+    async ({ application, page }) => {
+      await waitForEditorReady(page);
+      await captureRenderDiagnostics(page);
+      await application.evaluate(({ dialog }, filePath) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
+      }, video);
+      await addMediaToProject(page);
+      await page.locator('.viewers video').first().waitFor({ timeout: 30000 });
+
+      // OCR the burned-in line; its cue window is the fixture's window.
+      await page.getByRole('tab', { name: 'Transcribe', exact: true }).click();
+      const transcribe = page.locator('#panel-transcribe');
+      await transcribe.waitFor({ state: 'visible' });
+      await transcribe
+        .getByRole('combobox', { name: 'Displayed subtitles language', exact: true })
+        .click();
+      await page.getByRole('option', { name: languageNames[language], exact: true }).click();
+      await transcribe.getByRole('button', { name: 'Extract', exact: true }).click();
+      const applyOcr = await waitForOutcome(
+        page,
+        transcribe,
+        page.getByRole('button', { name: 'Apply draft', exact: true }),
+        300000,
+        'OCR',
+      );
+      const rows = await page.locator('.review-rows').first().innerText();
+      assert.match(rows, /1\.0[^\d]2\.0/, 'OCR keeps the burned-in line at 1.0–2.0 s');
+      await applyOcr.click();
+
+      // Translate the recognised line, keeping its window.
+      await page.getByRole('tab', { name: 'Translate', exact: true }).click();
+      const translate = page.locator('#panel-translate');
+      await translate.waitFor({ state: 'visible' });
+      await translate.getByRole('combobox', { name: 'Target language' }).click();
+      await page.getByRole('option', { name: 'Vietnamese', exact: true }).click();
+      const createDraft = translate.getByRole('button', { name: 'Create draft', exact: true });
+      await createDraft.waitFor({ timeout: 120000 });
+      await createDraft.click();
+      const reviewTranslation = await waitForOutcome(
+        page,
+        translate,
+        page.getByRole('button', { name: 'Review', exact: true }),
+        300000,
+        'Translation',
+      );
+      await reviewTranslation.click();
+      const applyTranslation = await waitForOutcome(
+        page,
+        translate,
+        page.getByRole('button', { name: 'Apply', exact: true }),
+        120000,
+        'Translation review',
+      );
+      await applyTranslation.click();
+
+      // Fit the cover band to the detected originals, then export.
+      await page.getByRole('tab', { name: 'Style', exact: true }).click();
+      const style = page.locator('#panel-style');
+      await style.waitFor({ state: 'visible' });
+      await style.getByRole('checkbox', { name: 'Cover original subtitles', exact: true }).check();
+      await style.getByRole('button', { name: 'Fit to original subtitles', exact: true }).click();
+      await page.getByRole('button', { name: 'Export…', exact: true }).click();
+      const dialog = page.getByRole('dialog');
+      await dialog.getByRole('button', { name: 'Export', exact: true }).click();
+      const artifactId = await waitForExport(page, 600000);
+      const output = path.join(workspace, 'renders', artifactId, 'output.mp4');
+      const exported = await stat(output);
+      assert.ok(exported.size > 1000, 'the export is a real file, never published anywhere');
     },
   );
 });

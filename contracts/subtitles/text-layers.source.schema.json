@@ -115,6 +115,22 @@
                   "minLength": 1,
                   "maxLength": 128,
                   "pattern": "^[^\\u0000]+$"
+                },
+                "regions": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["x_pct", "y_pct", "width_pct", "height_pct", "count"],
+                    "properties": {
+                      "x_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "y_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "width_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "height_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "count": { "type": "integer", "minimum": 1, "maximum": 100000 }
+                    }
+                  }
                 }
               },
               "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
@@ -388,6 +404,22 @@
                   "minLength": 1,
                   "maxLength": 128,
                   "pattern": "^[^\\u0000]+$"
+                },
+                "regions": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["x_pct", "y_pct", "width_pct", "height_pct", "count"],
+                    "properties": {
+                      "x_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "y_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "width_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "height_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "count": { "type": "integer", "minimum": 1, "maximum": 100000 }
+                    }
+                  }
                 }
               },
               "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
@@ -661,6 +693,22 @@
                   "minLength": 1,
                   "maxLength": 128,
                   "pattern": "^[^\\u0000]+$"
+                },
+                "regions": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["x_pct", "y_pct", "width_pct", "height_pct", "count"],
+                    "properties": {
+                      "x_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "y_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "width_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "height_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "count": { "type": "integer", "minimum": 1, "maximum": 100000 }
+                    }
+                  }
                 }
               },
               "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],
@@ -934,6 +982,22 @@
                   "minLength": 1,
                   "maxLength": 128,
                   "pattern": "^[^\\u0000]+$"
+                },
+                "regions": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["x_pct", "y_pct", "width_pct", "height_pct", "count"],
+                    "properties": {
+                      "x_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "y_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                      "width_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "height_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+                      "count": { "type": "integer", "minimum": 1, "maximum": 100000 }
+                    }
+                  }
                 }
               },
               "required": ["kind", "request_id", "source_sha256", "start_ms", "end_ms"],

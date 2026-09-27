@@ -1,3 +1,4 @@
+import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -7,6 +8,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   defaultCoverBand,
@@ -18,6 +20,7 @@ interface Props {
   value: SubtitleStyle;
   disabled: boolean;
   onChange(value: SubtitleStyle): void;
+  onFitCover?: (current: SubtitleStyle) => { style: SubtitleStyle; others: number[] } | null;
 }
 
 // Stored colour is exactly #RRGGBB (core parser); a native color input emits that shape.
@@ -73,8 +76,9 @@ const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; ste
   { key: 'spacing_pct', min: -0.2, max: 2, step: 0.05 },
 ];
 
-export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
+export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: Props) {
   const { t } = useTranslation();
+  const [otherPositions, setOtherPositions] = useState<number[] | null>(null);
   return (
     <VStack gap={3}>
       <FormLayout direction="vertical">
@@ -138,6 +142,24 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
           <Text as="p" type="supporting">
             {t('styleCoverNote')}
           </Text>
+          {onFitCover && (
+            <Button
+              label={t('styleCoverFit')}
+              size="sm"
+              isDisabled={disabled}
+              onClick={() => {
+                const fit = onFitCover(value);
+                if (!fit) return;
+                onChange(fit.style);
+                setOtherPositions(fit.others);
+              }}
+            />
+          )}
+          {otherPositions && otherPositions.length > 0 && (
+            <Text as="p" type="supporting">
+              {t('styleCoverFitOthers', { positions: otherPositions.join(', ') })}
+            </Text>
+          )}
           {(
             [
               ['x_pct', 0, 100],

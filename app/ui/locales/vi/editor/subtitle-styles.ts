@@ -11,6 +11,8 @@ export const subtitleStyleVi = {
   styleShadowBackground: 'Bóng & nền',
   styleCover: 'Che phụ đề gốc',
   styleCoverNote: 'Dải màu được phủ dưới phụ đề trong suốt video.',
+  styleCoverFit: 'Khớp phụ đề gốc',
+  styleCoverFitOthers: 'Các dòng gốc khác nằm ở {{positions}}% chiều cao.',
   style_cover_x_pct: 'Dải bên trái (% chiều rộng)',
   style_cover_y_pct: 'Dải bên trên (% chiều cao)',
   style_cover_width_pct: 'Chiều rộng dải (% chiều rộng)',

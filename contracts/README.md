@@ -105,7 +105,14 @@ Snapshots contain monotonic per-host `version`, `paused`, active job ID, recover
 See `worker-request.schema.json`, `app/core/vision/vision.ts` for bounds and exact request/result behavior. OCR observations
 are evidence, not editor instructions. Draft application is a separate explicit,
 revision-checked operation. The manifest, model weights and private paths are not
-accepted from renderer IPC. Burned-in text is hidden with the subtitle cover band, not a separate cleanup pass.
+accepted from renderer IPC.
+
+OCR samples merge into one cue per original line when their normalized text is close and
+their boxes overlap (a confidence-weighted vote for the text), and each cue edge is refined to
+the frame where the detected region changes. An applied draft records the detected subtitle
+positions as bounded `regions` in the displayed layer's OCR origin; the Style cover band's
+**Fit to original subtitles** action sets the band to the dominant position in output
+coordinates and reports the other positions instead of covering the space between them. Burned-in text is hidden with the subtitle cover band, not a separate cleanup pass.
 
 
 ## Local processing recipes
