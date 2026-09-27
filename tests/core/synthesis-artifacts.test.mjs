@@ -259,17 +259,6 @@ function voiceTrack(result) {
   };
 }
 
-const status = (overrides = {}) => ({
-  available: true,
-  code: null,
-  model_id: 'a'.repeat(64),
-  engine: 'vieneu-v3-turbo-onnx',
-  languages: ['vi'],
-  voices: [{ id: 'test-voice', label: 'Test' }],
-  verified: false,
-  ...overrides,
-});
-
 test('a saved reference is rediscovered and re-verified by a fresh store', async (t) => {
   const f = await fixture(t);
   await f.store.admit(f.result, f.input);
@@ -375,34 +364,32 @@ test('cancelling a voice job leaves no artifact a project could reference', asyn
   );
 });
 
-test('a voice track is gated by staleness, model availability and the same artifact verification', async (t) => {
+test('a voice track is gated by staleness and the artifact hash and receipt, never a model', async (t) => {
   const f = await fixture(t);
   await f.store.admit(f.result, f.input);
   const track = voiceTrack(f.result);
+  assert.equal(await verifyVoiceTrack(track, f.store), path.join(f.directory, 'speech.wav'));
+  await assert.rejects(verifyVoiceTrack({ ...track, stale: true }, f.store), /VOICE_TRACK_STALE/);
+  // A cloud or cloned provenance and a swapped local model are the artifact's own identity, not
+  // the installed model's: the finished audio still exports.
+  for (const provenance of [
+    { ...track.provenance, model_id: 'f'.repeat(64) },
+    { ...track.provenance, engine: 'vieneu-v4', voice_id: 'cloud-voice' },
+    { ...track.provenance, voice_id: 'cloned_0123456789abcdef' },
+  ]) {
+    assert.equal(
+      await verifyVoiceTrack({ ...track, provenance }, f.store),
+      path.join(f.directory, 'speech.wav'),
+    );
+  }
+  // A muted track contributes no audio; it no longer needs the model that produced it.
   assert.equal(
-    await verifyVoiceTrack(track, f.store, status()),
+    await verifyVoiceTrack({ ...track, muted: true }, f.store),
     path.join(f.directory, 'speech.wav'),
   );
-  await assert.rejects(
-    verifyVoiceTrack({ ...track, stale: true }, f.store, status()),
-    /VOICE_TRACK_STALE/,
-  );
-  await assert.rejects(
-    verifyVoiceTrack(track, f.store, status({ available: false, model_id: null, engine: null })),
-    /SYNTHESIS_VOICE_MODEL_MISSING/,
-  );
-  await assert.rejects(
-    verifyVoiceTrack(track, f.store, status({ model_id: 'f'.repeat(64) })),
-    /SYNTHESIS_MODEL_CHANGED/,
-  );
-  await assert.rejects(
-    verifyVoiceTrack(track, f.store, status({ voices: [{ id: 'other', label: 'Other' }] })),
-    /SYNTHESIS_VOICE_UNAVAILABLE/,
-  );
-  await assert.rejects(
-    verifyVoiceTrack(track, f.store, status({ languages: ['en'] })),
-    /MODEL_LANGUAGE_UNAVAILABLE/,
-  );
+  const gone = new SynthesisArtifacts(f.root);
+  await rm(f.directory, { recursive: true });
+  await assert.rejects(verifyVoiceTrack(track, gone), /SYNTHESIS_ARTIFACT_MISSING/);
 });
 
 test('speech export never replaces selected model files or their hardlink aliases', async (t) => {

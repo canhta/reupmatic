@@ -220,8 +220,7 @@ export function installSynthesis(host: Host) {
     },
     /** Re-verifies the saved voice artifact; a caller-supplied path is never admitted. */
     async verifyVoice(track: VoiceTrack) {
-      const status = parseSynthesisStatus(await host.worker.request('synthesis.status', {}).result);
-      return verifyVoiceTrack(track, artifacts, status);
+      return verifyVoiceTrack(track, artifacts);
     },
     async close() {
       closing = true;

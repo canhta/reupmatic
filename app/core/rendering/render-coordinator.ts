@@ -255,7 +255,7 @@ export class RenderCoordinator extends EventEmitter {
         if (asset.sha256 !== source.sha256) throw new RemoteError('SOURCE_CHANGED');
         params.soundtrack = { ...placement, asset_id: asset.asset_id, sha256: source.sha256 };
       }
-      if (input.voice) {
+      if (input.voice && !input.voice.muted) {
         if (!this.admitVoice) throw new RemoteError('VOICE_TRACK_STALE');
         const path = await this.admitVoice(input.voice);
         const mix = voiceMix(input.voice);
