@@ -51,13 +51,17 @@ export interface LiveVoiceLine extends VoiceLine {
   source_offset_s: number;
   /** How much recording this line consumes, in seconds. */
   source_duration_s: number;
-  /** Where the line starts on the output clock, in milliseconds. */
+  /** Where the line starts on the clock its surface plays, in milliseconds. */
   output_start_ms: number;
-  /** Where the line ends on the output clock, in milliseconds. */
+  /** Where the line ends on the clock its surface plays, in milliseconds. */
   output_end_ms: number;
 }
 
-/** The trim/speed mapping the render and the live mix share. */
+/**
+ * The render's trim/speed mapping. The live monitor uses `VOICE_CLOCK_UNITY` instead: it plays the
+ * element's own clock (source time for a single video, composition time for a composition), and the
+ * plan's cue offsets are already on that clock.
+ */
 export interface VoiceClock {
   readonly trimStartMs: number;
   readonly speed: number;
@@ -66,7 +70,7 @@ export interface VoiceClock {
 export const VOICE_CLOCK_UNITY: VoiceClock = { trimStartMs: 0, speed: 1 };
 
 /**
- * Source-time milliseconds to output-clock milliseconds: trim first, then clip speed. Mirrors the
+ * Source-time milliseconds to the render's output clock: trim first, then clip speed. Mirrors the
  * `(offset − trim.start)/speed` placement `worker/media/audio/mixing.py` applies to each line.
  */
 export function voiceClockOffsetMs(
@@ -76,7 +80,10 @@ export function voiceClockOffsetMs(
   return Math.max(0, Math.round((offsetMs - clock.trimStartMs) / clock.speed));
 }
 
-/** Mirrors worker/media/audio/mixing.py `voice_filters` line placement. */
+/**
+ * Mirrors worker/media/audio/mixing.py `voice_filters` line placement. A single video's live
+ * monitor passes `VOICE_CLOCK_UNITY`, keeping the line on its cue's source offset.
+ */
 export function voiceLineSchedule(
   track: VoiceTrack,
   clock: VoiceClock = VOICE_CLOCK_UNITY,

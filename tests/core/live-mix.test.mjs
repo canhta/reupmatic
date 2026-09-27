@@ -145,6 +145,30 @@ test('a trim and speed move the voice to the output clock the render uses', () =
   });
 });
 
+test('the live monitor keeps voice on source time, on the same cue as the export', () => {
+  const cueStart = 6000;
+  const source = {
+    ...voiceTrack,
+    plan: {
+      ...voiceTrack.plan,
+      lines: [{ ...voiceTrack.plan.lines[0], cue_id: 'cue-1', offset_ms: cueStart }],
+    },
+    segments: [voiceTrack.segments[0]],
+  };
+  // The monitor plays the untrimmed source, so the line stays on its cue's source offset.
+  assert.deepEqual(
+    voiceLineSchedule(source).map((line) => line.output_start_ms),
+    [cueStart],
+  );
+  // The export maps the same cue onto its trimmed, sped output clock...
+  const trimStart = 5000,
+    speed = 2,
+    renderOffset = voiceClockOffsetMs(cueStart, { trimStartMs: trimStart, speed });
+  assert.equal(renderOffset, 500);
+  // ...which is the same source instant, so monitor and export agree relative to the picture.
+  assert.equal(renderOffset * speed + trimStart, cueStart);
+});
+
 test('fade envelopes ramp linearly on the same clock the worker fades', () => {
   // Music: in over [1000, 2000), out over [3500, 4000).
   assert.equal(fadeGainAt(1000, 1000, 4000, 1000, 500), 0);
