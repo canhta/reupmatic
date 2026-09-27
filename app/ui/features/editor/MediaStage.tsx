@@ -282,6 +282,7 @@ export function MediaStage() {
                       onTimeUpdate={(event) =>
                         editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
                       }
+                      onEnded={editor.onSourceEnded}
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                     />
                     {cover && (
@@ -344,6 +345,7 @@ export function MediaStage() {
                   onTimeUpdate={(event) =>
                     editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
                   }
+                  onEnded={editor.onSourceEnded}
                   onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                 />
                 <canvas ref={subtitleCanvas} className="JASSUB subtitle-overlay" />

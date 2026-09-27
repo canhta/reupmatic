@@ -117,6 +117,7 @@ export interface EditorSession {
   seek: (milliseconds: number) => void;
   onSourceMetadata: () => void;
   onSourceTime: (milliseconds: number) => void;
+  onSourceEnded: () => void;
   sourceSelection: SourceSelection | null;
   sourceUrl: string | undefined;
   sourceEmpty: boolean;

@@ -33,6 +33,9 @@ export function useSourcePreview(
   const clock = useRef(0);
   const pending = useRef(0);
   const document = useRef(documentId);
+  // Set when playback should continue on the next clip once its element has metadata.
+  const resumeAfterLoad = useRef(false);
+  const switching = useRef(false);
 
   const seek = useCallback(
     (milliseconds: number) => {
@@ -87,6 +90,8 @@ export function useSourcePreview(
     grants.current.clear();
     ready.current = false;
     current.current = null;
+    resumeAfterLoad.current = false;
+    switching.current = false;
     setSelection(null);
     setNoClipAtPosition(false);
     video.current?.pause();
@@ -112,6 +117,31 @@ export function useSourcePreview(
     if (!composition || !video.current || !current.current) return;
     video.current.currentTime = pending.current / 1000;
     video.current.playbackRate = current.current.speed;
+    switching.current = false;
+    if (resumeAfterLoad.current) {
+      resumeAfterLoad.current = false;
+      void video.current.play().catch(() => undefined);
+    }
+  }
+
+  // The output clock runs past this clip's out point: jump to the next enabled span and keep
+  // playing. Disabled spans are skipped; the last clip parks the clock at the composition end.
+  function advanceClip(selected: SourceSelection) {
+    if (!composition || switching.current) return;
+    const spanEnd = selected.offset + Math.round((selected.end - selected.start) / selected.speed);
+    const next = compositionSpans(composition).find(
+      (span) => span.clip.enabled && span.start_ms >= spanEnd,
+    );
+    if (!next) {
+      video.current?.pause();
+      const end = Math.max(0, compositionDuration(composition) - 1);
+      clock.current = end;
+      updateClock(end);
+      return;
+    }
+    switching.current = true;
+    resumeAfterLoad.current = true;
+    seek(next.start_ms);
   }
 
   function onSourceTime(milliseconds: number) {
@@ -122,20 +152,26 @@ export function useSourcePreview(
     }
     const selected = current.current;
     if (!selected || !video.current) return;
-    const sourceTime = Math.max(selected.start, Math.min(selected.end - 1, milliseconds));
-    if (sourceTime !== milliseconds) {
-      video.current.pause();
-      video.current.currentTime = sourceTime / 1000;
+    if (milliseconds >= selected.end) {
+      advanceClip(selected);
+      return;
     }
+    const sourceTime = Math.max(selected.start, milliseconds);
     const time = selected.offset + Math.round((sourceTime - selected.start) / selected.speed);
     clock.current = time;
     updateClock(time);
+  }
+
+  function onSourceEnded() {
+    const selected = current.current;
+    if (composition && selected) advanceClip(selected);
   }
 
   return {
     seek,
     onSourceMetadata,
     onSourceTime,
+    onSourceEnded,
     sourceSelection: selection,
     sourceUrl: composition ? selection?.url : media?.url,
     sourceEmpty: Boolean(composition) && noClipAtPosition,
