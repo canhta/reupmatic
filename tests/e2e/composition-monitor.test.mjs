@@ -93,6 +93,57 @@ test('composition mode keeps the edit window, blocks OCR and renders a disabled 
   );
 });
 
+test('the monitor paints composition subtitles from the worker ASS overlay', {
+  timeout: 180000,
+}, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-composition-overlay-');
+  const primary = path.join(temp, 'primary.mp4');
+  const second = path.join(temp, 'second.mp4');
+  makeVideo(primary, 6);
+  makeVideo(second, 3);
+
+  await runElectronTest(
+    { temp, userData, screenshotName: 'composition-overlay-failure.png' },
+    async ({ application, page }) => {
+      await waitForEditorReady(page);
+      await stubMediaPicker(application, [primary, second]);
+      await addMediaToProject(page);
+      await page.locator('video[data-monitor-video="source"]').waitFor();
+      await addSecondClip(page, 'second.mp4');
+
+      const overlay = page.locator('canvas.JASSUB');
+      await overlay.waitFor({ timeout: 30000 });
+      // Hide the video so only subtitle pixels can change inside the overlay element.
+      await page.evaluate(() => {
+        const video = document.querySelector('video[data-monitor-video="source"]');
+        if (video instanceof HTMLElement) video.style.visibility = 'hidden';
+      });
+      const without = await overlay.screenshot();
+
+      await openSourcePanel(page, 'cues');
+      await page.getByRole('button', { name: 'Add cue', exact: true }).click();
+      const text = page.getByRole('textbox', { name: 'Text 1', exact: true });
+      await text.fill('Xin chào composition');
+      await text.blur();
+      await page.getByRole('button', { name: 'Play', exact: true }).click();
+      await page.waitForTimeout(500);
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+
+      let painted = null;
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline) {
+        painted = await overlay.screenshot();
+        if (!painted.equals(without)) break;
+        await page.waitForTimeout(300);
+      }
+      assert.ok(
+        painted && !painted.equals(without),
+        'the composition overlay must paint the active cue',
+      );
+    },
+  );
+});
+
 test('the monitor advances into the next clip instead of stopping at the boundary', {
   timeout: 180000,
 }, async () => {
