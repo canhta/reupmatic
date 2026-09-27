@@ -15,6 +15,7 @@ import type {
 } from '../../../core/library/library-contracts.js';
 import type { RegisteredVideo } from '../../../core/media/media-contracts.js';
 import { loadProject } from '../../../core/projects/project.js';
+import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { errorCode, type IpcWire } from '../../runtime/ipc.js';
 import type { ProjectPathAuthorizer } from '../../runtime/project-authorizer.js';
@@ -30,6 +31,7 @@ interface Host {
   workspace: string;
   media: MediaRegistry;
   projectPaths: ProjectPathAuthorizer;
+  verifyVoice?(track: VoiceTrack): Promise<unknown>;
   worker: WorkerClient;
   pendingJobs(item: ContentEntry): number;
   relatedRecords?(id: string): { posts: number; pending_posts: number; workflows: number };
@@ -253,6 +255,7 @@ export async function installLibrary(host: Host) {
       project,
       source,
       host.getLanguage?.(),
+      host.verifyVoice,
     );
     await required().resolveAsset(id, linked.id);
     return snapshot

@@ -216,7 +216,8 @@ const speech = installSpeech({
   runtimePacks: runtimePackSupport,
 });
 library = await installLibrary({
-  wire, getWindow: () => win, getLanguage, workspace, media, projectPaths, worker: client, diagnostics,
+  wire, getWindow: () => win, getLanguage, workspace, media, projectPaths,
+  verifyVoice: (track) => synthesis.verifyVoice(track), worker: client, diagnostics,
   assignTags: (contentId, tags) => {
     if (!catalog) throw new Error('LIBRARY_TAGS_UNAVAILABLE');
     return catalog.assignDouyinTags(contentId, tags);
