@@ -133,6 +133,8 @@ export interface EditorSession {
   resplitTranscript: () => boolean;
   transcriptNeedsResplit: boolean;
   lineLengthThresholds: (text: string) => QcThresholds;
+  /** The pixel canvas the subtitles burn on, for the live overlay's box. */
+  subtitleCanvas: { width: number; height: number };
   changeLayerCues: (
     next: Cue[],
     name?: TextLayerName,
@@ -281,50 +283,33 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     () => (compositionKey ? parseComposition(JSON.parse(compositionKey)) : undefined),
     [compositionKey],
   );
+  const subtitleCanvas = useMemo(
+    () =>
+      composition
+        ? outputFrame(processing?.editing, composition.canvas)
+        : outputFrame(processing?.editing, {
+            width: media?.width ?? 1920,
+            height: media?.height ?? 1080,
+          }),
+    [composition, processing?.editing, media?.width, media?.height],
+  );
   const transcriptNeedsResplit = useMemo(() => {
     const style = processing?.subtitle_style ?? defaultSubtitleStyle;
-    const frame = composition
-      ? outputFrame(processing?.editing, composition.canvas)
-      : outputFrame(processing?.editing, {
-          width: media?.width ?? 1920,
-          height: media?.height ?? 1080,
-        });
     return getTextLayer(snapshot, 'transcript').cues.some(
-      (cue) => Boolean(cue.words?.length) && splitCue(cue, lineLength, style, frame).length > 1,
+      (cue) =>
+        Boolean(cue.words?.length) && splitCue(cue, lineLength, style, subtitleCanvas).length > 1,
     );
-  }, [
-    snapshot,
-    processing?.subtitle_style,
-    processing?.editing,
-    composition,
-    media?.width,
-    media?.height,
-    lineLength,
-  ]);
+  }, [snapshot, processing?.subtitle_style, lineLength, subtitleCanvas]);
   const renderCues = useMemo(() => {
     const base = composition ? clipCuesToEnabled(composition, burnCues) : burnCues;
     const style = processing?.subtitle_style ?? defaultSubtitleStyle;
-    const frame = composition
-      ? outputFrame(processing?.editing, composition.canvas)
-      : outputFrame(processing?.editing, {
-          width: media?.width ?? 1920,
-          height: media?.height ?? 1080,
-        });
     return base.map((cue) => {
-      const fit = fitCue(cue.text, cue.end_ms - cue.start_ms, lineLength, style, frame);
+      const fit = fitCue(cue.text, cue.end_ms - cue.start_ms, lineLength, style, subtitleCanvas);
       return fit.font_scale < 1
         ? { ...cue, style: fitCueStyle(cue.style ?? style, fit.font_scale) }
         : cue;
     });
-  }, [
-    composition,
-    burnCues,
-    processing?.subtitle_style,
-    processing?.editing,
-    lineLength,
-    media?.width,
-    media?.height,
-  ]);
+  }, [composition, burnCues, processing?.subtitle_style, lineLength, subtitleCanvas]);
   const duration = composition ? compositionDuration(composition) : (media?.duration_ms ?? 0);
   const report = useCallback((reason: unknown) => {
     setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
@@ -560,7 +545,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     return qcThresholdsFromLineLength(
       lineLength,
       processing?.subtitle_style ?? defaultSubtitleStyle,
-      frameSize(),
+      subtitleCanvas,
       text,
     );
   }
@@ -1080,6 +1065,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     resplitTranscript,
     transcriptNeedsResplit,
     lineLengthThresholds,
+    subtitleCanvas,
     changeLayerCues,
     applyLayerCopy,
     reviewLayerSource,

@@ -1,22 +1,30 @@
 import JASSUB from 'jassub';
-import { useEffect, useRef, useState } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { unwrap } from '../../bridge/client';
 import { useEditor } from './EditorContext';
 import { jassubFontOptions } from './jassub-fonts';
 
-export function useMediaAdapters() {
-  const { media, composition, video, ass, getRevision, report } = useEditor();
-  const [wave, setWave] = useState<HTMLDivElement | null>(null);
+/**
+ * Draws the worker's ASS on a canvas that is the output frame itself, so `\move`/`\pos` land in
+ * the same place live and in the export. JASSUB is canvas-only here; time is driven manually from
+ * the editor clock because the canvas is not the source video element.
+ */
+export function useSubtitleOverlay(canvas: RefObject<HTMLCanvasElement | null>) {
+  const { media, composition, ass, getRevision, clock, subtitleCanvas, report } = useEditor();
   const renderer = useRef<JASSUB | null>(null);
+  const clockRef = useRef(clock);
+  clockRef.current = clock;
 
   useEffect(() => {
-    if (composition || !video.current || !media) return;
+    const element = canvas.current;
+    if (composition || !element || !media) return;
     let instance: JASSUB;
     let alive = true;
+    let frame = 0;
     try {
       instance = new JASSUB({
-        video: video.current,
+        canvas: element,
         subContent: '[Script Info]\nScriptType: v4.00+\n',
         ...jassubFontOptions(),
         queryFonts: false,
@@ -25,16 +33,40 @@ export function useMediaAdapters() {
       report(new Error('PREVIEW_UNAVAILABLE'));
       return;
     }
+    // A canvas-only instance sizes itself from these private fields; the output frame is the box.
+    const sized = instance as unknown as { _videoWidth: number; _videoHeight: number };
+    sized._videoWidth = subtitleCanvas.width;
+    sized._videoHeight = subtitleCanvas.height;
     renderer.current = instance;
-    void instance.ready.catch(() => {
-      if (alive) report(new Error('PREVIEW_UNAVAILABLE'));
-    });
+    void instance.ready
+      .then(async () => {
+        if (!alive) return;
+        await instance.resize(true);
+        const loop = () => {
+          if (!alive) return;
+          void instance.manualRender(
+            {
+              expectedDisplayTime: performance.now(),
+              width: subtitleCanvas.width,
+              height: subtitleCanvas.height,
+              mediaTime: clockRef.current / 1000,
+            },
+            true,
+          );
+          frame = requestAnimationFrame(loop);
+        };
+        loop();
+      })
+      .catch(() => {
+        if (alive) report(new Error('PREVIEW_UNAVAILABLE'));
+      });
     return () => {
       alive = false;
+      cancelAnimationFrame(frame);
       renderer.current = null;
       void instance.destroy();
     };
-  }, [composition, media?.asset_id, report, video, media]);
+  }, [composition, media, canvas, subtitleCanvas.width, subtitleCanvas.height, report]);
 
   useEffect(() => {
     const instance = renderer.current;
@@ -53,6 +85,11 @@ export function useMediaAdapters() {
       alive = false;
     };
   }, [ass, getRevision, report]);
+}
+
+export function useMediaAdapters() {
+  const { media, report } = useEditor();
+  const [wave, setWave] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // A media:// element taints the frame path, so draw the waveform from stored peaks only.

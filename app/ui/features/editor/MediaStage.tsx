@@ -23,6 +23,7 @@ import { useEditor } from './EditorContext';
 import { useEditorTools } from './EditorToolContext';
 import { useLiveMix } from './live-mix/useLiveMix';
 import { CoverBandOverlay } from './subtitle-styles/CoverBandOverlay';
+import { useSubtitleOverlay } from './useMediaAdapters';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
 const COLOR_PREVIEW_FILTER_ID = 'editor-color-preview';
@@ -113,6 +114,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   const [dragOver, setDragOver] = useState(false);
   const [playing, setPlaying] = useState(false);
   const resultVideo = useRef<HTMLVideoElement>(null);
+  const subtitleCanvas = useRef<HTMLCanvasElement>(null);
+  useSubtitleOverlay(subtitleCanvas);
   const [resultClock, setResultClock] = useState(0);
   const [resultDuration, setResultDuration] = useState(0);
   const result = editor.preview && editor.preview.revision === revision ? editor.preview : null;
@@ -319,27 +322,39 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                     />
                   )}
+                  <canvas ref={subtitleCanvas} className="subtitle-overlay" />
                 </div>
               </div>
             ) : (
-              <video
-                key={
-                  editor.composition ? (editor.sourceSelection?.id ?? 'loading') : media.asset_id
-                }
-                ref={editor.video}
-                data-monitor-video="source"
-                crossOrigin="anonymous"
-                src={editor.sourceUrl}
-                style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
-                onLoadedMetadata={editor.onSourceMetadata}
-                muted={liveMix.active ? false : (editor.processing?.editing?.audio?.muted ?? false)}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onTimeUpdate={(event) =>
-                  editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
-                }
-                onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
-              />
+              <div
+                className="source-frame"
+                style={{
+                  width: `min(100cqw, 100cqh * ${media.width / media.height})`,
+                  height: `min(100cqh, 100cqw / ${media.width / media.height})`,
+                }}
+              >
+                <video
+                  key={
+                    editor.composition ? (editor.sourceSelection?.id ?? 'loading') : media.asset_id
+                  }
+                  ref={editor.video}
+                  data-monitor-video="source"
+                  crossOrigin="anonymous"
+                  src={editor.sourceUrl}
+                  style={color ? { filter: `url(#${COLOR_PREVIEW_FILTER_ID})` } : undefined}
+                  onLoadedMetadata={editor.onSourceMetadata}
+                  muted={
+                    liveMix.active ? false : (editor.processing?.editing?.audio?.muted ?? false)
+                  }
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  onTimeUpdate={(event) =>
+                    editor.onSourceTime(Math.round(event.currentTarget.currentTime * 1000))
+                  }
+                  onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
+                />
+                <canvas ref={subtitleCanvas} className="subtitle-overlay" />
+              </div>
             )
           ) : (
             <EmptyState

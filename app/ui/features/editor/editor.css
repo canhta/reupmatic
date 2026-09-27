@@ -96,6 +96,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  container-type: size;
+}
+/* The live subtitle canvas is the output frame, so animated \move/\pos match the export. */
+.subtitle-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.source-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .monitor-clock {
   font-variant-numeric: tabular-nums;
@@ -176,53 +192,13 @@
 .geometry-frame .JASSUB {
   z-index: 1;
 }
-/* Selection hints only; the monitor renders the real ASS for the chosen template. */
-.template-sample {
-  display: inline-block;
-}
-.template-sample--clean-fade {
-  animation: template-fade 1.6s ease-in-out infinite;
-}
-.template-sample--pop-words {
-  animation: template-pop 1.6s ease-in-out infinite;
-}
-.template-sample--karaoke {
-  animation: template-karaoke 1.6s linear infinite;
-}
-.template-sample--bold-highlight {
-  font-weight: 800;
-  animation: template-pop 1.6s ease-in-out infinite;
-}
-@keyframes template-fade {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  30%,
-  70% {
-    opacity: 1;
-  }
-}
-@keyframes template-pop {
-  0% {
-    transform: scale(0.7);
-  }
-  40% {
-    transform: scale(1.15);
-  }
-  60%,
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes template-karaoke {
-  0% {
-    color: var(--color-text-secondary);
-  }
-  60%,
-  100% {
-    color: var(--accent);
-  }
+/* Selection hints: the worker's real ASS rendered on a small canvas per template. */
+.template-thumbnail {
+  display: block;
+  width: 100%;
+  max-width: 160px;
+  background: var(--bg-nav);
+  border-radius: var(--radius-sm);
 }
 .editor-start-frame {
   width: 100%;

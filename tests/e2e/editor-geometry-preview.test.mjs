@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { geometryPreview } from '../../dist-core/editing/geometry-preview.js';
+import { geometryPreview, outputFrame } from '../../dist-core/editing/geometry-preview.js';
 import { createTempWorkspace, root, runElectronTest } from './helpers/electron-harness.mjs';
 import { addMediaToProject, waitForEditorReady } from './ui-actions.mjs';
 
@@ -113,6 +113,75 @@ test('Source monitor previews rotate, flip and crop with the export geometry', {
       await page
         .locator('.geometry-stage')
         .screenshot({ path: path.join(artifacts, 'geometry-preview-source.png') });
+    },
+  );
+});
+
+test('Live subtitle overlay is the output frame for a crop that changes aspect', {
+  timeout: 180000,
+}, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-overlay-frame-');
+  const video = path.join(temp, 'overlay.mp4');
+  execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
+    '-v',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'smptebars=size=320x180:rate=30:duration=2',
+    '-c:v',
+    'libx264',
+    '-threads',
+    '2',
+    '-n',
+    video,
+  ]);
+  await runElectronTest(
+    { temp, userData, screenshotName: 'overlay-frame-failure.png' },
+    async ({ application, page }) => {
+      await page.setViewportSize({ width: 1420, height: 900 });
+      await waitForEditorReady(page);
+      await application.evaluate(({ dialog }, filename) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
+      }, video);
+      await addMediaToProject(page);
+      await page.locator('video[data-monitor-video="source"]').waitFor();
+
+      await page.getByRole('tab', { name: 'Edit', exact: true }).click();
+      await page.getByRole('button', { name: 'Framing & color', exact: true }).click();
+      await page.getByRole('checkbox', { name: 'Crop source frame', exact: true }).check();
+      const width = page.getByRole('spinbutton', { name: 'Width (%)', exact: true });
+      await width.fill('50');
+      await width.press('Enter');
+      await width.blur();
+
+      const expected = outputFrame({ crop: { x: 0, y: 0, width: 0.5, height: 1 } }, SOURCE);
+      const ratio = expected.width / expected.height;
+      await page.locator('.subtitle-overlay').waitFor();
+      await page.waitForFunction((target) => {
+        const frame = document.querySelector('.geometry-frame');
+        const overlay = document.querySelector('.subtitle-overlay');
+        if (!frame || !overlay) return false;
+        const frameBox = frame.getBoundingClientRect();
+        const overlayBox = overlay.getBoundingClientRect();
+        return (
+          Math.abs(overlayBox.width - frameBox.width) < 1.5 &&
+          Math.abs(overlayBox.height - frameBox.height) < 1.5 &&
+          Math.abs(frameBox.width / frameBox.height - target) < 0.03
+        );
+      }, ratio);
+      const frameBox = await page.locator('.geometry-frame').boundingBox();
+      const overlayBox = await page.locator('.subtitle-overlay').boundingBox();
+      assert.ok(frameBox && overlayBox, 'both the frame and the overlay render');
+      assert.ok(
+        Math.abs(overlayBox.width - frameBox.width) < 1.5 &&
+          Math.abs(overlayBox.height - frameBox.height) < 1.5,
+        'the live overlay box is the output frame',
+      );
+      assert.ok(
+        Math.abs(frameBox.width / frameBox.height - ratio) < 0.03,
+        `the output frame keeps the cropped aspect (${frameBox.width / frameBox.height} vs ${ratio})`,
+      );
     },
   );
 });
