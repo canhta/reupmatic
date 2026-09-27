@@ -1,5 +1,5 @@
 import { operation } from '../operation-contract.js';
-import { requestRecord } from '../validators.js';
+import { requestId, requestRecord } from '../validators.js';
 
 export const appOperations = {
   'app-install-update': operation<undefined, null>()({
@@ -24,5 +24,14 @@ export const appOperations = {
       return { language: value.language === 'vi' ? 'vi' : 'en' };
     },
     toRequest: (language: string) => ({ language: language as 'en' | 'vi' }),
+  }),
+  'session-close-result': operation<{ request_id: string; completed: boolean }, null>()({
+    rendererMethod: 'sessionCloseResult',
+    validate: (input) => {
+      const value = requestRecord(input, ['request_id', 'completed']);
+      if (typeof value.completed !== 'boolean') throw new Error('INVALID_REQUEST');
+      return { request_id: requestId(value.request_id), completed: value.completed };
+    },
+    toRequest: (request_id: string, completed: boolean) => ({ request_id, completed }),
   }),
 } as const;

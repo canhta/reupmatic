@@ -54,6 +54,9 @@ export const events = {
   'models-changed': event<void>()({ rendererMethod: 'onModelsChanged' }),
   'recent-changed': event<void>()({ rendererMethod: 'onRecentChanged' }),
   'recovery-flush': event<{ request_id: string }>()({ rendererMethod: 'onRecoveryFlush' }),
+  'session-close-request': event<{ request_id: string; action: 'save' | 'discard' }>()({
+    rendererMethod: 'onSessionCloseRequest',
+  }),
   'publish-progress': event<PublishProgressEvent>()({ rendererMethod: 'onPublishProgress' }),
   'vision-job': event<VisionJobEvent>()({ rendererMethod: 'onVisionJob' }),
   'speech-job': event<SpeechEvent>()({ rendererMethod: 'onSpeechJob' }),

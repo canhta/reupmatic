@@ -184,6 +184,8 @@ export interface EditorSession {
   clock: number;
   savingProject: boolean;
   status: string;
+  missingProject: string | null;
+  clearMissingProject: () => void;
   ass: SubtitlePreview | null;
   video: RefObject<HTMLVideoElement | null>;
   timeline: RefObject<TimelineState | null>;
@@ -201,8 +203,8 @@ export interface EditorSession {
   renameProject: (name: string) => boolean;
   projectName: string;
   projectPath: string | null;
-  saveCurrentProject: () => Promise<void>;
-  saveProjectAs: () => Promise<void>;
+  saveCurrentProject: () => Promise<boolean>;
+  saveProjectAs: () => Promise<boolean>;
   saveSubtitles: (timing?: 'source' | 'output', format?: 'srt' | 'ass') => Promise<void>;
   saveVideo: (artifactId: string) => Promise<SaveResult | null | undefined>;
   postExport: (artifactId: string) => Promise<void>;
@@ -232,6 +234,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   const [opening, setOpening] = useState(false);
   const openingRef = useRef(false);
   const [status, setStatus] = useState('ready');
+  const [missingProject, setMissingProject] = useState<string | null>(null);
   const [mediaMissing, setMediaMissing] = useState<string[]>([]);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [ass, setAss] = useState<SubtitlePreview | null>(null);
@@ -239,6 +242,8 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   const timeline = useRef<TimelineState>(null);
   const titleRef = useRef<HTMLElement>(null);
   const rev = useRef(0);
+  // JSON of the last saved/opened document, so undo back to it clears dirty again.
+  const savedBaseline = useRef<string | null>(JSON.stringify(UNTITLED));
   // Render artifact id -> Library export link id, filled when an export is saved.
   const exportLinks = useRef(new Map<string, string>());
   const getRevision = useCallback(() => rev.current, []);
@@ -313,7 +318,38 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
   }, []);
   const { setPreview, ...renderingPublic } = useRenderJob(rev, report, setStatus);
-  const autosave = useAutosave({ documentId, media, snapshot, revision, dirty, opening });
+  const autosave = useAutosave({
+    documentId,
+    media,
+    snapshot,
+    revision,
+    dirty,
+    opening,
+    projectPath,
+  });
+  // The quit dialog's Save/Don't Save arrive here; a false reply keeps the app open.
+  const closeAction = useRef<(action: 'save' | 'discard') => Promise<boolean>>(async () => false);
+  closeAction.current = async (action) => {
+    if (action === 'discard') {
+      await autosave.discard();
+      return true;
+    }
+    // Only a dirty project has anything to write; a clean or empty one quits as before.
+    if (!media || !dirty) return true;
+    return saveCurrentProject();
+  };
+  useEffect(
+    () =>
+      window.reupmatic.onSessionCloseRequest(({ request_id, action }) => {
+        void closeAction
+          .current(action)
+          .then((ok) => window.reupmatic.sessionCloseResult(request_id, ok))
+          .catch(() =>
+            window.reupmatic.sessionCloseResult(request_id, false).catch(() => undefined),
+          );
+      }),
+    [],
+  );
 
   const updateClock = useCallback((milliseconds: number) => {
     setClock(milliseconds);
@@ -454,7 +490,10 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   function bump() {
     rev.current += 1;
     setRevision(rev.current);
-    setDirty(true);
+    setDirty(
+      savedBaseline.current === null ||
+        JSON.stringify(document.getSnapshot()) !== savedBaseline.current,
+    );
     setError('');
   }
 
@@ -632,6 +671,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     setClock(0);
     rev.current += 1;
     setRevision(rev.current);
+    savedBaseline.current = JSON.stringify(snapshot);
     setDirty(false);
     setError('');
     setStatus('ready');
@@ -639,7 +679,11 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   }
 
   async function loadSource(
-    load: () => Promise<{ media: PublicVideo; snapshot: Snapshot; project_path?: string } | null>,
+    load: () => Promise<{
+      media: PublicVideo;
+      snapshot: Snapshot;
+      project_path?: string | null;
+    } | null>,
   ) {
     if (openingRef.current || renderingPublic.busy) throw new Error('EDITOR_BUSY');
     openingRef.current = true;
@@ -736,15 +780,25 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     try {
       await loadSource(() => unwrap(window.reupmatic.openProjectPath(path)));
     } catch (reason) {
-      report(reason);
+      // A missing recent project gets its own notice with Remove and Locate, not a generic error.
+      if (reason instanceof Error && reason.message === 'PROJECT_MISSING') setMissingProject(path);
+      else report(reason);
     }
   }
 
   async function openRecovery(id: string, expected_revision: number) {
     try {
-      if (await loadSource(() => unwrap(window.reupmatic.recoveryOpen({ id, expected_revision }))))
+      // The restored document carries this draft forward and drops it once saved.
+      autosave.prepareSource(id, expected_revision);
+      if (
+        await loadSource(() => unwrap(window.reupmatic.recoveryOpen({ id, expected_revision })))
+      ) {
+        // A recovered draft is unsaved work: no projection baseline until it is saved.
+        savedBaseline.current = null;
         setDirty(true);
+      } else autosave.clearPendingSource();
     } catch (reason) {
+      autosave.clearPendingSource();
       report(reason);
     }
   }
@@ -771,6 +825,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     setClock(0);
     rev.current += 1;
     setRevision(rev.current);
+    savedBaseline.current = JSON.stringify(UNTITLED);
     setDirty(false);
     setError('');
     setStatus('ready');
@@ -785,31 +840,36 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     return true;
   }
 
-  async function saveCurrentProject(saveAs = false) {
-    if (!media || savingProject) return;
+  async function saveCurrentProject(saveAs = false): Promise<boolean> {
+    if (!media || savingProject) return false;
+    // Capture the live document, not the snapshot of an older render.
     const savedRevision = rev.current;
+    const savedSnapshot = document.getSnapshot();
     try {
       setSavingProject(true);
       const value = await unwrap<SaveResult | null>(
         window.reupmatic.saveProject({
           asset_id: media.asset_id,
           revision: savedRevision,
-          snapshot,
+          snapshot: savedSnapshot,
           ...(saveAs || !projectPath ? {} : { path: projectPath }),
         }),
       );
-      if (value?.saved) {
-        if (value.path) setProjectPath(value.path);
-        setStatus(
-          media?.library_id && value.library_linked === false ? 'savedWithoutLibraryLink' : 'saved',
-        );
-        if (isCurrentRevision(rev.current, savedRevision)) {
-          setDirty(false);
-          await autosave.clearSaved(savedRevision);
-        }
+      if (!value?.saved) return false;
+      if (value.path) setProjectPath(value.path);
+      setStatus(
+        media?.library_id && value.library_linked === false ? 'savedWithoutLibraryLink' : 'saved',
+      );
+      // What is on disk is the baseline; undo back to it must clear dirty.
+      savedBaseline.current = JSON.stringify(savedSnapshot);
+      if (isCurrentRevision(rev.current, savedRevision)) {
+        setDirty(false);
+        await autosave.clearSaved(savedRevision);
       }
+      return true;
     } catch (reason) {
       report(reason);
+      return false;
     } finally {
       setSavingProject(false);
     }
@@ -1119,6 +1179,8 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     clock,
     savingProject,
     status,
+    missingProject,
+    clearMissingProject: () => setMissingProject(null),
     ass,
     video,
     timeline,

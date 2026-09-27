@@ -373,6 +373,122 @@ test('within a concurrent participants stage, one member failing does not stop i
   assert.equal(win.destroyed, true, 'the window is still destroyed even if a participant failed');
 });
 
+test('quit Save writes the workspace, skips the draft flush, and closes', async () => {
+  let saved = 0;
+  let flushCalls = 0;
+  const p = participant('a');
+  const wire = fakeWire();
+  const lifecycle = createWorkspaceLifecycle(
+    baseConfig({
+      wire,
+      steps: [{ kind: 'participants', participants: [p] }],
+      recoveryFlush: async () => {
+        flushCalls++;
+        return true;
+      },
+      saveWorkspace: async () => {
+        saved++;
+        return true;
+      },
+      confirm: async (kind) => (kind === 'quit' ? 'save' : 'discard'),
+    }),
+  );
+  wire.call('session-dirty', { dirty: true });
+  const win = fakeWindow();
+  lifecycle.attach(win);
+  win.triggerClose();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(saved, 1, 'Save must actually write the workspace');
+  assert.equal(flushCalls, 0, 'a saved workspace does not also flush a draft');
+  assert.equal(win.destroyed, true);
+  assert.equal(p.closed, true);
+});
+
+test('quit Save that is cancelled or fails leaves the window open', async () => {
+  let saved = 0;
+  const p = participant('a');
+  const wire = fakeWire();
+  const lifecycle = createWorkspaceLifecycle(
+    baseConfig({
+      wire,
+      steps: [{ kind: 'participants', participants: [p] }],
+      saveWorkspace: async () => {
+        saved++;
+        return false;
+      },
+      confirm: async (kind) => (kind === 'quit' ? 'save' : 'cancel'),
+    }),
+  );
+  wire.call('session-dirty', { dirty: true });
+  const win = fakeWindow();
+  lifecycle.attach(win);
+  win.triggerClose();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(saved, 1);
+  assert.equal(win.destroyed, false, 'an unsaved quit must not close');
+  assert.equal(p.closed, false);
+});
+
+test("quit Don't Save drops the draft and closes without flushing", async () => {
+  let discarded = 0;
+  let flushCalls = 0;
+  const p = participant('a');
+  const wire = fakeWire();
+  const lifecycle = createWorkspaceLifecycle(
+    baseConfig({
+      wire,
+      steps: [{ kind: 'participants', participants: [p] }],
+      recoveryFlush: async () => {
+        flushCalls++;
+        return true;
+      },
+      discardWorkspace: async () => {
+        discarded++;
+      },
+      confirm: async (kind) => (kind === 'quit' ? 'discard' : 'save'),
+    }),
+  );
+  wire.call('session-dirty', { dirty: true });
+  const win = fakeWindow();
+  lifecycle.attach(win);
+  win.triggerClose();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(discarded, 1, 'Don’t Save must drop the recovery draft');
+  assert.equal(flushCalls, 0);
+  assert.equal(win.destroyed, true);
+});
+
+test('quit Cancel neither saves nor discards and leaves the window open', async () => {
+  let saved = 0;
+  let discarded = 0;
+  const wire = fakeWire();
+  const lifecycle = createWorkspaceLifecycle(
+    baseConfig({
+      wire,
+      saveWorkspace: async () => {
+        saved++;
+        return true;
+      },
+      discardWorkspace: async () => {
+        discarded++;
+      },
+      confirm: async (kind) => (kind === 'quit' ? 'cancel' : 'save'),
+    }),
+  );
+  wire.call('session-dirty', { dirty: true });
+  const win = fakeWindow();
+  lifecycle.attach(win);
+  win.triggerClose();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(saved, 0);
+  assert.equal(discarded, 0);
+  assert.equal(win.destroyed, false);
+});
+
 test('the lifecycle registers session-dirty and ui-locale handlers that return null replies', () => {
   const wire = fakeWire();
   createWorkspaceLifecycle(baseConfig({ wire }));

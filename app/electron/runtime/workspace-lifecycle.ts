@@ -39,6 +39,10 @@ export interface WorkspaceLifecycleConfig {
   finalClose?: WorkspaceParticipant;
   recoveryFlush(): Promise<boolean>;
   confirm(kind: ConfirmKind, language: Language, context: ConfirmContext): Promise<ConfirmChoice>;
+  /** Quit-dialog Save: writes the project file (Save As when it has none). False stays open. */
+  saveWorkspace?(): Promise<boolean>;
+  /** Quit-dialog Don't Save: drops the unsaved recovery draft. */
+  discardWorkspace?(): Promise<void>;
   onLanguageChange?(language: Language): void;
 }
 
@@ -50,6 +54,7 @@ export interface WorkspaceLifecycle {
 
 export function createWorkspaceLifecycle(config: WorkspaceLifecycleConfig): WorkspaceLifecycle {
   const { wire, steps, finalClose, recoveryFlush, confirm, onLanguageChange } = config;
+  const { saveWorkspace, discardWorkspace } = config;
   let dirty = false;
   let language: Language = 'en';
   let closing = false;
@@ -141,9 +146,18 @@ export function createWorkspaceLifecycle(config: WorkspaceLifecycleConfig): Work
         }
         confirmingClose = true;
         void confirm('quit', language, { dirty, running: anyRunning() })
-          .then((choice) => {
+          .then(async (choice) => {
             if (choice === 'cancel') return;
-            return closeWorkspace(win, { skipFlush: choice === 'discard' });
+            if (choice === 'save') {
+              // Really write the project file; a cancelled Save As or a failed save stays open.
+              if (saveWorkspace && !(await saveWorkspace())) return;
+            } else if (discardWorkspace) {
+              await discardWorkspace();
+            }
+            // Save already replaced the draft; Don't Save dropped it.
+            const settled =
+              choice === 'discard' || (choice === 'save' && saveWorkspace !== undefined);
+            return closeWorkspace(win, { skipFlush: settled });
           })
           .finally(() => {
             confirmingClose = false;
