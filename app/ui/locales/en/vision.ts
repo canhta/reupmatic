@@ -1,6 +1,7 @@
 export const visionEn = {
   visionExtractTitle: 'Extract text',
   visionExtractFull: 'Extract',
+  visionComposition: 'Extract text from the original clip before composing.',
   visionExportSrt: 'Export SRT',
   visionSrtSaved: 'OCR SRT saved with source timing. Editor cues were not changed.',
   visionExtractEvidence: 'Full-source scan: {{count}} sampled frames. Showing the first 20.',

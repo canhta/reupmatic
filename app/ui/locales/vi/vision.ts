@@ -3,6 +3,7 @@ import type { visionEn } from '../en/vision';
 export const visionVi = {
   visionExtractTitle: 'Trích chữ',
   visionExtractFull: 'Trích xuất',
+  visionComposition: 'Trích chữ từ đoạn gốc trước khi ghép.',
   visionExportSrt: 'Xuất SRT',
   visionSrtSaved: 'Đã lưu SRT OCR theo thời gian nguồn. Phụ đề Editor không thay đổi.',
   visionExtractEvidence: 'Quét toàn nguồn: {{count}} khung hình lấy mẫu. Hiện 20 khung đầu tiên.',

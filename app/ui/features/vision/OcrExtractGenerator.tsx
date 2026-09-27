@@ -41,7 +41,7 @@ export function OcrSetup() {
   return (
     <InspectorPanelSection title={t('visionExtractTitle')}>
       <Stack direction="vertical" gap={3}>
-        {}
+        {editor.composition && <Banner status="warning" title={t('visionComposition')} />}
         <FormLayout direction="vertical">
           <LayerLanguageField
             layerName="displayed"
@@ -137,7 +137,7 @@ export function OcrSetup() {
           <Button
             label={t('visionExtractFull')}
             variant="primary"
-            isDisabled={busy || !hasOcr || !language}
+            isDisabled={busy || !hasOcr || !language || Boolean(editor.composition)}
             onClick={() => {
               if (!language) return;
               showReview('ocr');
