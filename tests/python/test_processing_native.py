@@ -171,7 +171,7 @@ class ProcessingNativeTests(VisionFixture, unittest.TestCase):
                     **self.recipe()["subtitle_style"],
                     "cover": {
                         **self.recipe()["subtitle_style"]["cover"],
-                        "height_pct": 40,
+                        "height_pct": 25,
                     },
                 }
             },
