@@ -323,6 +323,8 @@ test('Editor with real models: recognise, apply, translate and export with a cov
       const style = page.locator('#panel-style');
       await style.waitFor({ state: 'visible' });
       await style.getByRole('checkbox', { name: 'Cover original subtitles', exact: true }).check();
+      // Burn a word-emphasis template: all caps with the active word in the accent colour.
+      await style.getByText('Bold highlight', { exact: true }).click();
 
       // Export the whole video with the cover band step.
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
