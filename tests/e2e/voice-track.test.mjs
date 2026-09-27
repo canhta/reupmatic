@@ -63,6 +63,7 @@ const COPY = {
     start: (n) => `Start (s) ${n}`,
     end: (n) => `End (s) ${n}`,
     voiceTab: 'Voice',
+    editTab: 'Edit',
     setSpokenLanguage: 'Spoken text language',
     vietnamese: 'Vietnamese',
     voice: 'Voice',
@@ -111,6 +112,7 @@ const COPY = {
     start: (n) => `Bắt đầu (s) ${n}`,
     end: (n) => `Kết thúc (s) ${n}`,
     voiceTab: 'Giọng đọc',
+    editTab: 'Chỉnh sửa',
     setSpokenLanguage: 'Ngôn ngữ lớp Nội dung đọc',
     vietnamese: 'Tiếng Việt',
     voice: 'Giọng đọc',
@@ -572,6 +574,64 @@ for (const locale of ['en', 'vi']) {
             path: artifactPath(`voice-track-${locale}-missing-${width}x${height}.png`),
           });
         }
+      },
+    );
+  });
+}
+
+for (const locale of ['en', 'vi']) {
+  const copy = COPY[locale];
+
+  test(`Voice track: a generated draft survives switching tools (${locale})`, {
+    timeout: 110000,
+  }, async () => {
+    const { temp, userData } = await createTempWorkspace('reupmatic-voice-switch-');
+    const video = path.join(temp, 'voice-switch.mp4');
+    await createVideo(video);
+    const sdk = await seedSynthesisBundle(userData, temp);
+
+    await runElectronTest(
+      {
+        temp,
+        userData,
+        env: { PYTHONPATH: sdk },
+        screenshotName: `voice-switch-${locale}-failure.png`,
+      },
+      async ({ application, page }) => {
+        await waitForEditorReady(page);
+        if (locale === 'vi') {
+          await chooseLocale(application, page, 'vi');
+          await page.getByRole('button', { name: copy.editorArea, exact: true }).click();
+        }
+        await application.evaluate(({ dialog }, filePath) => {
+          dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
+        }, video);
+        await addMediaToProject(page);
+        await page.locator('.viewers video').waitFor();
+
+        await page.getByRole('combobox', { name: copy.editingLayer, exact: true }).click();
+        await page.getByRole('option', { name: copy.spokenLayer }).click();
+        await page.getByRole('button', { name: copy.addCue, exact: true }).click();
+        const field = page.getByRole('textbox', { name: copy.text(1), exact: true });
+        await composeText(page, field, CUES[0].text);
+        await commitNumber(page, copy.end(1), CUES[0].end);
+        await commitNumber(page, copy.start(1), CUES[0].start);
+
+        await page.getByRole('tab', { name: copy.voiceTab, exact: true }).click();
+        await page.locator('#panel-voice').waitFor({ state: 'visible' });
+        await page.getByRole('combobox', { name: copy.setSpokenLanguage, exact: true }).click();
+        await page.getByRole('option', { name: copy.vietnamese, exact: true }).click();
+
+        await generateReview(page, copy);
+
+        // Leave the Voice tool and return: the job and its draft must survive the unmount.
+        await page.getByRole('tab', { name: copy.editTab, exact: true }).click();
+        await page.locator('#panel-voice').waitFor({ state: 'detached' });
+        await page.getByRole('tab', { name: copy.voiceTab, exact: true }).click();
+        await page
+          .getByRole('heading', { name: copy.draftHeading, exact: true })
+          .waitFor({ timeout: 30000 });
+        await page.getByRole('button', { name: copy.apply, exact: true }).waitFor();
       },
     );
   });

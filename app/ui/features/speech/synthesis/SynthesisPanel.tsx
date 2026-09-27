@@ -11,21 +11,17 @@ import { useTranslation } from 'react-i18next';
 import { getTextLayer } from '../../../../core/subtitles/layers/document';
 import { InspectorPanelSection } from '../../../design-system/InspectorPanelSection';
 import { useEditor } from '../../editor/EditorContext';
+import { useEditorGenerators } from '../../editor/EditorGeneratorContext';
 import { LayerLanguageField } from '../../editor/text-layers/LayerLanguageField';
 import { synthesisErrorKey } from './error-message';
 import { SynthesisReview } from './SynthesisReview';
-import { useSynthesisJob } from './useSynthesisJob';
 
 export function SynthesisPanel() {
   const { t } = useTranslation(),
     editor = useEditor();
   const source = getTextLayer(editor.textSnapshot, 'spoken');
-  const job = useSynthesisJob({
-    documentId: editor.documentId,
-    revision: editor.revision,
-    snapshot: editor.textSnapshot,
-    opening: editor.opening,
-  });
+  // The job and its draft live above the tool panel so a tool switch cannot cancel or drop them.
+  const job = useEditorGenerators().synthesis;
   const language = source.language;
   const [voice, setVoice] = useState(''),
     [scope, setScope] = useState<'all' | 'selected'>('selected');

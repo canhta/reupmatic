@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import { getTextLayer } from '../../../core/subtitles/layers/document';
+import { useSynthesisJob } from '../speech/synthesis/useSynthesisJob';
 import { useTranslationJob } from '../speech/translation/useTranslationJob';
 import { useSpeechJob } from '../speech/useSpeechJob';
 import { useVisionJob } from '../vision/useVisionJob';
@@ -8,6 +9,7 @@ import { useEditor } from './EditorContext';
 type SpeechJob = ReturnType<typeof useSpeechJob>;
 type VisionJob = ReturnType<typeof useVisionJob>;
 type TranslationJob = ReturnType<typeof useTranslationJob>;
+type SynthesisJob = ReturnType<typeof useSynthesisJob>;
 
 export type GeneratorKind = 'speech' | 'ocr' | 'translate';
 
@@ -15,6 +17,7 @@ export interface EditorGenerators {
   speech: SpeechJob;
   vision: VisionJob;
   translation: TranslationJob;
+  synthesis: SynthesisJob;
   review: GeneratorKind | null;
   showReview: (kind: GeneratorKind) => void;
 }
@@ -44,6 +47,14 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     snapshot: editor.textSnapshot,
     opening: editor.opening,
   });
+  // Lifted here, not in the Voice panel: switching tools must not cancel a running job or drop
+  // its draft.
+  const synthesis = useSynthesisJob({
+    documentId: editor.documentId,
+    revision: editor.revision,
+    snapshot: editor.textSnapshot,
+    opening: editor.opening,
+  });
   const [started, setStarted] = useState<GeneratorKind | null>(null);
   const drafts: Record<GeneratorKind, unknown> = {
     speech: speech.draft,
@@ -55,7 +66,7 @@ export function EditorGeneratorsProvider({ children }: { children: ReactNode }) 
     (drafts.speech ? 'speech' : drafts.ocr ? 'ocr' : drafts.translate ? 'translate' : null);
   return (
     <EditorGeneratorsContext.Provider
-      value={{ speech, vision, translation, review, showReview: setStarted }}
+      value={{ speech, vision, translation, synthesis, review, showReview: setStarted }}
     >
       {children}
     </EditorGeneratorsContext.Provider>
