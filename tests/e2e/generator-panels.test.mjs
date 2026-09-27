@@ -78,6 +78,9 @@ async function seedControlledSdk(temp) {
   await writeFile(path.join(sdk, 'faster_whisper.py'), SPEECH_SDK, 'utf8');
   await writeFile(path.join(sdk, 'ctranslate2.py'), CT2_SDK, 'utf8');
   await writeFile(path.join(sdk, 'sentencepiece.py'), SPM_SDK, 'utf8');
+  // The worker's runtime probe requires the adapter's import targets to be present.
+  await writeFile(path.join(sdk, 'tokenizers.py'), 'class Tokenizer:\n    pass\n', 'utf8');
+  await writeFile(path.join(sdk, 'av.py'), 'class AudioResampler:\n    pass\n', 'utf8');
   for (const name of ['faster_whisper', 'ctranslate2', 'sentencepiece']) {
     const metadata = path.join(sdk, `${name}-0.0.0.dist-info`);
     await mkdir(metadata, { recursive: true });

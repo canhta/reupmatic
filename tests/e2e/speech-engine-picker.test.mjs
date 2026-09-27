@@ -39,6 +39,25 @@ async function seedSingleEngine(userData, { languages }) {
   );
 }
 
+/** The engine is never invoked; the worker only probes that the adapter's imports exist. */
+async function seedControlledSdk(temp) {
+  const sdk = path.join(temp, 'controlled-sdk');
+  await mkdir(sdk, { recursive: true });
+  await writeFile(path.join(sdk, 'faster_whisper.py'), 'class WhisperModel:\n    pass\n', 'utf8');
+  await writeFile(path.join(sdk, 'ctranslate2.py'), 'class Translator:\n    pass\n', 'utf8');
+  await writeFile(path.join(sdk, 'tokenizers.py'), 'class Tokenizer:\n    pass\n', 'utf8');
+  await writeFile(path.join(sdk, 'av.py'), 'class AudioResampler:\n    pass\n', 'utf8');
+  for (const name of ['faster_whisper', 'ctranslate2']) {
+    const metadata = path.join(sdk, `${name}-0.0.0.dist-info`);
+    await mkdir(metadata, { recursive: true });
+    await writeFile(
+      path.join(metadata, 'METADATA'),
+      `Metadata-Version: 2.1\nName: ${name.replace('_', '-')}\nVersion: 0.0.0\n`,
+    );
+  }
+  return sdk;
+}
+
 async function createVideoWithAudio(filePath) {
   execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
     '-v',
@@ -71,9 +90,15 @@ for (const locale of ['en', 'vi']) {
     const video = path.join(temp, 'engine-picker.mp4');
     await createVideoWithAudio(video);
     await seedSingleEngine(userData, { languages: ['en'] });
+    const sdk = await seedControlledSdk(temp);
 
     await runElectronTest(
-      { temp, userData, screenshotName: `speech-engine-picker-${locale}-failure.png` },
+      {
+        temp,
+        userData,
+        env: { PYTHONPATH: sdk },
+        screenshotName: `speech-engine-picker-${locale}-failure.png`,
+      },
       async ({ application, page }) => {
         await waitForEditorReady(page);
         if (locale === 'vi') {
