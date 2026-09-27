@@ -16,12 +16,30 @@ export const recoveryOperations = {
   'recovery-save': operation<RecoverySave, { revision: number; updated_at: number }>()({
     rendererMethod: 'recoverySave',
     validate: (input) => {
-      const value = requestRecord(input, ['id', 'expected_revision', 'asset_id', 'snapshot']);
+      const value = requestRecord(input, [
+        'id',
+        'expected_revision',
+        'asset_id',
+        'snapshot',
+        'project_path',
+        'source_id',
+      ]);
+      if (
+        value.project_path !== undefined &&
+        (typeof value.project_path !== 'string' ||
+          !value.project_path ||
+          value.project_path.length > 4096 ||
+          value.project_path.includes('\0'))
+      ) {
+        throw new Error('INVALID_REQUEST');
+      }
       return {
         id: requestId(value.id),
         expected_revision: requestRevision(value.expected_revision),
         asset_id: requestId(value.asset_id),
         snapshot: value.snapshot as RecoverySave['snapshot'],
+        ...(value.project_path === undefined ? {} : { project_path: value.project_path }),
+        ...(value.source_id === undefined ? {} : { source_id: requestId(value.source_id) }),
       };
     },
   }),

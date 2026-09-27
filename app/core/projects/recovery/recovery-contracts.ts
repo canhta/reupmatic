@@ -14,6 +14,10 @@ export interface RecoverySave {
   expected_revision: number;
   asset_id: string;
   snapshot: EditorSnapshot;
+  /** Project file backing this document, so a recovery save never becomes Save As. */
+  project_path?: string;
+  /** An older draft whose work this save carries forward, dropped atomically. */
+  source_id?: string;
 }
 export interface RecoveryIdentity {
   id: string;
@@ -22,4 +26,5 @@ export interface RecoveryIdentity {
 export interface RecoveryOpened {
   media: PublicVideo;
   snapshot: EditorSnapshot;
+  project_path?: string | null;
 }

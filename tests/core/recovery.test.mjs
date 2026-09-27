@@ -63,6 +63,38 @@ test('discarding a draft never deletes source media and separate projects keep s
     await rm(dir, { recursive: true, force: true });
   }
 });
+test('recovery drafts keep a project path, drop a superseded draft, and evict the oldest at the cap', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'recovery-policy-'));
+  const store = new ProjectRecovery(path.join(dir, 'recovery.sqlite'));
+  try {
+    store.save('document-001', 0, project(), {
+      project_path: '/projects/một dự án.reupmatic.json',
+    });
+    assert.equal(store.projectPath('document-001', 1), '/projects/một dự án.reupmatic.json');
+
+    // A save that carries an older draft's work forward drops that draft atomically.
+    store.save('document-002', 0, project(), { source_id: 'document-001' });
+    assert.deepEqual(
+      store.list().map((draft) => draft.id),
+      ['document-002'],
+    );
+
+    for (let index = 0; index < 100; index += 1) {
+      store.save(`draft-${String(index).padStart(4, '0')}`, 0, project());
+    }
+    const ids = store
+      .list()
+      .map((draft) => draft.id)
+      .sort();
+    assert.equal(ids.length, 100);
+    assert.equal(ids.includes('document-002'), false, 'the oldest draft is evicted, not refused');
+    assert.equal(ids.includes('draft-0099'), true, 'the newest draft is always kept');
+  } finally {
+    store.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('unsupported recovery stores fail without reset or automatic migration', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'recovery-version-'));
   try {
