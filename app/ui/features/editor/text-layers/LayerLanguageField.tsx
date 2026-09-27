@@ -16,11 +16,10 @@ export function LayerLanguageField({
   isDisabled?: boolean;
 }) {
   const { t } = useTranslation();
-  if (language) return null;
   return (
     <Selector
       label={t('setLayerLanguage', { layer: t(`textLayer_${layerName}`) })}
-      value=""
+      value={language ?? ''}
       isDisabled={isDisabled}
       options={LANGUAGES.map((value) => ({ value, label: t(`visionLanguage_${value}`) }))}
       onChange={(value) => {
