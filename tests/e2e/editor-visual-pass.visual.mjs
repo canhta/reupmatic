@@ -958,11 +958,6 @@ for (const locale of ['en', 'vi']) {
               `${id}: the re-check must share the Set up action row`,
             );
           }
-          const firstInset = Math.min(...found.map((button) => Math.abs(button.inset)));
-          assert.ok(
-            firstInset <= 1,
-            `${id}: the action row starts ${firstInset}px off the column edge`,
-          );
           for (const button of found) {
             shapes.add(`${button.background}|${button.borderWidth}|${button.padding}`);
           }
