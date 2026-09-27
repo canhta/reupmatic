@@ -154,7 +154,7 @@ export function useSourcePreview(
       return;
     }
     const selected = current.current;
-    if (!selected || !video.current) return;
+    if (!selected || !video.current || switching.current) return;
     if (milliseconds >= selected.end) {
       advanceClip(selected);
       return;
