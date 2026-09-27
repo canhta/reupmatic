@@ -11,4 +11,11 @@ export const recoveryEn = {
   recoveryOpen: 'Open recovered copy',
   recoveryDiscard: 'Discard draft',
   recoveredBadge: 'Recovered',
+  recoveryInvalid: 'The recovery request was invalid.',
+  recoveryCorrupt: 'This recovery draft is unreadable. Discard it and save a new copy.',
+  recoveryConflict: 'This draft changed since it was listed. Reopen the list and try again.',
+  recoveryMissing: 'This recovery draft no longer exists.',
+  recoveryVersion: 'Recovery data is from an unsupported version and needs a reset.',
+  recoveryUnavailable: 'Recovery is unavailable right now. Restart the app and try again.',
+  recoverySourceConflict: 'This draft belongs to a different source video.',
 } as const;

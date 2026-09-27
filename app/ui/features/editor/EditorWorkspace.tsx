@@ -62,6 +62,32 @@ const errorKeys: Record<string, string> = {
   PREVIEW_UNAVAILABLE: 'previewError',
   CANCELLED: 'cancelled',
   UNSUPPORTED_VIDEO_FORMAT: 'unsupportedVideoFormat',
+  PROJECT_FONT_UNSUPPORTED: 'projectFontUnsupported',
+  PROJECT_MISSING: 'projectMissing',
+  PROJECT_PATH_UNAUTHORIZED: 'projectError',
+  ENOENT: 'projectMissing',
+  INVALID_RECOVERY: 'recoveryInvalid',
+  RECOVERY_CORRUPT: 'recoveryCorrupt',
+  RECOVERY_CONFLICT: 'recoveryConflict',
+  RECOVERY_MISSING: 'recoveryMissing',
+  RECOVERY_VERSION: 'recoveryVersion',
+  RECOVERY_UNAVAILABLE: 'recoveryUnavailable',
+  RECOVERY_SOURCE_CONFLICT: 'recoverySourceConflict',
+  INVALID_VOICE_TRACK: 'voiceTrackInvalid',
+  VOICE_TRACK_STALE: 'synthesisVoiceStale',
+  SYNTHESIS_MODEL_CHANGED: 'synthesisModelChanged',
+  SYNTHESIS_VOICE_MODEL_MISSING: 'synthesisVoiceModelMissing',
+  SYNTHESIS_VOICE_UNAVAILABLE: 'synthesisVoiceMissing',
+  SYNTHESIS_ARTIFACT_MISSING: 'synthesisArtifactMissing',
+  SYNTHESIS_ARTIFACT_ALTERED: 'synthesisArtifactAltered',
+  SYNTHESIS_ARTIFACT_INVALID: 'synthesisInvalid',
+  SYNTHESIS_ARTIFACT_LIMIT: 'synthesisLimit',
+  INVALID_VOICE: 'synthesisInvalid',
+  UNKNOWN_ARTIFACT: 'synthesisArtifactMissing',
+  MODEL_LANGUAGE_UNAVAILABLE: 'modelLanguageUnavailable',
+  RUNTIME_PACK_MISSING: 'settingsModelRuntimePackMissing',
+  VISION_EVIDENCE_LIMIT: 'visionLimit',
+  VISION_FRAME_INVALID: 'visionInvalid',
 };
 
 const TIMELINE_DEFAULT_HEIGHT = 220;
@@ -90,22 +116,21 @@ function EditorStudio() {
   const isWide = useIsWide(EDITOR_WIDE_BREAKPOINT);
   const studioBodyRef = useRef<HTMLDivElement>(null);
   const toolPanelOpen = activeTool != null;
-  const { raiseError } = useNotifications();
+  const { raise, raiseError } = useNotifications();
 
   useEffect(() => {
     if (!error) return;
-    raiseError(
-      t(
-        processingErrorKey(error) ||
-          errorKeys[error] ||
-          (error.startsWith('MODEL_') || error.startsWith('VISION_')
-            ? visionErrorKey(error)
-            : 'failed'),
-        { count: MAX_CLIPS },
-      ),
-      error,
-    );
-  }, [error, raiseError, t]);
+    const key =
+      processingErrorKey(error) ||
+      errorKeys[error] ||
+      (error.startsWith('MODEL_') || error.startsWith('VISION_')
+        ? visionErrorKey(error)
+        : 'failed');
+    const message = t(key, { count: MAX_CLIPS });
+    // A user cancellation is a notice, not a failure.
+    if (error === 'CANCELLED') raise(message, { kind: 'info', uniqueID: error });
+    else raiseError(message, error);
+  }, [error, raise, raiseError, t]);
 
   const sourceRegion = useResizable({
     direction: 'horizontal',
