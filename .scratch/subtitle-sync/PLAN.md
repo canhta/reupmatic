@@ -77,3 +77,13 @@ with its source text beside it, so the user can shorten the wording. The window 
 - **S3** (core contract link) starts after the animation worker's slice A lands, because both change
   the cue contract.
 - **S4** goes to the `subtitle-animation` worker with its layout/ASS work.
+
+## Open after S3 (merged b562a87, 2026-09-27)
+
+- A composition split copies one `source_cue_id` onto every piece, so the extra pieces can read as
+  deviated. They are never retimed silently; the split rule still needs deciding.
+- A layer copied into "translated" (copy provenance, not translation) has no `source_cue_id`, and
+  sync falls back to matching ids. Replace that with explicit provenance, or show "no source link",
+  instead of a heuristic.
+- Drift shows on the applied translated layer, not in the draft review; that is correct, since a
+  draft cannot drift.
