@@ -30,42 +30,6 @@ def pixel_rect(value: dict, width: int, height: int) -> tuple[int, int, int, int
     )
 
 
-def timed_cues(observations: list[dict]) -> list[dict]:
-    """Conservative exact-text grouping. Never bridge a blank or a sampling gap."""
-    cues: list[dict] = []
-    adjacent = False
-    for item in observations:
-        lines = sorted(item["detections"], key=lambda d: (d["box"][1], d["box"][0]))
-        text = "\n".join(
-            unicodedata.normalize("NFC", line["text"]).strip()
-            for line in lines
-            if line["text"].strip()
-        )
-        if len(text) > 10000:
-            raise WorkerError("VISION_RESULT_TOO_LARGE")
-        if not text:
-            adjacent = False
-            continue
-        if (
-            adjacent
-            and cues
-            and cues[-1]["text"] == text
-            and cues[-1]["end_ms"] == item["start_ms"]
-        ):
-            cues[-1]["end_ms"] = item["end_ms"]
-        else:
-            cues.append(
-                {
-                    "id": f"ocr-{len(cues) + 1:06d}",
-                    "start_ms": item["start_ms"],
-                    "end_ms": item["end_ms"],
-                    "text": text,
-                }
-            )
-        adjacent = True
-    return cues
-
-
 class RapidAdapter:
     """RapidOCR public callable seam; result text is data, never instructions."""
 

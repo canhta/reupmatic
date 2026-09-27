@@ -76,14 +76,21 @@ class ChunkCompositionTests(unittest.TestCase):
         self.assertAlmostEqual(fractions[0], 1 / 3)
         self.assertLess(fractions[-1], 2 / 3)
 
-    def test_ocr_merges_only_adjacent_equal_text_across_chunks(self):
+    def test_ocr_merges_adjacent_near_text_across_chunks_and_a_blank_splits(self):
         options = {"language": "en", "sample_ms": 500, "min_confidence": 0.5}
         window = ocr_window(500)
         pins = {"ocr_en": "a" * 64}
-        observations = []
+        calls = []
         serialized = []
-        host = SimpleNamespace(cancelled=lambda req: None, emit=lambda *args: None)
+        host = SimpleNamespace(
+            cancelled=lambda req: None,
+            emit=lambda *args: None,
+            assets=SimpleNamespace(get=lambda *args: {"path": "/controlled/source.mp4"}),
+        )
         req = {"id": "test", "method": "media.process", "params": {"asset_id": "registered-source"}}
+
+        def detection(text, confidence=0.9):
+            return {"text": text, "confidence": confidence, "box": [10, 10, 120, 40]}
 
         class VisionDouble:
             def __init__(self, host):
@@ -92,20 +99,39 @@ class ChunkCompositionTests(unittest.TestCase):
             def run(self, request, *, staging, emit_progress):
                 p = request["params"]
                 first, last = p["start_ms"], p["end_ms"]
-                observations.append((first, last))
-                analysis_id = str(len(observations))
+                calls.append((first, last))
+                analysis_id = str(len(calls))
                 (staging / f"{analysis_id}.json").write_text("{}")
-                cues = [
-                    {"id": "source-cue", "start_ms": first, "end_ms": last, "text": "Same text"}
-                ]
-                if len(observations) == 3:
-                    cues[0]["start_ms"] += 500  # A blank observation breaks a cue.
+                # One misread character ("taxt") must not break the line; the third chunk starts
+                # blank, which does break it.
+                if len(calls) == 3:
+                    observations = [
+                        {"start_ms": first, "end_ms": first + 500, "detections": []},
+                        {
+                            "start_ms": first + 500,
+                            "end_ms": last,
+                            "detections": [detection("Same text")],
+                        },
+                    ]
+                else:
+                    observations = [
+                        {
+                            "start_ms": first,
+                            "end_ms": first + 500,
+                            "detections": [detection("Same text")],
+                        },
+                        {
+                            "start_ms": first + 500,
+                            "end_ms": last,
+                            "detections": [detection("Same taxt", 0.6)],
+                        },
+                    ]
                 return {
                     "width": 160,
                     "height": 90,
-                    "observations": [],
+                    "observations": observations,
                     "analysis_id": analysis_id,
-                    "cues": cues,
+                    "cues": [],
                     "model_fingerprints": {"ocr": pins["ocr_en"]},
                 }
 
@@ -121,12 +147,14 @@ class ChunkCompositionTests(unittest.TestCase):
             staging = Path(directory)
             with (
                 patch("processing.ocr_scan.VisionService", VisionDouble),
+                patch("processing.ocr_scan.refine_groups", lambda *args, **kwargs: None),
                 patch("subtitles.service.cue_document", document),
             ):
                 track, count = scan_subtitles(
                     host, req, options, 250, 250 + 3 * window, staging, pins
                 )
             self.assertEqual(count, 2)
+            self.assertEqual(serialized[0]["text"], "Same text")
             self.assertEqual(serialized[0]["start_ms"], 250)
             self.assertEqual(serialized[0]["end_ms"], 250 + 2 * window)
             self.assertEqual(serialized[1]["start_ms"], 750 + 2 * window)

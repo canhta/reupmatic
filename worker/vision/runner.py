@@ -10,7 +10,8 @@ from pathlib import Path
 from runtime.errors import WorkerError
 from runtime.offline import deny_network_and_children
 
-from vision.algorithms import RapidAdapter, timed_cues
+from vision.algorithms import RapidAdapter
+from vision.merge import timed_cues
 from vision.models import file_hash
 
 

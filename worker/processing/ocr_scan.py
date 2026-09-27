@@ -4,6 +4,8 @@ import json
 
 from runtime.errors import WorkerError
 from subtitles.validation import validate_cues
+from vision.merge import CueGrouper
+from vision.refine import refine_groups
 from vision.service import MAX_RESULT, VisionService
 
 from processing.chunks import intervals, ocr_window, progress_for, verify_segment_models
@@ -11,10 +13,13 @@ from processing.chunks import intervals, ocr_window, progress_for, verify_segmen
 MAX_EVIDENCE_BYTES = 128 * 1024**2
 
 
-def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evidence=False):
+def scan_cues(
+    host, req, options, start, end, staging, fingerprints, *, keep_evidence=False, refine=None
+):
     service = VisionService(host)
-    cues, observations, chunks = [], [], []
-    text_bytes = evidence_bytes = observation_count = 0
+    grouper = CueGrouper()
+    observations, chunks = [], []
+    evidence_bytes = observation_count = 0
     geometry = None
     for first, last in intervals(start, end, ocr_window(options["sample_ms"])):
         host.cancelled(req)
@@ -37,14 +42,8 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
         if geometry is not None and current != geometry:
             raise WorkerError("VISION_FRAME_INVALID")
         geometry = current
-        for cue in result["cues"]:
-            if cues and cues[-1]["text"] == cue["text"] and cues[-1]["end_ms"] == cue["start_ms"]:
-                cues[-1]["end_ms"] = cue["end_ms"]
-            else:
-                text_bytes += len(cue["text"].encode("utf-8"))
-                if len(cues) >= 10000 or text_bytes > MAX_RESULT:
-                    raise WorkerError("PROCESSING_CUE_LIMIT")
-                cues.append({**cue, "id": f"ocr-{len(cues) + 1:06d}"})
+        for observation in result["observations"]:
+            grouper.add(observation)
         observation_count += len(result["observations"])
         observations.extend(result["observations"][: max(0, 20 - len(observations))])
         evidence = staging / f"{result['analysis_id']}.json"
@@ -57,6 +56,24 @@ def scan_cues(host, req, options, start, end, staging, fingerprints, *, keep_evi
             evidence.unlink()
         host.emit(
             req, "progress", {"phase": "processingOcr", "fraction": (last - start) / (end - start)}
+        )
+    groups = grouper.finish()
+    refiner = refine if refine is not None else refine_groups
+    if groups and refiner is not None:
+        source = host.assets.get(req["params"]["asset_id"], "video")
+        refiner(host, req, source["path"], geometry[0], geometry[1], groups)
+    cues, text_bytes = [], 0
+    for index, group in enumerate(groups, 1):
+        text_bytes += len(group.text().encode("utf-8"))
+        if index > 10000 or text_bytes > MAX_RESULT:
+            raise WorkerError("PROCESSING_CUE_LIMIT")
+        cues.append(
+            {
+                "id": f"ocr-{index:06d}",
+                "start_ms": group.start_ms,
+                "end_ms": group.end_ms,
+                "text": group.text(),
+            }
         )
     validate_cues(cues)
     if len(json.dumps(cues, ensure_ascii=False).encode("utf-8")) > MAX_RESULT:

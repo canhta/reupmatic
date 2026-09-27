@@ -28,18 +28,17 @@ class VisionProtocolTests(unittest.TestCase):
                 session.close()
 
 
+def observation(start, text, *, box=(1, 2, 30, 10), confidence=0.9):
+    return {
+        "start_ms": start,
+        "end_ms": start + 500,
+        "detections": [{"text": text, "confidence": confidence, "box": list(box)}] if text else [],
+    }
+
+
 class TimedEvidenceTests(unittest.TestCase):
     def test_adjacent_text_merges_but_a_blank_frame_breaks_a_cue(self):
-        from vision.algorithms import timed_cues
-
-        def observation(start, text):
-            return {
-                "start_ms": start,
-                "end_ms": start + 500,
-                "detections": [{"text": text, "confidence": 0.9, "box": [1, 2, 30, 10]}]
-                if text
-                else [],
-            }
+        from vision.merge import timed_cues
 
         cues = timed_cues(
             [
@@ -53,6 +52,116 @@ class TimedEvidenceTests(unittest.TestCase):
             [(c["start_ms"], c["end_ms"], c["text"]) for c in cues],
             [(1000, 2000, "Tiếng Việt"), (2500, 3000, "Tiếng Việt")],
         )
+
+    def test_one_misread_character_does_not_break_one_original_line(self):
+        from vision.merge import timed_cues
+
+        cues = timed_cues(
+            [
+                observation(0, "Xin chào các bạn"),
+                observation(500, "Xin chào các bẹn"),
+                observation(1000, "Xin chào các bạn"),
+            ]
+        )
+        self.assertEqual(len(cues), 1)
+        self.assertEqual((cues[0]["start_ms"], cues[0]["end_ms"]), (0, 1500))
+        self.assertEqual(cues[0]["text"], "Xin chào các bạn")
+
+    def test_a_different_line_or_a_moved_box_splits(self):
+        from vision.merge import timed_cues
+
+        cues = timed_cues(
+            [
+                observation(0, "First line"),
+                observation(500, "A completely different line"),
+                observation(1000, "First line", box=(500, 400, 600, 430)),
+            ]
+        )
+        self.assertEqual(
+            [c["text"] for c in cues], ["First line", "A completely different line", "First line"]
+        )
+
+    def test_a_sampling_gap_always_splits_even_with_matching_text(self):
+        from vision.merge import timed_cues
+
+        cues = timed_cues([observation(0, "Same"), observation(2000, "Same")])
+        self.assertEqual(len(cues), 2)
+
+    def test_the_text_is_a_confidence_weighted_vote_across_samples(self):
+        from vision.merge import timed_cues
+
+        cues = timed_cues(
+            [
+                observation(0, "Đúng", confidence=0.9),
+                observation(500, "Sai", confidence=0.4),
+                observation(1000, "Đúng", confidence=0.8),
+            ]
+        )
+        self.assertEqual(cues[0]["text"], "Đúng")
+
+    def test_punctuation_and_whitespace_noise_still_merges(self):
+        from vision.merge import timed_cues
+
+        cues = timed_cues(
+            [
+                observation(0, "你好，世界"),
+                observation(500, "你好世界"),
+                observation(1000, "你好世界。"),
+            ]
+        )
+        self.assertEqual(len(cues), 1)
+
+
+class BoundaryRefinementTests(unittest.TestCase):
+    def frames(self, values):
+        import numpy as np
+
+        return [np.full((20, 40, 3), value, dtype=np.uint8) for value in values]
+
+    def test_region_is_the_padded_clamped_box_union(self):
+        from vision.refine import region_of
+
+        self.assertEqual(region_of((10, 10, 50, 30), 6, 160, 90), (4, 4, 56, 36))
+        self.assertIsNone(region_of(None, 6, 160, 90))
+        self.assertEqual(region_of((2, 2, 158, 88), 6, 160, 90), (0, 0, 160, 90))
+
+    def test_change_index_finds_the_single_region_step(self):
+        from vision.refine import change_index
+
+        frames = self.frames([0, 0, 255, 255])
+        self.assertEqual(change_index(frames), 2)
+        self.assertIsNone(change_index(self.frames([0, 0, 0])))
+
+    def group(self):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            start_ms=1000,
+            end_ms=2000,
+            prev=observation(500, ""),
+            next=observation(2000, ""),
+            first=observation(1000, "Text"),
+            last=observation(1500, "Text"),
+        )
+
+    def test_boundaries_snap_to_the_decoded_frame_with_a_synthetic_sampler(self):
+        from vision.refine import refine_boundaries
+
+        black, white = self.frames([0])[0], self.frames([255])[0]
+
+        def sampler(start_ms, end_ms, region):
+            if start_ms == 500:
+                return [(500, black), (600, black), (700, white), (800, white)]
+            return [(1500, white), (1600, white), (1700, black)]
+
+        self.assertEqual(refine_boundaries(self.group(), sampler, 160, 90), (700, 1700))
+
+    def test_an_inconclusive_interval_keeps_the_ocr_sample_time(self):
+        from vision.refine import refine_boundaries
+
+        black = self.frames([0])[0]
+        flat = lambda start, end, region: [(start, black), (end, black)]  # noqa: E731
+        self.assertEqual(refine_boundaries(self.group(), flat, 160, 90), (1000, 2000))
 
 
 class ModelRegistryTests(unittest.TestCase):
