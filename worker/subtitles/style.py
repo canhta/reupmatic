@@ -131,6 +131,27 @@ def _bounded(value, minimum, maximum, exclusive_min=False):
     return value
 
 
+def parse_line_length(value):
+    """The project's A2 line-length settings, so burn-time wrapping matches the splitter."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != {"mode", "cps", "max_lines", "max_chars"}:
+        raise WorkerError("INVALID_REQUEST")
+    if value["mode"] not in ("auto", "custom"):
+        raise WorkerError("INVALID_REQUEST")
+    if type(value["max_lines"]) is not int or value["max_lines"] not in (1, 2):
+        raise WorkerError("INVALID_REQUEST")
+    cps = value["cps"]
+    if cps is not None and (
+        type(cps) not in (int, float) or not math.isfinite(cps) or not 0 < cps <= 100
+    ):
+        raise WorkerError("INVALID_REQUEST")
+    max_chars = value["max_chars"]
+    if max_chars is not None and (type(max_chars) is not int or not 1 <= max_chars <= 500):
+        raise WorkerError("INVALID_REQUEST")
+    return dict(value)
+
+
 def ass_style(lib, value, width, height):
     style = parse_style(value)
 

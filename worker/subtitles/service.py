@@ -7,6 +7,7 @@ from runtime.errors import WorkerError
 from runtime.protocol import MAX_LINE, exact
 
 from subtitles.document import canvas_size, cue_document, srt_text, subtitle_library
+from subtitles.style import parse_line_length
 from subtitles.validation import validate_cues
 
 
@@ -30,16 +31,24 @@ def load_subtitles(host, req):
 
 
 def preview_subtitles(host, req):
-    p = exact(req["params"], {"cues"}, {"style", "canvas"})
-    return {"ass_text": cue_document(p["cues"], p.get("style"), p.get("canvas")).to_string("ass")}
+    p = exact(req["params"], {"cues"}, {"style", "canvas", "line_length"})
+    line_length = parse_line_length(p.get("line_length"))
+    return {
+        "ass_text": cue_document(
+            p["cues"], p.get("style"), p.get("canvas"), line_length=line_length
+        ).to_string("ass")
+    }
 
 
 def save_subtitles(host, req):
-    p = exact(req["params"], {"cues"}, {"format", "style", "canvas"})
+    p = exact(req["params"], {"cues"}, {"format", "style", "canvas", "line_length"})
     kind = p.get("format", "srt")
     if kind not in ("srt", "ass"):
         raise WorkerError("FORMAT_UNAVAILABLE")
-    subs = cue_document(p["cues"], p.get("style"), p.get("canvas"), styled=kind == "ass")
+    line_length = parse_line_length(p.get("line_length"))
+    subs = cue_document(
+        p["cues"], p.get("style"), p.get("canvas"), styled=kind == "ass", line_length=line_length
+    )
     target = host.workspace / "subtitles" / f"{uuid.uuid4()}.{kind}"
     target.parent.mkdir(exist_ok=True)
     if kind == "srt":
@@ -50,12 +59,14 @@ def save_subtitles(host, req):
     return {
         **registered,
         "path": str(target),
-        "ass_text": cue_document(p["cues"], p.get("style"), p.get("canvas")).to_string("ass"),
+        "ass_text": cue_document(
+            p["cues"], p.get("style"), p.get("canvas"), line_length=line_length
+        ).to_string("ass"),
     }
 
 
 def prepare_subtitles(host, req):
-    p = exact(req["params"], {"asset_id", "cues"}, {"editing", "style", "canvas"})
+    p = exact(req["params"], {"asset_id", "cues"}, {"editing", "style", "canvas", "line_length"})
     source = host.assets.verify(p["asset_id"], "video", lambda: host.cancelled(req))
     info = probe_file(host, req, source["path"])
     if "canvas" in p:
@@ -71,6 +82,7 @@ def prepare_subtitles(host, req):
                 "format": "ass",
                 "canvas": {"width": width, "height": height},
                 **({"style": p["style"]} if "style" in p else {}),
+                **({"line_length": p["line_length"]} if "line_length" in p else {}),
             },
         },
     )

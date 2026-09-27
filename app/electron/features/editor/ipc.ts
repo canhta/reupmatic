@@ -12,6 +12,7 @@ import { createProject, loadProject, saveProject } from '../../../core/projects/
 import type { RecentEntry } from '../../../core/projects/recent.js';
 import type { RenderCoordinator, RenderInput } from '../../../core/rendering/render-coordinator.js';
 import { assertCues } from '../../../core/subtitles/cues.js';
+import { parseLineLengthSettings } from '../../../core/subtitles/split.js';
 import { parseSubtitleStyle } from '../../../core/subtitles/style.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { type IpcWire, requestRecord, requestRevision } from '../../runtime/ipc.js';
@@ -222,13 +223,22 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     return { url: image.url };
   });
   wire('ass', async (input) => {
-    const value = requestRecord(input, ['cues', 'revision', 'style', 'asset_id', 'editing']);
+    const value = requestRecord(input, [
+      'cues',
+      'revision',
+      'style',
+      'asset_id',
+      'editing',
+      'line_length',
+    ]);
     assertCues(value.cues);
     const revision = requestRevision(value.revision);
     const source = media.getVideo(value.asset_id);
     // Preview the same canvas the render burns on: the output frame after crop/output, not the source.
     const editing = value.editing === undefined ? undefined : parseEditing(value.editing);
     const canvas = outputFrame(editing, { width: source.width, height: source.height });
+    const lineLength =
+      value.line_length === undefined ? undefined : parseLineLengthSettings(value.line_length);
     return {
       revision,
       ...(await worker.request(
@@ -236,6 +246,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
         {
           cues: value.cues,
           canvas,
+          ...(lineLength ? { line_length: lineLength } : {}),
           ...(value.style === undefined ? {} : { style: parseSubtitleStyle(value.style) }),
         },
         revision,
@@ -258,6 +269,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       'composition',
       'voice',
       'logo',
+      'line_length',
     ]);
     media.getVideo(value.asset_id);
     if (value.composition) media.authorizeComposition(parseComposition(value.composition));
@@ -387,6 +399,7 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       'style',
       'editing',
       'composition',
+      'line_length',
     ]);
     if (
       !['source', 'output'].includes(String(value.timing)) ||
@@ -412,6 +425,8 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     });
     if (chosen.canceled || !chosen.filePath) return null;
     const method = value.format === 'ass' ? 'subtitles.prepare' : 'subtitles.save';
+    const lineLength =
+      value.line_length === undefined ? undefined : parseLineLengthSettings(value.line_length);
     const params =
       value.format === 'ass'
         ? {
@@ -420,10 +435,15 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
             ...(composition
               ? { canvas: { width: composition.canvas.width, height: composition.canvas.height } }
               : {}),
+            ...(lineLength ? { line_length: lineLength } : {}),
             ...(style ? { style } : {}),
             ...(editing ? { editing } : {}),
           }
-        : { cues: value.cues, format: 'srt' };
+        : {
+            cues: value.cues,
+            format: 'srt',
+            ...(lineLength ? { line_length: lineLength } : {}),
+          };
     const generated = await worker.request(method, params).result;
     await saveChosenExport(generated.path, chosen.filePath, media.originalPaths);
     return {

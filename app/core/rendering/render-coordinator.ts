@@ -15,6 +15,7 @@ import {
 } from '../processing/recipe.js';
 import { parseVoiceTrack, type VoiceTrack } from '../speech/synthesis/voice-track.js';
 import { assertCues, type Cue } from '../subtitles/cues.js';
+import type { LineLengthSettings } from '../subtitles/split.js';
 import type { OperationName, OperationResult } from '../worker/operations.js';
 import { RemoteError } from '../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../worker/worker-client.js';
@@ -32,6 +33,7 @@ export interface RenderInput {
   soundtrack?: Soundtrack;
   voice?: VoiceTrack;
   logo?: ProjectMedia;
+  line_length?: LineLengthSettings;
 }
 
 export interface RenderOutput extends Record<string, unknown> {
@@ -232,6 +234,7 @@ export class RenderCoordinator extends EventEmitter {
             : {}),
           ...(input.processing?.editing ? { editing: input.processing.editing } : {}),
           ...(input.processing?.subtitle_style ? { style: input.processing.subtitle_style } : {}),
+          ...(input.line_length ? { line_length: input.line_length } : {}),
         });
         subtitleId = saved.asset_id;
       }

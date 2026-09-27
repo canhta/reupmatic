@@ -421,6 +421,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
           cues: renderCues,
           revision: snapshot,
           asset_id: media.asset_id,
+          line_length: lineLength,
           ...(processing?.editing ? { editing: processing.editing } : {}),
           ...(processing?.subtitle_style ? { style: processing.subtitle_style } : {}),
         }),
@@ -445,6 +446,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     revision,
     processing?.editing,
     processing?.subtitle_style,
+    lineLength,
     report,
   ]);
 
@@ -984,6 +986,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
           cues: outputCues,
           timing,
           format,
+          line_length: lineLength,
           ...(composition ? { composition } : {}),
           ...(format === 'ass' && activeTextLayer === 'displayed' && processing?.subtitle_style
             ? { style: processing.subtitle_style }
@@ -1042,6 +1045,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       voice: voiceTrack,
       composition,
       logo: logoMedia,
+      line_length: lineLength,
     });
   }
 

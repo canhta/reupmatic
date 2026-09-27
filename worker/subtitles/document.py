@@ -34,7 +34,7 @@ def canvas_size(value=None):
     return bounded_int(value["width"], 2, 16384), bounded_int(value["height"], 2, 16384)
 
 
-def cue_document(cues, style=None, canvas=None, styled=True):
+def cue_document(cues, style=None, canvas=None, styled=True, line_length=None):
     validate_cues(cues)
     lib = subtitle_library()
     subs = lib.SSAFile()
@@ -58,7 +58,7 @@ def cue_document(cues, style=None, canvas=None, styled=True):
             subs.styles[name] = ass_style(lib, effective, width, height)
         event = lib.SSAEvent(start=cue["start_ms"], end=cue["end_ms"], style=name)
         if styled:
-            event.text = event_text(cue, effective, width, height)
+            event.text = event_text(cue, effective, width, height, line_length)
         else:
             event.plaintext = cue["text"]
         subs.append(event)

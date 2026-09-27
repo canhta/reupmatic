@@ -4,6 +4,8 @@ Every generated tag is placed around escaped text, never inside it. The live ove
 same document, so a preset looks the same live and in the export.
 """
 
+import re
+
 from subtitles.style import parse_style
 from subtitles.word_timing import cue_words
 
@@ -132,7 +134,15 @@ def _is_cjk(character):
     return "\u2e80" <= character <= "\u9fff" or "\uf900" <= character <= "\ufaff"
 
 
-def _per_line(style, width, height, cjk):
+def _is_cjk_text(text):
+    cjk = sum(1 for character in text if _is_cjk(character))
+    other = sum(1 for character in text if not character.isspace() and not _is_cjk(character))
+    return cjk > other
+
+
+def _per_line(style, width, height, cjk, line_length=None):
+    if line_length and line_length.get("max_chars"):
+        return max(1, int(line_length["max_chars"]) // int(line_length["max_lines"]))
     em = height * style["font_size_pct"] / 100
     advance = (
         em
@@ -143,59 +153,125 @@ def _per_line(style, width, height, cjk):
     return max(1, int(usable / advance + 1e-9))
 
 
-def _is_cjk_text(text):
-    cjk = sum(1 for character in text if _is_cjk(character))
-    other = sum(1 for character in text if not character.isspace() and not _is_cjk(character))
-    return cjk > other
+_END_PUNCT = set(".,!?;:…") | set("。，、！？；：")
+# A break may not put one of these at the start of a line.
+_CLOSING_PUNCT = set(")]}»”’") | set("。，、！？；：）】》」』〕〉")
 
 
-def _wrap_text(text, per_line):
-    tokens = text.split(" ")
+def _ends_with_punct(text):
+    stripped = text.rstrip()
+    return bool(stripped) and stripped[-1] in _END_PUNCT
+
+
+def _starts_with_closing(text):
+    return bool(text) and text[0] in _CLOSING_PUNCT
+
+
+def _tokens(text):
+    """Word tokens for spaced scripts, character tokens for CJK."""
+    if _is_cjk_text(text):
+        tokens = []
+        for character in text:
+            if character.isspace() and tokens:
+                tokens[-1] = (tokens[-1][0], tokens[-1][1] + character)
+            else:
+                tokens.append((character, ""))
+        return [token for token in tokens if token[0] or token[1]]
+    return [(match.group(1), match.group(2)) for match in re.finditer(r"(\S+)(\s*)", text)]
+
+
+def _balanced_cuts(tokens, per_line, max_lines):
+    """Cuts that balance the lines' widths, cap the line count and prefer punctuation breaks."""
+    count = len(tokens)
+    if count == 0:
+        return [(0, 0)]
+    widths = [len(text) + len(separator) for text, separator in tokens]
+    prefix = [0] * (count + 1)
+    for index, width in enumerate(widths):
+        prefix[index + 1] = prefix[index] + width
+
+    def line_width(start, end):
+        return prefix[end] - prefix[start] - len(tokens[end - 1][1])
+
+    lines = 1
+    start = 0
+    for index in range(count):
+        if line_width(start, index + 1) > per_line and index > start:
+            lines += 1
+            start = index
+    limit = min(lines, max_lines, count)
+    if limit <= 1:
+        return [(0, count)]
+
+    infinity = float("inf")
+    cost = [[infinity] * (count + 1) for _ in range(limit + 1)]
+    back = [[-1] * (count + 1) for _ in range(limit + 1)]
+    cost[0][0] = 0.0
+    for line in range(1, limit + 1):
+        for end in range(line, count + 1):
+            for begin in range(line - 1, end):
+                if cost[line - 1][begin] == infinity:
+                    continue
+                width = line_width(begin, end)
+                over = max(0.0, width - per_line)
+                punctuation = 0 if (end == count or _ends_with_punct(tokens[end - 1][0])) else 1
+                orphan = 1000 if (begin > 0 and _starts_with_closing(tokens[begin][0])) else 0
+                candidate = (
+                    cost[line - 1][begin]
+                    + width * width
+                    + over * over * 1000
+                    + punctuation
+                    + orphan
+                )
+                if candidate < cost[line][end]:
+                    cost[line][end] = candidate
+                    back[line][end] = begin
+    if cost[limit][count] == infinity:
+        return [(0, count)]
+    cuts = []
+    end = count
+    for line in range(limit, 0, -1):
+        begin = back[line][end]
+        cuts.append((begin, end))
+        end = begin
+    cuts.reverse()
+    return cuts
+
+
+def _format_tokens(tokens, cuts):
     lines = []
-    current = []
-    count = 0
-    for token in tokens:
-        width = len(token)
-        if current and count + width + 1 > per_line:
-            lines.append(" ".join(current))
-            current = []
-            count = 0
-        current.append(token)
-        count += width + (1 if len(current) > 1 else 0)
-    if current:
-        lines.append(" ".join(current))
+    for begin, end in cuts:
+        line = "".join(text + separator for text, separator in tokens[begin : end - 1])
+        lines.append(line + tokens[end - 1][0])
     return "\n".join(lines)
 
 
-def _wrap_words(words, per_line):
-    lines = []
-    current = []
-    count = 0
-    for word in words:
-        width = sum(1 for character in word["text"] if not character.isspace())
-        if current and count + width + 1 > per_line:
-            lines.append(current)
-            current = []
-            count = 0
-        current.append(word)
-        count += width + (1 if len(current) > 1 else 0)
-    if current:
-        lines.append(current)
+def _wrap_text(text, per_line, max_lines):
+    tokens = _tokens(text)
+    return _format_tokens(tokens, _balanced_cuts(tokens, per_line, max_lines))
+
+
+def _wrap_words(words, per_line, max_lines):
+    tokens = [(word["text"], "") for word in words]
+    cuts = _balanced_cuts(tokens, per_line, max_lines)
+    if len(cuts) <= 1:
+        return list(words)
     wrapped = []
-    for index, line in enumerate(lines):
-        for position, word in enumerate(line):
-            text = word["text"]
-            if position == len(line) - 1 and index < len(lines) - 1:
+    for index, (begin, end) in enumerate(cuts):
+        for position in range(begin, end):
+            text = words[position]["text"]
+            if position == end - 1 and index < len(cuts) - 1:
                 text = text.rstrip() + "\n"
-            wrapped.append({**word, "text": text})
+            wrapped.append({**words[position], "text": text})
     return wrapped
 
 
-def _body(cue, style, animation, width, height):
+def _body(cue, style, animation, width, height, line_length=None):
     cue_start = cue["start_ms"]
     cue_duration = cue["end_ms"] - cue_start
     text = cue["text"].upper() if style["uppercase"] else cue["text"]
-    per_line = _per_line(style, width, height, _is_cjk_text(text))
+    per_line = _per_line(style, width, height, _is_cjk_text(text), line_length)
+    max_lines = int(line_length["max_lines"]) if line_length else WRAP_MAX_LINES
     emphasis = animation["emphasis"]["preset"]
     if emphasis != "none":
         accent = style["accent_color"]
@@ -204,14 +280,14 @@ def _body(cue, style, animation, width, height):
         if emphasis == "karaoke":
             # Sung words fill to the accent, the rest stay in the text colour.
             line = f"{{\\1c{_ass_color(accent)}\\2c{_ass_color(text_color)}}}"
-        words = _wrap_words(cue_words(cue), per_line)
+        words = _wrap_words(cue_words(cue), per_line, max_lines)
         for word in words:
             word_text = word["text"].upper() if style["uppercase"] else word["text"]
             line += _emphasis_tags(
                 emphasis, word, cue_start, cue_duration, accent, text_color
             ) + literal_ass(word_text)
         return line
-    wrapped = _wrap_text(text, per_line)
+    wrapped = _wrap_text(text, per_line, max_lines)
     if animation["in"]["preset"] == "typewriter":
         duration = min(animation["in"]["duration_ms"], cue_duration)
         characters = list(wrapped)
@@ -225,7 +301,7 @@ def _body(cue, style, animation, width, height):
     return literal_ass(wrapped)
 
 
-def event_text(cue, style, width, height):
+def event_text(cue, style, width, height, line_length=None):
     """One ASS event's text: escaped cue text wrapped in the style's animation tags."""
     value = parse_style(style)
     animation = value["animation"]
@@ -236,4 +312,4 @@ def event_text(cue, style, width, height):
         tags += f"{{\\fad({fade_in},{fade_out})}}"
     tags += _in_tags(animation, cue_duration, value, width, height)
     tags += _out_tags(animation, cue_duration, value, width, height)
-    return tags + _body(cue, value, animation, width, height)
+    return tags + _body(cue, value, animation, width, height, line_length)

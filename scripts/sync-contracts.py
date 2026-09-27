@@ -183,10 +183,31 @@ def compose():
         {key: {"type": "integer", "minimum": 2, "maximum": 16384} for key in ["width", "height"]},
         ["width", "height"],
     )
+    line_length = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["mode", "cps", "max_lines", "max_chars"],
+        "properties": {
+            "mode": {"enum": ["auto", "custom"]},
+            "cps": {
+                "oneOf": [
+                    {"type": "number", "exclusiveMinimum": 0, "maximum": 100},
+                    {"type": "null"},
+                ]
+            },
+            "max_lines": {"enum": [1, 2]},
+            "max_chars": {
+                "oneOf": [
+                    {"type": "integer", "minimum": 1, "maximum": 500},
+                    {"type": "null"},
+                ]
+            },
+        },
+    }
     by_method["asset.register"]["properties"]["kind"]["enum"] = ["video", "subtitle", "audio"]
     for method in ["subtitles.preview", "subtitles.save"]:
         by_method[method]["properties"].update(
-            {"cues": shape(cues), "style": style, "canvas": canvas}
+            {"cues": shape(cues), "style": style, "canvas": canvas, "line_length": line_length}
         )
     by_method["subtitles.save"]["properties"]["format"] = {"enum": ["srt", "ass"]}
     additions = {
@@ -236,6 +257,7 @@ def compose():
                 "editing": editing,
                 "style": style,
                 "canvas": canvas,
+                "line_length": line_length,
             },
             ["asset_id", "cues"],
         ),
