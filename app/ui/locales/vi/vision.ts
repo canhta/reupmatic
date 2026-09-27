@@ -16,7 +16,7 @@ export const visionVi = {
   visionLanguage_en: 'Tiếng Anh',
   visionLanguage_vi: 'Tiếng Việt',
   visionLanguage_zh: 'Tiếng Trung',
-  visionSample: 'Khoảng lấy mẫu (ms)',
+  visionSample: 'Khoảng lấy mẫu',
   visionConfidence: 'Độ tin cậy nhận dạng tối thiểu',
   visionDraft: 'Bản nháp OCR · {{count}} câu',
   visionApply: 'Áp dụng nháp',

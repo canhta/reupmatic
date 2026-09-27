@@ -322,7 +322,7 @@ const COPY = {
     clipEnable: 'Enable clip',
     transcribeTab: 'Transcribe',
     translateTab: 'Translate',
-    speechSection: 'Recognise speech',
+    speechSection: 'Recognize speech',
     speechLanguage: 'Transcript language',
     speechStart: 'Recognize speech',
     speechReview: 'Transcript result — not applied',
@@ -576,7 +576,9 @@ for (const locale of ['en', 'vi']) {
             .click();
         }
         await speechSection.getByRole('button', { name: copy.speechStart, exact: true }).click();
-        await page.getByText(copy.speechReview, { exact: true }).waitFor({ timeout: 90000 });
+        await page
+          .getByRole('list', { name: copy.speechReview, exact: true })
+          .waitFor({ timeout: 90000 });
         await shot(page, locale, 'review');
         await page.getByRole('button', { name: copy.discardResult, exact: true }).click();
         await page.getByRole('tab', { name: copy.transcribeTab, exact: true }).click();

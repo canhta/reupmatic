@@ -3,10 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -24,7 +21,6 @@ import { useEditorGenerators } from '../editor/EditorGeneratorContext';
 import { GeneratorFooter } from '../editor/GeneratorFooter';
 import { LayerLanguageField } from '../editor/text-layers/LayerLanguageField';
 import { ReviewRows } from '../editor/text-layers/ReviewRows';
-import { engineName } from './engine-name';
 import { speechErrorKey } from './error-message';
 import { problemCode } from './useSpeechJob';
 
@@ -50,7 +46,6 @@ export function SpeechSetup() {
 
   return (
     <InspectorPanelSection title={t('speechTitle')}>
-      {}
       <Stack direction="vertical" gap={3}>
         {editor.composition ? (
           <Banner status="warning" title={t('speechComposition')} />
@@ -78,11 +73,6 @@ export function SpeechSetup() {
             />
           )}
         </FormLayout>
-        {engines.length === 1 && (
-          <Text as="p" display="block" type="supporting">
-            {t('speechEngineSingle', { engine: engines[0].engine })}
-          </Text>
-        )}
         <GeneratorFooter
           readiness={{
             reason:
@@ -103,6 +93,7 @@ export function SpeechSetup() {
           errorLabel={t(speechErrorKey(job.error))}
           cancel={() => void job.cancel()}
         >
+          <LineLengthSection />
           <Button
             label={t('speechStart')}
             variant="primary"
@@ -124,7 +115,6 @@ export function SpeechSetup() {
             }}
           />
         </GeneratorFooter>
-        <LineLengthSection />
       </Stack>
     </InspectorPanelSection>
   );
@@ -211,7 +201,7 @@ function LineLengthSection() {
             }}
           />
           {editor.transcriptNeedsResplit && (
-            <Text as="p" type="supporting">
+            <Text as="p" type="body">
               {t('lineLengthStale')}
             </Text>
           )}
@@ -239,29 +229,6 @@ export function SpeechReview() {
 
   return (
     <VStack gap={3}>
-      <HStack gap={2} vAlign="center" hAlign="between">
-        <Heading level={5}>{t('speechDraft')}</Heading>
-        <IconButton
-          label={t('cancel')}
-          tooltip={t('cancel')}
-          size="sm"
-          variant="ghost"
-          icon={<Icon icon="close" size="sm" />}
-          onClick={() => job.consume(draft)}
-        />
-      </HStack>
-      {}
-      <Text as="p" display="block" type="body">
-        {t('speechReplaceHelp', { count: draft.data.cues.length })}
-      </Text>
-      <Text as="p" display="block" type="supporting">
-        {t('speechResultInfo', {
-          language: t(`visionLanguage_${draft.data.language}`),
-          start: draft.data.start_ms / 1000,
-          end: draft.data.end_ms / 1000,
-          engine: engineName(draft.data.runtime),
-        })}
-      </Text>
       {draft.data.cues.length === 0 ? (
         <Text as="p" display="block" type="body" role="status">
           {t('speechEmpty')}

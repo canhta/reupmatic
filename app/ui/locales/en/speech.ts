@@ -1,10 +1,9 @@
 export const speechEn = {
-  speechTitle: 'Recognise speech',
+  speechTitle: 'Recognize speech',
   speechComposition: 'Recognize the original clip before composing.',
   speechNoAudio:
     'The selected video has no audio stream. Import a transcript or choose a video with audio.',
   speechEngine: 'Recognition engine',
-  speechEngineSingle: 'Recognition engine: {{engine}}',
   speechChooseLanguage: 'Choose the language spoken in the source.',
   speechStart: 'Recognize speech',
   lineLengthTitle: 'Line length',
@@ -20,9 +19,6 @@ export const speechEn = {
   speechDecoding: 'Preparing source audio',
   speechRecognizing: 'Recognizing speech',
   speechDraft: 'Transcript result — not applied',
-  speechReplaceHelp_one: '{{count}} recognized cue. Applying replaces the entire transcript.',
-  speechReplaceHelp_other: '{{count}} recognized cues. Applying replaces the entire transcript.',
-  speechResultInfo: '{{language}} · source {{start}}–{{end}} s · {{engine}}',
   speechEmpty: 'No speech found — nothing was replaced.',
   speechStaleHelp: 'Document changed — review before replacing the transcript.',
   speechReview: 'Review',

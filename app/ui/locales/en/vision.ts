@@ -14,7 +14,7 @@ export const visionEn = {
   visionLanguage_en: 'English',
   visionLanguage_vi: 'Vietnamese',
   visionLanguage_zh: 'Chinese',
-  visionSample: 'Sample interval (ms)',
+  visionSample: 'Sample interval',
   visionConfidence: 'Minimum recognition confidence',
   visionDraft: 'OCR draft · {{count}} cues',
   visionApply: 'Apply draft',

@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -62,21 +63,15 @@ export function OcrSetup() {
             }
           />
         </FormLayout>
-        <Collapsible
-          trigger={
-            <Text type="label" weight="semibold">
-              {t('visionOcrOptions')}
-            </Text>
-          }
-          defaultIsOpen={false}
-        >
-          <HStack gap={3} vAlign="end" wrap="wrap">
+        <Collapsible trigger={t('visionOcrOptions')} defaultIsOpen={false}>
+          <Grid columns={2} gap={3}>
             <NumberInput
               label={t('visionSample')}
+              units="ms"
               min={100}
               max={2000}
               step={100}
-              width={220}
+              width="100%"
               value={sample}
               isDisabled={busy}
               isWheelEnabled={false}
@@ -88,13 +83,13 @@ export function OcrSetup() {
               min={0}
               max={1}
               step={0.05}
-              width={220}
+              width="100%"
               value={confidence}
               isDisabled={busy}
               isWheelEnabled={false}
               onChange={setConfidence}
             />
-          </HStack>
+          </Grid>
         </Collapsible>
         <GeneratorFooter
           readiness={{
@@ -211,14 +206,7 @@ export function OcrReview() {
           }))}
         />
       )}
-      <Collapsible
-        trigger={
-          <Text type="label" weight="semibold">
-            {t('visionEvidence')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible trigger={t('visionEvidence')} defaultIsOpen={false}>
         <Text as="p" type="body">
           {t('visionEvidenceLimit')}
         </Text>

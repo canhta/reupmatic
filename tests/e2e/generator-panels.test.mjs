@@ -185,7 +185,7 @@ const COPY = {
     editor: 'Editor',
     transcribeTab: 'Transcribe',
     translateTab: 'Translate',
-    speechSection: 'Recognise speech',
+    speechSection: 'Recognize speech',
     ocrSection: 'Extract text',
     language: 'Transcript language',
     spokenLanguage: 'English',
@@ -311,7 +311,9 @@ for (const locale of ['en', 'vi']) {
 
         await page.setViewportSize({ width: 1420, height: 900 });
         await speechSection.getByRole('button', { name: copy.start, exact: true }).click();
-        await page.getByText(copy.review, { exact: true }).waitFor({ timeout: 90000 });
+        await page
+          .getByRole('list', { name: copy.review, exact: true })
+          .waitFor({ timeout: 90000 });
         const cuePanel = page.locator('.cue-panel');
         for (const [width, height] of SIZES) {
           await page.setViewportSize({ width, height });

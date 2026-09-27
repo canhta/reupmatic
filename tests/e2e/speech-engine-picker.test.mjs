@@ -83,7 +83,7 @@ async function createVideoWithAudio(filePath) {
 }
 
 for (const locale of ['en', 'vi']) {
-  test(`Recognise speech: one configured engine names itself, no picker to clutter it (${locale})`, {
+  test(`Recognize speech: a single engine renders no picker (${locale})`, {
     timeout: 60000,
   }, async () => {
     const { temp, userData } = await createTempWorkspace('reupmatic-speech-engine-picker-');
@@ -121,7 +121,7 @@ for (const locale of ['en', 'vi']) {
         const panel = page.locator('#panel-transcribe');
         await panel.waitFor({ state: 'visible' });
         const speechSection = panel.getByLabel(
-          locale === 'vi' ? 'Nhận dạng giọng nói' : 'Recognise speech',
+          locale === 'vi' ? 'Nhận dạng giọng nói' : 'Recognize speech',
           { exact: true },
         );
 
@@ -138,12 +138,6 @@ for (const locale of ['en', 'vi']) {
           name: locale === 'vi' ? 'Bộ nhận dạng' : 'Recognition engine',
         });
         assert.equal(await engineField.count(), 0, 'a single engine must not render a picker');
-        await speechSection
-          .getByText(
-            locale === 'vi' ? 'Bộ nhận dạng: faster-whisper' : 'Recognition engine: faster-whisper',
-            { exact: true },
-          )
-          .waitFor();
 
         const start = speechSection.getByRole('button', {
           name: locale === 'vi' ? 'Nhận dạng giọng nói' : 'Recognize speech',
@@ -153,10 +147,14 @@ for (const locale of ['en', 'vi']) {
 
         await languageField.focus();
         await page.keyboard.press('Tab');
+        const lineLength = speechSection.getByRole('button', {
+          name: locale === 'vi' ? 'Độ dài dòng' : 'Line length',
+          exact: true,
+        });
         assert.equal(
-          await start.evaluate((element) => element === document.activeElement),
+          await lineLength.evaluate((element) => element === document.activeElement),
           true,
-          'Tab from the language field must reach Start next',
+          'Tab from the language field must reach the Line length trigger next',
         );
 
         const screenshots = path.join(root, '.test-artifacts');

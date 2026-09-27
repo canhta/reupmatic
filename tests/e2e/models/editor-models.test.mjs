@@ -274,7 +274,7 @@ test('Editor with real models: recognise, apply, translate and export with a cov
       await page.getByRole('tab', { name: 'Transcribe', exact: true }).click();
       const transcribe = page.locator('#panel-transcribe');
       await transcribe.waitFor({ state: 'visible' });
-      const speech = transcribe.getByLabel('Recognise speech', { exact: true });
+      const speech = transcribe.getByLabel('Recognize speech', { exact: true });
       await speech.getByRole('combobox', { name: 'Transcript language' }).click();
       await page.getByRole('option', { name: 'Chinese', exact: true }).click();
       const range = speech.getByRole('combobox', { name: 'Recognition range' });

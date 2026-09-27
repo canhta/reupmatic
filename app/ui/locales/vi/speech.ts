@@ -6,7 +6,6 @@ export const speechVi = {
   speechNoAudio:
     'Video đã chọn không có luồng âm thanh. Nhập bản chép lời hoặc chọn video có âm thanh.',
   speechEngine: 'Bộ nhận dạng',
-  speechEngineSingle: 'Bộ nhận dạng: {{engine}}',
   speechChooseLanguage: 'Chọn ngôn ngữ nói trong nguồn.',
   speechStart: 'Nhận dạng giọng nói',
   lineLengthTitle: 'Độ dài dòng',
@@ -22,9 +21,6 @@ export const speechVi = {
   speechDecoding: 'Đang chuẩn bị âm thanh nguồn',
   speechRecognizing: 'Đang nhận dạng giọng nói',
   speechDraft: 'Kết quả chép lời — chưa áp dụng',
-  speechReplaceHelp_one: '{{count}} câu nhận dạng. Áp dụng sẽ thay toàn bộ bản chép lời.',
-  speechReplaceHelp_other: '{{count}} câu nhận dạng. Áp dụng sẽ thay toàn bộ bản chép lời.',
-  speechResultInfo: '{{language}} · nguồn {{start}}–{{end}} giây · {{engine}}',
   speechEmpty: 'Không tìm thấy lời nói — chưa thay gì.',
   speechStaleHelp: 'Tài liệu đã đổi — xem lại trước khi thay bản chép lời.',
   speechReview: 'Duyệt',

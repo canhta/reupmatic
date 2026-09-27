@@ -708,7 +708,7 @@ test('Transcribe panel sets up speech recognition; no setup dialog, no cue-list 
     const panel = page.locator('#panel-transcribe');
     await panel.waitFor({ state: 'visible' });
 
-    const speechSection = panel.getByLabel('Recognise speech', { exact: true });
+    const speechSection = panel.getByLabel('Recognize speech', { exact: true });
     await speechSection.getByRole('combobox', { name: 'Transcript language' }).waitFor();
     const ocrSection = panel.getByLabel('Extract text', { exact: true });
     await ocrSection.getByRole('heading', { name: 'Extract text' }).waitFor();

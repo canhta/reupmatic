@@ -29,7 +29,6 @@ const ALLOWED = {
   'features/editor/text-rules/': 'text-rules panel lands in slices 3-11 (#50)',
   'features/editor/video-tools/': 'edit panel lands in slices 3-11 (#50)',
   'features/editor/EditorExportDialog.tsx': 'export dialog lands in slice 10 (#50)',
-  'features/vision/': 'ocr worker owns the vision panels (#31, #43-#48)',
   'features/processing/': 'shared options land in slices 3-11 (#50)',
   // Subtitles and Media drawers land in slice 11 (#50).
   'features/editor/CuePanel.tsx': 'subtitles drawer lands in slice 11 (#50)',
