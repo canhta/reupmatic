@@ -15,6 +15,7 @@ import {
 } from '../processing/recipe.js';
 import { parseVoiceTrack, type VoiceTrack } from '../speech/synthesis/voice-track.js';
 import { assertCues, type Cue } from '../subtitles/cues.js';
+import { type LineLengthSettings, parseLineLengthSettings } from '../subtitles/split.js';
 import type { OperationName, OperationResult } from '../worker/operations.js';
 import { RemoteError } from '../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../worker/worker-client.js';
@@ -32,6 +33,7 @@ export interface RenderInput {
   soundtrack?: Soundtrack;
   voice?: VoiceTrack;
   logo?: ProjectMedia;
+  line_length?: LineLengthSettings;
 }
 
 export interface RenderOutput extends Record<string, unknown> {
@@ -66,6 +68,7 @@ function parseInput(value: unknown): RenderInput {
     'voice',
     'composition',
     'logo',
+    'line_length',
   ]);
   if (
     Object.keys(input).some((key) => !allowed.has(key)) ||
@@ -89,6 +92,7 @@ function parseInput(value: unknown): RenderInput {
     copy.logo = logo;
     if (!copy.processing?.editing?.logo) throw new RemoteError('INVALID_REQUEST');
   }
+  if (copy.line_length !== undefined) copy.line_length = parseLineLengthSettings(copy.line_length);
   if (copy.soundtrack !== undefined) copy.soundtrack = parseSoundtrack(copy.soundtrack);
   if (copy.voice !== undefined) {
     copy.voice = parseVoiceTrack(copy.voice);
@@ -232,6 +236,7 @@ export class RenderCoordinator extends EventEmitter {
             : {}),
           ...(input.processing?.editing ? { editing: input.processing.editing } : {}),
           ...(input.processing?.subtitle_style ? { style: input.processing.subtitle_style } : {}),
+          ...(input.line_length ? { line_length: input.line_length } : {}),
         });
         subtitleId = saved.asset_id;
       }

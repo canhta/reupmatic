@@ -453,3 +453,20 @@ test('a lossless voice render is refused before any work starts', async () => {
   assert.equal(worker.calls.length, 0);
   await coordinator.close();
 });
+
+test('line-length settings reach subtitle preparation so the burn wraps like the splitter', async () => {
+  const worker = new ControlledWorker();
+  const coordinator = new RenderCoordinator(worker);
+  const line_length = { mode: 'custom', cps: 15, max_lines: 1, max_chars: 30 };
+  const ticket = coordinator.start({ ...input([cue]), line_length });
+  assert.equal(worker.calls[0].method, 'subtitles.prepare');
+  assert.deepEqual(worker.calls[0].params.line_length, line_length);
+  assert.throws(
+    () => coordinator.start({ ...input([cue], 'request-0002'), line_length: { max_lines: 3 } }),
+    /INVALID/,
+  );
+  await ticket.cancel();
+  worker.calls[0].resolve({ asset_id: 'sub-1' });
+  await assert.rejects(ticket.result, { code: 'CANCELLED' });
+  await coordinator.close();
+});
