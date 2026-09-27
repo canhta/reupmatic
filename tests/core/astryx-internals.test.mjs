@@ -18,7 +18,6 @@ function cssFiles(directory) {
 // Styling an Astryx internal (`.astryx-*`) is prohibited unless it is a genuine design-system gap.
 // Each entry records the reason its override is sanctioned rather than hand-waving the selector.
 const ALLOWED_ASTRYX_SELECTORS = {
-  '.astryx-collapsible-trigger': 'No per-instance width/size control on a `Collapsible` trigger',
   '.astryx-app-shell-header': '`xstyle` cannot compile in this repo today',
   '.astryx-app-shell-sidenav': '`xstyle` cannot compile in this repo today',
 };
