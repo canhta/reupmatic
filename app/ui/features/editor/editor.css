@@ -196,17 +196,22 @@
 .template-thumbnail-wrap {
   display: block;
   width: 100%;
-  max-width: 200px;
   padding: 0;
   border: 0;
   background: none;
+  text-align: start;
   cursor: pointer;
 }
 .template-thumbnail {
   display: block;
   width: 100%;
+  margin-block-end: var(--spacing-1);
   background: var(--bg-nav);
   border-radius: var(--radius-sm);
+}
+.template-thumbnail-wrap[aria-pressed="true"] .template-thumbnail {
+  outline: var(--focus-outline-width) solid var(--accent);
+  outline-offset: var(--spacing-1);
 }
 .editor-start-frame {
   width: 100%;

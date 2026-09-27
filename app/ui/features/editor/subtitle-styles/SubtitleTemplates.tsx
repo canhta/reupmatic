@@ -1,4 +1,3 @@
-import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import JASSUB from 'jassub';
@@ -16,21 +15,26 @@ import { recordRendererDiagnostic } from '../../../shell/diagnostics';
 import { useEditor } from '../EditorContext';
 import { jassubFontOptions } from '../jassub-fonts';
 
-const SAMPLE_TEXT = 'Bold words win';
+const SAMPLE_TEXT = 'Chữ đậm thu hút';
 const SAMPLE_DURATION_MS = 1400;
 /** A time at which every preset shows its fully-shown state. */
 const STATIC_TIME_MS = 800;
 /** A canvas-only renderer needs a few frames before the static frame is composited. */
 const STATIC_FRAMES = 12;
+/** A small landscape strip, so the sample line reads legibly in the panel. */
+const SAMPLE_CANVAS = { width: 480, height: 220 };
+/** A sample-only font bump; the strip is too short for the style's own size to read. */
+const SAMPLE_FONT_PCT = 15;
 const SAMPLE_CUE = {
   id: 'template-sample',
   start_ms: 0,
   end_ms: SAMPLE_DURATION_MS,
   text: SAMPLE_TEXT,
   words: [
-    { text: 'Bold ', start_ms: 0, end_ms: 400 },
-    { text: 'words ', start_ms: 400, end_ms: 800 },
-    { text: 'win', start_ms: 800, end_ms: SAMPLE_DURATION_MS },
+    { text: 'Chữ ', start_ms: 0, end_ms: 300 },
+    { text: 'đậm ', start_ms: 300, end_ms: 600 },
+    { text: 'thu ', start_ms: 600, end_ms: 900 },
+    { text: 'hút', start_ms: 900, end_ms: SAMPLE_DURATION_MS },
   ],
 };
 
@@ -42,10 +46,12 @@ function reasonMessage(reason: unknown): string {
 function TemplateThumbnail({
   template,
   disabled,
+  selected,
   onSelect,
 }: {
   template: SubtitleTemplate;
   disabled: boolean;
+  selected: boolean;
   onSelect(): void;
 }) {
   const { t } = useTranslation();
@@ -57,8 +63,11 @@ function TemplateThumbnail({
   const [failed, setFailed] = useState(false);
   const [active, setActive] = useState(false);
   const { asset_id } = editor.media ?? { asset_id: '' };
-  const { width, height } = editor.subtitleCanvas;
-  const style = applySubtitleTemplate(defaultSubtitleStyle, template);
+  const { width, height } = SAMPLE_CANVAS;
+  const style = {
+    ...applySubtitleTemplate(defaultSubtitleStyle, template),
+    font_size_pct: SAMPLE_FONT_PCT,
+  };
   const styleKey = JSON.stringify(style);
   const name = t(`styleTemplate_${template.id}`);
 
@@ -80,6 +89,7 @@ function TemplateThumbnail({
         cues: [SAMPLE_CUE],
         revision: editor.revision,
         asset_id,
+        canvas: SAMPLE_CANVAS,
         style: JSON.parse(styleKey) as SubtitleStyle,
       }),
     )
@@ -146,7 +156,7 @@ function TemplateThumbnail({
       instance.current = null;
       void renderer.destroy();
     };
-  }, [assText, width, height, fail]);
+  }, [assText, fail]);
 
   useEffect(() => {
     cancelAnimationFrame(frame.current);
@@ -188,7 +198,7 @@ function TemplateThumbnail({
     };
     loop();
     return () => cancelAnimationFrame(frame.current);
-  }, [active, width, height]);
+  }, [active]);
 
   if (failed) return null;
   return (
@@ -196,6 +206,7 @@ function TemplateThumbnail({
       type="button"
       className="template-thumbnail-wrap"
       aria-label={name}
+      aria-pressed={selected}
       disabled={disabled}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
@@ -208,6 +219,9 @@ function TemplateThumbnail({
         className="template-thumbnail"
         style={{ aspectRatio: `${width} / ${height}` }}
       />
+      <Text as="span" display="block" type="body" weight="medium">
+        {name}
+      </Text>
     </button>
   );
 }
@@ -225,25 +239,17 @@ export function SubtitleTemplates({
   const effective = value ?? defaultSubtitleStyle;
   const current = matchingSubtitleTemplate(effective)?.id;
   return (
-    <VStack gap={1}>
+    <VStack gap={2}>
       <Text as="p" type="label" weight="semibold">
         {t('styleTemplate')}
       </Text>
       {subtitleTemplates.map((template) => (
-        <Item
+        <TemplateThumbnail
           key={template.id}
-          align="center"
-          density="compact"
-          isDisabled={disabled}
-          isSelected={current === template.id}
-          label={
-            <TemplateThumbnail
-              template={template}
-              disabled={disabled}
-              onSelect={() => onChange(applySubtitleTemplate(effective, template))}
-            />
-          }
-          description={t(`styleTemplate_${template.id}`)}
+          template={template}
+          disabled={disabled}
+          selected={current === template.id}
+          onSelect={() => onChange(applySubtitleTemplate(effective, template))}
         />
       ))}
     </VStack>

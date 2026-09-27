@@ -897,6 +897,37 @@ async function paintedPixels(application, buffer) {
   }, buffer.toString('base64'));
 }
 
+/** The painted text's height in CSS pixels: the vertical extent of non-background rows / dpr. */
+async function textHeightCss(application, buffer, devicePixelRatio) {
+  return application.evaluate(
+    ({ nativeImage }, { base64, dpr }) => {
+      const image = nativeImage.createFromBuffer(Buffer.from(base64, 'base64'));
+      const { width, height } = image.getSize();
+      const bitmap = image.toBitmap();
+      const [b0, g0, r0] = [bitmap[0], bitmap[1], bitmap[2]];
+      let top = -1;
+      let bottom = -1;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const index = (y * width + x) * 4;
+          if (
+            Math.abs(bitmap[index] - b0) +
+              Math.abs(bitmap[index + 1] - g0) +
+              Math.abs(bitmap[index + 2] - r0) >
+            60
+          ) {
+            if (top < 0) top = y;
+            bottom = y;
+            break;
+          }
+        }
+      }
+      return top < 0 ? 0 : (bottom - top + 1) / dpr;
+    },
+    { base64: buffer.toString('base64'), dpr: devicePixelRatio },
+  );
+}
+
 const THUMBNAIL_STYLE_TAB = { en: 'Style', vi: 'Kiểu chữ' };
 for (const locale of ['en', 'vi']) {
   test(`Style template thumbnails paint their sample and animate on hover (${locale})`, {
@@ -917,16 +948,24 @@ for (const locale of ['en', 'vi']) {
         const tiles = page.locator('.template-thumbnail');
         await tiles.first().waitFor({ timeout: 30000 });
         assert.equal(await tiles.count(), 4, 'one thumbnail per template');
+        const dpr = await page.evaluate(() => window.devicePixelRatio);
         for (let index = 0; index < 4; index += 1) {
           const tile = tiles.nth(index);
           const deadline = Date.now() + 30000;
           let painted = 0;
+          let height = 0;
           while (Date.now() < deadline) {
-            painted = await paintedPixels(application, await tile.screenshot());
+            const shot = await tile.screenshot();
+            painted = await paintedPixels(application, shot);
+            height = await textHeightCss(application, shot, dpr);
             if (painted > 30) break;
             await page.waitForTimeout(300);
           }
           assert.ok(painted > 30, `thumbnail ${index} paints its sample line (${painted} px)`);
+          assert.ok(
+            height >= 12,
+            `thumbnail ${index} text is legible at tile size (${height.toFixed(1)} css px)`,
+          );
         }
         const first = tiles.first();
         const before = await first.screenshot();

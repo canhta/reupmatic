@@ -43,6 +43,19 @@ interface Host {
   onRecentChanged?(): void;
 }
 
+/** A thumbnail's own small canvas, bounded like the worker's `canvas_size`. */
+function previewCanvas(value: unknown): { width: number; height: number } {
+  const record =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : undefined;
+  const bounded = (field: unknown) =>
+    typeof field === 'number' && Number.isInteger(field) && field >= 2 && field <= 16384;
+  if (!record || !bounded(record.width) || !bounded(record.height))
+    throw new Error('INVALID_REQUEST');
+  return { width: record.width as number, height: record.height as number };
+}
+
 export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]> } {
   const { wire, worker, media } = host;
   installAudio(host);
@@ -230,13 +243,17 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       'asset_id',
       'editing',
       'line_length',
+      'canvas',
     ]);
     assertCues(value.cues);
     const revision = requestRevision(value.revision);
     const source = media.getVideo(value.asset_id);
-    // Preview the same canvas the render burns on: the output frame after crop/output, not the source.
+    // Preview the same canvas the render burns on unless a caller asks for a small strip.
     const editing = value.editing === undefined ? undefined : parseEditing(value.editing);
-    const canvas = outputFrame(editing, { width: source.width, height: source.height });
+    const canvas =
+      value.canvas === undefined
+        ? outputFrame(editing, { width: source.width, height: source.height })
+        : previewCanvas(value.canvas);
     const lineLength =
       value.line_length === undefined ? undefined : parseLineLengthSettings(value.line_length);
     return {
