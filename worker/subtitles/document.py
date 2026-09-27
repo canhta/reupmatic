@@ -44,7 +44,7 @@ def cue_document(cues, style=None, canvas=None, styled=True):
             "PlayResX": str(width),
             "PlayResY": str(height),
             "ScaledBorderAndShadow": "yes",
-            "WrapStyle": "0",
+            "WrapStyle": "2",
         }
     )
     default_style = DEFAULT_STYLE if style is None else style

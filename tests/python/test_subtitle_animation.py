@@ -55,7 +55,7 @@ class EventTextTests(unittest.TestCase):
         self.assertEqual(self.render(cue(), style("blur")), r"{\blur22\t(0,200,\blur0)}Hi")
         self.assertEqual(
             self.render(cue(text="Hi", end_ms=400), style("typewriter")),
-            r"{\alpha&HFF&\t(0,0,\alpha&H00&)}H{\alpha&HFF&\t(100,100,\alpha&H00&)}i",
+            r"{\alpha&HFF&\t(0,100,\alpha&H00&)}H{\alpha&HFF&\t(100,200,\alpha&H00&)}i",
         )
 
     def test_whole_line_out_presets(self):
@@ -78,32 +78,60 @@ class EventTextTests(unittest.TestCase):
             self.render(cue(text="Hi there", words=words), style(emphasis="karaoke")),
             r"{\1c&H00D4FF&\2c&HFFFFFF&}{\kf40}Hi {\kf60}there",
         )
+        # Base at rest; only the active word turns to the accent colour.
         self.assertEqual(
             self.render(cue(text="Hi there", words=words), style(emphasis="color")),
-            r"{\c&H00D4FF&\t(0,0,\c&H00D4FF&)\t(400,400,\c&HFFFFFF&)}Hi "
-            r"{\c&H00D4FF&\t(400,400,\c&H00D4FF&)\t(1000,1000,\c&HFFFFFF&)}there",
+            r"{\c&HFFFFFF&\t(0,40,\c&H00D4FF&)\t(400,440,\c&HFFFFFF&)}Hi "
+            r"{\c&HFFFFFF&\t(400,440,\c&H00D4FF&)\t(1000,1000,\c&HFFFFFF&)}there",
         )
+        # A short eased transient, not a hold for the whole word.
         self.assertEqual(
             self.render(cue(text="Hi there", words=words), style(emphasis="pop")),
-            r"{\t(0,0,\fscx120\fscy120)\t(400,400,\fscx100\fscy100)}Hi "
-            r"{\t(400,400,\fscx120\fscy120)\t(1000,1000,\fscx100\fscy100)}there",
+            r"{\t(0,80,0.5,\fscx115\fscy115)\t(80,200,0.5,\fscx100\fscy100)}Hi "
+            r"{\t(400,480,0.5,\fscx115\fscy115)\t(480,600,0.5,\fscx100\fscy100)}there",
         )
         self.assertEqual(
             self.render(cue(text="Hi there", words=words), style(emphasis="appear")),
-            r"{\alpha&HFF&\t(0,0,\alpha&H00&)}Hi "
-            r"{\alpha&HFF&\t(400,400,\alpha&H00&)}there",
+            r"{\alpha&HFF&\t(0,40,\alpha&H00&)}Hi "
+            r"{\alpha&HFF&\t(400,440,\alpha&H00&)}there",
         )
         self.assertEqual(
             self.render(cue(text="Hi there", words=words), style(emphasis="one-at-a-time")),
-            r"{\alpha&HFF&\t(0,0,\alpha&H00&)\t(400,400,\alpha&HFF&)}Hi "
-            r"{\alpha&HFF&\t(400,400,\alpha&H00&)\t(1000,1000,\alpha&HFF&)}there",
+            r"{\alpha&HFF&\t(0,40,\alpha&H00&)\t(400,440,\alpha&HFF&)}Hi "
+            r"{\alpha&HFF&\t(400,440,\alpha&H00&)\t(1000,1000,\alpha&HFF&)}there",
         )
+
+    def test_lines_are_broken_explicitly_so_libass_never_re_wraps(self):
+        narrow = style()
+        narrow["font_size_pct"] = 15
+        text = "aaaa bbbb cccc dddd eeee"
+        plain = self.render(cue(text=text, end_ms=1000), narrow)
+        self.assertIn(r"aaaa bbbb cccc dddd\Neeee", plain)
+        words = [
+            {"text": "aaaa ", "start_ms": 0, "end_ms": 200},
+            {"text": "bbbb ", "start_ms": 200, "end_ms": 400},
+            {"text": "cccc ", "start_ms": 400, "end_ms": 600},
+            {"text": "dddd ", "start_ms": 600, "end_ms": 800},
+            {"text": "eeee", "start_ms": 800, "end_ms": 1000},
+        ]
+        popped = self.render(
+            cue(text=text, words=words),
+            {
+                **narrow,
+                "animation": {
+                    "in": {"preset": "none", "duration_ms": 200},
+                    "out": {"preset": "none", "duration_ms": 200},
+                    "emphasis": {"preset": "pop"},
+                },
+            },
+        )
+        self.assertIn(r"dddd\N", popped)
 
     def test_emphasis_without_measured_words_estimates_inside_the_window(self):
         text = self.render(cue(text="Xin chào"), style(emphasis="appear"))
         self.assertIn("Xin", text)
         self.assertIn("chào", text)
-        self.assertTrue(text.startswith(r"{\alpha&HFF&\t(0,0,\alpha&H00&)}Xin"))
+        self.assertTrue(text.startswith(r"{\alpha&HFF&\t(0,40,\alpha&H00&)}Xin"))
 
     def test_durations_never_run_past_the_cue_window(self):
         self.assertEqual(self.render(cue(end_ms=100), style("fade")), r"{\fad(100,0)}Hi")
@@ -129,6 +157,7 @@ class DocumentAnimationTests(unittest.TestCase):
         )
         text = styled.to_string("ass")
         self.assertIn(r"\fscx0\fscy0", text)
+        self.assertEqual(styled.info["WrapStyle"], "2")
         srt = srt_text([value])
         self.assertNotIn(r"\fscx", srt)
         self.assertNotIn("{\\", srt)

@@ -7,6 +7,19 @@ same document, so a preset looks the same live and in the export.
 from subtitles.style import parse_style
 from subtitles.word_timing import cue_words
 
+# Instant style switches need a real duration; equal-time `\t` never animates in libass.
+SWITCH_MS = 40
+# Active-word pop: a short transient, not a hold. Peak, rise and fall are named and eased.
+POP_PEAK_PERCENT = 115
+POP_RISE_MS = 80
+POP_FALL_MS = 120
+POP_EASE = 0.5
+# Mirrors the core layout constants so libass never re-wraps an explicitly broken line.
+LATIN_ADVANCE_EM = 0.5
+CJK_ADVANCE_EM = 1.0
+BOLD_ADVANCE_FACTOR = 1.05
+WRAP_MAX_LINES = 2
+
 
 def literal_ass(text):
     # Break user-authored escape sequences; only our newlines become ASS tags.
@@ -85,28 +98,104 @@ def _out_tags(animation, cue_duration, style, width, height):
     return ""
 
 
-def _emphasis_tags(preset, word, cue_start, accent, text_color):
+def _emphasis_tags(preset, word, cue_start, cue_duration, accent, text_color):
     start = max(0, word["start_ms"] - cue_start)
     end = max(start, word["end_ms"] - cue_start)
     if preset == "karaoke":
         return f"{{\\kf{max(1, round((end - start) / 10))}}}"
     if preset == "color":
+        # Base at rest; accent only between this word's start and end.
         return (
-            f"{{\\c{_ass_color(accent)}\\t({start},{start},\\c{_ass_color(accent)})"
-            f"\\t({end},{end},\\c{_ass_color(text_color)})}}"
+            f"{{\\c{_ass_color(text_color)}"
+            f"\\t({start},{min(cue_duration, start + SWITCH_MS)},\\c{_ass_color(accent)})"
+            f"\\t({end},{min(cue_duration, end + SWITCH_MS)},\\c{_ass_color(text_color)})}}"
         )
     if preset == "pop":
-        return f"{{\\t({start},{start},\\fscx120\\fscy120)\\t({end},{end},\\fscx100\\fscy100)}}"
+        peak = start + POP_RISE_MS
+        settle = peak + POP_FALL_MS
+        return (
+            f"{{\\t({start},{peak},{POP_EASE},"
+            f"\\fscx{POP_PEAK_PERCENT}\\fscy{POP_PEAK_PERCENT})"
+            f"\\t({peak},{settle},{POP_EASE},\\fscx100\\fscy100)}}"
+        )
     if preset == "appear":
-        return f"{{\\alpha&HFF&\\t({start},{start},\\alpha&H00&)}}"
+        return f"{{\\alpha&HFF&\\t({start},{min(cue_duration, start + SWITCH_MS)},\\alpha&H00&)}}"
     if preset == "one-at-a-time":
-        return f"{{\\alpha&HFF&\\t({start},{start},\\alpha&H00&)\\t({end},{end},\\alpha&HFF&)}}"
+        return (
+            f"{{\\alpha&HFF&\\t({start},{min(cue_duration, start + SWITCH_MS)},\\alpha&H00&)"
+            f"\\t({end},{min(cue_duration, end + SWITCH_MS)},\\alpha&HFF&)}}"
+        )
     return ""
 
 
-def _body(cue, style, animation):
+def _is_cjk(character):
+    return "\u2e80" <= character <= "\u9fff" or "\uf900" <= character <= "\ufaff"
+
+
+def _per_line(style, width, height, cjk):
+    em = height * style["font_size_pct"] / 100
+    advance = (
+        em
+        * (CJK_ADVANCE_EM if cjk else LATIN_ADVANCE_EM)
+        * (BOLD_ADVANCE_FACTOR if style["bold"] else 1)
+    )
+    usable = width * (1 - 2 * style["margin_x_pct"] / 100)
+    return max(1, int(usable / advance + 1e-9))
+
+
+def _is_cjk_text(text):
+    cjk = sum(1 for character in text if _is_cjk(character))
+    other = sum(1 for character in text if not character.isspace() and not _is_cjk(character))
+    return cjk > other
+
+
+def _wrap_text(text, per_line):
+    tokens = text.split(" ")
+    lines = []
+    current = []
+    count = 0
+    for token in tokens:
+        width = len(token)
+        if current and count + width + 1 > per_line:
+            lines.append(" ".join(current))
+            current = []
+            count = 0
+        current.append(token)
+        count += width + (1 if len(current) > 1 else 0)
+    if current:
+        lines.append(" ".join(current))
+    return "\n".join(lines)
+
+
+def _wrap_words(words, per_line):
+    lines = []
+    current = []
+    count = 0
+    for word in words:
+        width = sum(1 for character in word["text"] if not character.isspace())
+        if current and count + width + 1 > per_line:
+            lines.append(current)
+            current = []
+            count = 0
+        current.append(word)
+        count += width + (1 if len(current) > 1 else 0)
+    if current:
+        lines.append(current)
+    wrapped = []
+    for index, line in enumerate(lines):
+        for position, word in enumerate(line):
+            text = word["text"]
+            if position == len(line) - 1 and index < len(lines) - 1:
+                text = text.rstrip() + "\n"
+            wrapped.append({**word, "text": text})
+    return wrapped
+
+
+def _body(cue, style, animation, width, height):
     cue_start = cue["start_ms"]
+    cue_duration = cue["end_ms"] - cue_start
     text = cue["text"].upper() if style["uppercase"] else cue["text"]
+    per_line = _per_line(style, width, height, _is_cjk_text(text))
     emphasis = animation["emphasis"]["preset"]
     if emphasis != "none":
         accent = style["accent_color"]
@@ -115,23 +204,25 @@ def _body(cue, style, animation):
         if emphasis == "karaoke":
             # Sung words fill to the accent, the rest stay in the text colour.
             line = f"{{\\1c{_ass_color(accent)}\\2c{_ass_color(text_color)}}}"
-        for word in cue_words(cue):
+        words = _wrap_words(cue_words(cue), per_line)
+        for word in words:
             word_text = word["text"].upper() if style["uppercase"] else word["text"]
-            line += _emphasis_tags(emphasis, word, cue_start, accent, text_color) + literal_ass(
-                word_text
-            )
+            line += _emphasis_tags(
+                emphasis, word, cue_start, cue_duration, accent, text_color
+            ) + literal_ass(word_text)
         return line
+    wrapped = _wrap_text(text, per_line)
     if animation["in"]["preset"] == "typewriter":
-        duration = min(animation["in"]["duration_ms"], cue["end_ms"] - cue_start)
-        characters = list(text)
+        duration = min(animation["in"]["duration_ms"], cue_duration)
+        characters = list(wrapped)
         if duration > 0 and characters:
             step = duration / len(characters)
             return "".join(
-                f"{{\\alpha&HFF&\\t({round(index * step)},{round(index * step)},\\alpha&H00&)}}"
+                f"{{\\alpha&HFF&\\t({round(index * step)},{round(index * step + step)},\\alpha&H00&)}}"
                 + literal_ass(character)
                 for index, character in enumerate(characters)
             )
-    return literal_ass(text)
+    return literal_ass(wrapped)
 
 
 def event_text(cue, style, width, height):
@@ -145,4 +236,4 @@ def event_text(cue, style, width, height):
         tags += f"{{\\fad({fade_in},{fade_out})}}"
     tags += _in_tags(animation, cue_duration, value, width, height)
     tags += _out_tags(animation, cue_duration, value, width, height)
-    return tags + _body(cue, value, animation)
+    return tags + _body(cue, value, animation, width, height)
