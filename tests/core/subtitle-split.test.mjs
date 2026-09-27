@@ -2,15 +2,19 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { outputFrame } from '../../dist-core/editing/geometry-preview.js';
 import { createProject, parseProject } from '../../dist-core/projects/project.js';
+import { qcThresholdsFromLineLength } from '../../dist-core/subtitles/qc.js';
 import {
   CHINESE_CPS,
   defaultLineLengthSettings,
+  fitCue,
+  fitCueStyle,
   LATIN_CPS,
   lineLengthLimits,
   MIN_ON_SCREEN_MS,
   parseLineLengthSettings,
   splitCue,
   splitCues,
+  TRANSLATION_FONT_FLOOR,
 } from '../../dist-core/subtitles/split.js';
 import { defaultSubtitleStyle } from '../../dist-core/subtitles/style.js';
 
@@ -189,6 +193,31 @@ test('a cue sized for the full 9:16 frame splits where the 1:1 output does not',
   assert.equal(full.length, 2);
   assert.equal(square.length, 1);
   assert.equal(full.map((piece) => piece.text).join(''), square[0].text);
+});
+
+test('a long line shrinks to the floor before it is flagged, and over-speed always flags', () => {
+  const settings = defaultLineLengthSettings;
+  const short = fitCue('Short line', 1000, settings, defaultSubtitleStyle, latinFrame);
+  assert.deepEqual(short, { font_scale: 1, lines: 1, flagged: false });
+  const medium = fitCue('a'.repeat(160), 20000, settings, defaultSubtitleStyle, latinFrame);
+  assert.equal(medium.font_scale, TRANSLATION_FONT_FLOOR);
+  assert.equal(medium.flagged, false);
+  const overflow = fitCue('a'.repeat(400), 20000, settings, defaultSubtitleStyle, latinFrame);
+  assert.equal(overflow.font_scale, TRANSLATION_FONT_FLOOR);
+  assert.equal(overflow.flagged, true);
+  const fast = fitCue('a'.repeat(30), 1000, settings, defaultSubtitleStyle, latinFrame);
+  assert.equal(fast.font_scale, 1);
+  assert.equal(fast.flagged, true);
+  const style = { ...defaultSubtitleStyle, font_size_pct: 10 };
+  assert.equal(fitCueStyle(style, 0.8).font_size_pct, 8);
+  assert.equal(fitCueStyle(style, 1), style);
+});
+
+test('QC thresholds come from the reading-speed settings and the style layout', () => {
+  assert.deepEqual(
+    qcThresholdsFromLineLength(defaultLineLengthSettings, defaultSubtitleStyle, latinFrame, 'Hi'),
+    { maxCharsPerLine: 69, minDurationMs: MIN_ON_SCREEN_MS, maxCps: LATIN_CPS },
+  );
 });
 
 test('line-length settings are strict and survive a project round trip', () => {

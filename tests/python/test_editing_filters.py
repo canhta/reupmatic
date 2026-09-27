@@ -19,6 +19,48 @@ INFO = {"width": 1920, "height": 1080, "has_audio": True, "frame_rate": "30"}
 
 
 class GeometryFilterTests(unittest.TestCase):
+    def test_output_frame_matches_the_core_preview_canvas(self):
+        # Pinned to outputFrame in tests/core/subtitle-split.test.mjs; both sides must agree so the
+        # live subtitle preview and the burn use the same canvas.
+        portrait = {"width": 1080, "height": 1920}
+        self.assertEqual(geometry_filters({}, portrait)[1], (1080, 1920))
+        self.assertEqual(geometry_filters({"rotate": 90}, portrait)[1], (1920, 1080))
+        self.assertEqual(
+            geometry_filters(
+                {"output": {"aspect": "1:1", "fit": "cover", "height": 1080}}, portrait
+            )[1],
+            (1080, 1080),
+        )
+        self.assertEqual(
+            geometry_filters(
+                {"crop": {"x": 0.25, "y": 0, "width": 0.5, "height": 1}},
+                {"width": 1920, "height": 1080},
+            )[1],
+            (960, 1080),
+        )
+
+    def test_cover_band_is_a_static_drawbox_under_the_burn(self):
+        from media.editing.filters import cover_drawbox
+
+        self.assertEqual(cover_drawbox(None, (1920, 1080)), [])
+        band = cover_drawbox(
+            {
+                "x_pct": 0,
+                "y_pct": 80,
+                "width_pct": 100,
+                "height_pct": 15,
+                "color": "#000000",
+                "opacity": 1,
+            },
+            (1920, 1080),
+        )
+        self.assertEqual(
+            band,
+            ["drawbox=x=0:y=864:w=1920:h=162:color=0x000000@1.000000000:t=fill"],
+        )
+        # A static band: no time enable, so animated subtitles draw over it.
+        self.assertNotIn("enable", band[0])
+
     def test_rotate_precedes_crop_and_flip(self):
         edit = parse_editing(
             {

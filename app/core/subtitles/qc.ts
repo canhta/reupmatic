@@ -1,4 +1,11 @@
 import type { Cue } from './cues.js';
+import {
+  type FrameSize,
+  type LineLengthSettings,
+  lineLengthLimits,
+  MIN_ON_SCREEN_MS,
+} from './split.js';
+import type { SubtitleStyle } from './style.js';
 
 export interface QcThresholds {
   maxCharsPerLine: number;
@@ -11,6 +18,21 @@ export const defaultQcThresholds: QcThresholds = {
   minDurationMs: 700,
   maxCps: 20,
 };
+
+/** QC reads the project's reading-speed settings and the real style layout, not fixed constants. */
+export function qcThresholdsFromLineLength(
+  settings: LineLengthSettings,
+  style: SubtitleStyle,
+  frame: FrameSize,
+  text: string,
+): QcThresholds {
+  const limits = lineLengthLimits(text, settings, style, frame);
+  return {
+    maxCharsPerLine: Math.max(1, Math.floor(limits.maxChars / settings.max_lines)),
+    minDurationMs: MIN_ON_SCREEN_MS,
+    maxCps: limits.cps,
+  };
+}
 
 export type QcFlag = 'long-line' | 'too-short' | 'too-fast';
 

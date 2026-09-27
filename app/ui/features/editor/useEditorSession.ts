@@ -74,8 +74,11 @@ import {
   type TextLayerName,
   visibleTextLayer,
 } from '../../../core/subtitles/layers/document';
+import { type QcThresholds, qcThresholdsFromLineLength } from '../../../core/subtitles/qc';
 import {
   defaultLineLengthSettings,
+  fitCue,
+  fitCueStyle,
   type LineLengthSettings,
   splitCue,
 } from '../../../core/subtitles/split';
@@ -129,6 +132,7 @@ export interface EditorSession {
   changeLineLength: (value: LineLengthSettings) => void;
   resplitTranscript: () => boolean;
   transcriptNeedsResplit: boolean;
+  lineLengthThresholds: (text: string) => QcThresholds;
   changeLayerCues: (
     next: Cue[],
     name?: TextLayerName,
@@ -297,10 +301,30 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     media?.height,
     lineLength,
   ]);
-  const renderCues = useMemo(
-    () => (composition ? clipCuesToEnabled(composition, burnCues) : burnCues),
-    [composition, burnCues],
-  );
+  const renderCues = useMemo(() => {
+    const base = composition ? clipCuesToEnabled(composition, burnCues) : burnCues;
+    const style = processing?.subtitle_style ?? defaultSubtitleStyle;
+    const frame = composition
+      ? outputFrame(processing?.editing, composition.canvas)
+      : outputFrame(processing?.editing, {
+          width: media?.width ?? 1920,
+          height: media?.height ?? 1080,
+        });
+    return base.map((cue) => {
+      const fit = fitCue(cue.text, cue.end_ms - cue.start_ms, lineLength, style, frame);
+      return fit.font_scale < 1
+        ? { ...cue, style: fitCueStyle(cue.style ?? style, fit.font_scale) }
+        : cue;
+    });
+  }, [
+    composition,
+    burnCues,
+    processing?.subtitle_style,
+    processing?.editing,
+    lineLength,
+    media?.width,
+    media?.height,
+  ]);
   const duration = composition ? compositionDuration(composition) : (media?.duration_ms ?? 0);
   const report = useCallback((reason: unknown) => {
     setError(reason instanceof Error ? reason.message : 'WORKER_FAILURE');
@@ -412,6 +436,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
           cues: renderCues,
           revision: snapshot,
           asset_id: media.asset_id,
+          ...(processing?.editing ? { editing: processing.editing } : {}),
           ...(processing?.subtitle_style ? { style: processing.subtitle_style } : {}),
         }),
       )
@@ -427,7 +452,16 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       alive = false;
       clearTimeout(timer);
     };
-  }, [renderCues, media, composition, cap?.pysubs2, revision, processing?.subtitle_style, report]);
+  }, [
+    renderCues,
+    media,
+    composition,
+    cap?.pysubs2,
+    revision,
+    processing?.editing,
+    processing?.subtitle_style,
+    report,
+  ]);
 
   function bump() {
     rev.current += 1;
@@ -520,6 +554,15 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   function resplitTranscript(): boolean {
     const transcript = getTextLayer(document.getSnapshot(), 'transcript');
     return changeLayerCues(splitTranscriptCues(transcript.cues), 'transcript');
+  }
+
+  function lineLengthThresholds(text: string): QcThresholds {
+    return qcThresholdsFromLineLength(
+      lineLength,
+      processing?.subtitle_style ?? defaultSubtitleStyle,
+      frameSize(),
+      text,
+    );
   }
 
   function applyLayerCopy(preview: LayerCopyPreview, expectedRevision: number) {
@@ -1036,6 +1079,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     changeLineLength,
     resplitTranscript,
     transcriptNeedsResplit,
+    lineLengthThresholds,
     changeLayerCues,
     applyLayerCopy,
     reviewLayerSource,

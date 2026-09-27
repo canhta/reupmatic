@@ -119,6 +119,47 @@ export interface SplitPiece {
   words: CueWord[];
 }
 
+/** Long translations shrink to this fraction of the style size before they are flagged. */
+export const TRANSLATION_FONT_FLOOR = 0.8;
+
+export interface CueFit {
+  font_scale: number;
+  lines: number;
+  flagged: boolean;
+}
+
+/**
+ * Fits text inside its existing window: wrap to the max lines, then shrink the font down to the
+ * floor. Flagged when it still overflows or reads faster than the reading-speed budget.
+ */
+export function fitCue(
+  text: string,
+  durationMs: number,
+  settings: LineLengthSettings,
+  style: SubtitleStyle,
+  frame: FrameSize,
+): CueFit {
+  const limits = lineLengthLimits(text, settings, style, frame);
+  const perLine = Math.max(1, Math.floor(limits.maxChars / settings.max_lines));
+  const chars = characterCount(text);
+  const lines = Math.max(1, Math.ceil(chars / perLine));
+  const font_scale =
+    lines <= settings.max_lines ? 1 : Math.max(TRANSLATION_FONT_FLOOR, settings.max_lines / lines);
+  const linesAfter = Math.ceil(chars / (perLine / font_scale));
+  const cps = durationMs > 0 ? chars / (durationMs / 1000) : 0;
+  return {
+    font_scale,
+    lines,
+    flagged: linesAfter > settings.max_lines || cps > limits.cps,
+  };
+}
+
+/** The style a fitted cue burns with; only the font size changes, never the window. */
+export function fitCueStyle(style: SubtitleStyle, font_scale: number): SubtitleStyle {
+  if (font_scale >= 1) return style;
+  return { ...style, font_size_pct: Math.max(1, style.font_size_pct * font_scale) };
+}
+
 function piece(words: CueWord[]): SplitPiece {
   return {
     text: words.map((word) => word.text).join(''),

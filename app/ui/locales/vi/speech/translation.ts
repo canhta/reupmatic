@@ -29,6 +29,7 @@ export const translationVi = {
   translationComparison: 'So sánh bản dịch',
   translationGenerated: 'Văn bản vừa tạo',
   translationAfter: 'Kết quả sau khi áp dụng',
+  translationOverSpeed: 'Kết quả sau khi áp dụng — quá nhanh để đọc với độ dài này',
   translationConfirm: 'Tôi đã duyệt so sánh và xác nhận thay toàn bộ câu dịch.',
   translationApply: 'Áp dụng',
   translationDiscard: 'Bỏ kết quả',

@@ -28,6 +28,7 @@ export const translationEn = {
   translationComparison: 'Translation comparison',
   translationGenerated: 'Generated text',
   translationAfter: 'Result after application',
+  translationOverSpeed: 'Result after application — too fast to read at this length',
   translationConfirm: 'I reviewed the comparison and confirm replacing all translated cues.',
   translationApply: 'Apply',
   translationDiscard: 'Discard result',

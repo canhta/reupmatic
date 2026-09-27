@@ -4,6 +4,7 @@ import path from 'node:path';
 import { type BrowserWindow, dialog, shell } from 'electron';
 import { parseComposition } from '../../../core/editing/composition/document.js';
 import { parseEditing } from '../../../core/editing/edit-recipe.js';
+import { outputFrame } from '../../../core/editing/geometry-preview.js';
 import { parseProjectMedia } from '../../../core/editing/project-media.js';
 import type { Soundtrack } from '../../../core/editing/soundtrack.js';
 import { saveChosenExport } from '../../../core/media/files.js';
@@ -221,17 +222,20 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
     return { url: image.url };
   });
   wire('ass', async (input) => {
-    const value = requestRecord(input, ['cues', 'revision', 'style', 'asset_id']);
+    const value = requestRecord(input, ['cues', 'revision', 'style', 'asset_id', 'editing']);
     assertCues(value.cues);
     const revision = requestRevision(value.revision);
     const source = media.getVideo(value.asset_id);
+    // Preview the same canvas the render burns on: the output frame after crop/output, not the source.
+    const editing = value.editing === undefined ? undefined : parseEditing(value.editing);
+    const canvas = outputFrame(editing, { width: source.width, height: source.height });
     return {
       revision,
       ...(await worker.request(
         'subtitles.preview',
         {
           cues: value.cues,
-          canvas: { width: source.width, height: source.height },
+          canvas,
           ...(value.style === undefined ? {} : { style: parseSubtitleStyle(value.style) }),
         },
         revision,

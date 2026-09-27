@@ -244,7 +244,7 @@ export function CuePanel() {
                 {filtered.map((cue) => {
                   const index = indexById.get(cue.id) ?? 0;
                   const isSelected = cue.id === selected;
-                  const flags = cueQcFlags(cue);
+                  const flags = cueQcFlags(cue, editor.lineLengthThresholds(cue.text));
                   const syncState = cueSync.get(cue.id);
                   const syncLabel =
                     syncState === 'deviated'

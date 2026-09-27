@@ -26,6 +26,7 @@ import type {
   TranslationSource,
 } from '../../../../core/speech/translation/rules';
 import { getTextLayer } from '../../../../core/subtitles/layers/document';
+import { cueQcFlags } from '../../../../core/subtitles/qc';
 import { useEditor } from '../../editor/EditorContext';
 import { useEditorGenerators } from '../../editor/EditorGeneratorContext';
 import { LayerLanguageField } from '../../editor/text-layers/LayerLanguageField';
@@ -299,6 +300,13 @@ function TranslationDraftReview({
             ariaLabel={t('translationComparison')}
             entries={ids.map((id) => {
               const sourceCue = source.get(id) ?? before.get(id);
+              const afterCue = after.get(id);
+              const overSpeed = Boolean(
+                afterCue &&
+                  cueQcFlags(afterCue, editor.lineLengthThresholds(afterCue.text)).includes(
+                    'too-fast',
+                  ),
+              );
               return {
                 key: id,
                 time: sourceCue ? `${sourceCue.start_ms / 1000}–${sourceCue.end_ms / 1000}` : '—',
@@ -316,8 +324,8 @@ function TranslationDraftReview({
                   },
                   {
                     key: 'after',
-                    label: t('translationAfter'),
-                    text: after.get(id)?.text ?? '—',
+                    label: overSpeed ? t('translationOverSpeed') : t('translationAfter'),
+                    text: afterCue?.text ?? '—',
                     isPrimary: true,
                   },
                 ],
