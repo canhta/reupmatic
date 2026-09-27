@@ -269,7 +269,6 @@ export function installEditor(host: Host): { recentList(): Promise<RecentEntry[]
       'composition',
       'voice',
       'logo',
-      'line_length',
     ]);
     media.getVideo(value.asset_id);
     if (value.composition) media.authorizeComposition(parseComposition(value.composition));

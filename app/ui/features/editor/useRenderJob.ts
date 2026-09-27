@@ -8,7 +8,6 @@ import { type ProcessingRecipe, parseProcessingRecipe } from '../../../core/proc
 import { RenderTracker } from '../../../core/rendering/render-tracker';
 import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track';
 import type { Cue } from '../../../core/subtitles/cues';
-import type { LineLengthSettings } from '../../../core/subtitles/split';
 import { unwrap } from '../../bridge/client';
 
 export interface Preview {
@@ -26,7 +25,6 @@ interface RenderInput {
   media: PublicVideo | null;
   cues: Cue[];
   revision: number;
-  line_length?: LineLengthSettings;
 }
 
 export function useRenderJob(
@@ -89,7 +87,6 @@ export function useRenderJob(
           ...(input.voice ? { voice: input.voice } : {}),
           ...(input.logo ? { logo: input.logo } : {}),
           ...(input.processing ? { processing: input.processing } : {}),
-          ...(input.line_length ? { line_length: input.line_length } : {}),
         }),
       );
       if (tracker.current.acknowledge(reply.request_id)) {

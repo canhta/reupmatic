@@ -1045,7 +1045,6 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       voice: voiceTrack,
       composition,
       logo: logoMedia,
-      line_length: lineLength,
     });
   }
 

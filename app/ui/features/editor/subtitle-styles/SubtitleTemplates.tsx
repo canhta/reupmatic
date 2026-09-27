@@ -14,6 +14,7 @@ import {
 import { unwrap } from '../../../bridge/client';
 import { recordRendererDiagnostic } from '../../../shell/diagnostics';
 import { useEditor } from '../EditorContext';
+import { jassubFontOptions } from '../jassub-fonts';
 
 const SAMPLE_TEXT = 'Bold words win';
 const SAMPLE_DURATION_MS = 1400;
@@ -103,6 +104,7 @@ function TemplateThumbnail({
         canvas: element,
         subContent: '[Script Info]\nScriptType: v4.00+\n',
         queryFonts: false,
+        ...jassubFontOptions(),
       });
     } catch (reason) {
       fail(reason);
