@@ -200,8 +200,9 @@ test('Electron Settings: a non-missing model code shows its own concise row stat
         .click();
       const processing = settings.getByLabel('AI & processing', { exact: true });
       await processing.getByText('Manifest invalid').first().waitFor();
-      assert.equal(await processing.getByText('Manifest invalid').count(), 2);
+      assert.equal(await processing.getByText('Manifest invalid').count(), 1);
       assert.equal(await processing.getByText('Not configured').count(), 0);
+      assert.equal(await processing.getByText('Object removal', { exact: true }).count(), 0);
     },
   );
 });
