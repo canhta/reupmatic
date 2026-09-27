@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import type { ProcessingProfile, SaveProfile } from '../../../core/profiles/profile-contracts';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
 import { DetailSurface } from '../../design-system/DetailSurface';
+import { useNotifications } from '../../shell/NotificationsProvider';
 import { useCatalog } from '../catalog/CatalogProvider';
 import { useRecordDraft } from '../catalog/useRecordDraft';
 
@@ -46,11 +47,11 @@ export function ProfileManager() {
   const { t, i18n } = useTranslation();
   const catalog = useCatalog();
   const confirm = useConfirmation();
+  const { raise } = useNotifications();
   const draft = useRecordDraft(draftOf);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('active');
   const [page, setPage] = useState(1);
-  const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(false);
   const { value } = draft;
   const disabled = catalog.busy || !catalog.snapshot;
@@ -65,7 +66,7 @@ export function ProfileManager() {
     const result = await catalog.mutate(() => window.reupmatic.profileSave(value));
     if (result) {
       draft.replace(draftOf(result));
-      setMessage(t('catalogSaved'));
+      raise(t('catalogSaved'));
       setEditing(false);
     }
   }
@@ -89,7 +90,7 @@ export function ProfileManager() {
         notes: document.notes,
         processing: document.processing,
       });
-      setMessage(t('profileImportedDraft'));
+      raise(t('profileImportedDraft'));
     }
   }
 
@@ -151,7 +152,7 @@ export function ProfileManager() {
               void catalog.mutate(async () => {
                 const result = await window.reupmatic.profileExport(profile.id);
                 if (result.ok && result.data)
-                  setMessage(t('profileExported', { name: result.data.name }));
+                  raise(t('profileExported', { name: result.data.name }));
                 return result;
               });
             }}
@@ -305,11 +306,6 @@ export function ProfileManager() {
               />
               {draft.dirty && <Text type="supporting">{t('catalogUnsaved')}</Text>}
             </HStack>
-            {message && (
-              <Text as="p" type="body" role="status">
-                {message}
-              </Text>
-            )}
           </VStack>
         </DetailSurface>
       </div>

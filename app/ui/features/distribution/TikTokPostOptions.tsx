@@ -17,6 +17,7 @@ import {
   tiktokDisclosure,
 } from '../../../core/distribution/publishing/tiktok';
 import { unwrap } from '../../bridge/client';
+import { tiktokPrivacyKey } from './publish-copy';
 
 // TikTok's own copies of the policies the consent declaration links to.
 const MUSIC_USAGE_URL = 'https://www.tiktok.com/legal/page/global/music-usage-confirmation/en';
@@ -67,7 +68,7 @@ export function TikTokPostOptions({
   // A paid partnership cannot be private: SELF_ONLY is offered but disabled while it is on.
   const privacyOptions = (settings?.privacy_level_options ?? []).map((option) => ({
     value: option,
-    label: option,
+    label: t(tiktokPrivacyKey(option)),
     disabled: option === 'SELF_ONLY' && options.brand_content_toggle,
   }));
 

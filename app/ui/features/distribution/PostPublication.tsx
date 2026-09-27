@@ -207,7 +207,7 @@ export function PostPublication({
 
       {error && (
         <Text as="p" type="body" className="inline-error" role="alert">
-          {error}
+          {t(error)}
         </Text>
       )}
       {phase === 'failed' && post.publication?.error && (

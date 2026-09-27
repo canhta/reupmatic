@@ -47,3 +47,15 @@ const ERROR_KEYS: Record<string, string> = {
 export function publishErrorKey(code: string): string {
   return ERROR_KEYS[code] ?? 'publishErrorDefault';
 }
+
+// TikTok reports `privacy_level` as an API code; the picker must name it, never echo it.
+const TIKTOK_PRIVACY_KEYS: Record<string, string> = {
+  PUBLIC_TO_EVERYONE: 'tiktokPrivacyPublic',
+  MUTUAL_FOLLOW_FRIENDS: 'tiktokPrivacyFriends',
+  FOLLOWER_OF_CREATOR: 'tiktokPrivacyFollowers',
+  SELF_ONLY: 'tiktokPrivacySelfOnly',
+};
+
+export function tiktokPrivacyKey(code: string): string {
+  return TIKTOK_PRIVACY_KEYS[code] ?? 'tiktokPrivacyOther';
+}
