@@ -73,6 +73,28 @@ class SpeechContracts(unittest.TestCase):
         result["cues"][0]["style"] = {}
         self.assertFalse(validator.is_valid(result))
 
+    def test_result_cues_may_carry_measured_word_timings(self):
+        result = {
+            "kind": "stt",
+            **self.params,
+            "runtime": "controlled@1",
+            "clock": "source",
+            "timing": "segment",
+            "cues": [
+                {
+                    "id": "stt-1",
+                    "start_ms": 1000,
+                    "end_ms": 2000,
+                    "text": "Việt Nam",
+                    "words": [
+                        {"text": "Việt ", "start_ms": 1000, "end_ms": 1400},
+                        {"text": "Nam", "start_ms": 1400, "end_ms": 1900},
+                    ],
+                },
+            ],
+        }
+        self.validator(self.speech["result"]).validate(result)
+
     def test_status_is_a_list_of_engines_and_rejects_the_previous_single_engine_shape(self):
         status_validator = self.validator(self.speech["status"])
         status_validator.validate(

@@ -1,4 +1,4 @@
-import { assertCues, type Cue } from '../subtitles/cues.js';
+import { assertCues, type Cue, remapCueWords } from '../subtitles/cues.js';
 
 export interface TimeRange {
   start_ms: number;
@@ -272,7 +272,16 @@ export function retimeCues(cues: Cue[], window: EditWindow): Cue[] {
       window.duration_ms,
       Math.round((last - window.start_ms) / window.speed),
     );
-    return last > first && end_ms > start_ms ? [{ ...cue, start_ms, end_ms }] : [];
+    return last > first && end_ms > start_ms
+      ? [
+          remapCueWords(
+            cue,
+            (time) => Math.round((time - window.start_ms) / window.speed),
+            start_ms,
+            end_ms,
+          ),
+        ]
+      : [];
   });
   assertCues(result);
   return result;

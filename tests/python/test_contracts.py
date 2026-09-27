@@ -97,6 +97,18 @@ class Contracts(unittest.TestCase):
         cues = [{"id": "a", "start_ms": 10, "end_ms": 20, "text": "Tiếng Việt\nEnglish"}]
         self.validator(self.schemas["cues.schema.json"]).validate(cues)
         validate_cues(cues)
+        with_words = {
+            "id": "b",
+            "start_ms": 0,
+            "end_ms": 1000,
+            "text": "Hello world",
+            "words": [
+                {"text": "Hello ", "start_ms": 0, "end_ms": 400},
+                {"text": "world", "start_ms": 400, "end_ms": 900},
+            ],
+        }
+        self.validator(self.schemas["cues.schema.json"]).validate([with_words])
+        validate_cues([with_words])
         cues[0]["end_ms"] = 5
         with self.assertRaises(WorkerError):
             validate_cues(cues)

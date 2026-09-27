@@ -199,13 +199,46 @@ class SpeechNativeTests(unittest.TestCase):
         result = session.call("speech.transcribe", params, revision=17)
         self.assertEqual(
             result["cues"][0],
-            {"id": "stt-1", "start_ms": 1100, "end_ms": 1300, "text": "Xin chào Việt Nam"},
+            {
+                "id": "stt-1",
+                "start_ms": 1100,
+                "end_ms": 1300,
+                "text": "Xin chào Việt Nam",
+                "words": [
+                    {"text": "Xin", "start_ms": 1100, "end_ms": 1150},
+                    {"text": " chào", "start_ms": 1150, "end_ms": 1200},
+                    {"text": " Việt", "start_ms": 1200, "end_ms": 1250},
+                    {"text": " Nam", "start_ms": 1250, "end_ms": 1300},
+                ],
+            },
         )
         self.assertEqual(
             result["cues"],
             [
-                {"id": "stt-1", "start_ms": 1100, "end_ms": 1300, "text": "Xin chào Việt Nam"},
-                {"id": "stt-2", "start_ms": 1500, "end_ms": 1900, "text": "Nội dung thử nghiệm"},
+                {
+                    "id": "stt-1",
+                    "start_ms": 1100,
+                    "end_ms": 1300,
+                    "text": "Xin chào Việt Nam",
+                    "words": [
+                        {"text": "Xin", "start_ms": 1100, "end_ms": 1150},
+                        {"text": " chào", "start_ms": 1150, "end_ms": 1200},
+                        {"text": " Việt", "start_ms": 1200, "end_ms": 1250},
+                        {"text": " Nam", "start_ms": 1250, "end_ms": 1300},
+                    ],
+                },
+                {
+                    "id": "stt-2",
+                    "start_ms": 1500,
+                    "end_ms": 1900,
+                    "text": "Nội dung thử nghiệm",
+                    "words": [
+                        {"text": "Nội", "start_ms": 1500, "end_ms": 1600},
+                        {"text": " dung", "start_ms": 1600, "end_ms": 1700},
+                        {"text": " thử", "start_ms": 1700, "end_ms": 1800},
+                        {"text": " nghiệm", "start_ms": 1800, "end_ms": 1900},
+                    ],
+                },
             ],
         )
         self.assertEqual(result["source_sha256"], self.original)

@@ -4,8 +4,8 @@ import {
   createTextLayers,
   getTextLayer,
   type LayerOrigin,
+  layerCues,
   parseTextLayers,
-  plainCues,
   sameText,
   type TextLanguage,
   type TextLayerName,
@@ -35,7 +35,7 @@ export function editTextLayer<T extends TextSnapshot>(
 ): T {
   assertCues(value);
   const before = getTextLayer(snapshot, name);
-  const cues = name === 'displayed' ? structuredClone(value) : plainCues(value);
+  const cues = name === 'displayed' ? structuredClone(value) : layerCues(value);
   const language = options.language === undefined ? before.language : options.language;
   const textChanged = !sameText(before.cues, cues) || language !== before.language;
   if (!textChanged && !options.origin) {
@@ -104,7 +104,7 @@ export function previewLayerCopy(
   if (source.stale) throw new Error('TEXT_LAYER_STALE');
   if (!source.cues.length) throw new Error('TEXT_LAYER_EMPTY');
   const styles = new Map(target.cues.map((cue) => [cue.id, cue.style]));
-  const cues = plainCues(source.cues).map((cue) =>
+  const cues = layerCues(source.cues).map((cue) =>
     to === 'displayed' && styles.get(cue.id)
       ? { ...cue, style: structuredClone(styles.get(cue.id)) }
       : cue,

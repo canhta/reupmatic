@@ -55,24 +55,32 @@ def _word_spans(segment, offset_ms: int, end_ms: int) -> list[tuple[str, int, in
     return spans
 
 
-def _size_words(spans: list[tuple[str, int, int]]) -> list[tuple[int, int, str]]:
-    """Split words under the cue character and duration limits, keeping word boundaries."""
-    cues: list[tuple[int, int, str]] = []
-    tokens: list[str] = []
+def _sized_piece(tokens: list[tuple[str, int, int]]) -> tuple[int, int, str, list[dict]]:
+    text = _cue_text([token[0] for token in tokens])
+    words = [{"text": token[0], "start_ms": token[1], "end_ms": token[2]} for token in tokens]
+    # `_cue_text` trims the outer whitespace, so the word texts must trim the same edges to rejoin.
+    words[0]["text"] = words[0]["text"].lstrip()
+    words[-1]["text"] = words[-1]["text"].rstrip()
+    return tokens[0][1], tokens[-1][2], text, [word for word in words if word["text"]]
+
+
+def _size_words(spans: list[tuple[str, int, int]]) -> list[tuple[int, int, str, list[dict]]]:
+    """Split words under the cue character and duration limits, keeping word timings."""
+    cues: list[tuple[int, int, str, list[dict]]] = []
+    tokens: list[tuple[str, int, int]] = []
     begin = 0
-    last = 0
     for text, start, finish in spans:
         if tokens and (
-            len(_cue_text([*tokens, text])) > MAX_CUE_CHARS or finish - begin > MAX_CUE_MS
+            len(_cue_text([*[token[0] for token in tokens], text])) > MAX_CUE_CHARS
+            or finish - begin > MAX_CUE_MS
         ):
-            cues.append((begin, last, _cue_text(tokens)))
+            cues.append(_sized_piece(tokens))
             tokens = []
         if not tokens:
             begin = start
-        tokens.append(text)
-        last = finish
+        tokens.append((text, start, finish))
     if tokens:
-        cues.append((begin, last, _cue_text(tokens)))
+        cues.append(_sized_piece(tokens))
     return cues
 
 
@@ -108,14 +116,16 @@ def timed_segments(
         if first < previous or last <= first:
             raise WorkerError("SPEECH_TIMING_INVALID")
         spans = _word_spans(segment, start_ms, end_ms)
-        pieces = _size_words(spans) if spans else [(first, last, text.strip())]
-        for piece_first, piece_last, piece_text in pieces:
+        pieces = _size_words(spans) if spans else [(first, last, text.strip(), [])]
+        for piece_first, piece_last, piece_text, piece_words in pieces:
             cue = {
                 "id": f"stt-{len(cues) + 1}",
                 "start_ms": piece_first,
                 "end_ms": piece_last,
                 "text": piece_text,
             }
+            if piece_words:
+                cue["words"] = piece_words
             size += len(json.dumps(cue, ensure_ascii=False).encode("utf-8"))
             if size > 900000:
                 raise WorkerError("SPEECH_RESULT_TOO_LARGE")

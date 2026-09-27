@@ -16,7 +16,13 @@ import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type Cue, mergeNext, splitCue } from '../../../core/subtitles/cues';
+import {
+  type Cue,
+  mergeNext,
+  setCueText,
+  setCueTime,
+  splitCue,
+} from '../../../core/subtitles/cues';
 import {
   getTextLayer,
   type TextLanguage,
@@ -53,8 +59,12 @@ export function CuePanel() {
     return needle ? cues.filter((cue) => cue.text.toLowerCase().includes(needle)) : cues;
   }, [cues, query]);
 
-  function update(id: string, patch: Partial<Cue>) {
-    change(cues.map((cue) => (cue.id === id ? { ...cue, ...patch } : cue)));
+  function updateText(id: string, text: string) {
+    change(cues.map((cue) => (cue.id === id ? setCueText(cue, text) : cue)));
+  }
+
+  function updateTime(id: string, start_ms: number, end_ms: number) {
+    change(cues.map((cue) => (cue.id === id ? setCueTime(cue, start_ms, end_ms) : cue)));
   }
 
   function add() {
@@ -265,7 +275,7 @@ export function CuePanel() {
                                       caret.current = event.target.selectionStart;
                                     }
                                   }}
-                                  onChange={(text) => update(cue.id, { text })}
+                                  onChange={(text) => updateText(cue.id, text)}
                                 />
                                 <HStack gap={2} vAlign="end" wrap="wrap" hAlign="between">
                                   <HStack gap={2} vAlign="end" wrap="wrap">
@@ -273,13 +283,13 @@ export function CuePanel() {
                                       label={`${t('start')} ${index + 1}`}
                                       value={cue.start_ms}
                                       onFocus={() => setSelected(cue.id)}
-                                      onCommit={(value) => update(cue.id, { start_ms: value })}
+                                      onCommit={(value) => updateTime(cue.id, value, cue.end_ms)}
                                     />
                                     <TimeInput
                                       label={`${t('end')} ${index + 1}`}
                                       value={cue.end_ms}
                                       onFocus={() => setSelected(cue.id)}
-                                      onCommit={(value) => update(cue.id, { end_ms: value })}
+                                      onCommit={(value) => updateTime(cue.id, cue.start_ms, value)}
                                     />
                                   </HStack>
                                   <MoreMenu

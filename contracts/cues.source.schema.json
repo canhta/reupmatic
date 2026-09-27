@@ -26,6 +26,33 @@
         "type": "string",
         "maxLength": 10000
       },
+      "words": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 2000,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "start_ms", "end_ms"],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10000
+            },
+            "start_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "end_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            }
+          }
+        }
+      },
       "style": {
         "type": "object",
         "additionalProperties": false,
@@ -116,5 +143,5 @@
     "required": ["id", "start_ms", "end_ms", "text"],
     "additionalProperties": false
   },
-  "$comment": "Unique IDs, end > start, NUL rejection and source-duration checks are semantic validation, not fully expressible here. Integer milliseconds. Display text only; not spoken-text authorization."
+  "$comment": "Unique IDs, end > start, NUL rejection and source-duration checks are semantic validation, not fully expressible here. Optional `words` are measured word timings inside the cue, ordered and joining back to `text`; absent means render-time estimation. Integer milliseconds. Display text only; not spoken-text authorization."
 }

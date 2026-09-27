@@ -1,4 +1,4 @@
-import { assertCues, type Cue } from './cues.js';
+import { assertCues, type Cue, remapCueWords, setCueText } from './cues.js';
 
 export interface TextRule {
   mode: 'literal' | 'regex';
@@ -86,7 +86,7 @@ export function previewTextRule(cues: Cue[], input: TextRule, ids?: string[]): T
     replacements += matches;
     outputBytes += encoder.encode(text).length;
     if (text.length > 10000 || outputBytes > 1024 * 1024) throw new Error('TEXT_RULE_LIMIT');
-    return { ...cue, text };
+    return text === cue.text ? { ...cue } : setCueText(cue, text);
   });
   assertCues(result);
   return { cues: result, matched_cues, replacements, changes };
@@ -108,7 +108,7 @@ export function shiftCueTimes(cues: Cue[], delta: number, duration: number, ids?
     const start_ms = cue.start_ms + delta,
       end_ms = cue.end_ms + delta;
     if (start_ms < 0 || end_ms > duration) throw new Error('SUBTITLE_SHIFT_RANGE');
-    return { ...cue, start_ms, end_ms };
+    return remapCueWords(cue, (time) => time + delta, start_ms, end_ms);
   });
   assertCues(shifted);
   return shifted;

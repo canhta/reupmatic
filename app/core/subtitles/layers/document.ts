@@ -171,6 +171,17 @@ export function plainCues(cues: Cue[]): Cue[] {
   return cues.map(({ id, start_ms, end_ms, text }) => ({ id, start_ms, end_ms, text }));
 }
 
+/** A non-display layer keeps measured words but never visual style. */
+export function layerCues(cues: Cue[]): Cue[] {
+  return cues.map(({ id, start_ms, end_ms, text, words }) => ({
+    id,
+    start_ms,
+    end_ms,
+    text,
+    ...(words ? { words: structuredClone(words) } : {}),
+  }));
+}
+
 export function sameText(left: Cue[], right: Cue[]): boolean {
   return JSON.stringify(plainCues(left)) === JSON.stringify(plainCues(right));
 }
