@@ -113,6 +113,10 @@
   align-items: center;
   justify-content: center;
 }
+/* A disabled composition span: the worker renders black, so the monitor shows none of the clip. */
+.source-empty-frame {
+  background: var(--video-pad);
+}
 .monitor-clock {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);

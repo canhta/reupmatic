@@ -2,6 +2,7 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import {
   type Composition,
   compositionDuration,
+  compositionPosition,
   compositionSpans,
 } from '../../../../core/editing/composition/document';
 import type { PublicVideo } from '../../../../core/media/media-contracts';
@@ -49,10 +50,12 @@ export function useSourcePreview(
         return;
       }
       if (!ready.current) return;
-      const span = compositionSpans(composition).find(
-        (value) => value.start_ms <= time && value.end_ms > time,
-      );
-      if (!span) {
+      // A disabled span has no frame: the export renders black there, so preview nothing.
+      const position = compositionPosition(composition, time);
+      const span = position
+        ? compositionSpans(composition).find((value) => value.clip.id === position.clip_id)
+        : undefined;
+      if (!position || !span) {
         current.current = null;
         setSelection(null);
         setNoClipAtPosition(true);
@@ -70,7 +73,7 @@ export function useSourcePreview(
         offset: span.start_ms,
         speed: span.clip.speed,
       };
-      pending.current = selected.start + (time - selected.offset) * selected.speed;
+      pending.current = position.source_ms;
       if (current.current?.id === selected.id && video.current) {
         video.current.currentTime = pending.current / 1000;
         video.current.playbackRate = selected.speed;

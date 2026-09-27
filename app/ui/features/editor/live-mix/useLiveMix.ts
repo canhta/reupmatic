@@ -306,7 +306,11 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     stopSources();
     graph.anchorCtx = graph.context.currentTime;
     graph.anchorMediaMs = mediaTimeMs;
-    graph.rate = graph.source.mediaElement?.playbackRate || 1;
+    // A composition's output clock advances at 1x; the element's rate is the clip's speed.
+    graph.rate = liveMixClockRate(
+      Boolean(input.composition),
+      graph.source.mediaElement?.playbackRate || 1,
+    );
 
     const music = input.soundtrack;
     if (graph.musicBuffer && music) {

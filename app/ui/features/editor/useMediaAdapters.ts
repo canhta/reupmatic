@@ -11,14 +11,14 @@ import { jassubFontOptions } from './jassub-fonts';
  * the editor clock because the canvas is not the source video element.
  */
 export function useSubtitleOverlay(canvas: RefObject<HTMLCanvasElement | null>) {
-  const { media, composition, ass, getRevision, clock, subtitleCanvas, report } = useEditor();
+  const { media, ass, getRevision, clock, subtitleCanvas, report, sourceEmpty } = useEditor();
   const renderer = useRef<JASSUB | null>(null);
   const clockRef = useRef(clock);
   clockRef.current = clock;
 
   useEffect(() => {
     const element = canvas.current;
-    if (composition || !element || !media) return;
+    if (!element || !media || sourceEmpty) return;
     let instance: JASSUB;
     let alive = true;
     let frame = 0;
@@ -66,7 +66,7 @@ export function useSubtitleOverlay(canvas: RefObject<HTMLCanvasElement | null>) 
       renderer.current = null;
       void instance.destroy();
     };
-  }, [composition, media, canvas, subtitleCanvas.width, subtitleCanvas.height, report]);
+  }, [media, canvas, subtitleCanvas.width, subtitleCanvas.height, sourceEmpty, report]);
 
   useEffect(() => {
     const instance = renderer.current;

@@ -351,12 +351,18 @@ export function MediaStage() {
                 <canvas ref={subtitleCanvas} className="JASSUB subtitle-overlay" />
               </div>
             )
-          ) : (
-            <EmptyState
-              isCompact
-              className="video-placeholder"
-              title={t(editor.sourceEmpty ? 'sourceEmpty' : 'sourceLoading')}
+          ) : editor.sourceEmpty ? (
+            // The export renders a disabled span as black; the monitor matches it.
+            <div
+              className="source-frame source-empty-frame"
+              style={{
+                width: `min(100cqw, 100cqh * ${media.width / media.height})`,
+                height: `min(100cqh, 100cqw / ${media.width / media.height})`,
+              }}
+              aria-hidden="true"
             />
+          ) : (
+            <EmptyState isCompact className="video-placeholder" title={t('sourceLoading')} />
           )}
         </div>
       </div>

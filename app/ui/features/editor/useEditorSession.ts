@@ -407,7 +407,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   }, [mediaKey]);
 
   useEffect(() => {
-    if (!media || composition || !cap?.pysubs2) {
+    if (!media || !cap?.pysubs2) {
       setAss(null);
       return;
     }
@@ -420,6 +420,8 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
           revision: snapshot,
           asset_id: media.asset_id,
           line_length: lineLength,
+          // A composition burns on its output frame; renderCues already drops disabled spans.
+          ...(composition ? { canvas: subtitleCanvas } : {}),
           ...(processing?.editing ? { editing: processing.editing } : {}),
           ...(processing?.subtitle_style ? { style: processing.subtitle_style } : {}),
         }),
@@ -445,6 +447,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     processing?.editing,
     processing?.subtitle_style,
     lineLength,
+    subtitleCanvas,
     report,
   ]);
 
