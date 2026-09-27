@@ -155,6 +155,7 @@ class SpeechContracts(unittest.TestCase):
         self.validator(self.layers).validate(layers)
         project = {
             "format": "reupmatic.project",
+            "name": "test",
             "source": {"path": "/source.mp4", "sha256": "a" * 64},
             "cues": [],
             "text_layers": layers,

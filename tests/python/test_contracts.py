@@ -57,6 +57,7 @@ class Contracts(unittest.TestCase):
         v = self.validator(self.schemas["project.schema.json"])
         example = {
             "format": "reupmatic.project",
+            "name": "test",
             "source": {"path": "/videos/test.mp4", "sha256": "a" * 64},
             "cues": [],
         }

@@ -54,6 +54,7 @@ class MediaContracts(unittest.TestCase):
     def test_project_and_recipe_accept_style_and_audio_without_ai(self):
         project = {
             "format": "reupmatic.project",
+            "name": "test",
             "source": {"path": "/video.mp4", "sha256": "b" * 64},
             "cues": [
                 {"id": "1", "start_ms": 0, "end_ms": 1000, "text": "Việt", "style": DEFAULT_STYLE}

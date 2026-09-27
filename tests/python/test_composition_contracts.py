@@ -43,6 +43,7 @@ class CompositionContracts(unittest.TestCase):
         self.validator(schema).validate(self.composition)
         project = {
             "format": "reupmatic.project",
+            "name": "test",
             "source": {"path": "/video.mp4", "sha256": "a" * 64},
             "cues": [],
             "composition": self.composition,
