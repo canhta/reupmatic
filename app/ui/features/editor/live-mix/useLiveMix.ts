@@ -247,7 +247,9 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
 
   async function voiceUrl(track: VoiceTrack): Promise<string> {
     return (
-      await unwrap<{ url: string }>(window.reupmatic.synthesisPreview(track.artifact.artifact_id))
+      await unwrap<{ url: string }>(
+        window.reupmatic.synthesisPreview(track.artifact.artifact_id, track.artifact.sha256),
+      )
     ).url;
   }
 

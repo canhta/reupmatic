@@ -78,6 +78,21 @@ test('real TS coordinator and Python worker promote an auditionable PCM artifact
   assert.equal((await f.worker.request('hello', {}).result).protocol, 1);
 });
 
+test('a re-created artifact store serves a preview by hash and receipt', async (t) => {
+  const f = await native(t);
+  const result = await f.coordinator.start(f.input).result;
+  const reopened = new SynthesisArtifacts(f.workspace);
+  const filename = await reopened.verifyReference({
+    artifact_id: result.artifact_id,
+    sha256: result.sha256,
+  });
+  assert.equal(Buffer.from(await readFile(filename)).toString('ascii', 0, 4), 'RIFF');
+  await assert.rejects(
+    reopened.verifyReference({ artifact_id: result.artifact_id, sha256: '0'.repeat(64) }),
+    /SYNTHESIS_ARTIFACT_ALTERED/,
+  );
+});
+
 test('real worker failure preserves an earlier admitted speech artifact and stays usable', async (t) => {
   const f = await native(t);
   const first = await f.coordinator.start(f.input).result;

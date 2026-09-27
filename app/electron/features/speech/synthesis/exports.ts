@@ -32,10 +32,12 @@ export function installSynthesisExports(host: Host) {
     if (closing || cancelled) throw new Error('CANCELLED');
   };
   host.wire('synthesis-preview', async (input) => {
-    const id = input.artifact_id;
-    const filename = await host.artifacts.verify(id);
+    const filename = await host.artifacts.verifyReference({
+      artifact_id: input.artifact_id,
+      sha256: input.sha256,
+    });
     if (closing) throw new Error('APP_CLOSING');
-    const grant = `synthesis-${id}`;
+    const grant = `synthesis-${input.artifact_id}`;
     host.media.registerArtifact(grant, filename);
     return { url: `media://local/${grant}` };
   });

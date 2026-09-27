@@ -52,12 +52,14 @@ export const synthesisOperations = {
     validate: () => undefined,
     toRequest: () => undefined,
   }),
-  'synthesis-preview': operation<{ artifact_id: string }, { url: string }>()({
+  // The reference carries its own hash so a reopened store never trusts an in-memory grant.
+  'synthesis-preview': operation<{ artifact_id: string; sha256: string }, { url: string }>()({
     rendererMethod: 'synthesisPreview',
-    validate: (input) => ({
-      artifact_id: requestId(requestRecord(input, ['artifact_id']).artifact_id),
-    }),
-    toRequest: (id: string) => ({ artifact_id: id }),
+    validate: (input) => {
+      const value = requestRecord(input, ['artifact_id', 'sha256']);
+      return { artifact_id: requestId(value.artifact_id), sha256: hash(value.sha256) };
+    },
+    toRequest: (id: string, sha256: string) => ({ artifact_id: id, sha256 }),
   }),
   'synthesis-choose-export': operation<
     { artifact_id: string; kind: 'wav' | 'receipt' },

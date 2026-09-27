@@ -96,7 +96,9 @@ export function SynthesisReview({
     try {
       assertCurrent();
       if (kind === 'listen') {
-        const result = await unwrap(window.reupmatic.synthesisPreview(draft.result.artifact_id));
+        const result = await unwrap(
+          window.reupmatic.synthesisPreview(draft.result.artifact_id, draft.result.sha256),
+        );
         assertCurrent();
         if (aborted.current) throw new Error('CANCELLED');
         if (result.url !== `media://local/synthesis-${draft.result.artifact_id}`)
