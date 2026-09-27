@@ -37,8 +37,10 @@ export function remapCompositionCues(
           target.start_ms + Math.round((end - target.clip.start_ms) / target.clip.speed),
         );
         if (end_ms <= start_ms) continue;
+        const first = pieces === 0;
+        pieces += 1;
         let id = cue.id;
-        if (pieces++) {
+        if (!first) {
           let suffix = pieces;
           do {
             id = `${cue.id.slice(0, 110)}~${suffix++}`;
@@ -46,7 +48,14 @@ export function remapCompositionCues(
           used.add(id);
         }
         if (result.length >= 10000) throw new Error('COMPOSITION_CUE_LIMIT');
-        result.push({ ...structuredClone(cue), id, start_ms, end_ms });
+        // The first piece keeps the source link; the extras record the cue they were cut from.
+        result.push({
+          ...structuredClone(cue),
+          id,
+          start_ms,
+          end_ms,
+          ...(first ? {} : { split_from_cue_id: cue.id }),
+        });
       }
     }
   }

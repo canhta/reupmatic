@@ -59,6 +59,12 @@
         "maxLength": 128,
         "pattern": "^[^\\u0000]+$"
       },
+      "split_from_cue_id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[^\\u0000]+$"
+      },
       "style": {
         "type": "object",
         "additionalProperties": false,

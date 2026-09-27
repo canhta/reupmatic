@@ -104,11 +104,14 @@ export function previewLayerCopy(
   if (source.stale) throw new Error('TEXT_LAYER_STALE');
   if (!source.cues.length) throw new Error('TEXT_LAYER_EMPTY');
   const styles = new Map(target.cues.map((cue) => [cue.id, cue.style]));
-  const cues = layerCues(source.cues).map((cue) =>
-    to === 'displayed' && styles.get(cue.id)
-      ? { ...cue, style: structuredClone(styles.get(cue.id)) }
-      : cue,
-  );
+  // A copied cue records the source cue it came from explicitly; sync never guesses by id.
+  const cues = layerCues(source.cues).map(({ split_from_cue_id: _split, ...cue }) => ({
+    ...cue,
+    source_cue_id: cue.id,
+    ...(to === 'displayed' && styles.get(cue.id)
+      ? { style: structuredClone(styles.get(cue.id)) }
+      : {}),
+  }));
   return {
     from,
     to,

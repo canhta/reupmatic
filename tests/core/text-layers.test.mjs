@@ -81,6 +81,14 @@ test('copy is previewed, explicit, detached and stale targets or sources cannot 
   assert.equal(getTextLayer(copied, 'spoken').origin.kind, 'copy');
 });
 
+test('copying records explicit per-cue provenance for the derived layer', () => {
+  const s = copy(empty(), 'displayed', 'translated');
+  assert.deepEqual(
+    getTextLayer(s, 'translated').cues.map((cue) => cue.source_cue_id),
+    ['cue-1'],
+  );
+});
+
 test('upstream text edits invalidate descendants without replacing their text', () => {
   let s = editTextLayer(empty(), 'transcript', [cue('Source')]);
   s = copy(s, 'transcript', 'translated');

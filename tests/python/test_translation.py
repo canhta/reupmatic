@@ -92,11 +92,15 @@ class TranslationValidationTests(unittest.TestCase):
             "source_cue_id": "one",
         }
         validate_cues([linked])
+        validate_cues([{**linked, "split_from_cue_id": "one"}])
         for bad in [
             {**linked, "source_cue_id": ""},
             {**linked, "source_cue_id": "x" * 129},
             {**linked, "source_cue_id": "a\x00b"},
             {**linked, "source_cue_id": 1},
+            {**linked, "split_from_cue_id": ""},
+            {**linked, "split_from_cue_id": "x" * 129},
+            {**linked, "split_from_cue_id": 1},
             {**linked, "extra": True},
         ]:
             with self.subTest(bad=bad), self.assertRaises(WorkerError):

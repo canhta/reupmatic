@@ -274,4 +274,7 @@ Every translated cue records the source cue it came from (`source_cue_id`) and k
 source cue's exact `start_ms`/`end_ms`; core and worker reject a result that moves the window
 or changes the link, and never retime a translation when its source layer changes — the derived
 layer is marked stale instead. Hand retiming a translated cue is a deliberate, visible
-deviation from its source.
+deviation from its source. A layer copied into "translated" records the same explicit link on
+every cue, and a cue with no link is reported as unlinked rather than matched by id. A
+composition split keeps the first piece's source link and marks the extra pieces with
+`split_from_cue_id`, so they pair with the matching source piece instead of reading as drift.

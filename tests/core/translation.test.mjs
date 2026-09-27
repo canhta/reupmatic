@@ -256,6 +256,79 @@ test('translated cues report drift against their source and hand-retiming is a d
   assert.equal(translatedCueSync(withoutSource).find((cue) => cue.id === 'two')?.state, 'detached');
 });
 
+test('a copied translated cue records explicit provenance and never matches by id', () => {
+  const doc = editTextLayer(document(), 'displayed', [cue('display-1', 'Hello')], {
+    language: 'en',
+  });
+  const next = applyLayerCopy(doc, previewLayerCopy(doc, 'displayed', 'translated'));
+  assert.deepEqual(
+    getTextLayer(next, 'translated').cues.map((cue) => cue.source_cue_id),
+    ['display-1'],
+  );
+  assert.deepEqual(
+    translatedCueSync(next).map((cue) => [cue.id, cue.state]),
+    [['display-1', 'linked']],
+  );
+  // A cue whose id matches a source cue but carries no link is not guessed as linked.
+  const manual = editTextLayer(next, 'translated', [
+    { id: 'display-1', start_ms: 0, end_ms: 1000, text: 'Manual line' },
+  ]);
+  assert.equal(translatedCueSync(manual)[0].state, 'unlinked');
+});
+
+test('a composition split keeps both translated pieces linked to their source', async () => {
+  const { editCompositionSnapshot } = await import(
+    '../../dist-core/editing/composition/snapshot.js'
+  );
+  let doc = document();
+  doc.composition = {
+    canvas: { width: 320, height: 180, fps: 30 },
+    clips: [
+      {
+        id: 'clip-a',
+        source: { path: '/source.mp4', name: 'source.mp4', sha256: model, duration_ms: 4000 },
+        start_ms: 0,
+        end_ms: 4000,
+        speed: 1,
+        enabled: true,
+      },
+    ],
+  };
+  doc = editTextLayer(
+    doc,
+    'transcript',
+    [{ id: 'one', start_ms: 0, end_ms: 4000, text: 'Hello' }],
+    {
+      language: 'en',
+    },
+  );
+  const request = input(doc);
+  const translated = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const split = editCompositionSnapshot(translated, [
+    { kind: 'split', id: 'clip-a', at_ms: 2000, new_id: 'clip-b' },
+  ]);
+  const cues = getTextLayer(split, 'translated').cues;
+  assert.equal(cues.length, 2);
+  assert.equal(cues[0].id, 'one');
+  assert.equal(cues[0].source_cue_id, 'one');
+  assert.equal(cues[1].id, 'one~2');
+  assert.equal(cues[1].source_cue_id, 'one');
+  assert.equal(cues[1].split_from_cue_id, 'one');
+  assert.deepEqual(
+    translatedCueSync(split).map((cue) => [cue.id, cue.state]),
+    [
+      ['one', 'linked'],
+      ['one~2', 'linked'],
+    ],
+  );
+  const retimed = editTextLayer(
+    split,
+    'translated',
+    cues.map((cue) => (cue.id === 'one~2' ? { ...cue, end_ms: cue.end_ms - 100 } : cue)),
+  );
+  assert.equal(translatedCueSync(retimed).find((cue) => cue.id === 'one~2')?.state, 'deviated');
+});
+
 test('a source retime or delete marks the translation stale without retiming its cues', () => {
   const doc = document(),
     request = input(doc);

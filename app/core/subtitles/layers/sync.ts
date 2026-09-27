@@ -6,7 +6,7 @@ import {
   type TextSnapshot,
 } from './document.js';
 
-export type CueSyncState = 'linked' | 'deviated' | 'detached';
+export type CueSyncState = 'linked' | 'deviated' | 'detached' | 'unlinked';
 
 export interface CueSync {
   id: string;
@@ -14,7 +14,7 @@ export interface CueSync {
   state: CueSyncState;
 }
 
-/** The layer a translated layer was produced from; null when it has no upstream link. */
+/** The layer a derived (translated or copied) layer was produced from. */
 export function translatedSourceLayer(snapshot: TextSnapshot): TextLayerName | null {
   const layers = snapshot.text_layers ?? createTextLayers();
   const origin = layers.translated.origin;
@@ -22,8 +22,14 @@ export function translatedSourceLayer(snapshot: TextSnapshot): TextLayerName | n
   return null;
 }
 
-function link(cue: Cue, source: Cue | undefined): CueSync {
-  if (!source) return { id: cue.id, source_cue_id: cue.source_cue_id ?? null, state: 'detached' };
+function link(cue: Cue, sourceById: Map<string, Cue>): CueSync {
+  if (!cue.source_cue_id) return { id: cue.id, source_cue_id: null, state: 'unlinked' };
+  // A composition split gives every layer's piece the same derived id, so a marked piece pairs
+  // with the source cue of that id; every other cue pairs with its recorded source cue.
+  const source =
+    (cue.split_from_cue_id ? sourceById.get(cue.id) : undefined) ??
+    sourceById.get(cue.source_cue_id);
+  if (!source) return { id: cue.id, source_cue_id: cue.source_cue_id, state: 'detached' };
   return {
     id: cue.id,
     source_cue_id: source.id,
@@ -37,5 +43,5 @@ export function translatedCueSync(snapshot: TextSnapshot): CueSync[] {
   const sourceName = translatedSourceLayer(snapshot);
   if (!sourceName) return [];
   const source = new Map(getTextLayer(snapshot, sourceName).cues.map((cue) => [cue.id, cue]));
-  return translated.cues.map((cue) => link(cue, source.get(cue.source_cue_id ?? cue.id)));
+  return translated.cues.map((cue) => link(cue, source));
 }

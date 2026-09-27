@@ -13,10 +13,21 @@ export interface Cue {
   style?: SubtitleStyle;
   /** Word timings measured from speech; absent means render-time estimation. */
   words?: CueWord[];
-  /** The source cue a translated line was produced from, so drift stays visible. */
+  /** The source cue a derived (translated or copied) line was produced from. */
   source_cue_id?: string;
+  /** Set on the extra pieces of a composition split; the cue they were cut from. */
+  split_from_cue_id?: string;
 }
-const CUE_KEYS = ['id', 'start_ms', 'end_ms', 'text', 'style', 'words', 'source_cue_id'];
+const CUE_KEYS = [
+  'id',
+  'start_ms',
+  'end_ms',
+  'text',
+  'style',
+  'words',
+  'source_cue_id',
+  'split_from_cue_id',
+];
 const WORD_KEYS = ['text', 'start_ms', 'end_ms'];
 const MAX_CUE_WORDS = 2000;
 
@@ -60,6 +71,13 @@ function wordsJoin(
   return joined === text;
 }
 
+/** Optional cue references are token-like ids; empty or NUL values are invalid. */
+function cueReference(value: unknown): boolean {
+  return (
+    typeof value === 'string' && value.length > 0 && value.length <= 128 && !value.includes('\0')
+  );
+}
+
 export function assertCues(cues: unknown): asserts cues is Cue[] {
   if (!Array.isArray(cues)) throw new Error('INVALID_CUES');
   const seen = new Set<string>();
@@ -88,13 +106,8 @@ export function assertCues(cues: unknown): asserts cues is Cue[] {
     if ('style' in c) parseSubtitleStyle(c.style);
     if ('words' in c && !wordsJoin(c.text, c.start_ms, c.end_ms, c.words))
       throw new Error('INVALID_CUES');
-    if (
-      'source_cue_id' in c &&
-      (typeof c.source_cue_id !== 'string' ||
-        !c.source_cue_id ||
-        c.source_cue_id.length > 128 ||
-        c.source_cue_id.includes('\0'))
-    )
+    if ('source_cue_id' in c && !cueReference(c.source_cue_id)) throw new Error('INVALID_CUES');
+    if ('split_from_cue_id' in c && !cueReference(c.split_from_cue_id))
       throw new Error('INVALID_CUES');
     seen.add(c.id);
   }
