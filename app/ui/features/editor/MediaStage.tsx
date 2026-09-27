@@ -1,7 +1,6 @@
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -62,7 +61,7 @@ function clockText(milliseconds: number): string {
   return `${Math.floor(total / 60)}:${(total % 60).toString().padStart(2, '0')}`;
 }
 
-export function MediaStage({ isWide }: { isWide: boolean }) {
+export function MediaStage() {
   const { t } = useTranslation();
   const editor = useEditor();
   const { activeTool } = useEditorTools();
@@ -174,13 +173,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
         className="monitor-header"
       >
         <StackItem size="fill">
-          {isWide ? (
-            <Heading level={5} maxLines={1}>
-              {t('monitorTitle')}
-            </Heading>
-          ) : (
-            <VisuallyHidden as="h5">{t('monitorTitle')}</VisuallyHidden>
-          )}
+          <VisuallyHidden as="h5">{t('monitorTitle')}</VisuallyHidden>
         </StackItem>
         {stale && (
           <StackItem className="monitor-header-badge">
@@ -322,7 +315,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                     />
                   )}
-                  <canvas ref={subtitleCanvas} className="subtitle-overlay" />
+                  <canvas ref={subtitleCanvas} className="JASSUB subtitle-overlay" />
                 </div>
               </div>
             ) : (
@@ -353,7 +346,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                   }
                   onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                 />
-                <canvas ref={subtitleCanvas} className="subtitle-overlay" />
+                <canvas ref={subtitleCanvas} className="JASSUB subtitle-overlay" />
               </div>
             )
           ) : (

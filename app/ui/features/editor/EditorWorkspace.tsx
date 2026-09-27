@@ -169,7 +169,7 @@ function EditorStudio() {
           />
         )}
         <section className="editor-viewer-region" aria-label={t('mainStageLabel')}>
-          <MediaStage isWide={isWide} />
+          <MediaStage />
         </section>
         {}
         <div className="editor-tool-panel-handle" hidden={!isWide || !toolPanelOpen}>
