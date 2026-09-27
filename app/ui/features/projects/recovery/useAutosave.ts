@@ -10,11 +10,14 @@ interface Context {
   revision: number;
   dirty: boolean;
   opening: boolean;
+  projectPath: string | null;
 }
 interface Draft {
   id: string;
   storedRevision: number;
   savedEditorRevision: number;
+  /** A recovered draft this document supersedes, dropped once its work is saved. */
+  source?: { id: string; revision: number };
 }
 interface Status {
   key: string;
@@ -25,13 +28,20 @@ interface Status {
 export function useAutosave(context: Context) {
   const latest = useRef(context);
   latest.current = context;
+  const pending = useRef<{ id: string; revision: number } | null>(null);
   const draft = useRef<Draft>({
     id: context.documentId,
     storedRevision: 0,
     savedEditorRevision: -1,
   });
   if (draft.current.id !== context.documentId) {
-    draft.current = { id: context.documentId, storedRevision: 0, savedEditorRevision: -1 };
+    draft.current = {
+      id: context.documentId,
+      storedRevision: 0,
+      savedEditorRevision: -1,
+      ...(pending.current ? { source: pending.current } : {}),
+    };
+    pending.current = null;
   }
   const queue = useRef<Promise<void>>(Promise.resolve());
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -55,10 +65,14 @@ export function useAutosave(context: Context) {
             expected_revision: record.storedRevision,
             asset_id,
             snapshot,
+            ...(captured.projectPath ? { project_path: captured.projectPath } : {}),
+            ...(record.source ? { source_id: record.source.id } : {}),
           }),
         );
         record.storedRevision = result.revision;
         record.savedEditorRevision = captured.revision;
+        // The store dropped the superseded draft in the same write.
+        record.source = undefined;
         if (draft.current === record)
           setStatus({
             updatedAt: result.updated_at,
@@ -85,6 +99,15 @@ export function useAutosave(context: Context) {
     const record = draft.current;
     const remove = async () => {
       if (draft.current !== record || latest.current.revision !== revision) return;
+      if (record.source) {
+        await unwrap(
+          window.reupmatic.recoveryDiscard({
+            id: record.source.id,
+            expected_revision: record.source.revision,
+          }),
+        ).catch(() => undefined);
+        record.source = undefined;
+      }
       if (record.storedRevision > 0) {
         await unwrap(
           window.reupmatic.recoveryDiscard({
@@ -103,6 +126,7 @@ export function useAutosave(context: Context) {
     return result;
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revision re-arms the debounce on every edit
   useEffect(() => {
     if (!context.media || !context.dirty || context.opening) return;
     setStatus({ key: 'recoveryWaiting' });
@@ -110,7 +134,49 @@ export function useAutosave(context: Context) {
       void flush().catch(() => undefined);
     }, 800);
     return () => clearTimeout(timer.current);
-  }, [context.dirty, context.opening, context.media, flush]);
+  }, [context.dirty, context.opening, context.media, context.revision, flush]);
+
+  /** Drops this document's draft (and any superseded source) without marking it saved. */
+  const discard = useCallback((): Promise<void> => {
+    clearTimeout(timer.current);
+    const record = draft.current;
+    const remove = async () => {
+      if (draft.current !== record) return;
+      if (record.source) {
+        await unwrap(
+          window.reupmatic.recoveryDiscard({
+            id: record.source.id,
+            expected_revision: record.source.revision,
+          }),
+        ).catch(() => undefined);
+        record.source = undefined;
+      }
+      if (record.storedRevision > 0) {
+        await unwrap(
+          window.reupmatic.recoveryDiscard({
+            id: record.id,
+            expected_revision: record.storedRevision,
+          }),
+        ).catch(() => undefined);
+        record.storedRevision = 0;
+      }
+      record.savedEditorRevision = -1;
+      setStatus({ key: 'recoveryIdle' });
+    };
+    const result = queue.current.catch(() => undefined).then(remove);
+    queue.current = result;
+    void result.catch(() => undefined);
+    return result;
+  }, []);
+
+  /** Arms the draft a recovered document supersedes, consumed on the next document id. */
+  const prepareSource = useCallback((id: string, revision: number) => {
+    pending.current = { id, revision };
+  }, []);
+
+  const clearPendingSource = useCallback(() => {
+    pending.current = null;
+  }, []);
 
   useEffect(
     () =>
@@ -125,5 +191,5 @@ export function useAutosave(context: Context) {
     [flush],
   );
 
-  return { status, flush, clearSaved };
+  return { status, flush, clearSaved, discard, prepareSource, clearPendingSource };
 }

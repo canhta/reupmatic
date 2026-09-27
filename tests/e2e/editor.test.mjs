@@ -796,3 +796,61 @@ test('A recovered draft is announced with Open and Discard, and Discard confirms
     },
   );
 });
+
+test('Autosave advances the recovery draft on every edit, not once per dirty stretch', {
+  timeout: 120000,
+}, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-autosave-');
+  const video = path.join(temp, 'autosave-source.mp4');
+  execFileSync(process.env.FFMPEG_PATH || 'ffmpeg', [
+    '-v',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc2=size=320x180:rate=30:duration=4',
+    '-c:v',
+    'libx264',
+    '-threads',
+    '2',
+    '-n',
+    video,
+  ]);
+  await runElectronTest(
+    { temp, userData, screenshotName: 'autosave-revision-failure.png' },
+    async ({ application, page }) => {
+      await waitForEditorReady(page);
+      await application.evaluate(({ dialog }, file) => {
+        dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] });
+      }, video);
+      await addMediaToProject(page);
+      await page.locator('.viewers video').waitFor();
+
+      const latestRevision = () =>
+        page.evaluate(async () => {
+          const reply = await window.reupmatic.recoveryList();
+          return reply.ok === true && reply.data.length ? reply.data[0].revision : 0;
+        });
+      const waitForRevision = (target) =>
+        page.waitForFunction(async (expected) => {
+          const reply = await window.reupmatic.recoveryList();
+          return reply.ok === true && reply.data.some((draft) => draft.revision >= expected);
+        }, target);
+
+      await page.getByRole('button', { name: 'autosave-source', exact: true }).click();
+      let field = page.getByRole('textbox', { name: 'Project name', exact: true });
+      await field.fill('First edit');
+      await field.press('Enter');
+      await waitForRevision(1);
+      const first = await latestRevision();
+
+      await page.getByRole('button', { name: 'First edit', exact: true }).click();
+      field = page.getByRole('textbox', { name: 'Project name', exact: true });
+      await field.fill('Second edit');
+      await field.press('Enter');
+      await waitForRevision(first + 1);
+      const second = await latestRevision();
+      assert.ok(second > first, `draft revision must advance (was ${first}, now ${second})`);
+    },
+  );
+});
