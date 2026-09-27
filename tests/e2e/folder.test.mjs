@@ -74,7 +74,7 @@ for (const locale of ['en', 'vi']) {
               watch: 'Bắt đầu theo dõi',
               pause: 'Dừng theo dõi',
               batch: /Xử lý lô & tác vụ/,
-              closeJobs: 'Đóng bảng tác vụ',
+              closeJobs: 'Đóng Xử lý lô & tác vụ',
               run: 'Chạy hàng đợi',
             }
           : {
@@ -87,7 +87,7 @@ for (const locale of ['en', 'vi']) {
               watch: 'Start monitoring',
               pause: 'Pause monitoring',
               batch: /Batch & jobs/,
-              closeJobs: 'Close jobs',
+              closeJobs: 'Close Batch & jobs',
               run: 'Start queue',
             };
       await page.getByRole('button', { name: labels.nav, exact: true }).click();
@@ -114,7 +114,10 @@ for (const locale of ['en', 'vi']) {
       );
       await page.getByRole('button', { name: labels.batch }).click();
       await page.getByRole('button', { name: labels.run, exact: true }).click();
-      await page.locator('.batch-workspace [data-state="complete"]').waitFor({ timeout: 60000 });
+      await page
+        .getByRole('complementary', { name: labels.batch })
+        .locator('[data-state="complete"]')
+        .waitFor({ timeout: 60000 });
       assert.equal((await fs.readdir(output)).length, 1);
       await page.getByRole('button', { name: labels.closeJobs, exact: true }).click();
       await page.getByRole('button', { name: labels.pause, exact: true }).click();

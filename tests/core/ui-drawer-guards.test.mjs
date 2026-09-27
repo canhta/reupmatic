@@ -56,8 +56,6 @@ const ALLOWED = {
   // Picker contents other slices own.
   'features/profiles/ProfilePicker.tsx': 'profile picker lands in slices 3-11 (#50)',
   'features/taxonomy/LabelPicker.tsx': 'label picker lands in slices 3-11 (#50)',
-  // The drawer refactor's own in-progress files, cleared by slice 13.
-  'features/batch/': 'batch & jobs land in slice 13 (#50)',
 };
 
 function isAllowed(relative) {

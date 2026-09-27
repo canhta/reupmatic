@@ -26,7 +26,6 @@ export const batchVi = {
   batchPause: 'Tạm dừng hàng đợi',
   batchPaused: 'Đã tạm dừng',
   batchRunning: 'Hàng đợi đang bật',
-  batchPauseHint: 'Mở lại ứng dụng thì bấm Chạy lại để tiếp tục.',
   batchRetry: 'Thử lại mục này',
   batchShowOutput: 'Mở thư mục chứa',
   batchState: 'Trạng thái',

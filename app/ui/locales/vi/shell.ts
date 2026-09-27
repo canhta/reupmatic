@@ -19,7 +19,6 @@ export const shellVi = {
   retryLoad: 'Tải lại',
   queueReady: 'Sẵn sàng xử lý tác vụ trong hàng đợi',
   queueIdle: 'Không có tác vụ đang chạy',
-  closeJobs: 'Đóng bảng tác vụ',
   closeDetail: 'Đóng {{label}}',
   localProcessing: 'Xử lý cục bộ',
   workspaceStatus: 'Trạng thái không gian làm việc',

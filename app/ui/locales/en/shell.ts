@@ -17,7 +17,6 @@ export const shellEn = {
   retryLoad: 'Retry loading',
   queueReady: 'Ready to process queued jobs',
   queueIdle: 'No active job',
-  closeJobs: 'Close jobs',
   closeDetail: 'Close {{label}}',
   localProcessing: 'Local processing',
   workspaceStatus: 'Workspace status',

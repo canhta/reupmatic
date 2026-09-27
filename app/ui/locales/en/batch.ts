@@ -24,7 +24,6 @@ export const batchEn = {
   batchPause: 'Pause queue',
   batchPaused: 'Paused',
   batchRunning: 'Queue enabled',
-  batchPauseHint: 'Press Start again after reopening the app.',
   batchRetry: 'Retry item',
   batchShowOutput: 'Show in folder',
   batchState: 'State',

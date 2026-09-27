@@ -1,8 +1,6 @@
-import { Heading } from '@astryxdesign/core/Heading';
-import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SidePanel } from '../design-system/SidePanel';
 import { BatchPanel } from '../features/batch/BatchPanel';
 import type { useBatchQueue } from '../features/batch/useBatchQueue';
 
@@ -16,47 +14,28 @@ export function JobsTray({
   onClose(): void;
 }) {
   const { t } = useTranslation();
-  const tray = useRef<HTMLElement>(null);
-  const wasOpen = useRef(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      wasOpen.current = true;
-      requestAnimationFrame(() => tray.current?.querySelector<HTMLElement>('button')?.focus());
-      return;
-    }
-    if (wasOpen.current) {
-      document.querySelector<HTMLElement>('#shared-jobs-trigger')?.focus();
-      wasOpen.current = false;
-    }
-  }, [isOpen]);
-
+  // The tray keeps focus only while the queue has a control to press, so Escape is caught
+  // window-wide; a dialog that already handled the key sets defaultPrevented.
   useEffect(() => {
     if (!isOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      onClose();
     };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
   return (
-    <aside id="shared-jobs-tray" ref={tray} className="jobs-tray" aria-label={t('batchTitle')}>
-      <header className="jobs-tray-header">
-        <Heading level={5}>{t('batchTitle')}</Heading>
-        <IconButton
-          label={t('closeJobs')}
-          tooltip={t('closeJobs')}
-          variant="ghost"
-          size="sm"
-          icon={<Icon icon="close" size="sm" />}
-          onClick={onClose}
-        />
-      </header>
-      <div className="jobs-tray-scroll">
-        <BatchPanel queue={queue} alwaysOpen />
-      </div>
-    </aside>
+    <SidePanel
+      open={isOpen}
+      id="shared-jobs-tray"
+      label={t('batchTitle')}
+      className="jobs-panel"
+      onClose={onClose}
+    >
+      <BatchPanel queue={queue} />
+    </SidePanel>
   );
 }

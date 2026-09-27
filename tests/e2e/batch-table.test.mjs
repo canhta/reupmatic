@@ -52,36 +52,27 @@ test('Batch queue table search and sort apply to the whole queue (UI-CM05)', {
       await page.getByText(output, { exact: false }).waitFor();
       await page.getByRole('button', { name: 'Add 3 video(s) to queue', exact: true }).click();
 
-      const table = page.locator('.batch-workspace .batch-scroll table tbody tr');
+      const tray = page.getByRole('complementary', { name: 'Batch & jobs' });
+      const table = tray.locator('tr[data-job-id]');
       await table.first().waitFor();
       assert.equal(await table.count(), 3);
 
       await table.first().getByText('charlie.mp4', { exact: false }).waitFor();
 
-      await page
-        .locator('.batch-workspace')
+      await tray
         .getByRole('columnheader', { name: 'Video', exact: false })
         .getByRole('button')
         .first()
         .click();
       await table.first().getByText('alpha.mp4', { exact: false }).waitFor();
 
-      await page
-        .locator('.batch-workspace')
-        .getByRole('textbox', { name: 'Search', exact: true })
-        .fill('bravo');
+      await tray.getByRole('textbox', { name: 'Search', exact: true }).fill('bravo');
       await table.first().getByText('bravo.mp4', { exact: false }).waitFor();
       assert.equal(await table.count(), 1);
 
-      await page
-        .locator('.batch-workspace')
-        .getByRole('textbox', { name: 'Search', exact: true })
-        .fill('nonexistent');
+      await tray.getByRole('textbox', { name: 'Search', exact: true }).fill('nonexistent');
       await page.getByText('No matching jobs', { exact: true }).waitFor();
-      await page
-        .locator('.batch-workspace')
-        .getByRole('button', { name: 'Clear search', exact: true })
-        .click();
+      await tray.getByRole('button', { name: 'Clear search', exact: true }).click();
       await table.first().waitFor();
     },
   );

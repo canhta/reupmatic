@@ -18,6 +18,7 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BatchItemView, BatchState } from '../../../core/batch/batch-contracts';
@@ -111,7 +112,7 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
           )}
           {item.error_code && (
             <Text as="p" type="body" className="inline-error">
-              {t(batchErrorKey(item.error_code))} <code>{item.error_code}</code>
+              {t(batchErrorKey(item.error_code))}
             </Text>
           )}
         </div>
@@ -189,7 +190,7 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
     return <EmptyState isCompact title={t('batchEmpty')} description={t('batchDraftNote')} />;
   }
   return (
-    <div className="batch-scroll">
+    <VStack gap={3}>
       <Toolbar
         label={t('batchQueue')}
         size="sm"
@@ -207,9 +208,7 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
             }}
           />
         }
-        endContent={
-          <Text type="supporting">{t('batchJobsCount', { count: sortedData.length })}</Text>
-        }
+        endContent={<Text type="body">{t('batchJobsCount', { count: sortedData.length })}</Text>}
       />
       <Table
         density="compact"
@@ -232,6 +231,6 @@ export function BatchJobTable({ items, busy, onControl }: Props) {
           />
         }
       />
-    </div>
+    </VStack>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BatchDraft } from '../../../core/batch/batch-contracts';
@@ -32,7 +33,7 @@ export function BatchDraftTable({ items, busy, onAttach, onRemoveSubtitle, onRem
       )
     : items;
   return (
-    <div className="batch-scroll">
+    <VStack gap={3}>
       {items.length > 8 && (
         <TextInput
           label={t('catalogSearch')}
@@ -94,6 +95,6 @@ export function BatchDraftTable({ items, busy, onAttach, onRemoveSubtitle, onRem
           </TableBody>
         </Table>
       )}
-    </div>
+    </VStack>
   );
 }

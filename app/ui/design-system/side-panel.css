@@ -26,3 +26,13 @@
     box-shadow: var(--shadow-overlay);
   }
 }
+
+/* The Batch & jobs tray overlays the workspace above the status bar. */
+.jobs-panel {
+  position: absolute;
+  z-index: 4;
+  inset: 0 0 var(--shell-statusbar-h) auto;
+  width: min(430px, calc(100% - 72px));
+  border-left: 1px solid color-mix(in srgb, var(--edge) 78%, transparent);
+  box-shadow: var(--shadow-overlay);
+}
