@@ -75,3 +75,28 @@ per preset. An e2e that the live overlay changes pixels across a pop-in and a ka
 short screen capture of each template.
 
 Owner confirmed (2026-09-27): all four — word-level highlight, whole-line in/out, templates, and the bold uppercase + thick outline look — ship in the first set.
+
+## A2. Line length from reading speed and style (owner, 2026-09-27)
+
+The owner rejects the hardcoded MAX_CUE_CHARS = 42 / MAX_CUE_MS = 3500 in
+`worker/speech/recognition/timestamps.py`. Line length depends on the reader's speed and on the style
+size, so it must not be hardcoded.
+
+- **Splitting moves to core** as one pure function over measured word timings: `splitCues(words,
+  settings, style, frame)`. Recognition returns segments with their words; the worker no longer
+  sizes cues. The same function can **re-split** existing cues that carry words, without
+  re-recognising.
+- **Auto (the default):**
+  - Max characters per line comes from the real layout: frame width minus both side margins, divided
+    by the average glyph advance at the style's `font_size_pct` (Latin ≈ 0.5 em, CJK ≈ 1 em, bold
+    wider; constants named and documented), times max lines.
+  - Max duration comes from reading speed: characters ÷ CPS, bounded by a minimum on-screen time.
+- **Custom (optional, in the Editor):** in the Transcribe tool, a collapsed "Line length" section,
+  closed by default, holds reading speed (characters per second, NumberInput), max lines (1–2) and
+  max characters (NumberInput, or "auto from style"). It lives per project in the snapshot. A
+  **Re-split** action applies it to the current transcript layer, with undo.
+- **Defaults** are industry reference values, labelled as such in code: 17 CPS for Latin-script
+  languages and 9 CPS for Chinese (Netflix timed-text guidance), and a minimum of about 5/6 s on
+  screen. They are editable. Report them as the defaults chosen.
+- Changing the style size or the frame (crop/fit) does not silently re-split. The Transcribe tool
+  shows one clause that the lines were sized for another style, with Re-split beside it.
