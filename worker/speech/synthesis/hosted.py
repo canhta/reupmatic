@@ -12,7 +12,6 @@ from typing import Callable
 
 from runtime.errors import WorkerError
 from runtime.tls import https_context
-from speech.synthesis.contracts import SAMPLE_RATES
 
 MODEL = "vieneu-v4"
 SAMPLE_RATE = 48000
@@ -63,9 +62,12 @@ def _get(url: str, headers: dict[str, str]) -> tuple[int, bytes]:
         raise WorkerError("MODEL_NETWORK_DISABLED") from None
 
 
-def idempotency_key(request_id: str, cue: dict) -> str:
-    """Deterministic per cue so a retry of the same request never double-charges."""
-    seed = f"{request_id}:{cue['id']}:{cue['text']}".encode()
+def idempotency_key(job: dict, cue: dict) -> str:
+    """Deterministic per line and content so a retry of the same line never double-charges.
+
+    The key deliberately excludes `request_id`: a new Start reseeds it and would bill again.
+    """
+    seed = f"{job['params']['source_token']}:{job['voice_id']}:{cue['id']}:{cue['text']}".encode()
     return hashlib.sha256(seed).hexdigest()
 
 
@@ -88,7 +90,7 @@ def cues_to_wav(job: dict, credential: str) -> dict:
                 f"https://{provider['endpoint_host']}/api/v1/audio/speech",
                 {
                     **_headers(credential),
-                    "Idempotency-Key": idempotency_key(job["request_id"], cue),
+                    "Idempotency-Key": idempotency_key(job, cue),
                 },
                 {
                     "model": MODEL,
@@ -105,7 +107,7 @@ def cues_to_wav(job: dict, credential: str) -> dict:
                     if (
                         audio.getnchannels() != 1
                         or audio.getsampwidth() != 2
-                        or audio.getframerate() not in SAMPLE_RATES
+                        or audio.getframerate() != rate
                         or audio.getcomptype() != "NONE"
                     ):
                         raise ValueError

@@ -1,9 +1,11 @@
 import copy
 import hashlib
+import io
 import json
 import sys
 import tempfile
 import unittest
+import wave
 from pathlib import Path
 from unittest.mock import patch as mock_patch
 
@@ -93,12 +95,20 @@ class SynthesisContractTests(unittest.TestCase):
                 parse_options({**p, **patch})
 
     def test_a_retry_of_the_same_request_reuses_the_cue_key_and_a_different_cue_does_not(self):
-        cue = {"id": "cue-1", "text": "Xin chào", "start_ms": 0, "end_ms": 1000}
-        first = idempotency_key("request-12345678", cue)
-        self.assertEqual(idempotency_key("request-12345678", cue), first)
+        job = {"params": params("a" * 64), "voice_id": "test-voice"}
+        cue = job["params"]["cues"][0]
+        first = idempotency_key(job, cue)
+        self.assertEqual(idempotency_key(job, cue), first)
         self.assertRegex(first, r"^[A-Za-z0-9_-]{8,128}$")
-        self.assertNotEqual(idempotency_key("request-87654321", cue), first)
-        self.assertNotEqual(idempotency_key("request-12345678", {**cue, "text": "Khác"}), first)
+        # The key is content, not the request: a retry with a fresh id still reuses the line.
+        self.assertNotEqual(idempotency_key({**job, "voice_id": "other"}, cue), first)
+        self.assertNotEqual(
+            idempotency_key(
+                {**job, "params": {**job["params"], "source_token": "spoken-87654321"}}, cue
+            ),
+            first,
+        )
+        self.assertNotEqual(idempotency_key(job, {**cue, "text": "Khác"}), first)
 
     def test_frame_spans_must_exactly_cover_all_cues_and_reported_spacing(self):
         p = params("a" * 64)
@@ -430,3 +440,42 @@ class MaterialiseVoicesTests(unittest.TestCase):
                 materialise_voices(manifest)
         self.assertFalse((directory / "voices.json").exists())
         self.assertEqual(manifest.read_text(), before)
+
+
+class HostedSynthesisTests(unittest.TestCase):
+    """The fake transport stands in for the cloud; no test reaches VieNeu."""
+
+    def wav(self, rate):
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as audio:
+            audio.setparams((1, 2, rate, 0, "NONE", "not compressed"))
+            audio.writeframes(bytes(rate // 5 * 2))
+        return buffer.getvalue()
+
+    def job(self):
+        p = params("a" * 64)
+        return {
+            "params": p,
+            "provider": {"protocol": "vieneu", "endpoint_host": "api.example"},
+            "request_id": "request-12345678",
+            "voice_id": p["voice_id"],
+            "cues": p["cues"],
+        }
+
+    def test_cloud_pcm_is_read_at_the_rate_the_request_asked_for(self):
+        from speech.synthesis.hosted import cues_to_wav
+
+        with mock_patch("speech.synthesis.hosted._post", return_value=(200, self.wav(48000))):
+            value = cues_to_wav(self.job(), "k")
+        self.assertEqual(value["sample_rate"], 48000)
+        self.assertEqual([segment["cue_id"] for segment in value["segments"]], ["cue-1", "cue-2"])
+        with wave.open(io.BytesIO(value["wav"]), "rb") as audio:
+            self.assertEqual(audio.getframerate(), 48000)
+
+    def test_cloud_audio_at_another_rate_is_refused_not_rewritten_as_48k(self):
+        from speech.synthesis.hosted import cues_to_wav
+
+        with mock_patch("speech.synthesis.hosted._post", return_value=(200, self.wav(24000))):
+            with self.assertRaises(WorkerError) as caught:
+                cues_to_wav(self.job(), "k")
+        self.assertEqual(caught.exception.code, "MODEL_OUTPUT_INVALID")
