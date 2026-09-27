@@ -113,6 +113,45 @@ class TimedEvidenceTests(unittest.TestCase):
         self.assertEqual(len(cues), 1)
 
 
+class SubtitleRowTests(unittest.TestCase):
+    def test_a_persistent_banner_is_not_joined_to_the_subtitle(self):
+        from vision.merge import timed_cues
+
+        def sample(start, text):
+            return {
+                "start_ms": start,
+                "end_ms": start + 500,
+                "detections": [
+                    {"text": "Follow", "confidence": 0.9, "box": [10, 10, 100, 30]},
+                    {"text": text, "confidence": 0.9, "box": [100, 300, 500, 340]},
+                ],
+            }
+
+        cues = timed_cues([sample(0, "First"), sample(500, "First"), sample(1000, "Second")])
+        self.assertEqual([c["text"] for c in cues], ["First", "Second"])
+        self.assertTrue(all("\n" not in c["text"] for c in cues))
+
+    def test_regions_ignore_a_banner_elsewhere_in_the_frame(self):
+        from vision.merge import RegionCollector
+
+        collector = RegionCollector(640, 360)
+        for index in range(4):
+            collector.add(
+                {
+                    "start_ms": index * 500,
+                    "end_ms": index * 500 + 500,
+                    "detections": [
+                        {"text": "Follow", "confidence": 0.9, "box": [10, 10, 100, 30]},
+                        {"text": f"Line {index}", "confidence": 0.9, "box": [100, 300, 500, 340]},
+                    ],
+                }
+            )
+        regions = collector.finish()
+        self.assertEqual(len(regions), 1)
+        self.assertGreater(regions[0]["y_pct"], 70)
+        self.assertLess(regions[0]["height_pct"], 20)
+
+
 class BoundaryRefinementTests(unittest.TestCase):
     def frames(self, values):
         import numpy as np

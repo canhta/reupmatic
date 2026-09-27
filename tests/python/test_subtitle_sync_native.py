@@ -203,6 +203,7 @@ class RefinementCostTests(unittest.TestCase):
                 check=True,
             )
             # A typical density: one original line every two seconds, so 30 boundaries a minute.
+            # Every frame also carries a persistent banner; the subtitle row must be refined alone.
             grouper = CueGrouper()
             step = 2000
             for index in range(30):
@@ -213,7 +214,8 @@ class RefinementCostTests(unittest.TestCase):
                             "start_ms": start + offset,
                             "end_ms": start + offset + 500,
                             "detections": [
-                                {"text": text, "confidence": 0.9, "box": [40, 100, 280, 150]}
+                                {"text": text, "confidence": 0.9, "box": [40, 100, 280, 150]},
+                                {"text": "Banner", "confidence": 0.9, "box": [10, 10, 60, 25]},
                             ],
                         }
                     )
@@ -232,9 +234,13 @@ class RefinementCostTests(unittest.TestCase):
             )
             stats = refine_groups(host, {"id": "cost"}, video, 320, 180, groups)
             minute_cost = stats["elapsed_ms"]
+            from vision.merge import summarize
+
+            region = summarize(groups[0].first)[2]
             print(
                 f"\nS1 refinement: {len(groups)} cues, {stats['decoded_frames']} frames, "
-                f"{minute_cost} ms per 60 s of video at 24 fps"
+                f"{minute_cost} ms per 60 s of video at 24 fps, "
+                f"region {region[2] - region[0]}x{region[3] - region[1]}"
             )
             self.assertGreater(stats["decoded_frames"], 0)
             self.assertLess(minute_cost, 20000)

@@ -13,6 +13,7 @@ export const processingEn = {
   processingSummaryEdit: 'Video/audio edits',
   processingSummaryOcr: 'OCR → generated subtitles',
   processingOcr: 'Recognizing source text',
+  processingOcrRefine: 'Refining subtitle timing',
   processingEncoding: 'Encoding video and original audio',
   processingVerifying: 'Verifying source and output',
 } as const;

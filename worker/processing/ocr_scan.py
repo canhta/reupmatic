@@ -65,7 +65,20 @@ def scan_cues(
     refiner = refine if refine is not None else refine_groups
     if groups and refiner is not None:
         source = host.assets.get(req["params"]["asset_id"], "video")
-        refiner(host, req, source["path"], geometry[0], geometry[1], groups)
+
+        def refine_progress(fraction):
+            host.emit(req, "progress", {"phase": "processingOcrRefine", "fraction": fraction})
+
+        host.emit(req, "progress", {"phase": "processingOcrRefine", "fraction": 0})
+        refiner(
+            host,
+            req,
+            source["path"],
+            geometry[0],
+            geometry[1],
+            groups,
+            on_progress=refine_progress,
+        )
     cues, text_bytes = [], 0
     for index, group in enumerate(groups, 1):
         text_bytes += len(group.text().encode("utf-8"))

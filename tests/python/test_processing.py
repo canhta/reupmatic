@@ -235,6 +235,64 @@ class RegionScanTests(unittest.TestCase):
         self.assertEqual(later[0]["count"], 10)
 
 
+class RefinementProgressTests(unittest.TestCase):
+    def test_refinement_is_reported_as_its_own_progress_phase(self):
+        options = {"language": "en", "sample_ms": 500, "min_confidence": 0.5}
+        pins = {"ocr_en": "a" * 64}
+        events = []
+        host = SimpleNamespace(
+            cancelled=lambda req: None,
+            emit=lambda req, event, data: events.append(data),
+            assets=SimpleNamespace(get=lambda *args: {"path": "/controlled/source.mp4"}),
+        )
+        req = {
+            "id": "test",
+            "method": "media.ocr.extract",
+            "params": {"asset_id": "registered-source"},
+        }
+        counter = [0]
+
+        class VisionDouble:
+            def __init__(self, host):
+                pass
+
+            def run(self, request, *, staging, emit_progress):
+                counter[0] += 1
+                p = request["params"]
+                (staging / f"{counter[0]}.json").write_text("{}")
+                return {
+                    "width": 160,
+                    "height": 90,
+                    "observations": [
+                        {
+                            "start_ms": p["start_ms"],
+                            "end_ms": p["end_ms"],
+                            "detections": [
+                                {"text": "Text", "confidence": 0.9, "box": [10, 40, 100, 70]}
+                            ],
+                        }
+                    ],
+                    "analysis_id": str(counter[0]),
+                    "cues": [],
+                    "model_fingerprints": {"ocr": pins["ocr_en"]},
+                }
+
+        def refiner(host, req, path, width, height, groups, on_progress=None):
+            if on_progress is not None:
+                on_progress(1.0)
+
+        with tempfile.TemporaryDirectory() as directory:
+            with (
+                patch("processing.ocr_scan.VisionService", VisionDouble),
+                patch("processing.ocr_scan.refine_groups", refiner),
+            ):
+                scan_cues(host, req, options, 0, 1000, Path(directory), pins)
+        fractions = [
+            event["fraction"] for event in events if event.get("phase") == "processingOcrRefine"
+        ]
+        self.assertEqual(fractions, [0, 1.0])
+
+
 class ProcessingSchemaTests(unittest.TestCase):
     def setUp(self):
         try:

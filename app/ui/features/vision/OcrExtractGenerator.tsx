@@ -37,6 +37,16 @@ export function OcrSetup() {
   const hasOcr = Boolean(
     language && job.models?.ocr.available && job.models.ocr.languages.includes(language),
   );
+  const languageMissing = Boolean(
+    language && job.models?.ocr.available && !job.models.ocr.languages.includes(language),
+  );
+  const status = job.checking
+    ? t('visionChecking')
+    : job.models && !job.models.ocr.available
+      ? t(visionErrorKey(job.models.ocr.code || 'MODEL_MISSING'))
+      : languageMissing
+        ? t('visionLanguageMissing')
+        : '';
 
   return (
     <InspectorPanelSection title={t('visionExtractTitle')}>
@@ -86,15 +96,13 @@ export function OcrSetup() {
             />
           </HStack>
         </Collapsible>
-        {(job.checking || !job.models?.ocr.available) && (
+        {status && (
           <>
             <Text as="p" display="block" type="body" role="status">
-              {job.checking
-                ? t('visionChecking')
-                : t(visionErrorKey(job.models?.ocr.code || 'MODEL_MISSING'))}
+              {status}
             </Text>
             <HStack gap={2} vAlign="center" wrap="wrap">
-              {job.models && !job.models.ocr.available && (
+              {job.models && (!job.models.ocr.available || languageMissing) && (
                 <Button
                   size="sm"
                   variant="secondary"

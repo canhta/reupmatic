@@ -71,9 +71,38 @@ def box_overlap(
     return intersection / union if union > 0 else 0.0
 
 
+# A line joins the subtitle row while its vertical center stays within this multiple of the
+# dominant line's height; a distant banner stays out and a two-line subtitle stays in.
+ROW_CENTER_TOLERANCE = 1.5
+
+
+def select_subtitle_row(detections: list[dict]) -> list[dict]:
+    """The largest text line plus the lines on its row, excluding text elsewhere in the frame.
+
+    OCR reports every text in a frame. A persistent banner must not join a subtitle line, grow its
+    box, or widen the region that boundary refinement compares. The dominant line is the largest
+    by area, which for burned-in subtitles is the subtitle rather than a watermark or prompt.
+    """
+    lines = [d for d in detections if d["text"].strip()]
+    if len(lines) <= 1:
+        return lines
+    dominant = max(lines, key=lambda d: _area(d["box"]))
+    height = max(1, dominant["box"][3] - dominant["box"][1])
+    tolerance = height * ROW_CENTER_TOLERANCE
+    dominant_center = (dominant["box"][1] + dominant["box"][3]) / 2
+    left, right = dominant["box"][0], dominant["box"][2]
+    return [
+        line
+        for line in lines
+        if abs((line["box"][1] + line["box"][3]) / 2 - dominant_center) <= tolerance
+        and line["box"][2] > left
+        and line["box"][0] < right
+    ]
+
+
 def summarize(observation: dict) -> tuple[str, str, tuple[int, int, int, int] | None, float]:
     """Display text, normalized text, union box and mean confidence of one sample."""
-    detections = [d for d in observation.get("detections", []) if d["text"].strip()]
+    detections = select_subtitle_row(observation.get("detections", []))
     lines = sorted(detections, key=lambda d: (d["box"][1], d["box"][0]))
     display = "\n".join(unicodedata.normalize("NFC", line["text"]).strip() for line in lines)
     if not display:

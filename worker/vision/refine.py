@@ -165,7 +165,9 @@ def frame_sampler(host, req, source_path, width: int, height: int, fps: float, s
     return sample
 
 
-def refine_groups(host, req, source_path, width: int, height: int, groups: list[Any]) -> dict:
+def refine_groups(
+    host, req, source_path, width: int, height: int, groups: list[Any], on_progress=None
+) -> dict:
     """Refine every internal cue edge; return decode statistics for the caller to report."""
     import time
 
@@ -174,13 +176,16 @@ def refine_groups(host, req, source_path, width: int, height: int, groups: list[
     stats = {"frames": 0}
     sampler = frame_sampler(host, req, source_path, width, height, fps, stats)
     refined = 0
-    for group in groups:
+    total = len(groups)
+    for index, group in enumerate(groups, 1):
         before = (group.start_ms, group.end_ms)
         start_ms, end_ms = refine_boundaries(group, sampler, width, height)
         if start_ms < end_ms:
             group.start_ms, group.end_ms = start_ms, end_ms
         if (group.start_ms, group.end_ms) != before:
             refined += 1
+        if on_progress is not None:
+            on_progress(index / total)
     return {
         "fps": fps,
         "refined": refined,

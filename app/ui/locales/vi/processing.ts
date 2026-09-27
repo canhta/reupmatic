@@ -13,6 +13,7 @@ export const processingVi = {
   processingSummaryEdit: 'Chỉnh sửa hình/tiếng',
   processingSummaryOcr: 'OCR → phụ đề được tạo',
   processingOcr: 'Đang nhận diện chữ trong nguồn',
+  processingOcrRefine: 'Đang tinh chỉnh thời gian phụ đề',
   processingEncoding: 'Đang mã hóa video và âm thanh nguồn',
   processingVerifying: 'Đang kiểm tra nguồn và đầu ra',
 } satisfies Record<keyof typeof processingEn, string>;
