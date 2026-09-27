@@ -33,43 +33,73 @@ async function stubMediaPicker(application, files) {
   }, files);
 }
 
-// Adds the second video as a timeline clip, turning the project into a two-clip composition.
-async function addSecondClip(page, secondName) {
+// Opens the first video (the anchor), whose file the stub returns first.
+async function openEditor(page, application, files) {
+  await waitForEditorReady(page);
+  await stubMediaPicker(application, files);
+  await addMediaToProject(page);
+  await page.locator('video[data-monitor-video="source"]').waitFor();
+}
+
+// Adds one more video as a timeline clip, turning the project into a composition.
+async function addClip(page, name) {
   await openSourcePanel(page, 'media');
   const media = page.getByRole('tabpanel', { name: 'Media' });
   await media.getByRole('button', { name: 'Add…', exact: true }).click();
-  const row = media.locator('li').filter({ hasText: secondName });
+  const row = media.locator('li').filter({ hasText: name });
   await row.waitFor();
   await row.getByRole('button', { name: 'Add to timeline', exact: true }).click();
-  await page.locator('.timeline-editor-action').filter({ hasText: secondName }).first().waitFor();
+  await page.locator('.timeline-editor-action').filter({ hasText: name }).first().waitFor();
 }
 
-test('composition mode keeps the edit window, blocks OCR and renders a disabled span black', {
-  timeout: 180000,
-}, async () => {
-  const { temp, userData } = await createTempWorkspace('reupmatic-composition-guards-');
+function clipAction(page, name) {
+  return page.locator('.timeline-editor-action').filter({ hasText: name }).first();
+}
+
+async function disableClip(page, name) {
+  const clip = clipAction(page, name);
+  await clip.scrollIntoViewIfNeeded();
+  await clip.click();
+  await page.keyboard.press('v');
+  await page.locator('.timeline-action-disabled').first().waitFor();
+  return clip;
+}
+
+test('#38 composition mode keeps the output edit window visible', { timeout: 180000 }, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-composition-window-');
   const primary = path.join(temp, 'primary.mp4');
   const second = path.join(temp, 'second.mp4');
   makeVideo(primary, 4);
   makeVideo(second, 3);
 
   await runElectronTest(
-    { temp, userData, screenshotName: 'composition-guards-failure.png' },
+    { temp, userData, screenshotName: 'composition-window-failure.png' },
     async ({ application, page }) => {
-      await waitForEditorReady(page);
-      await stubMediaPicker(application, [primary, second]);
-      await addMediaToProject(page);
-      await page.locator('video[data-monitor-video="source"]').waitFor();
-      await addSecondClip(page, 'second.mp4');
+      await openEditor(page, application, [primary, second]);
+      await addClip(page, 'second.mp4');
 
-      // #38: the output edit window must stay visible in composition mode.
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.locator('#panel-edit').waitFor();
       const trim = page.getByRole('checkbox', { name: 'Trim source', exact: true });
       await trim.waitFor();
-      assert.equal(await trim.isVisible(), true, 'the trim window stays reachable');
+      assert.equal(await trim.isVisible(), true, 'the output edit window stays reachable');
+    },
+  );
+});
 
-      // #41: OCR cannot run on a composition and the reason is shown.
+test('#41 composition mode blocks OCR with a banner', { timeout: 180000 }, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-composition-ocr-');
+  const primary = path.join(temp, 'primary.mp4');
+  const second = path.join(temp, 'second.mp4');
+  makeVideo(primary, 4);
+  makeVideo(second, 3);
+
+  await runElectronTest(
+    { temp, userData, screenshotName: 'composition-ocr-failure.png' },
+    async ({ application, page }) => {
+      await openEditor(page, application, [primary, second]);
+      await addClip(page, 'second.mp4');
+
       await page.getByRole('tab', { name: 'Transcribe', exact: true }).click();
       await page.locator('#panel-transcribe').waitFor();
       await page
@@ -77,23 +107,76 @@ test('composition mode keeps the edit window, blocks OCR and renders a disabled 
         .waitFor();
       const extract = page.getByRole('button', { name: 'Extract', exact: true });
       assert.equal(await extract.isDisabled(), true, 'Extract is blocked on a composition');
-
-      // #40 M2: a disabled span shows the black frame the export renders.
-      const secondClip = page
-        .locator('.timeline-editor-action')
-        .filter({ hasText: 'second.mp4' })
-        .first();
-      await secondClip.scrollIntoViewIfNeeded();
-      await secondClip.click();
-      await page.keyboard.press('v');
-      await page.locator('.timeline-action-disabled').first().waitFor();
-      await secondClip.click();
-      await page.locator('.source-empty-frame').waitFor({ timeout: 15000 });
     },
   );
 });
 
-test('the monitor paints composition subtitles from the worker ASS overlay', {
+test('#40 a disabled span renders black when the playhead lands on it', {
+  timeout: 180000,
+}, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-composition-black-');
+  const primary = path.join(temp, 'primary.mp4');
+  const second = path.join(temp, 'second.mp4');
+  makeVideo(primary, 4);
+  makeVideo(second, 3);
+
+  await runElectronTest(
+    { temp, userData, screenshotName: 'composition-black-failure.png' },
+    async ({ application, page }) => {
+      await openEditor(page, application, [primary, second]);
+      await addClip(page, 'second.mp4');
+
+      const clip = await disableClip(page, 'second.mp4');
+      await clip.click();
+      await page.locator('.source-empty-frame').waitFor({ timeout: 15000 });
+      assert.equal(
+        await page.locator('video[data-monitor-video="source"]').count(),
+        0,
+        'the source is silent over a disabled span',
+      );
+    },
+  );
+});
+
+test('#40 playback crosses a disabled span black and continues to the next clip', {
+  timeout: 180000,
+}, async () => {
+  const { temp, userData } = await createTempWorkspace('reupmatic-composition-black-play-');
+  const primary = path.join(temp, 'primary.mp4');
+  const second = path.join(temp, 'second.mp4');
+  const third = path.join(temp, 'third.mp4');
+  makeVideo(primary, 2);
+  makeVideo(second, 2);
+  makeVideo(third, 2);
+
+  await runElectronTest(
+    { temp, userData, screenshotName: 'composition-black-play-failure.png' },
+    async ({ application, page }) => {
+      await openEditor(page, application, [primary, second, third]);
+      await addClip(page, 'second.mp4');
+      await addClip(page, 'third.mp4');
+      await disableClip(page, 'second.mp4');
+      // Park on the first clip so playback starts from an element, then crosses the disabled run.
+      await clipAction(page, 'primary.mp4').click();
+
+      await page.getByRole('button', { name: 'Play', exact: true }).click();
+      // Two seconds of primary, then the disabled clip plays black, then the third clip.
+      await page.locator('.source-empty-frame').waitFor({ timeout: 30000 });
+      assert.equal(
+        await page.locator('video[data-monitor-video="source"]').count(),
+        0,
+        'the source is silent over a disabled span',
+      );
+      await page
+        .locator('.monitor-source-name')
+        .filter({ hasText: 'third.mp4' })
+        .waitFor({ timeout: 30000 });
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    },
+  );
+});
+
+test('#40 the monitor paints composition subtitles from the worker ASS overlay', {
   timeout: 180000,
 }, async () => {
   const { temp, userData } = await createTempWorkspace('reupmatic-composition-overlay-');
@@ -105,11 +188,8 @@ test('the monitor paints composition subtitles from the worker ASS overlay', {
   await runElectronTest(
     { temp, userData, screenshotName: 'composition-overlay-failure.png' },
     async ({ application, page }) => {
-      await waitForEditorReady(page);
-      await stubMediaPicker(application, [primary, second]);
-      await addMediaToProject(page);
-      await page.locator('video[data-monitor-video="source"]').waitFor();
-      await addSecondClip(page, 'second.mp4');
+      await openEditor(page, application, [primary, second]);
+      await addClip(page, 'second.mp4');
 
       const overlay = page.locator('canvas.JASSUB');
       await overlay.waitFor({ timeout: 30000 });
@@ -144,7 +224,7 @@ test('the monitor paints composition subtitles from the worker ASS overlay', {
   );
 });
 
-test('the monitor advances into the next clip instead of stopping at the boundary', {
+test('#39 the monitor advances into the next clip instead of stopping at the boundary', {
   timeout: 180000,
 }, async () => {
   const { temp, userData } = await createTempWorkspace('reupmatic-composition-advance-');
@@ -156,11 +236,8 @@ test('the monitor advances into the next clip instead of stopping at the boundar
   await runElectronTest(
     { temp, userData, screenshotName: 'composition-advance-failure.png' },
     async ({ application, page }) => {
-      await waitForEditorReady(page);
-      await stubMediaPicker(application, [primary, second]);
-      await addMediaToProject(page);
-      await page.locator('video[data-monitor-video="source"]').waitFor();
-      await addSecondClip(page, 'second.mp4');
+      await openEditor(page, application, [primary, second]);
+      await addClip(page, 'second.mp4');
 
       const name = page.locator('.monitor-source-name');
       await name.filter({ hasText: 'primary.mp4' }).waitFor();
