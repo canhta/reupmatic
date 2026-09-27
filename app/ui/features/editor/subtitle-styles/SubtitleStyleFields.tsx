@@ -12,6 +12,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fontFamilies } from '../../../../core/subtitles/fonts';
 import {
+  ANIMATION_EMPHASIS_PRESETS,
+  ANIMATION_IN_PRESETS,
+  ANIMATION_OUT_PRESETS,
   defaultCoverBand,
   type SubtitleStyle,
   subtitleStyleFieldInvalid,
@@ -67,7 +70,7 @@ function ColorField({
   );
 }
 
-const colorFields = ['text_color', 'outline_color', 'box_color'] as const;
+const colorFields = ['text_color', 'outline_color', 'box_color', 'accent_color'] as const;
 const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; step: number }[] = [
   { key: 'outline_pct', min: 0, max: 2, step: 0.05 },
   { key: 'shadow_pct', min: 0, max: 2, step: 0.05 },
@@ -222,6 +225,108 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">
+            {t('styleAnimation')}
+          </Text>
+        }
+        defaultIsOpen={false}
+      >
+        <FormLayout direction="vertical">
+          <Selector
+            label={t('styleInPreset')}
+            value={value.animation.in.preset}
+            isDisabled={disabled}
+            options={ANIMATION_IN_PRESETS.map((preset) => ({
+              value: preset,
+              label: t(`styleInPreset_${preset}`),
+            }))}
+            onChange={(preset) =>
+              onChange({
+                ...value,
+                animation: {
+                  ...value.animation,
+                  in: { ...value.animation.in, preset: preset as typeof value.animation.in.preset },
+                },
+              })
+            }
+          />
+          <NumberInput
+            label={t('styleInDuration')}
+            value={value.animation.in.duration_ms}
+            min={0}
+            max={3000}
+            step={50}
+            isIntegerOnly
+            isWheelEnabled={false}
+            isDisabled={disabled}
+            onChange={(duration_ms) =>
+              onChange({
+                ...value,
+                animation: { ...value.animation, in: { ...value.animation.in, duration_ms } },
+              })
+            }
+          />
+          <Selector
+            label={t('styleOutPreset')}
+            value={value.animation.out.preset}
+            isDisabled={disabled}
+            options={ANIMATION_OUT_PRESETS.map((preset) => ({
+              value: preset,
+              label: t(`styleOutPreset_${preset}`),
+            }))}
+            onChange={(preset) =>
+              onChange({
+                ...value,
+                animation: {
+                  ...value.animation,
+                  out: {
+                    ...value.animation.out,
+                    preset: preset as typeof value.animation.out.preset,
+                  },
+                },
+              })
+            }
+          />
+          <NumberInput
+            label={t('styleOutDuration')}
+            value={value.animation.out.duration_ms}
+            min={0}
+            max={3000}
+            step={50}
+            isIntegerOnly
+            isWheelEnabled={false}
+            isDisabled={disabled}
+            onChange={(duration_ms) =>
+              onChange({
+                ...value,
+                animation: { ...value.animation, out: { ...value.animation.out, duration_ms } },
+              })
+            }
+          />
+          <Selector
+            label={t('styleEmphasisPreset')}
+            value={value.animation.emphasis.preset}
+            isDisabled={disabled}
+            options={ANIMATION_EMPHASIS_PRESETS.map((preset) => ({
+              value: preset,
+              label: t(`styleEmphasisPreset_${preset}`),
+            }))}
+            onChange={(preset) =>
+              onChange({
+                ...value,
+                animation: {
+                  ...value.animation,
+                  emphasis: {
+                    preset: preset as typeof value.animation.emphasis.preset,
+                  },
+                },
+              })
+            }
+          />
+        </FormLayout>
+      </Collapsible>
+      <Collapsible
+        trigger={
+          <Text type="label" weight="semibold">
             {t('styleShadowBackground')}
           </Text>
         }
@@ -257,6 +362,12 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
             value={value.italic}
             isDisabled={disabled}
             onChange={(italic) => onChange({ ...value, italic })}
+          />
+          <CheckboxInput
+            label={t('styleUppercase')}
+            value={value.uppercase}
+            isDisabled={disabled}
+            onChange={(uppercase) => onChange({ ...value, uppercase })}
           />
         </FormLayout>
       </Collapsible>

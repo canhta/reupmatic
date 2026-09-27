@@ -80,6 +80,10 @@ const ALLOWED_DYNAMIC_KEYS = [
   'editLogoAnchor_',
   'style_',
   'stylePosition_',
+  'styleTemplate_',
+  'styleInPreset_',
+  'styleOutPreset_',
+  'styleEmphasisPreset_',
   'soundtrack_',
 ];
 const PLURAL_SUFFIXES = ['_zero', '_one', '_two', '_few', '_many', '_other'];

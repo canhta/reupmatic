@@ -13,6 +13,7 @@ import {
 } from '../../../../core/subtitles/style';
 import { useEditor } from '../EditorContext';
 import { SubtitleStyleForm } from './SubtitleStyleForm';
+import { SubtitleTemplates } from './SubtitleTemplates';
 
 export function SubtitleStylesPanel() {
   const { t } = useTranslation();
@@ -63,6 +64,11 @@ export function SubtitleStylesPanel() {
             {t('styleChooseCue')}
           </Text>
         )}
+        <SubtitleTemplates
+          value={scope === 'cue' ? selected?.style : globalStyle}
+          disabled={disabled}
+          onChange={apply}
+        />
         <SubtitleStyleForm
           key={scope === 'cue' ? selected?.id : 'global'}
           value={scope === 'cue' ? selected?.style : globalStyle}
