@@ -70,6 +70,7 @@ export const editorVi = {
   complete: 'Hoàn tất',
   cancel: 'Hủy',
   cancelled: 'Đã hủy',
+  cancelling: 'Đang hủy',
   noSubtitlesYet: 'Chưa có phụ đề',
   noCues: 'Nhập file SRT hoặc thêm câu tại vị trí phát hiện tại.',
   noCueMatches: 'Không có câu nào khớp tìm kiếm.',

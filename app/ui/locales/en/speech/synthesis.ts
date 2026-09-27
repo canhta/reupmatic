@@ -1,7 +1,7 @@
 export const synthesisEn = {
   synthesisTitle: 'Local voice generation',
   synthesisLimits: 'Up to 100 cues, 300 characters each.',
-  synthesisVoice: 'Preset voice',
+  synthesisVoice: 'Voice',
   synthesisChooseVoice: 'Choose a voice',
   synthesisScope: 'Cues to generate',
   synthesisAll: 'All spoken cues',
@@ -57,7 +57,7 @@ export const synthesisEn = {
   synthesisDisk: 'Not enough disk space. Free space and retry.',
   synthesisProtected: 'Destination protected or changed. Choose a different output file.',
   synthesisExtension: 'Choose a .wav filename for audio or a .json filename for the receipt.',
-  synthesisNetwork: 'Blocked a network attempt. Check the voice setup and try again.',
+  synthesisNetwork: 'You appear to be offline. Reconnect and try again.',
   synthesisCloudKey: 'Your VieNeu API key was refused. Update it under speech providers.',
   synthesisCloudCredits: 'Your VieNeu plan has no credits left for this run.',
   synthesisCloudRefused: 'VieNeu refused part of the text. Edit it and try again.',

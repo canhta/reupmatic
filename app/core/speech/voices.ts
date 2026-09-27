@@ -215,6 +215,7 @@ export function parseCloudVoices(value: unknown): { voices: CloudVoice[] } {
 
 /** The local engine view the status carries, without the wire's stricter shape. */
 export interface LocalVoiceStatusView {
+  available: boolean;
   engine: string | null;
   model_id: string | null;
   languages: readonly VoiceLanguage[];
@@ -238,7 +239,7 @@ export function buildSynthesisVoices(
     seen.add(option.id);
     options.push(option);
   };
-  if (local?.engine && local.model_id) {
+  if (local?.available && local.engine && local.model_id) {
     for (const voice of local.voices) {
       push({
         id: voice.id,

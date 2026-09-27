@@ -115,6 +115,7 @@ test('the selector union lists presets, this engine clones, and cloud voices wit
   for (const voice of [clone, nanoClone]) voice.engine = 'vieneu-v3-turbo-onnx';
   const options = buildSynthesisVoices(
     {
+      available: true,
       engine: 'vieneu-v3-turbo-onnx',
       model_id: model,
       languages: ['en', 'vi'],
@@ -136,6 +137,22 @@ test('the selector union lists presets, this engine clones, and cloud voices wit
 
 test('with no local engine and no cloud model the selector is empty, never a placeholder', () => {
   assert.deepEqual(buildSynthesisVoices(null, [], [], null), []);
+});
+
+test('an unavailable local engine lists no voices, so the Set up route stays reachable', () => {
+  const options = buildSynthesisVoices(
+    {
+      available: false,
+      engine: 'vieneu-v3-turbo-onnx',
+      model_id: 'a'.repeat(64),
+      languages: ['vi'],
+      voices: [{ id: 'preset-1', label: 'Preset' }],
+    },
+    [],
+    [],
+    null,
+  );
+  assert.deepEqual(options, []);
 });
 
 test('stored metadata with a broken timestamp, source or engine is refused loudly', () => {

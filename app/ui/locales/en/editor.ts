@@ -68,6 +68,7 @@ export const editorEn = {
   complete: 'Complete',
   cancel: 'Cancel',
   cancelled: 'Cancelled',
+  cancelling: 'Cancelling',
   noSubtitlesYet: 'No subtitles yet',
   noCues: 'Import an SRT file or add a cue at the playhead.',
   noCueMatches: 'No cues match your search.',

@@ -3,7 +3,7 @@ import type { synthesisEn } from '../../en/speech/synthesis';
 export const synthesisVi = {
   synthesisTitle: 'Tạo giọng nói cục bộ',
   synthesisLimits: 'Tối đa 100 câu, 300 ký tự mỗi câu.',
-  synthesisVoice: 'Giọng có sẵn',
+  synthesisVoice: 'Giọng đọc',
   synthesisChooseVoice: 'Chọn giọng',
   synthesisScope: 'Các câu cần tạo giọng',
   synthesisAll: 'Toàn bộ lớp nội dung đọc',
@@ -56,7 +56,7 @@ export const synthesisVi = {
   synthesisDisk: 'Không đủ dung lượng. Giải phóng rồi thử lại.',
   synthesisProtected: 'Đích lưu bị bảo vệ hoặc đã đổi. Chọn tệp đầu ra khác.',
   synthesisExtension: 'Chọn tên có đuôi .wav cho âm thanh hoặc .json cho hồ sơ.',
-  synthesisNetwork: 'Đã chặn một kết nối mạng. Kiểm tra phần giọng nói rồi thử lại.',
+  synthesisNetwork: 'Có vẻ bạn đang ngoại tuyến. Kết nối lại rồi thử lại.',
   synthesisCloudKey: 'Khoá VieNeu của bạn bị từ chối. Cập nhật lại trong phần nhà cung cấp.',
   synthesisCloudCredits: 'Gói VieNeu của bạn đã hết credit cho lần này.',
   synthesisCloudRefused: 'VieNeu từ chối một phần nội dung. Sửa lại rồi thử tiếp.',

@@ -99,7 +99,8 @@ export function useSynthesisJob(context: Context) {
       operation.current = null;
       setActive(null);
       if (message.event === 'error') {
-        setError(message.data.code);
+        // A cancel the user asked for is not a failure; never banner it.
+        if (message.data.code !== 'CANCELLED') setError(message.data.code);
         return;
       }
       if (request.documentId !== current.current.documentId) return;
