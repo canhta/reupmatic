@@ -28,6 +28,8 @@ export function useSourcePreview(
 ) {
   const [selection, setSelection] = useState<SourceSelection | null>(null);
   const [noClipAtPosition, setNoClipAtPosition] = useState(false);
+  // True while the output clock is driven over a disabled span rather than by an element.
+  const [blackPlaying, setBlackPlaying] = useState(false);
   const current = useRef<SourceSelection | null>(null);
   const grants = useRef(new Map<string, string>());
   const ready = useRef(false);
@@ -37,10 +39,20 @@ export function useSourcePreview(
   // Set when playback should continue on the next clip once its element has metadata.
   const resumeAfterLoad = useRef(false);
   const switching = useRef(false);
+  // Drives the output clock over a disabled span: no element, black frame, real time.
+  const black = useRef<number | null>(null);
+  const cancelBlack = useCallback(() => {
+    if (black.current !== null) {
+      cancelAnimationFrame(black.current);
+      black.current = null;
+    }
+    setBlackPlaying(false);
+  }, []);
 
   const seek = useCallback(
     (milliseconds: number) => {
       if (!media) return;
+      cancelBlack();
       const duration = composition ? compositionDuration(composition) : media.duration_ms;
       const time = Math.max(0, Math.min(Math.round(milliseconds), duration - 1));
       clock.current = time;
@@ -81,7 +93,7 @@ export function useSourcePreview(
       current.current = selected;
       setSelection(selected);
     },
-    [composition, media, updateClock, video],
+    [cancelBlack, composition, media, updateClock, video],
   );
 
   useEffect(() => {
@@ -95,6 +107,7 @@ export function useSourcePreview(
     current.current = null;
     resumeAfterLoad.current = false;
     switching.current = false;
+    cancelBlack();
     setSelection(null);
     setNoClipAtPosition(false);
     video.current?.pause();
@@ -113,8 +126,9 @@ export function useSourcePreview(
       });
     return () => {
       alive = false;
+      cancelBlack();
     };
-  }, [documentId, composition, seek, report, video]);
+  }, [cancelBlack, documentId, composition, seek, report, video]);
 
   function onSourceMetadata() {
     if (!composition || !video.current || !current.current) return;
@@ -127,8 +141,36 @@ export function useSourcePreview(
     }
   }
 
-  // The output clock runs past this clip's out point: jump to the next enabled span and keep
-  // playing. Disabled spans are skipped; the last clip parks the clock at the composition end.
+  // Play a disabled span on the output clock: no element, black frame, source silent, real time.
+  function startBlackSpan(from: number, to: number) {
+    if (!composition) return;
+    video.current?.pause();
+    current.current = null;
+    setSelection(null);
+    setNoClipAtPosition(true);
+    switching.current = true;
+    setBlackPlaying(true);
+    const startedAt = performance.now();
+    const step = (now: number) => {
+      const at = Math.min(to, from + (now - startedAt));
+      clock.current = at;
+      updateClock(at);
+      if (at >= to) {
+        black.current = null;
+        setBlackPlaying(false);
+        switching.current = false;
+        resumeAfterLoad.current = true;
+        seek(to);
+        return;
+      }
+      black.current = requestAnimationFrame(step);
+    };
+    black.current = requestAnimationFrame(step);
+  }
+
+  // The output clock runs past this clip's out point: keep playing. A contiguous next clip hands
+  // over at once; a disabled run in between plays black for its duration, then continues. The
+  // last clip parks the clock at the composition end.
   function advanceClip(selected: SourceSelection) {
     if (!composition || switching.current) return;
     const spanEnd = selected.offset + Math.round((selected.end - selected.start) / selected.speed);
@@ -140,6 +182,10 @@ export function useSourcePreview(
       const end = Math.max(0, compositionDuration(composition) - 1);
       clock.current = end;
       updateClock(end);
+      return;
+    }
+    if (next.start_ms > spanEnd) {
+      startBlackSpan(spanEnd, next.start_ms);
       return;
     }
     switching.current = true;
@@ -178,5 +224,6 @@ export function useSourcePreview(
     sourceSelection: selection,
     sourceUrl: composition ? selection?.url : media?.url,
     sourceEmpty: Boolean(composition) && noClipAtPosition,
+    blackPlaying,
   };
 }

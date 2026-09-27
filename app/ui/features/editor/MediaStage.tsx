@@ -367,7 +367,7 @@ export function MediaStage() {
           )}
         </div>
       </div>
-      {result || (media && editor.sourceUrl) ? (
+      {result || (media && (editor.sourceUrl || editor.blackPlaying)) ? (
         <MonitorTransport
           isPlaying={playing}
           at={result ? resultClock : editor.clock}

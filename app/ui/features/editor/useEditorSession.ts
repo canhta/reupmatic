@@ -121,6 +121,7 @@ export interface EditorSession {
   sourceSelection: SourceSelection | null;
   sourceUrl: string | undefined;
   sourceEmpty: boolean;
+  blackPlaying: boolean;
   activeTextLayer: TextLayerName;
   selectTextLayer: (name: TextLayerName) => void;
   visibleLayer: TextLayerName | null;
