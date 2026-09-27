@@ -4,7 +4,6 @@ import re
 from media.editing.recipe import parse_editing
 from runtime.errors import WorkerError
 from subtitles.style import parse_style
-from vision.algorithms import region
 
 
 def record(value, required, optional=()):
@@ -35,8 +34,8 @@ def language(value):
 
 
 def parse_recipe(value, has_subtitles=False):
-    value = record(value, (), ("ocr", "inpaint", "editing", "subtitle_style"))
-    if not (value.keys() & {"ocr", "inpaint", "editing", "subtitle_style"}):
+    value = record(value, (), ("ocr", "editing", "subtitle_style"))
+    if not (value.keys() & {"ocr", "editing", "subtitle_style"}):
         raise WorkerError("INVALID_PROCESSING")
     recipe = {}
     if "subtitle_style" in value:
@@ -50,23 +49,6 @@ def parse_recipe(value, has_subtitles=False):
             "sample_ms": number(ocr["sample_ms"], 100, 2000, True),
             "min_confidence": number(ocr["min_confidence"], 0, 1),
         }
-    if "inpaint" in value:
-        paint = record(value["inpaint"], ("target", "padding_px"), ("region", "language"))
-        padding = number(paint["padding_px"], 0, 32, True)
-        if paint["target"] == "manual" and "language" not in paint:
-            try:
-                rectangle = region(paint.get("region"))
-            except WorkerError:
-                raise WorkerError("INVALID_PROCESSING") from None
-            recipe["inpaint"] = {"target": "manual", "padding_px": padding, "region": rectangle}
-        elif paint["target"] == "text" and "region" not in paint:
-            recipe["inpaint"] = {
-                "target": "text",
-                "padding_px": padding,
-                "language": language(paint.get("language")),
-            }
-        else:
-            raise WorkerError("INVALID_PROCESSING")
     if "editing" in value:
         recipe["editing"] = parse_editing(value["editing"])
     return recipe
@@ -76,10 +58,6 @@ def required_models(recipe):
     keys = set()
     if "ocr" in recipe:
         keys.add("ocr_" + recipe["ocr"]["language"])
-    if "inpaint" in recipe:
-        keys.add("inpainting")
-        if recipe["inpaint"]["target"] == "text":
-            keys.add("ocr_" + recipe["inpaint"]["language"])
     return sorted(keys)
 
 
@@ -99,8 +77,8 @@ def parse_fingerprints(value, recipe):
 def resolve_models(host, req, recipe):
     fingerprints = {}
     for key in required_models(recipe):
-        kind, lang = ("ocr", key[4:]) if key.startswith("ocr_") else ("inpainting", None)
-        bundle = host.models.require(kind, lang, check=lambda: host.cancelled(req))
+        lang = key[4:]
+        bundle = host.models.require("ocr", lang, check=lambda: host.cancelled(req))
         fingerprints[key] = bundle["fingerprint"]
     return fingerprints
 

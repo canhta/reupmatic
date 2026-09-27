@@ -1,4 +1,4 @@
-"""Vision request orchestration over the existing worker queue and native tools."""
+"""OCR request orchestration over the existing worker queue and native tools."""
 
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from runtime.context import WorkerContext
 from runtime.errors import WorkerError
 from subtitles.validation import validate_cues
 
-from vision.algorithms import region
 from vision.models import file_hash
 
 MAX_TIME = 86400000
@@ -30,10 +29,8 @@ def parse_options(method: str, params: object) -> dict:
     common = {"asset_id", "start_ms", "end_ms"}
     # vision.ocr is the internal chunk call the processing scan uses; it is not a wire method.
     ocr = method in ("media.ocr.extract", "vision.ocr")
-    required = common | (
-        {"language", "sample_ms", "min_confidence"} if ocr else {"target", "padding_px"}
-    )
-    allowed = required | {"region"} | (set() if ocr else {"language"})
+    required = common | ({"language", "sample_ms", "min_confidence"} if ocr else set())
+    allowed = required
     if (
         not isinstance(params, dict)
         or not required <= params.keys()
@@ -48,35 +45,18 @@ def parse_options(method: str, params: object) -> dict:
         raise WorkerError("INVALID_REQUEST")
     if method == "media.ocr.extract" and start != 0:
         raise WorkerError("INVALID_REQUEST")
-    if method != "media.ocr.extract" and end - start > (120000 if ocr else 10000):
+    if method != "media.ocr.extract" and end - start > 120000:
         raise WorkerError("VISION_LIMIT")
-    if "region" in params:
-        region(params["region"])
-    if ocr:
-        sample, confidence = params["sample_ms"], params["min_confidence"]
-        if (
-            type(sample) is not int
-            or not 100 <= sample <= 2000
-            or type(confidence) not in (int, float)
-            or not math.isfinite(confidence)
-            or not 0 <= confidence <= 1
-        ):
-            raise WorkerError("INVALID_REQUEST")
-    else:
-        if (
-            params["target"] not in ("manual", "text")
-            or type(params["padding_px"]) is not int
-            or not 0 <= params["padding_px"] <= 32
-        ):
-            raise WorkerError("INVALID_REQUEST")
-        if params["target"] == "manual":
-            if "region" not in params or "language" in params:
-                raise WorkerError("INVALID_REQUEST")
-        elif "region" in params:
-            raise WorkerError("INVALID_REQUEST")
-    if ocr or params["target"] == "text":
-        if params.get("language") not in ("en", "vi", "zh"):
-            raise WorkerError("INVALID_REQUEST")
+    sample, confidence = params["sample_ms"], params["min_confidence"]
+    if (
+        type(sample) is not int
+        or not 100 <= sample <= 2000
+        or type(confidence) not in (int, float)
+        or not math.isfinite(confidence)
+        or not 0 <= confidence <= 1
+        or params.get("language") not in ("en", "vi", "zh")
+    ):
+        raise WorkerError("INVALID_REQUEST")
     return dict(params)
 
 
@@ -89,17 +69,11 @@ class VisionService:
         emit = emit_progress or (lambda data: host.emit(req, "progress", data))
         params = parse_options(req["method"], req["params"])
         source = host.assets.get(params["asset_id"], "video")
-        ocr = req["method"] == "vision.ocr"
-        kind = "ocr" if ocr else "inpainting"
 
         def check():
             return host.cancelled(req)
 
-        models = {}
-        if ocr or params["target"] == "text":
-            models["ocr"] = host.models.require("ocr", params["language"], check=check)
-        if not ocr:
-            models["inpainting"] = host.models.require("inpainting", check=check)
+        models = {"ocr": host.models.require("ocr", params["language"], check=check)}
         info = probe_file(host, req, source["path"])
         if params["end_ms"] > info["duration_ms"]:
             raise WorkerError("INVALID_REQUEST")
@@ -132,14 +106,14 @@ class VisionService:
         source_w, source_h = stream_info["width"], stream_info["height"]
         if abs(rotation) % 180 == 90:
             source_w, source_h = source_h, source_w
-        factor = min(1, (MAX_OCR_EDGE if ocr else 960) / max(source_w, source_h))
+        factor = min(1, MAX_OCR_EDGE / max(source_w, source_h))
         width = max(2, int(source_w * factor) // 2 * 2)
         height = max(2, int(source_h * factor) // 2 * 2)
-        rate = 1000 / params["sample_ms"] if ocr else 24
+        rate = 1000 / params["sample_ms"]
         duration = (params["end_ms"] - params["start_ms"]) / 1000
         max_frames = math.ceil(duration * rate)
         frame_size = width * height * 3
-        required_disk = frame_size * max_frames * (1 if ocr else 2) + DISK_RESERVE
+        required_disk = frame_size * max_frames + DISK_RESERVE
         if required_disk > MAX_SEGMENT_BYTES:
             raise WorkerError("VISION_LIMIT")
         if shutil.disk_usage(host.workspace).free < required_disk:
@@ -148,7 +122,7 @@ class VisionService:
         emit({"phase": "visionDecoding", "fraction": None})
         with tempfile.TemporaryDirectory(dir=host.workspace, prefix="vision-") as directory:
             tmp = Path(directory)
-            frames, processed = tmp / "input.rgb", tmp / "processed.rgb"
+            frames = tmp / "input.rgb"
             host.process.run(
                 req,
                 [
@@ -189,18 +163,16 @@ class VisionService:
             host.assets.get(params["asset_id"], "video")
             job = {
                 **params,
-                "kind": kind,
+                "kind": "ocr",
                 "models": models,
                 "width": width,
                 "height": height,
                 "frame_count": count,
                 "input_frames": str(frames),
-                "output_frames": str(processed),
             }
             job_path = tmp / "request.json"
             job_path.write_text(json.dumps(job, ensure_ascii=False), encoding="utf-8")
-            phase = "visionRecognizing" if ocr else "visionInpainting"
-            emit({"phase": phase, "fraction": 0})
+            emit({"phase": "visionRecognizing", "fraction": 0})
             last = -1
 
             def progress():
@@ -211,7 +183,7 @@ class VisionService:
                     completed = value.get("completed")
                     if type(completed) is int and last < completed <= count:
                         last = completed
-                        emit({"phase": phase, "fraction": completed / count})
+                        emit({"phase": "visionRecognizing", "fraction": completed / count})
                 except (OSError, ValueError, TypeError, AttributeError):
                     pass
 
@@ -252,7 +224,7 @@ class VisionService:
             if staging is None and file_hash(source["path"], check) != source["sha256"]:
                 raise WorkerError("SOURCE_CHANGED")
             metadata = {
-                "kind": kind,
+                "kind": "ocr",
                 "asset_id": params["asset_id"],
                 "source_sha256": source["sha256"],
                 "start_ms": params["start_ms"],
@@ -264,95 +236,23 @@ class VisionService:
                 },
                 "algorithm_version": "vision-0.6.0",
             }
-            if ocr:
-                validate_cues(data.get("cues"))
-                if (
-                    not isinstance(data.get("observations"), list)
-                    or len(data["observations"]) > 1200
-                ):
-                    raise WorkerError("MODEL_OUTPUT_INVALID")
-                result = {
-                    **metadata,
-                    **data,
-                    "language": params["language"],
-                    "sample_ms": params["sample_ms"],
-                    "analysis_id": str(uuid.uuid4()),
-                }
-                encoded = json.dumps(result, ensure_ascii=False, allow_nan=False).encode("utf-8")
-                if len(encoded) > MAX_RESULT:
-                    raise WorkerError("VISION_RESULT_TOO_LARGE")
-                analyses = staging or host.workspace / "analyses"
-                analyses.mkdir(exist_ok=True)
-                analysis_file = tmp / "analysis.json"
-                analysis_file.write_bytes(encoded)
-                check()
-                os.replace(analysis_file, analyses / f"{result['analysis_id']}.json")
-                return result
-            if processed.stat().st_size != frame_size * count:
-                raise WorkerError("VISION_FRAME_INVALID")
-            emit({"phase": "visionEncoding", "fraction": None})
-            output = tmp / ("chunk.mkv" if staging else "sample.mp4")
-            args = [
-                host.ffmpeg,
-                "-v",
-                "error",
-                "-nostdin",
-                "-f",
-                "rawvideo",
-                "-pix_fmt",
-                "rgb24",
-                "-s",
-                f"{width}x{height}",
-                "-r",
-                "24",
-                "-i",
-                str(processed),
-            ]
-            if staging:
-                args += ["-map", "0:v:0", "-an", "-c:v", "ffv1", "-level", "3"]
-            else:
-                args += [
-                    "-ss",
-                    str(start),
-                    "-i",
-                    str(source["path"]),
-                    "-t",
-                    str(duration),
-                    "-map",
-                    "0:v:0",
-                    "-map",
-                    "1:a:0?",
-                    "-c:v",
-                    "libx264",
-                    "-preset",
-                    "fast",
-                    "-crf",
-                    "18",
-                    "-pix_fmt",
-                    "yuv420p",
-                    "-c:a",
-                    "aac",
-                    "-movflags",
-                    "+faststart",
-                ]
-            args += ["-map_metadata", "-1", "-threads", "2", "-n", str(output)]
-            host.process.run(req, args)
-            generated = probe_file(host, req, output)
-            host.assets.get(params["asset_id"], "video")
-            if staging is None and file_hash(source["path"], check) != source["sha256"]:
-                raise WorkerError("SOURCE_CHANGED")
-            aid = str(uuid.uuid4())
+            validate_cues(data.get("cues"))
+            if not isinstance(data.get("observations"), list) or len(data["observations"]) > 1200:
+                raise WorkerError("MODEL_OUTPUT_INVALID")
             result = {
                 **metadata,
                 **data,
-                "artifact_id": aid,
-                "path": str((staging or host.cache) / f"{aid}{output.suffix}"),
-                "duration_ms": generated["duration_ms"],
-                "has_audio": generated["has_audio"],
-                "fps": 24,
-                "cache_hit": False,
-                "sha256": file_hash(output, check),
+                "language": params["language"],
+                "sample_ms": params["sample_ms"],
+                "analysis_id": str(uuid.uuid4()),
             }
+            encoded = json.dumps(result, ensure_ascii=False, allow_nan=False).encode("utf-8")
+            if len(encoded) > MAX_RESULT:
+                raise WorkerError("VISION_RESULT_TOO_LARGE")
+            analyses = staging or host.workspace / "analyses"
+            analyses.mkdir(exist_ok=True)
+            analysis_file = tmp / "analysis.json"
+            analysis_file.write_bytes(encoded)
             check()
-            os.replace(output, result["path"])
+            os.replace(analysis_file, analyses / f"{result['analysis_id']}.json")
             return result

@@ -100,8 +100,7 @@ function parseInput(value: unknown): RenderInput {
   }
   if (copy.composition !== undefined) {
     copy.composition = parseComposition(copy.composition);
-    if (copy.processing?.ocr || copy.processing?.inpaint)
-      throw new RemoteError('COMPOSITION_PROCESSING_UNAVAILABLE');
+    if (copy.processing?.ocr) throw new RemoteError('COMPOSITION_PROCESSING_UNAVAILABLE');
     const duration = compositionDuration(copy.composition);
     resolveEditWindow(copy.processing?.editing, duration);
     if (copy.cues.some((cue) => cue.end_ms > duration)) throw new RemoteError('INVALID_CUES');

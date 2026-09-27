@@ -9,7 +9,7 @@ import { WorkerClient } from '../../dist-core/worker/worker-client.js';
 const HELLO_RESULT =
   '{"v": 1, "id": req["id"], "revision": req["revision"], "event": "result", ' +
   '"data": {"protocol": 1, "ffmpeg": True, "pysubs2": True, "ocr": False, ' +
-  '"inpainting": False, "durable_jobs": False}}';
+  '"durable_jobs": False}}';
 
 const LAUNCH_LOG = [
   'import json, os, sys',

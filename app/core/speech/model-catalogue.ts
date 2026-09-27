@@ -29,7 +29,7 @@ export const ARCHITECTURES_BY_TASK: ReadonlyMap<ModelTask, ReadonlySet<string>> 
     ]),
   ],
   ['translation', new Set<string>(['ctranslate2-sentencepiece'])],
-  ['vision', new Set<string>(['rapidocr-lama'])],
+  ['vision', new Set<string>(['rapidocr'])],
 ]);
 
 export const IMPLEMENTED_ARCHITECTURES: ReadonlySet<string> = new Set<string>(
@@ -52,7 +52,7 @@ const BASE_KEYS = [
 ] as const;
 const SPEECH_KEYS = [...BASE_KEYS, 'languages'] as const;
 const TRANSLATION_KEYS = [...BASE_KEYS, 'source_language', 'target_language'] as const;
-const VISION_KEYS = [...BASE_KEYS, 'ocr', 'inpainting'] as const;
+const VISION_KEYS = [...BASE_KEYS, 'ocr'] as const;
 const FILE_KEYS = ['name', 'path', 'sha256', 'size'] as const;
 
 export interface CatalogueFile {
@@ -96,8 +96,7 @@ export interface VisionOcrPack {
 
 export interface VisionCatalogueModel extends CatalogueModelBase {
   readonly task: 'vision';
-  readonly ocr?: Partial<Record<SpeechLanguage, VisionOcrPack>>;
-  readonly inpainting?: { readonly model: string };
+  readonly ocr: Partial<Record<SpeechLanguage, VisionOcrPack>>;
 }
 
 export type CatalogueModel =
@@ -295,77 +294,52 @@ function parseVisionModel(
 ): VisionCatalogueModel {
   const names = new Set(common.files.map((file) => file.name));
   const referenced = new Set<string>();
-  const hasOcr = 'ocr' in value;
-  const hasInpainting = 'inpainting' in value;
-  if (!hasOcr && !hasInpainting) throw new RemoteError('MODEL_CATALOGUE_INVALID');
-  let ocr: Partial<Record<SpeechLanguage, VisionOcrPack>> | undefined;
-  if (hasOcr) {
-    const raw = value.ocr;
-    if (!plain(raw)) throw new RemoteError('MODEL_CATALOGUE_INVALID');
-    const languages = Object.keys(raw);
-    if (
-      languages.length < 1 ||
-      languages.length > 3 ||
-      languages.some((language) => !VISION_LANGUAGES.includes(language as SpeechLanguage))
-    ) {
-      throw new RemoteError('MODEL_CATALOGUE_INVALID');
-    }
-    ocr = {};
-    for (const language of languages) {
-      const pack = raw[language];
-      if (
-        !plain(pack) ||
-        !exact(pack, OCR_PACK_KEYS) ||
-        typeof pack.det !== 'string' ||
-        typeof pack.rec !== 'string' ||
-        typeof pack.keys !== 'string' ||
-        ![pack.det, pack.rec, pack.keys].every((name) => names.has(name)) ||
-        typeof pack.det_version !== 'string' ||
-        !VISION_VERSIONS.includes(pack.det_version) ||
-        typeof pack.rec_version !== 'string' ||
-        !VISION_VERSIONS.includes(pack.rec_version) ||
-        !Number.isInteger(pack.rec_height) ||
-        !VISION_HEIGHTS.includes(pack.rec_height as number)
-      ) {
-        throw new RemoteError('MODEL_CATALOGUE_INVALID');
-      }
-      referenced.add(pack.det);
-      referenced.add(pack.rec);
-      referenced.add(pack.keys);
-      ocr[language as SpeechLanguage] = {
-        det: pack.det,
-        rec: pack.rec,
-        keys: pack.keys,
-        det_version: pack.det_version,
-        rec_version: pack.rec_version,
-        rec_height: pack.rec_height as number,
-      };
-    }
+  const raw = value.ocr;
+  if (!plain(raw)) throw new RemoteError('MODEL_CATALOGUE_INVALID');
+  const languages = Object.keys(raw);
+  if (
+    languages.length < 1 ||
+    languages.length > 3 ||
+    languages.some((language) => !VISION_LANGUAGES.includes(language as SpeechLanguage))
+  ) {
+    throw new RemoteError('MODEL_CATALOGUE_INVALID');
   }
-  let inpainting: { readonly model: string } | undefined;
-  if (hasInpainting) {
-    const raw = value.inpainting;
+  const ocr: Partial<Record<SpeechLanguage, VisionOcrPack>> = {};
+  for (const language of languages) {
+    const pack = raw[language];
     if (
-      !plain(raw) ||
-      !exact(raw, ['model']) ||
-      typeof raw.model !== 'string' ||
-      !names.has(raw.model)
+      !plain(pack) ||
+      !exact(pack, OCR_PACK_KEYS) ||
+      typeof pack.det !== 'string' ||
+      typeof pack.rec !== 'string' ||
+      typeof pack.keys !== 'string' ||
+      ![pack.det, pack.rec, pack.keys].every((name) => names.has(name)) ||
+      typeof pack.det_version !== 'string' ||
+      !VISION_VERSIONS.includes(pack.det_version) ||
+      typeof pack.rec_version !== 'string' ||
+      !VISION_VERSIONS.includes(pack.rec_version) ||
+      !Number.isInteger(pack.rec_height) ||
+      !VISION_HEIGHTS.includes(pack.rec_height as number)
     ) {
       throw new RemoteError('MODEL_CATALOGUE_INVALID');
     }
-    referenced.add(raw.model);
-    inpainting = { model: raw.model };
+    referenced.add(pack.det);
+    referenced.add(pack.rec);
+    referenced.add(pack.keys);
+    ocr[language as SpeechLanguage] = {
+      det: pack.det,
+      rec: pack.rec,
+      keys: pack.keys,
+      det_version: pack.det_version,
+      rec_version: pack.rec_version,
+      rec_height: pack.rec_height as number,
+    };
   }
   // Every downloaded file must be used by a role; an unreferenced file is refused.
   if ([...names].some((name) => !referenced.has(name))) {
     throw new RemoteError('MODEL_CATALOGUE_INVALID');
   }
-  return {
-    ...common,
-    task: 'vision',
-    ...(ocr ? { ocr } : {}),
-    ...(inpainting ? { inpainting } : {}),
-  };
+  return { ...common, task: 'vision', ocr };
 }
 
 // An unimplemented architecture is refused at configuration time, never at run time.

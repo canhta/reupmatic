@@ -196,7 +196,7 @@ test('malformed entries are refused with a plain reason and never offered', () =
   assert.throws(() => parseCatalogueModel({ ...entry(), extra: true }), /MODEL_CATALOGUE_INVALID/);
 });
 
-test('the shipped catalogue offers a translation pair and the LaMa inpainting model', async () => {
+test('the shipped catalogue offers a translation pair and the OCR vision pack', async () => {
   const filename = new URL('../../app/core/speech/catalogue.json', import.meta.url);
   const { models } = await readCatalogue([filename.pathname]);
   const byId = new Map(models.map((model) => [model.id, model]));
@@ -222,18 +222,17 @@ test('the shipped catalogue offers a translation pair and the LaMa inpainting mo
   assert.deepEqual([zhEn.source_language, zhEn.target_language], ['zh', 'en']);
   assert.deepEqual([zhVi.source_language, zhVi.target_language], ['zh', 'vi']);
 
-  const lama = byId.get('lama-onnx-fp32');
-  assert.ok(lama, 'the inpainting model is offered');
-  assert.equal(lama.task, 'vision');
-  assert.equal(lama.engine, 'rapidocr-lama');
-  assert.equal(lama.licence, 'Apache-2.0');
-  assert.deepEqual(lama.inpainting, { model: 'lama_fp32.onnx' });
-  assert.equal(lama.ocr, undefined);
+  const vision = models.filter((model) => model.task === 'vision');
+  assert.deepEqual(
+    vision.map((model) => model.id),
+    ['rapidocr-ppocrv5-mobile'],
+    'only the OCR vision entry remains',
+  );
 
   const ocr = byId.get('rapidocr-ppocrv5-mobile');
   assert.ok(ocr, 'the OCR packs are offered');
   assert.equal(ocr.task, 'vision');
-  assert.equal(ocr.engine, 'rapidocr-lama');
+  assert.equal(ocr.engine, 'rapidocr');
   assert.equal(ocr.licence, 'Apache-2.0');
   assert.deepEqual(Object.keys(ocr.ocr).sort(), ['en', 'vi', 'zh']);
   for (const pack of Object.values(ocr.ocr)) {
@@ -369,10 +368,10 @@ function translationEntry(overrides = {}) {
 
 function visionEntry(overrides = {}) {
   return {
-    id: 'rapidocr-lama',
+    id: 'rapidocr',
     task: 'vision',
-    engine: 'rapidocr-lama',
-    purpose: { en: 'Read and remove on-screen text', vi: 'Đọc và xoá chữ trên hình' },
+    engine: 'rapidocr',
+    purpose: { en: 'Read on-screen text', vi: 'Đọc chữ trên hình' },
     licence: 'Apache-2.0',
     source_host: 'huggingface.co',
     ocr: {
@@ -385,13 +384,7 @@ function visionEntry(overrides = {}) {
         rec_height: 48,
       },
     },
-    inpainting: { model: 'lama_fp32.onnx' },
-    ...sized([
-      file('vi/det.onnx', 3),
-      file('vi/rec.onnx', 3),
-      file('vi/keys.txt', 2),
-      file('lama_fp32.onnx', 2),
-    ]),
+    ...sized([file('vi/det.onnx', 3), file('vi/rec.onnx', 3), file('vi/keys.txt', 2)]),
     ...overrides,
   };
 }
@@ -447,36 +440,17 @@ test('a translation entry that cannot install is refused at configuration time',
   );
 });
 
-test('a vision entry declares OCR packs and/or an inpainting model, each pointing at a file', () => {
+test('a vision entry declares OCR packs pointing at a file', () => {
   const both = parseCatalogueModel(visionEntry());
   assert.equal(both.task, 'vision');
   assert.equal(both.ocr.vi.det, 'vi/det.onnx');
   assert.equal(both.ocr.vi.rec_height, 48);
-  assert.equal(both.inpainting.model, 'lama_fp32.onnx');
-
-  const ocrOnly = visionEntry();
-  delete ocrOnly.inpainting;
-  Object.assign(ocrOnly, sized(ocrOnly.files.filter((item) => item.name !== 'lama_fp32.onnx')));
-  const parsedOcr = parseCatalogueModel(ocrOnly);
-  assert.equal(parsedOcr.inpainting, undefined);
-  assert.ok(parsedOcr.ocr.vi);
-
-  const inpaintingOnly = visionEntry();
-  delete inpaintingOnly.ocr;
-  Object.assign(
-    inpaintingOnly,
-    sized(inpaintingOnly.files.filter((item) => !item.name.startsWith('vi/'))),
-  );
-  const parsedInpaint = parseCatalogueModel(inpaintingOnly);
-  assert.equal(parsedInpaint.ocr, undefined);
-  assert.equal(parsedInpaint.inpainting.model, 'lama_fp32.onnx');
 });
 
 test('a vision entry that cannot install is refused at configuration time', () => {
-  const neither = visionEntry();
-  delete neither.ocr;
-  delete neither.inpainting;
-  assert.throws(() => parseCatalogueModel(neither), /MODEL_CATALOGUE_INVALID/);
+  const noOcr = visionEntry();
+  delete noOcr.ocr;
+  assert.throws(() => parseCatalogueModel(noOcr), /MODEL_CATALOGUE_INVALID/);
   assert.throws(
     () =>
       parseCatalogueModel(

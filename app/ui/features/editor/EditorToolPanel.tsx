@@ -1,9 +1,7 @@
-import { Text } from '@astryxdesign/core/Text';
 import { useTranslation } from 'react-i18next';
 import { SpeechSetup } from '../speech/SpeechGenerator';
 import { TranslateSetup } from '../speech/translation/TranslateGenerator';
 import { OcrSetup } from '../vision/OcrExtractGenerator';
-import { VisionPanel } from '../vision/VisionPanel';
 import { AudioPanel } from './audio-tools/AudioPanel';
 import { VoicePanel } from './audio-tools/VoicePanel';
 import { ClipsPanel } from './composition/ClipsPanel';
@@ -30,7 +28,6 @@ export function EditorToolPanel({ onClose }: { onClose: () => void }) {
 }
 
 function ToolPanelContent({ activeTool }: { activeTool: ToolId }) {
-  const { t } = useTranslation();
   const editor = useEditor();
   const media = editor.media;
   switch (activeTool) {
@@ -42,19 +39,6 @@ function ToolPanelContent({ activeTool }: { activeTool: ToolId }) {
       return <VoicePanel />;
     case 'style':
       return media ? <SubtitleStylesPanel key={`styles-${media.asset_id}`} /> : null;
-    case 'clean-up':
-      return !media ? null : editor.composition ? (
-        <Text as="p" type="body" className="notice">
-          {t('compositionAiUnavailable')}
-        </Text>
-      ) : (
-        <VisionPanel
-          key={media.asset_id}
-          assetId={media.asset_id}
-          revision={editor.revision}
-          duration={media.duration_ms}
-        />
-      );
     case 'audio':
       return media ? <AudioPanel key={`audio-${media.asset_id}`} /> : null;
     case 'edit':

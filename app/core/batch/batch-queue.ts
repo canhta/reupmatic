@@ -188,7 +188,6 @@ export class BatchQueue extends EventEmitter {
         'rendering',
         'processingModels',
         'processingOcr',
-        'processingInpaint',
         'processingJoining',
         'processingEncoding',
         'processingVerifying',

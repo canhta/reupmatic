@@ -386,14 +386,8 @@ test('shared queue forwards the saved recipe, model pins and stage progress on e
     queue.beginClose();
     await queue.close();
   });
-  const processing = {
-    inpaint: {
-      target: 'manual',
-      padding_px: 4,
-      region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 },
-    },
-  };
-  const processing_models = { inpainting: digest('exact model') };
+  const processing = { ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } };
+  const processing_models = { ocr_en: digest('exact model') };
   const snapshot = queue.enqueue('processing-queued', [
     { ...f.input, processing, processing_models },
   ]);
@@ -408,10 +402,10 @@ test('shared queue forwards the saved recipe, model pins and stage progress on e
     id: renderer.calls[0].input.request_id,
     revision: 1,
     event: 'progress',
-    data: { phase: 'processingInpaint', fraction: 0.5 },
+    data: { phase: 'processingOcr', fraction: 0.5 },
   });
   assert.deepEqual(queue.snapshot().items[0].progress, {
-    phase: 'processingInpaint',
+    phase: 'processingOcr',
     fraction: 0.5,
   });
   renderer.calls[0].reject(new RemoteError('PROCESSING_MODELS_CHANGED'));

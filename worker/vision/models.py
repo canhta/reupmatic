@@ -12,8 +12,6 @@ from typing import Callable
 from assets.registry import sha256 as file_hash
 from runtime.errors import WorkerError
 
-from vision.algorithms import lama_signature
-
 LANGUAGES = {"en", "vi", "zh"}
 VERSIONS = {"PP-OCRv3", "PP-OCRv4", "PP-OCRv5"}
 
@@ -23,36 +21,6 @@ def runtime_available(packages: tuple[str, ...]) -> bool:
         return all(importlib.util.find_spec(name) is not None for name in packages)
     except (ImportError, ValueError):
         return False
-
-
-def open_inpainting_session(path: Path):
-    """Session metadata only; status must not run inference."""
-    import onnxruntime as ort
-
-    options = ort.SessionOptions()
-    options.intra_op_num_threads = 2
-    options.inter_op_num_threads = 1
-    return ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
-
-
-# Status is called often; the ~200 MB LaMa graph is opened once per (path, weight hash).
-_SIGNATURE_CACHE: dict[tuple[str, str], str | None] = {}
-
-
-def inpainting_signature_code(bundle: dict) -> str | None:
-    key = (str(bundle["model"]["path"]), str(bundle["model"]["sha256"]))
-    if key not in _SIGNATURE_CACHE:
-        try:
-            session = open_inpainting_session(Path(key[0]))
-            inputs = {
-                item.name: {"shape": list(item.shape), "type": item.type}
-                for item in session.get_inputs()
-            }
-        except Exception:
-            _SIGNATURE_CACHE[key] = "MODEL_INFERENCE_FAILED"
-        else:
-            _SIGNATURE_CACHE[key] = None if lama_signature(inputs) else "MODEL_SHAPE_UNSUPPORTED"
-    return _SIGNATURE_CACHE[key]
 
 
 class ModelRegistry:
@@ -66,7 +34,7 @@ class ModelRegistry:
             if len(raw) > 65536:
                 raise ValueError
             value = json.loads(raw)
-            if not isinstance(value, dict) or value.keys() - {"ocr", "inpainting"}:
+            if not isinstance(value, dict) or value.keys() - {"ocr"}:
                 raise ValueError
             return value
         except FileNotFoundError:
@@ -111,38 +79,27 @@ class ModelRegistry:
         runtime: bool = True,
     ) -> dict:
         manifest = self._read()
-        if kind == "ocr":
-            entries = manifest.get("ocr", {})
-            if not isinstance(entries, dict) or entries.keys() - LANGUAGES:
-                raise WorkerError("MODEL_MANIFEST_INVALID")
-            if language not in entries:
-                raise WorkerError("MODEL_LANGUAGE_UNAVAILABLE" if entries else "MODEL_MISSING")
-            item = entries[language]
-            if (
-                not isinstance(item, dict)
-                or set(item) != {"det", "rec", "keys", "det_version", "rec_version", "rec_height"}
-                or item["det_version"] not in VERSIONS
-                or item["rec_version"] not in VERSIONS
-                or type(item["rec_height"]) is not int
-                or item["rec_height"] not in {32, 48}
-            ):
-                raise WorkerError("MODEL_MANIFEST_INVALID")
-            bundle = {
-                key: self._artifact(item[key], verify, check) for key in ("det", "rec", "keys")
-            }
-            bundle.update({key: item[key] for key in ("det_version", "rec_version", "rec_height")})
-            bundle["language"] = language
-            packages = ("numpy", "cv2", "onnxruntime", "rapidocr")
-        elif kind == "inpainting":
-            item = manifest.get("inpainting")
-            if item is None:
-                raise WorkerError("MODEL_MISSING")
-            if not isinstance(item, dict) or set(item) != {"model"}:
-                raise WorkerError("MODEL_MANIFEST_INVALID")
-            bundle = {"model": self._artifact(item["model"], verify, check)}
-            packages = ("numpy", "cv2", "onnxruntime")
-        else:
+        if kind != "ocr":
             raise WorkerError("INVALID_REQUEST")
+        entries = manifest.get("ocr", {})
+        if not isinstance(entries, dict) or entries.keys() - LANGUAGES:
+            raise WorkerError("MODEL_MANIFEST_INVALID")
+        if language not in entries:
+            raise WorkerError("MODEL_LANGUAGE_UNAVAILABLE" if entries else "MODEL_MISSING")
+        item = entries[language]
+        if (
+            not isinstance(item, dict)
+            or set(item) != {"det", "rec", "keys", "det_version", "rec_version", "rec_height"}
+            or item["det_version"] not in VERSIONS
+            or item["rec_version"] not in VERSIONS
+            or type(item["rec_height"]) is not int
+            or item["rec_height"] not in {32, 48}
+        ):
+            raise WorkerError("MODEL_MANIFEST_INVALID")
+        bundle = {key: self._artifact(item[key], verify, check) for key in ("det", "rec", "keys")}
+        bundle.update({key: item[key] for key in ("det_version", "rec_version", "rec_height")})
+        bundle["language"] = language
+        packages = ("numpy", "cv2", "onnxruntime", "rapidocr")
         if runtime and not runtime_available(packages):
             raise WorkerError("RUNTIME_PACK_MISSING")
         # Paths are NOT included in identity or public status.
@@ -160,25 +117,20 @@ class ModelRegistry:
         entries = raw.get("ocr", {})
         if not isinstance(entries, dict) or entries.keys() - LANGUAGES:
             raise WorkerError("MODEL_MANIFEST_INVALID")
-        if not entries and "inpainting" not in raw:
+        if not entries:
             raise WorkerError("MODEL_MANIFEST_INVALID")
-        result: dict = {}
-        if entries:
-            result["ocr"] = {}
-            for language in sorted(entries):
-                bundle = self.require("ocr", language, check=check, runtime=False)
-                result["ocr"][language] = {
-                    key: bundle[key]
-                    for key in ("det", "rec", "keys", "det_version", "rec_version", "rec_height")
-                }
-        if "inpainting" in raw:
-            bundle = self.require("inpainting", check=check, runtime=False)
-            result["inpainting"] = {"model": bundle["model"]}
+        result: dict = {"ocr": {}}
+        for language in sorted(entries):
+            bundle = self.require("ocr", language, check=check, runtime=False)
+            result["ocr"][language] = {
+                key: bundle[key]
+                for key in ("det", "rec", "keys", "det_version", "rec_version", "rec_height")
+            }
         return result
 
     def status(self) -> dict:
         result = {}
-        for kind in ("ocr", "inpainting"):
+        for kind in ("ocr",):
             languages: list[str] = []
             code: str | None = None
             try:
@@ -197,11 +149,6 @@ class ModelRegistry:
                             failures.append(error.code)
                     if not languages:
                         raise WorkerError(failures[0])
-                else:
-                    bundle = self.require(kind, verify=False)
-                    signature = inpainting_signature_code(bundle)
-                    if signature is not None:
-                        raise WorkerError(signature)
             except WorkerError as error:
                 code = error.code
             result[kind] = {

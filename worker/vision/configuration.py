@@ -12,7 +12,7 @@ from runtime.protocol import exact, string
 
 from vision.models import ModelRegistry
 
-_KEYS = {"ocr", "inpainting"}
+_KEYS = {"ocr"}
 
 
 def _candidate(req: dict) -> Path:
@@ -105,9 +105,6 @@ def merge_models(host, req: dict) -> dict:
     ocr = {**existing.get("ocr", {}), **incoming.get("ocr", {})}
     if ocr:
         merged["ocr"] = ocr
-    inpainting = incoming.get("inpainting", existing.get("inpainting"))
-    if inpainting is not None:
-        merged["inpainting"] = inpainting
     check()
     _write_manifest(destination, merged)
     host.models = ModelRegistry(destination)
@@ -131,11 +128,6 @@ def unconfigure_models(host, req: dict) -> dict:
             }
             if keep:
                 remaining["ocr"] = keep
-        inpainting = value.get("inpainting")
-        if isinstance(inpainting, dict) and not _under(
-            destination, directory, (inpainting.get("model") or {}).get("path")
-        ):
-            remaining["inpainting"] = inpainting
         if remaining:
             _write_manifest(destination, remaining)
         else:

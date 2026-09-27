@@ -234,8 +234,8 @@ installProtocols(
 const editorApi = installEditor({ wire, getWindow: () => win, getLanguage,
   worker: client, renderer, media, library, workspace, savePath: settings.savePath,
   onRecentChanged: () => void rebuildMenu() });
-const vision = installVision({ wire, getWindow: () => win, worker: client, workspace,
-  owns: id => media.ownsVideo(id), registerArtifact: (id, filename, assetId) => media.registerArtifact(id, filename, assetId) });
+const vision = installVision({ wire, getWindow: () => win, worker: client,
+  owns: id => media.ownsVideo(id) });
 batch = await installBatch({ wire, getWindow: () => win, getLanguage, diagnostics,
   worker: client, renderer, workspace, originalPaths: media.originalPaths,
   defaultDirectory: settings.defaultDirectory, resolveLibrary: libraryApi.resolve,

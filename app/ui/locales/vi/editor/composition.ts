@@ -26,6 +26,6 @@ export const compositionVi = {
   compositionInvalid: 'Chưa áp dụng. Kiểm tra khoảng và vị trí phát rồi thử lại.',
   compositionDiscard: 'Bỏ khoảng đoạn chưa áp dụng để chọn đoạn khác?',
   compositionRemoveConfirm: 'Bỏ đoạn này? File nguồn không bị ảnh hưởng.',
-  compositionAiUnavailable: 'Tắt OCR và xóa chữ AI để render bản ghép.',
   compositionClock: 'Điểm vào/ra dùng thời gian riêng của đoạn.',
+  compositionAiUnavailable: 'Tắt OCR để render bản ghép.',
 } satisfies Record<keyof typeof compositionEn, string>;

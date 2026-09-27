@@ -48,17 +48,12 @@ test('SC-03: optional data-only profiles round trip without user media, cues or 
   }
 });
 
-test('SC-03: reusable profiles reject video-specific removal masks', () => {
+test('SC-03: reusable profiles carry OCR without source-specific edits', () => {
   const catalog = new WorkspaceCatalog(':memory:', unusedExport);
   try {
-    const processing = {
-      inpaint: {
-        target: 'manual',
-        padding_px: 4,
-        region: { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
-      },
-    };
-    assert.throws(() => catalog.saveProfile({ ...profile, processing }), /PROFILE_MEDIA_SPECIFIC/);
+    const processing = { ocr: { language: 'vi', sample_ms: 500, min_confidence: 0.5 } };
+    catalog.saveProfile({ ...profile, processing });
+    assert.deepEqual(catalog.getProfileDocument(profile.id).processing, processing);
   } finally {
     catalog.close();
   }

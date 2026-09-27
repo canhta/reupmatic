@@ -18,7 +18,6 @@ function modelState(value: unknown): ModelState {
 function validateModelStatus(data: unknown): ModelStatus {
   const value = resultObject(data);
   modelState(value.ocr);
-  modelState(value.inpainting);
   return value as unknown as ModelStatus;
 }
 
@@ -34,7 +33,7 @@ function validateModelConfigureResult(data: unknown): ModelConfigureResult {
   return value as unknown as ModelConfigureResult;
 }
 
-/** Keyed by `inpainting` and/or `ocr_<language>`; not a fixed field set. */
+/** Keyed by `ocr_<language>`; not a fixed field set. */
 export type ModelResolveResult = Record<string, string>;
 
 function validateModelResolveResult(data: unknown): ModelResolveResult {

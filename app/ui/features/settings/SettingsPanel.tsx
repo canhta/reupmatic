@@ -186,13 +186,7 @@ function GeneralCategory({
   );
 }
 
-function ModelStatusText({
-  models,
-  model,
-}: {
-  models: SettingsSnapshot['models'];
-  model: 'ocr' | 'inpainting';
-}) {
+function ModelStatusText({ models, model }: { models: SettingsSnapshot['models']; model: 'ocr' }) {
   const { t } = useTranslation();
   if (!models) return null;
   return (
@@ -214,9 +208,6 @@ function ProcessingCategory({ snapshot }: { snapshot: SettingsSnapshot }) {
           <MetadataList label={SETTINGS_LABEL}>
             <MetadataListItem label="OCR">
               <ModelStatusText models={models} model="ocr" />
-            </MetadataListItem>
-            <MetadataListItem label={t('settingsModelObjectRemoval')}>
-              <ModelStatusText models={models} model="inpainting" />
             </MetadataListItem>
             {}
             <MetadataListItem label={t('settingsVisionManifest')}>

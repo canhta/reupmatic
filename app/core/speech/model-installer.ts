@@ -108,9 +108,8 @@ function buildManifest(
         path: path.join(directory, name),
         sha256: hashes.get(name),
       });
-      const manifest: Record<string, unknown> = {};
-      if (model.ocr) {
-        manifest.ocr = Object.fromEntries(
+      return {
+        ocr: Object.fromEntries(
           Object.entries(model.ocr).map(([language, pack]) => [
             language,
             {
@@ -122,10 +121,8 @@ function buildManifest(
               rec_height: pack.rec_height,
             },
           ]),
-        );
-      }
-      if (model.inpainting) manifest.inpainting = { model: artifact(model.inpainting.model) };
-      return manifest;
+        ),
+      };
     }
   }
 }

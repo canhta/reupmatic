@@ -348,14 +348,8 @@ test('missing source reports needs-attention, keeps queued data, can recover aft
 test('folder processing recipe and original model pins reach the existing queue only once', async (t) => {
   const f = await fixture(t);
   await fs.writeFile(path.join(f.source, 'local.mp4'), 'source content');
-  const processing = {
-    inpaint: {
-      target: 'manual',
-      padding_px: 4,
-      region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 },
-    },
-  };
-  const processing_models = { inpainting: 'b'.repeat(64) };
+  const processing = { ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } };
+  const processing_models = { ocr_en: 'b'.repeat(64) };
   const id = await create(f, { processing, processing_models });
   assert.deepEqual(f.intake.snapshot().rules[0].processing, processing);
   await f.intake.start(id);

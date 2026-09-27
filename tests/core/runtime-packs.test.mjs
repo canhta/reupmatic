@@ -88,7 +88,7 @@ test('platform and engine mapping stay narrow', () => {
   assert.equal(currentRuntimePackPlatform('linux', 'x64'), null);
   assert.equal(packForEngine('vieneu-v3-turbo-onnx'), 'synthesis');
   assert.equal(packForEngine('vieneu-v3-turbo-clone-onnx'), 'synthesis');
-  assert.equal(packForEngine('rapidocr-lama'), 'vision');
+  assert.equal(packForEngine('rapidocr'), 'vision');
   assert.equal(packForEngine('faster-whisper'), null);
   const manifest = parseRuntimePackManifest({ packs: [entry()] });
   assert.equal(findRuntimePack(manifest, 'vision', 'darwin-arm64')?.version, '2026.09.26');

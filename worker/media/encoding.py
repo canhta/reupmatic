@@ -4,7 +4,7 @@ from pathlib import Path
 from subtitles.document import style_srt
 
 from media.audio.mixing import audio_arguments_from, audio_filter_graph
-from media.editing.filters import geometry_filters, logo_overlay, video_fade_filters
+from media.editing.filters import cover_drawbox, geometry_filters, logo_overlay, video_fade_filters
 from media.editing.recipe import parse_editing
 from media.probe import probe_file
 
@@ -67,6 +67,8 @@ def encode_video(
         filters += [f"setpts=PTS+{source_offset_ms / 1000:.6f}/TB"]
     geometry, dimensions = geometry_filters(edit, video_info)
     filters += geometry
+    if subtitle_style:
+        filters += cover_drawbox(subtitle_style.get("cover"), dimensions)
     if subtitle:
         if subtitle.suffix.lower() == ".srt" and subtitle_style:
             track = working / "track.ass"

@@ -39,7 +39,6 @@ from subtitles.service import load_subtitles, prepare_subtitles, preview_subtitl
 from vision.configuration import configure_models, merge_models, unconfigure_models
 from vision.extraction import extract_ocr
 from vision.models import ModelRegistry
-from vision.service import VisionService
 
 from runtime import diagnostics
 from runtime.errors import WorkerError
@@ -73,7 +72,6 @@ class Worker:
         self.models = ModelRegistry(
             Path(os.environ.get("REUPMATIC_MODEL_MANIFEST", str(default_models)))
         )
-        self.vision = VisionService(self)
         self.synthesis_models = SynthesisRegistry(self.workspace / "local-synthesis.json")
         self.translation_models = TranslationRegistry(self.workspace / "local-translation.json")
         self.speech_models = SpeechEngines(self.workspace / "local-speech.json")
@@ -136,7 +134,6 @@ class Worker:
                         "ffmpeg": self.runtime_identity != "unavailable",
                         "pysubs2": importlib.util.find_spec("pysubs2") is not None,
                         "ocr": self.models.status()["ocr"]["available"],
-                        "inpainting": self.models.status()["inpainting"]["available"],
                         "durable_jobs": False,
                     },
                 )
@@ -221,7 +218,6 @@ class Worker:
                     "models.configure": partial(configure_models, self),
                     "models.merge": partial(merge_models, self),
                     "models.unconfigure": partial(unconfigure_models, self),
-                    "media.inpaint": self.vision.run,
                     "asset.register": self.assets.register,
                     "media.probe": partial(probe, self),
                     "media.probe-file": partial(probe_file_request, self),

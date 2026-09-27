@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
-  InpaintResult,
   ModelStatus,
   OcrResult,
   VisionInput,
@@ -31,7 +30,6 @@ export function useVisionJob(context: VisionContext) {
   const [checking, setChecking] = useState(false);
   const [active, setActive] = useState<Active | null>(null);
   const [draft, setDraft] = useState<Captured<OcrResult> | null>(null);
-  const [output, setOutput] = useState<Captured<InpaintResult> | null>(null);
   const [error, setError] = useState('');
   const operation = useRef<Active | null>(null);
   const checkingRef = useRef(false);
@@ -77,8 +75,7 @@ export function useVisionJob(context: VisionContext) {
         return;
       }
       if (message.data.asset_id !== current.current.assetId) return;
-      if (message.data.kind === 'ocr') setDraft({ data: message.data, revision: request.revision });
-      else setOutput({ data: message.data, revision: request.revision });
+      setDraft({ data: message.data, revision: request.revision });
     });
     const offModels = window.reupmatic.onModelsChanged(() => {
       void refresh();
@@ -147,7 +144,6 @@ export function useVisionJob(context: VisionContext) {
     checking,
     active,
     draft,
-    output,
     error,
     report,
     refresh,

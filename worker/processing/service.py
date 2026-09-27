@@ -13,7 +13,6 @@ from runtime.errors import WorkerError
 from runtime.protocol import exact
 from subtitles.service import subtitle_library
 
-from processing.chunks import remove_text
 from processing.ocr_scan import scan_subtitles
 from processing.recipe import parse_fingerprints, parse_recipe, resolve_models
 
@@ -88,15 +87,7 @@ def process_video(host, req):
             track, cue_count = scan_subtitles(
                 host, req, processing["ocr"], start, end, staging, fingerprints
             )
-        video_track = None
-        frame_count = None
-        if "inpaint" in processing:
-            video_track, frame_count = remove_text(
-                host, req, processing["inpaint"], start, end, staging, fingerprints
-            )
-        required = (
-            video_track.stat().st_size if video_track else source["path"].stat().st_size
-        ) + 64 * 1024**2
+        required = source["path"].stat().st_size + 64 * 1024**2
         if shutil.disk_usage(staging).free < required:
             raise WorkerError("VISION_DISK_LOW")
         output = staging / "output.mp4"
@@ -110,7 +101,6 @@ def process_video(host, req):
             end_ms=end,
             encoding="review",
             subtitle=track,
-            video_track=video_track,
             editing=processing.get("editing"),
             soundtrack=soundtrack,
             voice=voice,
@@ -139,7 +129,6 @@ def process_video(host, req):
             "recipe": processing,
             "model_fingerprints": fingerprints,
             "ocr_cue_count": cue_count,
-            "inpaint_frame_count": frame_count,
             "edit_window": window,
         }
         verify_soundtrack(host, req, soundtrack)

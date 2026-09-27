@@ -12,10 +12,8 @@ import {
   saveProject,
 } from '../../dist-core/projects/project.js';
 
-const recipe = () => ({
-  inpaint: { target: 'manual', padding_px: 4, region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 } },
-});
-const pins = () => ({ inpainting: 'b'.repeat(64) });
+const recipe = () => ({ ocr: { language: 'en', sample_ms: 500, min_confidence: 0.5 } });
+const pins = () => ({ ocr_en: 'b'.repeat(64) });
 async function workspace(t) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'processing-persistence-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -30,8 +28,8 @@ test('one current project schema round-trips both plain and processing snapshots
   assert.deepEqual(parseProject(plain), plain);
   const processing = recipe();
   const project = createProject(source, { ...snapshot, processing });
-  processing.inpaint.padding_px = 10;
-  assert.equal(project.processing.inpaint.padding_px, 4);
+  processing.ocr.sample_ms = 1500;
+  assert.equal(project.processing.ocr.sample_ms, 500);
   const filename = path.join(directory, 'edit.reupmatic.json');
   await saveProject(filename, project);
   assert.deepEqual(await loadProject(filename), project);
@@ -63,8 +61,8 @@ test('batch recipe and model pins survive restart, interruption and explicit ret
   const store = new BatchStore(filename);
   const [job] = store.enqueue('processing-job-01', [input]);
   const original = structuredClone(input);
-  input.processing.inpaint.padding_px = 15;
-  input.processing_models.inpainting = 'c'.repeat(64);
+  input.processing.ocr.sample_ms = 1500;
+  input.processing_models.ocr_en = 'c'.repeat(64);
   assert.deepEqual(store.get(job.id).input, original);
   assert.equal(store.enqueue('processing-job-01', [original])[0].id, job.id);
   assert.throws(() => store.enqueue('processing-job-01', [input]), { code: 'DUPLICATE_REQUEST' });
@@ -122,8 +120,8 @@ test('folder rule persists its immutable recipe and refuses a model-free recipe'
   };
   const store = new FolderStore(filename);
   const saved = store.add(config);
-  config.processing.inpaint.region.y = 0.2;
-  assert.equal(store.get(saved.id).processing.inpaint.region.y, 0.7);
+  config.processing.ocr.sample_ms = 1000;
+  assert.equal(store.get(saved.id).processing.ocr.sample_ms, 500);
   store.close();
   const reopened = new FolderStore(filename);
   t.after(() => reopened.close());

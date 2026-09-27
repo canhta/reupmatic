@@ -57,70 +57,6 @@
           "required": ["language", "sample_ms", "min_confidence"],
           "additionalProperties": false
         },
-        "inpaint": {
-          "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "target": {
-                  "const": "manual"
-                },
-                "padding_px": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 32
-                },
-                "region": {
-                  "type": "object",
-                  "properties": {
-                    "x": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    },
-                    "y": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 1
-                    },
-                    "width": {
-                      "type": "number",
-                      "exclusiveMinimum": 0,
-                      "maximum": 1
-                    },
-                    "height": {
-                      "type": "number",
-                      "exclusiveMinimum": 0,
-                      "maximum": 1
-                    }
-                  },
-                  "required": ["x", "y", "width", "height"],
-                  "additionalProperties": false
-                }
-              },
-              "required": ["target", "padding_px", "region"],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "target": {
-                  "const": "text"
-                },
-                "padding_px": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 32
-                },
-                "language": {
-                  "enum": ["en", "vi", "zh"]
-                }
-              },
-              "required": ["target", "padding_px", "language"],
-              "additionalProperties": false
-            }
-          ]
-        },
         "editing": {
           "type": "object",
           "properties": {
@@ -324,9 +260,6 @@
       "anyOf": [
         {
           "required": ["ocr"]
-        },
-        {
-          "required": ["inpaint"]
         },
         {
           "required": ["editing"]

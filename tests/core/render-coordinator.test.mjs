@@ -169,29 +169,22 @@ test('closing coordinator cancels preparation and rejects new dispatch', async (
 test('processing snapshots recipe and pins while retaining the public render lifecycle', async () => {
   const worker = new ControlledWorker();
   const coordinator = new RenderCoordinator(worker);
-  const recipe = {
-    inpaint: {
-      target: 'manual',
-      padding_px: 4,
-      region: { x: 0.1, y: 0.7, width: 0.8, height: 0.2 },
-    },
-  };
-  const pins = { inpainting: 'b'.repeat(64) };
+  const recipe = { editing: { speed: 1.5 } };
+  const pins = {};
   const events = [];
   coordinator.on('job', (event) => events.push(event));
   const ticket = coordinator.start({ ...input(), processing: recipe }, 'registered-srt', pins);
-  recipe.inpaint.padding_px = 10;
-  pins.inpainting = 'c'.repeat(64);
+  recipe.editing.speed = 2;
   assert.equal(worker.calls[0].method, 'media.process');
-  assert.equal(worker.calls[0].params.processing.inpaint.padding_px, 4);
-  assert.equal(worker.calls[0].params.model_fingerprints.inpainting, 'b'.repeat(64));
+  assert.equal(worker.calls[0].params.processing.editing.speed, 1.5);
+  assert.deepEqual(worker.calls[0].params.model_fingerprints, {});
   assert.equal(worker.calls[0].params.subtitle_id, 'registered-srt');
   worker.emit('message', {
     v: 1,
     id: worker.calls[0].id,
     revision: 2,
     event: 'progress',
-    data: { phase: 'processingInpaint', fraction: 0.5 },
+    data: { phase: 'processingEncoding', fraction: 0.5 },
   });
   assert.equal(events[0].id, ticket.id);
   await ticket.cancel();

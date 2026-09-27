@@ -109,7 +109,6 @@ export const mediaOperations = {
   'media.poster': { method: 'media.poster', kind: 'queued', validate: validateMediaPosterResult },
   'audio.probe': { method: 'audio.probe', kind: 'queued', validate: validateAudioProbeResult },
   'media.ocr.extract': { method: 'media.ocr.extract', kind: 'queued', validate: resultRecord },
-  'media.inpaint': { method: 'media.inpaint', kind: 'queued', validate: resultRecord },
   'media.render': { method: 'media.render', kind: 'queued', validate: validateRenderOutput },
   'media.process': { method: 'media.process', kind: 'queued', validate: validateRenderOutput },
 } as const satisfies Record<string, OperationEntry<unknown>>;

@@ -4,7 +4,6 @@ export interface Capabilities {
   ffmpeg: boolean;
   pysubs2: boolean;
   ocr: boolean;
-  inpainting: boolean;
 }
 
 export async function unwrap<T>(request: Promise<Reply<T>>): Promise<T> {

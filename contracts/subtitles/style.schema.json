@@ -18,7 +18,8 @@
     "box_color",
     "position",
     "bold",
-    "italic"
+    "italic",
+    "cover"
   ],
   "properties": {
     "font_family": {
@@ -84,7 +85,50 @@
     },
     "italic": {
       "type": "boolean"
+    },
+    "cover": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x_pct", "y_pct", "width_pct", "height_pct", "color", "opacity"],
+          "properties": {
+            "x_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "y_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "width_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "height_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      ]
     }
   },
-  "$comment": "Runtime requires an installed-font name made of letters, numbers, space, underscore, period or hyphen. Dimensions use output-frame percentages; box opacity > 0 selects ASS opaque-box rendering."
+  "$comment": "Runtime requires an installed-font name made of letters, numbers, space, underscore, period or hyphen. Dimensions use output-frame percentages; box opacity > 0 selects ASS opaque-box rendering. The cover band is drawn under the subtitles for the whole video, in the same output-frame percentages."
 }

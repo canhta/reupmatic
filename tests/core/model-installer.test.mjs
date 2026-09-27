@@ -322,12 +322,11 @@ test('a translation entry writes the CT2/SentencePiece manifest its adapter read
   }
 });
 
-test('a vision entry writes the nested OCR/inpainting manifest its adapter reads', async () => {
+test('a vision entry writes the nested OCR manifest its adapter reads', async () => {
   const bodies = {
     '/vi/det.onnx': Buffer.from('det'),
     '/vi/rec.onnx': Buffer.from('rec'),
     '/vi/keys.txt': Buffer.from('keys'),
-    '/lama_fp32.onnx': Buffer.from('lama'),
   };
   const server = await startServer((request, response) => {
     const body = bodies[request.url];
@@ -344,7 +343,7 @@ test('a vision entry writes the nested OCR/inpainting manifest its adapter reads
     const result = await installOfferedModel({
       model: buildModel(files, {
         task: 'vision',
-        engine: 'rapidocr-lama',
+        engine: 'rapidocr',
         ocr: {
           vi: {
             det: 'vi/det.onnx',
@@ -355,7 +354,6 @@ test('a vision entry writes the nested OCR/inpainting manifest its adapter reads
             rec_height: 48,
           },
         },
-        inpainting: { model: 'lama_fp32.onnx' },
       }),
       bundleRoot: root,
       baseUrl: `http://127.0.0.1:${server.address().port}`,
@@ -376,7 +374,6 @@ test('a vision entry writes the nested OCR/inpainting manifest its adapter reads
           rec_height: 48,
         },
       },
-      inpainting: { model: artifact('lama_fp32.onnx') },
     });
   } finally {
     await stop(server);

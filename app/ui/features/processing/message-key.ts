@@ -12,11 +12,5 @@ export function processingErrorKey(code: string): MessageKey | undefined {
   return undefined;
 }
 export function processingSummaryKey(recipe: ProcessingRecipe): MessageKey {
-  return recipe.ocr && recipe.inpaint
-    ? 'processingSummaryBoth'
-    : recipe.ocr
-      ? 'processingSummaryOcr'
-      : recipe.inpaint
-        ? 'processingSummaryInpaint'
-        : 'processingSummaryEdit';
+  return recipe.ocr ? 'processingSummaryOcr' : 'processingSummaryEdit';
 }

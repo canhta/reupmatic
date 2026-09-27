@@ -18,7 +18,10 @@ DEFAULT_STYLE = {
     "spacing_pct": 0,
     "bold": False,
     "italic": False,
+    "cover": None,
 }
+
+COVER_KEYS = ("x_pct", "y_pct", "width_pct", "height_pct", "color", "opacity")
 
 
 def parse_style(value):
@@ -61,7 +64,36 @@ def parse_style(value):
         **value,
         "font_family": font.strip(),
         **{key: value[key].upper() for key in ("text_color", "outline_color", "box_color")},
+        "cover": _cover(value["cover"]),
     }
+
+
+def _cover(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != set(COVER_KEYS):
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    for key in ("x_pct", "y_pct"):
+        _bounded(value[key], 0, 100)
+    for key in ("width_pct", "height_pct"):
+        _bounded(value[key], 0, 100, exclusive_min=True)
+    _bounded(value["opacity"], 0, 1)
+    if (
+        value["x_pct"] + value["width_pct"] > 100 + 1e-9
+        or value["y_pct"] + value["height_pct"] > 100 + 1e-9
+    ):
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    if not isinstance(value["color"], str) or not re.fullmatch(r"#[a-fA-F0-9]{6}", value["color"]):
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    return {**value, "color": value["color"].upper()}
+
+
+def _bounded(value, minimum, maximum, exclusive_min=False):
+    if type(value) not in (int, float) or not math.isfinite(value):
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    if value < minimum or value > maximum or (exclusive_min and value <= minimum):
+        raise WorkerError("INVALID_SUBTITLE_STYLE")
+    return value
 
 
 def ass_style(lib, value, width, height):

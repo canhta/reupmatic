@@ -6,7 +6,6 @@ export interface HelloResult extends Record<string, unknown> {
   ffmpeg: boolean;
   pysubs2: boolean;
   ocr: boolean;
-  inpainting: boolean;
   durable_jobs: boolean;
 }
 
@@ -16,7 +15,6 @@ function validateHelloResult(data: unknown): HelloResult {
   resultBoolean(value, 'ffmpeg');
   resultBoolean(value, 'pysubs2');
   resultBoolean(value, 'ocr');
-  resultBoolean(value, 'inpainting');
   resultBoolean(value, 'durable_jobs');
   return value as HelloResult;
 }

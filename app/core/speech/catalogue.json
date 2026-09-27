@@ -391,31 +391,9 @@
       ]
     },
     {
-      "id": "lama-onnx-fp32",
-      "task": "vision",
-      "engine": "rapidocr-lama",
-      "purpose": {
-        "en": "Remove on-screen text from the frame",
-        "vi": "Xoá chữ trên khung hình"
-      },
-      "licence": "Apache-2.0",
-      "source_host": "huggingface.co",
-      "inpainting": { "model": "lama_fp32.onnx" },
-      "download_size": 208044816,
-      "on_disk_size": 208044816,
-      "files": [
-        {
-          "name": "lama_fp32.onnx",
-          "path": "Carve/LaMa-ONNX/resolve/main/lama_fp32.onnx",
-          "sha256": "1faef5301d78db7dda502fe59966957ec4b79dd64e16f03ed96913c7a4eb68d6",
-          "size": 208044816
-        }
-      ]
-    },
-    {
       "id": "rapidocr-ppocrv5-mobile",
       "task": "vision",
-      "engine": "rapidocr-lama",
+      "engine": "rapidocr",
       "purpose": {
         "en": "Read on-screen text in Chinese, English and Vietnamese",
         "vi": "Đọc chữ trên hình cho tiếng Trung, Anh và Việt"

@@ -4,19 +4,10 @@ import type { OperationName } from '../worker/operations.js';
 import { RemoteError } from '../worker/remote-error.js';
 import type { Envelope, Ticket, WorkerClient } from '../worker/worker-client.js';
 
-const VISION_METHODS = [
-  'media.ocr.extract',
-  'media.inpaint',
-] as const satisfies readonly OperationName[];
+const VISION_METHODS = ['media.ocr.extract'] as const satisfies readonly OperationName[];
 export type VisionMethod = (typeof VISION_METHODS)[number];
 
 export type ContentLanguage = 'en' | 'vi' | 'zh';
-export interface Region {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 export interface VisionParams extends Record<string, unknown> {
   asset_id: string;
   start_ms: number;
@@ -24,9 +15,6 @@ export interface VisionParams extends Record<string, unknown> {
   language?: ContentLanguage;
   sample_ms?: number;
   min_confidence?: number;
-  target?: 'manual' | 'text';
-  padding_px?: number;
-  region?: Region;
 }
 export interface VisionInput {
   request_id: string;
@@ -60,18 +48,7 @@ export interface OcrResult extends Record<string, unknown> {
   scope?: 'full-source';
   evidence?: { chunks: number; preview_count: number; observation_count: number };
 }
-export interface InpaintResult extends Record<string, unknown> {
-  kind: 'inpainting';
-  asset_id: string;
-  artifact_id: string;
-  duration_ms: number;
-  path?: string;
-  url?: string;
-  width: number;
-  height: number;
-  fps: number;
-}
-export type VisionResult = OcrResult | InpaintResult;
+export type VisionResult = OcrResult;
 export interface ModelState {
   available: boolean;
   code: string | null;
@@ -80,7 +57,6 @@ export interface ModelState {
 }
 export interface ModelStatus {
   ocr: ModelState;
-  inpainting: ModelState;
 }
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -92,19 +68,6 @@ function integer(value: unknown, min: number, max: number): value is number {
 function identifier(value: unknown): value is string {
   return (
     typeof value === 'string' && value.length > 0 && value.length <= 128 && !value.includes('\0')
-  );
-}
-function validRegion(value: unknown): value is Region {
-  if (!object(value) || Object.keys(value).sort().join(',') !== 'height,width,x,y') return false;
-  const { x, y, width, height } = value;
-  return (
-    [x, y, width, height].every((v) => typeof v === 'number' && Number.isFinite(v)) &&
-    Number(x) >= 0 &&
-    Number(y) >= 0 &&
-    Number(width) > 0 &&
-    Number(height) > 0 &&
-    Number(x) + Number(width) <= 1 + 1e-9 &&
-    Number(y) + Number(height) <= 1 + 1e-9
   );
 }
 export function parseVisionInput(value: unknown): VisionInput {
@@ -119,50 +82,27 @@ export function parseVisionInput(value: unknown): VisionInput {
   ) {
     throw new RemoteError('INVALID_REQUEST');
   }
-  const p = value.params,
-    ocr = value.method !== 'media.inpaint';
-  const required = [
-    'asset_id',
-    'start_ms',
-    'end_ms',
-    ...(ocr ? ['language', 'sample_ms', 'min_confidence'] : ['target', 'padding_px']),
-  ];
-  const allowed = [...required, 'region', ...(!ocr ? ['language'] : [])];
+  const p = value.params;
+  const required = ['asset_id', 'start_ms', 'end_ms', 'language', 'sample_ms', 'min_confidence'];
   if (
     required.some((key) => !(key in p)) ||
-    Object.keys(p).some((key) => !allowed.includes(key)) ||
+    Object.keys(p).some((key) => !required.includes(key)) ||
     !identifier(p.asset_id) ||
     !integer(p.start_ms, 0, 86400000) ||
     !integer(p.end_ms, 1, 86400000) ||
-    Number(p.end_ms) <= Number(p.start_ms) ||
-    ('region' in p && !validRegion(p.region))
+    Number(p.end_ms) <= Number(p.start_ms)
   )
     throw new RemoteError('INVALID_REQUEST');
-  if (value.method === 'media.ocr.extract' && p.start_ms !== 0)
-    throw new RemoteError('INVALID_REQUEST');
+  if (p.start_ms !== 0) throw new RemoteError('INVALID_REQUEST');
+  if (Number(p.end_ms) - Number(p.start_ms) > 120000) throw new RemoteError('VISION_LIMIT');
   if (
-    value.method !== 'media.ocr.extract' &&
-    Number(p.end_ms) - Number(p.start_ms) > (ocr ? 120000 : 10000)
-  )
-    throw new RemoteError('VISION_LIMIT');
-  if (ocr) {
-    if (
-      !integer(p.sample_ms, 100, 2000) ||
-      typeof p.min_confidence !== 'number' ||
-      !Number.isFinite(p.min_confidence) ||
-      p.min_confidence < 0 ||
-      p.min_confidence > 1
-    ) {
-      throw new RemoteError('INVALID_REQUEST');
-    }
-  } else if (
-    !['manual', 'text'].includes(String(p.target)) ||
-    !integer(p.padding_px, 0, 32) ||
-    (p.target === 'manual' && (!('region' in p) || 'language' in p)) ||
-    (p.target === 'text' && 'region' in p)
-  )
-    throw new RemoteError('INVALID_REQUEST');
-  if ((ocr || p.target === 'text') && !['en', 'vi', 'zh'].includes(String(p.language))) {
+    !integer(p.sample_ms, 100, 2000) ||
+    typeof p.min_confidence !== 'number' ||
+    !Number.isFinite(p.min_confidence) ||
+    p.min_confidence < 0 ||
+    p.min_confidence > 1 ||
+    !['en', 'vi', 'zh'].includes(String(p.language))
+  ) {
     throw new RemoteError('INVALID_REQUEST');
   }
   return structuredClone(value) as unknown as VisionInput;
@@ -181,79 +121,66 @@ export function validateVisionResult(value: unknown, input: VisionInput): Vision
   ) {
     throw new RemoteError('INVALID_WORKER_RESPONSE');
   }
-  if (input.method !== 'media.inpaint') {
+  if (
+    value.kind !== 'ocr' ||
+    value.language !== input.params.language ||
+    value.sample_ms !== input.params.sample_ms ||
+    !identifier(value.analysis_id) ||
+    !Array.isArray(value.observations) ||
+    value.observations.length > 1200
+  ) {
+    throw new RemoteError('INVALID_WORKER_RESPONSE');
+  }
+  if (
+    value.scope !== 'full-source' ||
+    !object(value.evidence) ||
+    !integer(value.evidence.chunks, 1, 100000) ||
+    value.evidence.preview_count !== value.observations.length ||
+    !integer(value.evidence.observation_count, value.observations.length, 864000)
+  ) {
+    throw new RemoteError('INVALID_WORKER_RESPONSE');
+  }
+  try {
+    assertCues(value.cues);
+  } catch {
+    throw new RemoteError('INVALID_WORKER_RESPONSE');
+  }
+  const cues = value.cues as Cue[];
+  if (cues.some((c) => c.start_ms < input.params.start_ms || c.end_ms > input.params.end_ms)) {
+    throw new RemoteError('INVALID_WORKER_RESPONSE');
+  }
+  let previous = input.params.start_ms;
+  for (const item of value.observations) {
     if (
-      value.kind !== 'ocr' ||
-      value.language !== input.params.language ||
-      value.sample_ms !== input.params.sample_ms ||
-      !identifier(value.analysis_id) ||
-      !Array.isArray(value.observations) ||
-      value.observations.length > 1200
+      !object(item) ||
+      !integer(item.start_ms, previous, input.params.end_ms - 1) ||
+      !integer(item.end_ms, Number(item.start_ms) + 1, input.params.end_ms) ||
+      !Array.isArray(item.detections) ||
+      item.detections.length > 100
     ) {
       throw new RemoteError('INVALID_WORKER_RESPONSE');
     }
-    if (
-      input.method === 'media.ocr.extract' &&
-      (value.scope !== 'full-source' ||
-        !object(value.evidence) ||
-        !integer(value.evidence.chunks, 1, 100000) ||
-        value.evidence.preview_count !== value.observations.length ||
-        !integer(value.evidence.observation_count, value.observations.length, 864000))
-    ) {
-      throw new RemoteError('INVALID_WORKER_RESPONSE');
-    }
-    try {
-      assertCues(value.cues);
-    } catch {
-      throw new RemoteError('INVALID_WORKER_RESPONSE');
-    }
-    const cues = value.cues as Cue[];
-    if (cues.some((c) => c.start_ms < input.params.start_ms || c.end_ms > input.params.end_ms)) {
-      throw new RemoteError('INVALID_WORKER_RESPONSE');
-    }
-    let previous = input.params.start_ms;
-    for (const item of value.observations) {
+    previous = Number(item.end_ms);
+    for (const d of item.detections) {
       if (
-        !object(item) ||
-        !integer(item.start_ms, previous, input.params.end_ms - 1) ||
-        !integer(item.end_ms, Number(item.start_ms) + 1, input.params.end_ms) ||
-        !Array.isArray(item.detections) ||
-        item.detections.length > 100
+        !object(d) ||
+        typeof d.text !== 'string' ||
+        d.text.length > 10000 ||
+        d.text.includes('\0') ||
+        typeof d.confidence !== 'number' ||
+        !Number.isFinite(d.confidence) ||
+        d.confidence < 0 ||
+        d.confidence > 1 ||
+        !Array.isArray(d.box) ||
+        d.box.length !== 4 ||
+        !integer(d.box[0], 0, Number(value.width) - 1) ||
+        !integer(d.box[1], 0, Number(value.height) - 1) ||
+        !integer(d.box[2], Number(d.box[0]) + 1, Number(value.width)) ||
+        !integer(d.box[3], Number(d.box[1]) + 1, Number(value.height))
       ) {
         throw new RemoteError('INVALID_WORKER_RESPONSE');
       }
-      previous = Number(item.end_ms);
-      for (const d of item.detections) {
-        if (
-          !object(d) ||
-          typeof d.text !== 'string' ||
-          d.text.length > 10000 ||
-          d.text.includes('\0') ||
-          typeof d.confidence !== 'number' ||
-          !Number.isFinite(d.confidence) ||
-          d.confidence < 0 ||
-          d.confidence > 1 ||
-          !Array.isArray(d.box) ||
-          d.box.length !== 4 ||
-          !integer(d.box[0], 0, Number(value.width) - 1) ||
-          !integer(d.box[1], 0, Number(value.height) - 1) ||
-          !integer(d.box[2], Number(d.box[0]) + 1, Number(value.width)) ||
-          !integer(d.box[3], Number(d.box[1]) + 1, Number(value.height))
-        ) {
-          throw new RemoteError('INVALID_WORKER_RESPONSE');
-        }
-      }
     }
-  } else if (
-    value.kind !== 'inpainting' ||
-    !identifier(value.artifact_id) ||
-    typeof value.path !== 'string' ||
-    !value.path ||
-    value.path.includes('\0') ||
-    !integer(value.duration_ms, 1, 10050) ||
-    value.fps !== 24
-  ) {
-    throw new RemoteError('INVALID_WORKER_RESPONSE');
   }
   return value as unknown as VisionResult;
 }

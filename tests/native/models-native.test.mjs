@@ -22,11 +22,21 @@ test('real Python protocol configures local files, rejects bad checksum and pers
   );
   const workspace = path.join(directory, 'workspace');
   const manifest = path.join(directory, 'manifest.json');
-  const weights = path.join(directory, 'test-only.onnx');
+  const weights = path.join(directory, 'det.onnx');
   const bytes = Buffer.from('configuration fixture, not a working ONNX model');
   await writeFile(weights, bytes);
+  await writeFile(path.join(directory, 'rec.onnx'), bytes);
+  await writeFile(path.join(directory, 'keys.txt'), bytes);
   const sha256 = createHash('sha256').update(bytes).digest('hex');
-  const good = { inpainting: { model: { path: 'test-only.onnx', sha256 } } };
+  const entry = {
+    det: { path: 'det.onnx', sha256 },
+    rec: { path: 'rec.onnx', sha256 },
+    keys: { path: 'keys.txt', sha256 },
+    det_version: 'PP-OCRv4',
+    rec_version: 'PP-OCRv4',
+    rec_height: 48,
+  };
+  const good = { ocr: { en: entry } };
   await writeFile(manifest, JSON.stringify(good));
   const start = () =>
     new WorkerClient(pythonExecutable(root), path.join(root, 'worker/main.py'), workspace);
@@ -34,15 +44,14 @@ test('real Python protocol configures local files, rejects bad checksum and pers
   try {
     const result = await worker.request('models.configure', { path: manifest }).result;
     assert.equal(result.configured, true);
-    assert.equal(result.models.inpainting.verified, false);
+    assert.equal(result.models.ocr.verified, false);
     const savedPath = path.join(workspace, 'local-models.json');
     const saved = await readFile(savedPath, 'utf8');
-    assert.equal(JSON.parse(saved).inpainting.model.path, weights);
+    assert.equal(JSON.parse(saved).ocr.en.det.path, weights);
     await writeFile(
       manifest,
       JSON.stringify({
-        ...good,
-        inpainting: { model: { path: 'test-only.onnx', sha256: '0'.repeat(64) } },
+        ocr: { en: { ...entry, det: { path: 'det.onnx', sha256: '0'.repeat(64) } } },
       }),
     );
     await assert.rejects(worker.request('models.configure', { path: manifest }).result, {
@@ -52,8 +61,8 @@ test('real Python protocol configures local files, rejects bad checksum and pers
     await worker.stop();
     worker = start();
     const status = await worker.request('models.status', {}).result;
-    assert.equal(status.inpainting.verified, false);
-    assert.notEqual(status.inpainting.code, 'MODEL_MISSING');
+    assert.equal(status.ocr.verified, false);
+    assert.notEqual(status.ocr.code, 'MODEL_MISSING');
     assert.equal(await readFile(savedPath, 'utf8'), saved);
   } finally {
     await worker.stop();

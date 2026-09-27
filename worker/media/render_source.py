@@ -15,7 +15,7 @@ def resolve_render_source(host, req, params, editing=None):
     document, spans = None, None
     if "composition" in params:
         document, spans, duration = parse_composition(params["composition"])
-        if any(key in params.get("processing", {}) for key in ("ocr", "inpaint")):
+        if "ocr" in params.get("processing", {}):
             raise WorkerError("COMPOSITION_PROCESSING_UNAVAILABLE")
         info = {
             "duration_ms": duration,

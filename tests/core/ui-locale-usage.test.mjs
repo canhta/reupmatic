@@ -40,8 +40,6 @@ function localeKeys() {
 const ALLOWED_DYNAMIC_KEYS = [
   'visionDecoding',
   'visionRecognizing',
-  'visionInpainting',
-  'visionEncoding',
   'speechDecoding',
   'speechRecognizing',
   'compositionEncoding',

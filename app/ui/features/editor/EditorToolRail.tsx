@@ -1,4 +1,4 @@
-import { AudioLines, Eraser, Languages, Mic, Music, Palette, Scissors } from 'lucide-react';
+import { AudioLines, Languages, Mic, Music, Palette, Scissors } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from './EditorContext';
@@ -10,7 +10,6 @@ const TOOL_ICON: Record<ToolId, ComponentType<SVGProps<SVGSVGElement>>> = {
   translate: Languages,
   voice: AudioLines,
   style: Palette,
-  'clean-up': Eraser,
   audio: Music,
   edit: Scissors,
 };
@@ -23,7 +22,7 @@ export function EditorToolRail() {
     id,
     label: t(TOOL_LABEL_KEY[id]),
     icon: TOOL_ICON[id],
-    hasRuleBefore: index === 5,
+    hasRuleBefore: index === 4,
   }));
   return (
     <EditorRail

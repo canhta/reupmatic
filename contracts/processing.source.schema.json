@@ -24,70 +24,6 @@
       "required": ["language", "sample_ms", "min_confidence"],
       "additionalProperties": false
     },
-    "inpaint": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "target": {
-              "const": "manual"
-            },
-            "padding_px": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32
-            },
-            "region": {
-              "type": "object",
-              "properties": {
-                "x": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "y": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "width": {
-                  "type": "number",
-                  "exclusiveMinimum": 0,
-                  "maximum": 1
-                },
-                "height": {
-                  "type": "number",
-                  "exclusiveMinimum": 0,
-                  "maximum": 1
-                }
-              },
-              "required": ["x", "y", "width", "height"],
-              "additionalProperties": false
-            }
-          },
-          "required": ["target", "padding_px", "region"],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "target": {
-              "const": "text"
-            },
-            "padding_px": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32
-            },
-            "language": {
-              "enum": ["en", "vi", "zh"]
-            }
-          },
-          "required": ["target", "padding_px", "language"],
-          "additionalProperties": false
-        }
-      ]
-    },
     "editing": {
       "type": "object",
       "properties": {
@@ -293,14 +229,11 @@
       "required": ["ocr"]
     },
     {
-      "required": ["inpaint"]
-    },
-    {
       "required": ["editing"]
     },
     {
       "required": ["subtitle_style"]
     }
   ],
-  "$comment": "Runtime additionally checks normalized rectangle sums, OCR/manual subtitle conflict, required model fingerprint keys and media duration. No paths, scripts or downloads."
+  "$comment": "Runtime additionally checks the OCR/manual subtitle conflict, required model fingerprint keys and media duration. No paths, scripts or downloads."
 }

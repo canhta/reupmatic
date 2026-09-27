@@ -52,12 +52,9 @@ interface ModelRow extends Record<string, unknown> {
   model: OfferedModel;
 }
 
-function detailFor(model: OfferedModel, objectRemoval: string): string {
+function detailFor(model: OfferedModel): string {
   if (model.task === 'translation') return `${model.source_language} → ${model.target_language}`;
-  if (model.task === 'vision') {
-    const ocr = model.ocr ? Object.keys(model.ocr).join(', ') : '';
-    return [ocr, model.inpainting ? objectRemoval : ''].filter(Boolean).join(' · ');
-  }
+  if (model.task === 'vision') return Object.keys(model.ocr).join(', ');
   return model.languages.join(', ');
 }
 
@@ -208,7 +205,7 @@ export function OfferedModels() {
         name: model.id,
         task: model.task,
         engine: model.engine,
-        languages: detailFor(model, t('settingsOfferedInpainting')),
+        languages: detailFor(model),
         size: model.download_size,
         source: `${model.source_host} ${model.licence}`,
         model,
@@ -232,7 +229,7 @@ export function OfferedModels() {
       }
       return 0;
     });
-  }, [catalogue, taskFilter, statusFilter, search, sort, t]);
+  }, [catalogue, taskFilter, statusFilter, search, sort]);
 
   const columns: TableColumn<ModelRow>[] = [
     {
@@ -270,7 +267,7 @@ export function OfferedModels() {
       header: t('settingsOfferedColumnLanguages'),
       width: proportional(1),
       sortable: true,
-      renderCell: (row) => detailFor(row.model, t('settingsOfferedInpainting')),
+      renderCell: (row) => detailFor(row.model),
     },
     {
       key: 'size',

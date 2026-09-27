@@ -1,23 +1,14 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
-export type ToolId = 'transcribe' | 'translate' | 'voice' | 'style' | 'clean-up' | 'audio' | 'edit';
+export type ToolId = 'transcribe' | 'translate' | 'voice' | 'style' | 'audio' | 'edit';
 
-export const TOOL_ORDER: ToolId[] = [
-  'transcribe',
-  'translate',
-  'voice',
-  'style',
-  'clean-up',
-  'audio',
-  'edit',
-];
+export const TOOL_ORDER: ToolId[] = ['transcribe', 'translate', 'voice', 'style', 'audio', 'edit'];
 
 export const TOOL_LABEL_KEY: Record<ToolId, string> = {
   transcribe: 'toolTranscribe',
   translate: 'toolTranslate',
   voice: 'toolVoice',
   style: 'toolStyle',
-  'clean-up': 'toolCleanUp',
   audio: 'toolAudio',
   edit: 'toolEdit',
 };

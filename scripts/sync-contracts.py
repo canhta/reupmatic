@@ -129,9 +129,7 @@ def compose():
     processing = read_source("processing.schema.json")
     processing["properties"]["editing"] = editing
     processing["properties"]["subtitle_style"] = style
-    processing["anyOf"] = [
-        {"required": [key]} for key in ["ocr", "inpaint", "editing", "subtitle_style"]
-    ]
+    processing["anyOf"] = [{"required": [key]} for key in ["ocr", "editing", "subtitle_style"]]
 
     def embedded(value):
         if isinstance(value, list):
@@ -139,7 +137,7 @@ def compose():
         if not isinstance(value, dict):
             return value
         properties = value.get("properties", {})
-        if {"ocr", "inpaint", "subtitle_style"} <= properties.keys():
+        if {"ocr", "subtitle_style"} <= properties.keys():
             return shape(processing)
         if (
             value.get("type") == "array"

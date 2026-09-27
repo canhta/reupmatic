@@ -1,4 +1,4 @@
-"""Single-request inference subprocess; the parent owns FFmpeg and cancellation."""
+"""Single-request OCR inference subprocess; the parent owns FFmpeg and cancellation."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from runtime.errors import WorkerError
 from runtime.offline import deny_network_and_children
 
-from vision.algorithms import LamaAdapter, RapidAdapter, make_mask, timed_cues
+from vision.algorithms import RapidAdapter, timed_cues
 from vision.models import file_hash
 
 
@@ -53,82 +53,39 @@ def make_ocr(bundle: dict) -> RapidAdapter:
     return RapidAdapter(RapidOCR(params=params))
 
 
-def make_lama(bundle: dict) -> LamaAdapter:
-    import onnxruntime as ort
-
-    options = ort.SessionOptions()
-    options.intra_op_num_threads = 2
-    options.inter_op_num_threads = 1
-    return LamaAdapter(
-        ort.InferenceSession(
-            bundle["model"]["path"], sess_options=options, providers=["CPUExecutionProvider"]
-        )
-    )
-
-
 def run(job: dict, progress: Path) -> dict:
     import numpy as np
 
     for bundle in job["models"].values():
         verify_bundle(bundle)
-    ocr = make_ocr(job["models"]["ocr"]) if "ocr" in job["models"] else None
-    lama = make_lama(job["models"]["inpainting"]) if job["kind"] == "inpainting" else None
+    ocr = make_ocr(job["models"]["ocr"])
     width, height = job["width"], job["height"]
     frame_size = width * height * 3
     observations = []
     observations_bytes = 0
-    changed_frames = 0
-    output = Path(job["output_frames"]).open("xb") if lama else None
-    try:
-        with Path(job["input_frames"]).open("rb") as frames:
-            for index in range(job["frame_count"]):
-                raw = frames.read(frame_size)
-                if len(raw) != frame_size:
-                    raise WorkerError("VISION_FRAME_INVALID")
-                rgb = np.frombuffer(raw, dtype=np.uint8).reshape(height, width, 3)
-                detections = (
-                    ocr.detect(
-                        rgb,
-                        confidence=job.get("min_confidence", 0.5),
-                        rectangle=job.get("region") if not lama else None,
-                    )
-                    if ocr
-                    else []
-                )
-                if not lama:
-                    start = job["start_ms"] + index * job["sample_ms"]
-                    item = {
-                        "start_ms": start,
-                        "end_ms": min(start + job["sample_ms"], job["end_ms"]),
-                        "detections": detections,
-                    }
-                    if item["start_ms"] < item["end_ms"]:
-                        observations_bytes += len(
-                            json.dumps(item, ensure_ascii=False).encode("utf-8")
-                        )
-                        if observations_bytes > 700000:
-                            raise WorkerError("VISION_RESULT_TOO_LARGE")
-                        observations.append(item)
-                else:
-                    mask = make_mask(
-                        width,
-                        height,
-                        job.get("region") if job["target"] == "manual" else None,
-                        detections,
-                        job["padding_px"],
-                    )
-                    changed_frames += int(bool(np.any(mask)))
-                    output.write(lama.erase(rgb, mask).tobytes())
-                atomic_json(progress, {"completed": index + 1, "total": job["frame_count"]})
-            if frames.read(1):
+    with Path(job["input_frames"]).open("rb") as frames:
+        for index in range(job["frame_count"]):
+            raw = frames.read(frame_size)
+            if len(raw) != frame_size:
                 raise WorkerError("VISION_FRAME_INVALID")
-    finally:
-        if output:
-            output.close()
+            rgb = np.frombuffer(raw, dtype=np.uint8).reshape(height, width, 3)
+            detections = ocr.detect(rgb, confidence=job.get("min_confidence", 0.5))
+            start = job["start_ms"] + index * job["sample_ms"]
+            item = {
+                "start_ms": start,
+                "end_ms": min(start + job["sample_ms"], job["end_ms"]),
+                "detections": detections,
+            }
+            if item["start_ms"] < item["end_ms"]:
+                observations_bytes += len(json.dumps(item, ensure_ascii=False).encode("utf-8"))
+                if observations_bytes > 700000:
+                    raise WorkerError("VISION_RESULT_TOO_LARGE")
+                observations.append(item)
+            atomic_json(progress, {"completed": index + 1, "total": job["frame_count"]})
+        if frames.read(1):
+            raise WorkerError("VISION_FRAME_INVALID")
     for bundle in job["models"].values():
         verify_bundle(bundle)
-    if lama:
-        return {"processed_frames": job["frame_count"], "masked_frames": changed_frames}
     return {
         "observations": observations,
         "cues": timed_cues(observations),

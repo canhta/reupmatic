@@ -65,25 +65,9 @@ test('vision validates bounded requests and preserves content language', () => {
   assert.throws(() => parseVisionInput({ ...value, method: 'media.ocr' }));
   assert.throws(() => parseVisionInput({ ...value, revision: Infinity }));
 });
-test('manual masks require coordinates; automatic text masks do not require review', () => {
+test('object removal is no longer a request this coordinator admits', () => {
   const p = { asset_id: 'a', start_ms: 0, end_ms: 1000, target: 'manual', padding_px: 2 };
   assert.throws(() => parseVisionInput({ ...input(), method: 'media.inpaint', params: p }));
-  assert.equal(
-    parseVisionInput({
-      ...input(),
-      method: 'media.inpaint',
-      params: { ...p, region: { x: 0, y: 0, width: 1, height: 1 } },
-    }).params.target,
-    'manual',
-  );
-  assert.equal(
-    parseVisionInput({
-      ...input(),
-      method: 'media.inpaint',
-      params: { ...p, target: 'text', language: 'en' },
-    }).params.target,
-    'text',
-  );
 });
 test('OCR draft cannot replace edits or follow a different source', () => {
   assert.equal(canApplyOcr(output(), 4, 'video-1', 4), true);

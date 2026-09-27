@@ -1,5 +1,15 @@
 import type { Cue } from './cues.js';
 
+/** A solid rectangle drawn under the subtitles to hide burned-in originals. */
+export interface CoverBand {
+  x_pct: number;
+  y_pct: number;
+  width_pct: number;
+  height_pct: number;
+  color: string;
+  opacity: number;
+}
+
 export interface SubtitleStyle {
   font_family: string;
   font_size_pct: number;
@@ -15,6 +25,7 @@ export interface SubtitleStyle {
   spacing_pct: number;
   bold: boolean;
   italic: boolean;
+  cover: CoverBand | null;
 }
 
 export const defaultSubtitleStyle: Readonly<SubtitleStyle> = Object.freeze({
@@ -32,7 +43,27 @@ export const defaultSubtitleStyle: Readonly<SubtitleStyle> = Object.freeze({
   spacing_pct: 0,
   bold: false,
   italic: false,
+  cover: null,
 });
+
+/** A full-width band at the subtitle's vertical position: the default when the box is enabled. */
+export function defaultCoverBand(
+  style: Pick<SubtitleStyle, 'font_size_pct' | 'position' | 'margin_y_pct'>,
+): CoverBand {
+  const height_pct = Math.min(40, Math.max(6, style.font_size_pct * 2));
+  const top = style.margin_y_pct;
+  const middle = 50 - height_pct / 2;
+  const bottom = 100 - style.margin_y_pct - height_pct;
+  const y_pct = style.position >= 7 ? top : style.position >= 4 ? middle : bottom;
+  return {
+    x_pct: 0,
+    y_pct: Math.max(0, Math.min(100 - height_pct, y_pct)),
+    width_pct: 100,
+    height_pct,
+    color: '#000000',
+    opacity: 1,
+  };
+}
 
 const FONT_FAMILY = /^[\p{L}\p{N} _.-]{1,80}$/u;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -47,11 +78,44 @@ const STYLE_RANGES: Record<string, [number, number]> = {
   spacing_pct: [-0.2, 2],
 };
 
+function coverBandInvalid(value: unknown): boolean {
+  if (value === null) return false;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return true;
+  const cover = value as Record<string, unknown>;
+  if (
+    Object.keys(cover).length !== 6 ||
+    !('x_pct' in cover) ||
+    !('y_pct' in cover) ||
+    !('width_pct' in cover) ||
+    !('height_pct' in cover) ||
+    !('color' in cover) ||
+    !('opacity' in cover)
+  )
+    return true;
+  const bounded = (field: unknown, min: number, max: number) =>
+    typeof field === 'number' && Number.isFinite(field) && field >= min && field <= max;
+  if (
+    !bounded(cover.x_pct, 0, 100) ||
+    !bounded(cover.y_pct, 0, 100) ||
+    !bounded(cover.width_pct, Number.MIN_VALUE, 100) ||
+    !bounded(cover.height_pct, Number.MIN_VALUE, 100) ||
+    !bounded(cover.opacity, 0, 1) ||
+    typeof cover.color !== 'string' ||
+    !HEX_COLOR.test(cover.color)
+  )
+    return true;
+  return (
+    Number(cover.x_pct) + Number(cover.width_pct) > 100 + 1e-9 ||
+    Number(cover.y_pct) + Number(cover.height_pct) > 100 + 1e-9
+  );
+}
+
 /** True when one field's value is outside its own type, format or numeric range. */
 export function subtitleStyleFieldInvalid(key: keyof SubtitleStyle, value: unknown): boolean {
   if (key === 'font_family')
     return typeof value !== 'string' || !FONT_FAMILY.test(value) || !value.trim();
   if (key === 'bold' || key === 'italic') return typeof value !== 'boolean';
+  if (key === 'cover') return coverBandInvalid(value);
   if (key === 'text_color' || key === 'outline_color' || key === 'box_color')
     return typeof value !== 'string' || !HEX_COLOR.test(value);
   if (key === 'position')
@@ -78,12 +142,14 @@ export function parseSubtitleStyle(value: unknown): SubtitleStyle {
   if (Object.keys(input).length !== keys.length || keys.some((key) => !(key in input)))
     return fail();
   if (firstInvalidSubtitleStyleField(input as unknown as SubtitleStyle)) return fail();
+  const cover = input.cover as CoverBand | null;
   return {
     ...input,
     font_family: String(input.font_family).trim(),
     text_color: String(input.text_color).toUpperCase(),
     outline_color: String(input.outline_color).toUpperCase(),
     box_color: String(input.box_color).toUpperCase(),
+    cover: cover === null ? null : { ...cover, color: cover.color.toUpperCase() },
   } as unknown as SubtitleStyle;
 }
 

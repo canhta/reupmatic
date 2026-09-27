@@ -8,7 +8,11 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
-import { type SubtitleStyle, subtitleStyleFieldInvalid } from '../../../../core/subtitles/style';
+import {
+  defaultCoverBand,
+  type SubtitleStyle,
+  subtitleStyleFieldInvalid,
+} from '../../../../core/subtitles/style';
 
 interface Props {
   value: SubtitleStyle;
@@ -123,6 +127,79 @@ export function SubtitleStyleFields({ value, disabled, onChange }: Props) {
           />
         ))}
       </FormLayout>
+      <CheckboxInput
+        label={t('styleCover')}
+        value={value.cover !== null}
+        isDisabled={disabled}
+        onChange={(on) => onChange({ ...value, cover: on ? defaultCoverBand(value) : null })}
+      />
+      {value.cover && (
+        <FormLayout direction="vertical">
+          <Text as="p" type="supporting">
+            {t('styleCoverNote')}
+          </Text>
+          {(
+            [
+              ['x_pct', 0, 100],
+              ['y_pct', 0, 100],
+              ['width_pct', 2, 100],
+              ['height_pct', 2, 100],
+            ] as const
+          ).map(([key, min, max]) => (
+            <NumberInput
+              key={key}
+              label={t(`style_cover_${key}`)}
+              value={value.cover?.[key] ?? min}
+              min={min}
+              max={max}
+              step={1}
+              isWheelEnabled={false}
+              isDisabled={disabled}
+              onChange={(next) =>
+                value.cover && onChange({ ...value, cover: { ...value.cover, [key]: next } })
+              }
+            />
+          ))}
+          <HStack gap={2} vAlign="end">
+            <TextInput
+              label={t('style_cover_color')}
+              value={value.cover.color}
+              isDisabled={disabled}
+              status={
+                subtitleStyleFieldInvalid('cover', value.cover)
+                  ? { type: 'error', message: t('styleColorInvalid') }
+                  : undefined
+              }
+              onChange={(color) =>
+                value.cover && onChange({ ...value, cover: { ...value.cover, color } })
+              }
+            />
+            <input
+              type="color"
+              className="style-color-swatch"
+              aria-label={`${t('style_cover_color')} – ${t('stylePickColor')}`}
+              disabled={disabled}
+              value={HEX_COLOR.test(value.cover.color) ? value.cover.color : '#000000'}
+              onChange={(event) =>
+                value.cover &&
+                onChange({ ...value, cover: { ...value.cover, color: event.target.value } })
+              }
+            />
+          </HStack>
+          <NumberInput
+            label={t('style_cover_opacity')}
+            value={value.cover.opacity}
+            min={0}
+            max={1}
+            step={0.05}
+            isWheelEnabled={false}
+            isDisabled={disabled}
+            onChange={(opacity) =>
+              value.cover && onChange({ ...value, cover: { ...value.cover, opacity } })
+            }
+          />
+        </FormLayout>
+      )}
       <Collapsible
         trigger={
           <Text type="label" weight="semibold">

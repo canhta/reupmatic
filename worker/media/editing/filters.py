@@ -52,6 +52,21 @@ def geometry_filters(edit, info):
     return filters, (width, height)
 
 
+def cover_drawbox(cover, dimensions):
+    """The opaque cover band, in final output pixels, drawn before the subtitle burn."""
+    if not cover:
+        return []
+    width, height = dimensions
+    x = round(width * cover["x_pct"] / 100)
+    y = round(height * cover["y_pct"] / 100)
+    box_w = max(2, round(width * cover["width_pct"] / 100))
+    box_h = max(2, round(height * cover["height_pct"] / 100))
+    color = cover["color"].lstrip("#")
+    return [
+        f"drawbox=x={x}:y={y}:w={box_w}:h={box_h}:color=0x{color}@{cover['opacity']:.9f}:t=fill"
+    ]
+
+
 def even(value):
     return max(2, math.floor(value / 2) * 2)
 

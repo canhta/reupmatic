@@ -155,16 +155,15 @@
   pointer-events: none;
   object-fit: fill;
 }
-/* The clean-up rectangle sits on the output frame; the numeric fields stay the precise input. */
-.inpaint-region {
+/* The cover band sits on the output frame, under the burned subtitle overlay. */
+.cover-band {
   position: absolute;
   box-sizing: border-box;
-  border: calc(var(--border-width) * 2) solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
   touch-action: none;
   cursor: move;
+  z-index: 0;
 }
-.inpaint-region-handle {
+.cover-band-handle {
   position: absolute;
   inset-inline-end: calc(-1 * var(--spacing-1));
   inset-block-end: calc(-1 * var(--spacing-1));
@@ -172,6 +171,10 @@
   height: var(--spacing-3);
   background: var(--accent);
   border-radius: var(--radius-sm);
+  outline: var(--focus-outline-width) solid var(--accent);
+}
+.geometry-frame .JASSUB {
+  z-index: 1;
 }
 .editor-start-frame {
   width: 100%;

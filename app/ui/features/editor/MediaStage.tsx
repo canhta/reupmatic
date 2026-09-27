@@ -17,12 +17,12 @@ import { resolveEditWindow } from '../../../core/editing/edit-recipe';
 import { fadePreviewOpacity } from '../../../core/editing/fade-preview';
 import { geometryPreview } from '../../../core/editing/geometry-preview';
 import { logoPreview } from '../../../core/editing/logo-preview';
-import type { ProcessingRegion } from '../../../core/processing/recipe';
+import type { CoverBand } from '../../../core/subtitles/style';
 import { unwrap } from '../../bridge/client';
-import { InpaintRegionOverlay } from '../vision/InpaintRegionOverlay';
 import { useEditor } from './EditorContext';
 import { useEditorTools } from './EditorToolContext';
 import { useLiveMix } from './live-mix/useLiveMix';
+import { CoverBandOverlay } from './subtitle-styles/CoverBandOverlay';
 
 // Mirrors the worker's FFmpeg `eq` on the live source.
 const COLOR_PREVIEW_FILTER_ID = 'editor-color-preview';
@@ -67,8 +67,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   const { activeTool } = useEditorTools();
   const { media, revision, ass } = editor;
   const { color, crop, flip, rotate, fade, logo, output } = editor.processing?.editing ?? {};
-  const inpaint = editor.processing?.inpaint;
-  const showRegion = activeTool === 'clean-up' && inpaint?.target === 'manual';
+  const cover = editor.processing?.subtitle_style?.cover ?? null;
   const [logoAspect, setLogoAspect] = useState<number | null>(null);
   const geometry = useMemo(
     () =>
@@ -82,7 +81,8 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
   );
   const staged =
     geometry != null &&
-    (rotate !== undefined ||
+    (cover !== null ||
+      rotate !== undefined ||
       flip !== undefined ||
       crop !== undefined ||
       fade !== undefined ||
@@ -135,10 +135,13 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
     if (liveMix.error) editor.setError(liveMix.error);
   }, [liveMix.error, editor.setError]);
 
-  function changeInpaintRegion(region: ProcessingRegion) {
-    const processing = editor.processing;
-    if (processing?.inpaint?.target !== 'manual') return;
-    editor.changeProcessing({ ...processing, inpaint: { ...processing.inpaint, region } });
+  function changeCoverBand(band: CoverBand) {
+    const style = editor.processing?.subtitle_style;
+    if (!style) return;
+    editor.changeProcessing({
+      ...(editor.processing ?? {}),
+      subtitle_style: { ...style, cover: band },
+    });
   }
 
   // A cancelled open must not strand focus on <body> after the busy button blurs.
@@ -234,7 +237,7 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
               <EmptyState isCompact className="video-placeholder" title={t('openHint')} />
             </div>
           ) : editor.sourceUrl ? (
-            (staged || showRegion) && geometry ? (
+            staged && geometry ? (
               // Numbers come from geometryPreview, the same recipe the worker's filter chain consumes.
               <div className="geometry-stage">
                 <div
@@ -285,6 +288,13 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                       }
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
                     />
+                    {cover && (
+                      <CoverBandOverlay
+                        band={cover}
+                        disabled={activeTool !== 'style' || editor.opening || editor.busy}
+                        onChange={changeCoverBand}
+                      />
+                    )}
                   </div>
                   {logo && editor.logoUrl && (
                     <img
@@ -307,13 +317,6 @@ export function MediaStage({ isWide }: { isWide: boolean }) {
                         )
                       }
                       onError={() => editor.setError('PREVIEW_UNAVAILABLE')}
-                    />
-                  )}
-                  {showRegion && inpaint?.region && (
-                    <InpaintRegionOverlay
-                      region={inpaint.region}
-                      disabled={editor.opening || editor.busy}
-                      onChange={changeInpaintRegion}
                     />
                   )}
                 </div>

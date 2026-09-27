@@ -1014,7 +1014,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     });
   }
 
-  const compositionBlocked = Boolean(composition && (processing?.ocr || processing?.inpaint));
+  const compositionBlocked = Boolean(composition && processing?.ocr);
   const renderUnavailable =
     compositionBlocked ||
     renderingPublic.busy ||

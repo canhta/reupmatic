@@ -5,9 +5,7 @@ import type { ProfileDocument } from './profile-contracts.js';
 export function parseProfileProcessing(input: unknown): ProcessingRecipe | null {
   if (input === null) return null;
   const recipe = parseProcessingRecipe(input);
-  if (recipe.inpaint?.target === 'manual' || recipe.editing?.trim) {
-    throw new Error('PROFILE_MEDIA_SPECIFIC');
-  }
+  if (recipe.editing?.trim) throw new Error('PROFILE_MEDIA_SPECIFIC');
   if (recipe.editing?.logo) {
     const editing = { ...recipe.editing };
     delete editing.logo;
