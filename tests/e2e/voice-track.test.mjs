@@ -73,13 +73,7 @@ const COPY = {
     running: 'Generating speech',
     draftHeading: 'Generated voice — not applied',
     comparison: 'Captured speech timing',
-    gridHeaders: [
-      'Captured spoken text',
-      'Slot (s)',
-      'Speech (s)',
-      'Compressed (%)',
-      'Overrun (s)',
-    ],
+    gridHeaders: ['Captured spoken text', 'Timing (s)'],
     engineNatural: 'This engine speaks at its natural rate; the plan placed each line.',
     listen: 'Listen',
     reviewed: 'I checked the text and listened for problems.',
@@ -90,9 +84,9 @@ const COPY = {
     voicePanel: 'Generated voice',
     voiceNone: 'No generated narration is applied to this project.',
     voiceMix: 'Mix with source',
-    voiceGain: 'Narration level (dB)',
-    voiceFadeIn: 'Fade in (s)',
-    voiceFadeOut: 'Fade out (s)',
+    voiceGain: 'Narration level',
+    voiceFadeIn: 'Fade in',
+    voiceFadeOut: 'Fade out',
     audition: 'Preview',
     keepVoice: 'Keep audio',
     remove: 'Remove narration',
@@ -122,13 +116,7 @@ const COPY = {
     running: 'Đang tạo giọng nói',
     draftHeading: 'Giọng đã tạo — chưa áp dụng',
     comparison: 'Thời gian giọng đã chụp',
-    gridHeaders: [
-      'Nội dung đọc đã chụp',
-      'Khoảng khả dụng (s)',
-      'Lời nói (s)',
-      'Đã nén (%)',
-      'Vượt (s)',
-    ],
+    gridHeaders: ['Nội dung đọc đã chụp', 'Thời gian (s)'],
     engineNatural: 'Bộ máy này đọc ở tốc độ tự nhiên; kế hoạch đặt vị trí từng câu.',
     listen: 'Nghe',
     reviewed: 'Tôi đã đối chiếu nội dung và nghe kiểm tra.',
@@ -139,9 +127,9 @@ const COPY = {
     voicePanel: 'Giọng đã tạo',
     voiceNone: 'Chưa áp dụng giọng đọc nào cho project này.',
     voiceMix: 'Trộn với nguồn',
-    voiceGain: 'Âm lượng giọng đọc (dB)',
-    voiceFadeIn: 'Mờ vào (s)',
-    voiceFadeOut: 'Mờ ra (s)',
+    voiceGain: 'Âm lượng giọng đọc',
+    voiceFadeIn: 'Mờ vào',
+    voiceFadeOut: 'Mờ ra',
     audition: 'Xem thử',
     keepVoice: 'Giữ âm thanh',
     remove: 'Bỏ giọng đọc',
@@ -417,7 +405,7 @@ for (const locale of ['en', 'vi']) {
           .fill('Cảm ơn bạn đã theo dõi — bản đã sửa.');
         await page.getByText(copy.staleVoice).first().waitFor();
         assert.equal(
-          await page.getByRole('radio', { name: copy.voiceMix }).isDisabled(),
+          await page.getByRole('button', { name: copy.voiceMix, exact: true }).isDisabled(),
           true,
           'a stale track locks its settings',
         );
@@ -439,7 +427,7 @@ for (const locale of ['en', 'vi']) {
         await keep.click();
         await page.getByText(copy.staleVoice).first().waitFor({ state: 'hidden' });
         assert.equal(
-          await page.getByRole('radio', { name: copy.voiceMix }).isDisabled(),
+          await page.getByRole('button', { name: copy.voiceMix, exact: true }).isDisabled(),
           false,
           'keeping the existing audio unlocks the settings',
         );
@@ -500,9 +488,9 @@ for (const locale of ['en', 'vi']) {
         assert.ok(
           await narrowTable.evaluate((element) => {
             const scroller = element.parentElement;
-            return scroller != null && scroller.scrollWidth > scroller.clientWidth + 1;
+            return scroller != null && scroller.scrollWidth <= scroller.clientWidth + 1;
           }),
-          'the narrow review grid must scroll horizontally so its right-hand columns stay reachable',
+          'the two-column review grid must fit the narrow panel without horizontal scroll',
         );
         await scrollToTopOf(
           page,
@@ -510,14 +498,6 @@ for (const locale of ['en', 'vi']) {
         );
         await page.screenshot({
           path: artifactPath(`voice-track-${locale}-review-1050x700.png`),
-        });
-        await narrowTable.evaluate((element) => {
-          const scroller = element.parentElement;
-          if (scroller) scroller.scrollLeft = scroller.scrollWidth;
-        });
-        await page.waitForTimeout(100);
-        await page.screenshot({
-          path: artifactPath(`voice-track-${locale}-review-compressed-1050x700.png`),
         });
 
         // Export, then capture the result view the monitor switches to.

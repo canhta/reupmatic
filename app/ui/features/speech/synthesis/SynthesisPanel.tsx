@@ -1,4 +1,3 @@
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -59,12 +58,26 @@ export function SynthesisPanel() {
         : value.label;
   const selectionValid =
     editor.activeTextLayer === 'spoken' && source.cues.some((cue) => cue.id === editor.selected);
+  // One readiness Banner carries the first reason the primary is blocked; the billing line and the
+  // limits copy stay as plain body text.
+  const blockingReason = job.checking
+    ? t('visionChecking')
+    : !job.models?.available && !hasVoices
+      ? t(synthesisErrorKey(job.models?.code || 'MODEL_MISSING'))
+      : languageUnsupported
+        ? t('synthesisLanguageMismatch')
+        : source.stale
+          ? t('textLayerStale')
+          : !source.cues.length
+            ? t('textLayerEmpty')
+            : scope === 'selected' && !selectionValid
+              ? t('synthesisSelectionHelp')
+              : !available && hasVoices
+                ? t('synthesisVoiceMissing')
+                : undefined;
   return (
     <InspectorPanelSection title={t('synthesisTitle')}>
       <VStack gap={3}>
-        <Text as="p" display="block" type="supporting">
-          {t('synthesisLimits')}
-        </Text>
         <FormLayout direction="vertical">
           <LayerLanguageField
             layerName="spoken"
@@ -95,36 +108,17 @@ export function SynthesisPanel() {
             }}
           />
         </FormLayout>
-        {!available && hasVoices && (
-          <Text as="p" display="block" type="body" role="status">
-            {t('synthesisVoiceMissing')}
-          </Text>
-        )}
-        {scope === 'selected' && !selectionValid && (
-          <Text as="p" display="block" type="body" role="status">
-            {t('synthesisSelectionHelp')}
-          </Text>
-        )}
+        <Text as="p" display="block" type="body">
+          {t('synthesisLimits')}
+        </Text>
         {selectedVoice?.source === 'cloud' && (
           <Text as="p" display="block" type="body" role="status">
             {t('synthesisCloudCharacters', { count: characters })}
           </Text>
         )}
-        {!source.cues.length && (
-          <Text as="p" display="block" type="body" role="status">
-            {t('textLayerEmpty')}
-          </Text>
-        )}
-        {source.stale && <Banner status="warning" title={t('textLayerStale')} />}
-        {languageUnsupported && <Banner status="warning" title={t('synthesisLanguageMismatch')} />}
         <GeneratorFooter
           readiness={{
-            reason:
-              job.checking || (!job.models?.available && !hasVoices)
-                ? job.checking
-                  ? t('visionChecking')
-                  : t(synthesisErrorKey(job.models?.code || 'MODEL_MISSING'))
-                : undefined,
+            reason: blockingReason,
             checking: job.checking,
             canSetUp: Boolean(job.models && !job.models.available),
             onSetUp: () => void editor.openSettings('processing'),

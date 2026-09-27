@@ -21,7 +21,6 @@ function tsxFiles(directory) {
 // the profiles and taxonomy managers, `LibraryDetails`/`SourcesWorkspace`, `batch/` and `JobsTray`.
 const ALLOWED = {
   // Voice worker (#28-#36) owns these editor tool-panel contents.
-  'features/speech/': 'voice worker owns the speech panels (#28-#36)',
   'features/editor/audio-tools/': 'voice worker owns the audio panels (#28-#36)',
   'features/editor/composition/': 'composition worker owns the composition panels (#37-#42)',
   'features/editor/subtitle-styles/': 'style panel lands in slices 3-11 (#50)',

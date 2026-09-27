@@ -1,9 +1,10 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
+import { proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ import { InspectorPanelSection } from '../../../design-system/InspectorPanelSect
 import { useEditor } from '../EditorContext';
 
 type VoiceTrackEdit = Partial<Pick<VoiceTrack, 'mode' | 'gain_db' | 'fade_in_ms' | 'fade_out_ms'>>;
+type VoiceModeRow = { key: 'replace' | 'mix'; label: string; help: string };
 
 export function VoiceTrackPanel() {
   const { t } = useTranslation();
@@ -30,6 +32,10 @@ export function VoiceTrackPanel() {
   const disabled = busy || track.stale;
   const duration = track.artifact.duration_ms / 1000;
   const change = (patch: VoiceTrackEdit) => editor.changeVoiceTrack({ ...track, ...patch });
+  const modes: VoiceModeRow[] = [
+    { key: 'replace', label: t('voiceTrackReplace'), help: t('voiceTrackReplaceHelp') },
+    { key: 'mix', label: t('voiceTrackMix'), help: t('voiceTrackMixHelp') },
+  ];
   return (
     <InspectorPanelSection title={t('voiceTrackTitle')}>
       <VStack gap={3}>
@@ -41,28 +47,49 @@ export function VoiceTrackPanel() {
           })}
         </Text>
         {track.stale && <Banner status="warning" title={t('synthesisVoiceStale')} />}
-        <RadioList
-          label={t('voiceTrackMode')}
-          value={track.mode}
-          isDisabled={disabled}
-          onChange={(mode) => {
-            if (mode === 'replace' || mode === 'mix') change({ mode });
-          }}
-        >
-          <RadioListItem
-            value="replace"
-            label={t('voiceTrackReplace')}
-            description={t('voiceTrackReplaceHelp')}
-          />
-          <RadioListItem
-            value="mix"
-            label={t('voiceTrackMix')}
-            description={t('voiceTrackMixHelp')}
-          />
-        </RadioList>
-        <FormLayout direction="vertical">
+        <Table
+          density="compact"
+          aria-label={t('voiceTrackMode')}
+          data={modes}
+          idKey="key"
+          emptyState={false}
+          columns={[
+            {
+              key: 'mode',
+              header: t('voiceTrackModeColumn'),
+              width: proportional(1, { minWidth: 0 }),
+              renderCell: (mode) => (
+                <HStack gap={2} vAlign="center">
+                  {mode.key === track.mode && (
+                    <StatusDot
+                      variant="accent"
+                      label={t('voiceTrackActive')}
+                      tooltip={t('voiceTrackActive')}
+                    />
+                  )}
+                  <Button
+                    label={mode.label}
+                    variant="ghost"
+                    size="sm"
+                    isDisabled={disabled}
+                    onClick={() => change({ mode: mode.key })}
+                  />
+                </HStack>
+              ),
+            },
+            {
+              key: 'behavior',
+              header: t('voiceTrackBehaviorColumn'),
+              width: proportional(1, { minWidth: 0 }),
+              renderCell: (mode) => <Text type="body">{mode.help}</Text>,
+            },
+          ]}
+        />
+        <Grid columns={2} gap={3}>
           <NumberInput
             label={t('voiceTrackGain')}
+            units="dB"
+            width="100%"
             value={track.gain_db}
             min={-60}
             max={24}
@@ -73,6 +100,8 @@ export function VoiceTrackPanel() {
           />
           <NumberInput
             label={t('voiceTrackFadeIn')}
+            units="s"
+            width="100%"
             value={track.fade_in_ms / 1000}
             min={0}
             max={duration}
@@ -83,6 +112,8 @@ export function VoiceTrackPanel() {
           />
           <NumberInput
             label={t('voiceTrackFadeOut')}
+            units="s"
+            width="100%"
             value={track.fade_out_ms / 1000}
             min={0}
             max={duration}
@@ -91,9 +122,9 @@ export function VoiceTrackPanel() {
             isDisabled={disabled}
             onChange={(value) => change({ fade_out_ms: Math.round(value * 1000) })}
           />
-        </FormLayout>
+        </Grid>
         {track.plan.lines.some((line) => line.rate !== 1) && (
-          <Text as="p" type="supporting">
+          <Text as="p" type="body">
             {t('voiceTrackPitchNote')}
           </Text>
         )}

@@ -1,9 +1,12 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import type { DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
+import { proportional, Table, useTablePagination } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,10 +20,11 @@ import {
 import { applyVoiceResult } from '../../../../core/speech/synthesis/voice-track';
 import { unwrap } from '../../../bridge/client';
 import { useEditor } from '../../editor/EditorContext';
-import { ReviewGrid } from '../../editor/text-layers/ReviewGrid';
 import { engineName } from '../engine-name';
 import { synthesisErrorKey } from './error-message';
 import type { SynthesisDraft } from './useSynthesisJob';
+
+const REVIEW_PAGE_SIZE = 25;
 
 export function SynthesisReview({
   draft,
@@ -45,7 +49,8 @@ export function SynthesisReview({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [saved, setSaved] = useState(''),
-    [applied, setApplied] = useState(false);
+    [applied, setApplied] = useState(false),
+    [page, setPage] = useState(1);
   function assertCurrent() {
     if (
       !alive.current ||
@@ -166,6 +171,18 @@ export function SynthesisReview({
     texts = new Map(p.cues.map((entry) => [entry.id, entry.text])),
     seconds = (ms: number) => (ms / 1000).toFixed(3),
     compressed = (rate: number) => `${((1 - 1 / rate) * 100).toFixed(1)}%`;
+  const reviewRows = p.cues.map((cue) => ({ cue }));
+  const pagination = useTablePagination<{ cue: (typeof p.cues)[number] }>({
+    page,
+    onPageChange: setPage,
+    totalItems: reviewRows.length,
+    pageSize: REVIEW_PAGE_SIZE,
+    variant: 'count',
+  });
+  const saveItems: DropdownMenuOption[] = [
+    { label: t('synthesisSaveWav'), onClick: () => void action('wav') },
+    { label: t('synthesisSaveReceipt'), onClick: () => void action('receipt') },
+  ];
   return (
     <VStack gap={3}>
       <Heading level={5}>{t('synthesisDraft')}</Heading>
@@ -178,47 +195,55 @@ export function SynthesisReview({
           runtime: engineName(result.runtime),
         })}
       </Text>
-      <Text as="p" type="supporting">
+      <Text as="p" type="body">
         {t('synthesisSession')}
       </Text>
-      <Text as="p" type="supporting">
+      <Text as="p" type="body">
         {t(plan.engine_targets_duration ? 'synthesisEngineFits' : 'synthesisEngineNatural')}
       </Text>
       {!fresh && <Banner status="warning" title={t('synthesisStale')} />}
-      <ReviewGrid
-        ariaLabel={t('synthesisComparison')}
-        rowKey={(cue) => cue.id}
-        rows={p.cues}
+      <Table
+        density="compact"
+        aria-label={t('synthesisComparison')}
+        data={reviewRows}
+        idKey={(item) => item.cue.id}
+        emptyState={false}
+        plugins={reviewRows.length > REVIEW_PAGE_SIZE ? { pagination } : undefined}
         columns={[
           {
             key: 'words',
             header: t('synthesisWords'),
-            width: proportional(1, { minWidth: 200 }),
-            render: (cue) => cue.text,
+            width: proportional(2, { minWidth: 0 }),
+            renderCell: (item) => (
+              <Text type="body" className="rule-comparison-text">
+                {item.cue.text}
+              </Text>
+            ),
           },
           {
-            key: 'slot',
-            header: t('synthesisSlot'),
-            width: pixel(180),
-            render: (cue) => seconds(planned.get(cue.id)?.slot_ms ?? 0),
-          },
-          {
-            key: 'speech',
-            header: t('synthesisSpeech'),
-            width: pixel(120),
-            render: (cue) => seconds(planned.get(cue.id)?.speech_ms ?? 0),
-          },
-          {
-            key: 'compressed',
-            header: t('synthesisCompressed'),
-            width: pixel(150),
-            render: (cue) => compressed(planned.get(cue.id)?.rate ?? 1),
-          },
-          {
-            key: 'overrun',
-            header: t('synthesisOverrun'),
-            width: pixel(110),
-            render: (cue) => seconds(planned.get(cue.id)?.overrun_ms ?? 0),
+            key: 'timing',
+            header: t('synthesisTiming'),
+            width: proportional(1, { minWidth: 0 }),
+            renderCell: (item) => {
+              const entry = planned.get(item.cue.id);
+              const overrun = entry?.overrun_ms ?? 0;
+              const overruns = overrun > 0;
+              return (
+                <HStack gap={2} vAlign="center">
+                  <StatusDot
+                    variant={overruns ? 'warning' : 'success'}
+                    label={t(overruns ? 'synthesisTimingOverrun' : 'synthesisTimingFits')}
+                    tooltip={t(overruns ? 'synthesisTimingOverrun' : 'synthesisTimingFits')}
+                  />
+                  <Text type="body" hasTabularNumbers>
+                    {`${t('synthesisSlot')} ${seconds(entry?.slot_ms ?? 0)} · ${t('synthesisSpeech')} ${seconds(entry?.speech_ms ?? 0)} · ${t('synthesisOverrun')} ${seconds(overrun)}`}
+                    {entry && entry.rate !== 1
+                      ? ` · ${t('synthesisCompressed')} ${compressed(entry.rate)}`
+                      : ''}
+                  </Text>
+                </HStack>
+              );
+            },
           },
         ]}
       />
@@ -263,12 +288,6 @@ export function SynthesisReview({
         isDisabled={!heard || !fresh || busy || disabled}
         onChange={setReviewed}
       />
-      <Text as="p" type="supporting">
-        {t('synthesisApplyHelp')}
-      </Text>
-      <Text as="p" type="supporting">
-        {t('synthesisReceiptHelp')}
-      </Text>
       <HStack gap={2} vAlign="center" wrap="wrap">
         <Button
           label={t('synthesisApply')}
@@ -276,15 +295,10 @@ export function SynthesisReview({
           isDisabled={!fresh || !heard || !reviewed || disabled || busy}
           onClick={apply}
         />
-        <Button
-          label={t('synthesisSaveWav')}
+        <MoreMenu
+          label={t('synthesisReviewActions')}
+          items={saveItems}
           isDisabled={!fresh || !heard || !reviewed || disabled || busy}
-          onClick={() => void action('wav')}
-        />
-        <Button
-          label={t('synthesisSaveReceipt')}
-          isDisabled={!fresh || !heard || !reviewed || disabled || busy}
-          onClick={() => void action('receipt')}
         />
         {busy && (
           <Button
@@ -311,13 +325,7 @@ export function SynthesisReview({
           {t('synthesisApplied')}
         </Text>
       )}
-      {error && (
-        <Banner
-          status="error"
-          title={t(synthesisErrorKey(error))}
-          description={<code>{error}</code>}
-        />
-      )}
+      {error && <Banner status="error" title={t(synthesisErrorKey(error))} />}
     </VStack>
   );
 }
