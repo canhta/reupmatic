@@ -22,7 +22,7 @@ const STATIC_TIME_MS = 800;
 /** A canvas-only renderer needs a few frames before the static frame is composited. */
 const STATIC_FRAMES = 12;
 /** A small landscape strip, so the sample line reads legibly in the panel. */
-const SAMPLE_CANVAS = { width: 480, height: 220 };
+const SAMPLE_CANVAS = { width: 360, height: 160 };
 /** A sample-only font bump; the strip is too short for the style's own size to read. */
 const SAMPLE_FONT_PCT = 15;
 const SAMPLE_CUE = {
@@ -67,6 +67,8 @@ function TemplateThumbnail({
   const style = {
     ...applySubtitleTemplate(defaultSubtitleStyle, template),
     font_size_pct: SAMPLE_FONT_PCT,
+    // Centred so the short strip has no empty band above a bottom-anchored line.
+    position: 5,
   };
   const styleKey = JSON.stringify(style);
   const name = t(`styleTemplate_${template.id}`);
