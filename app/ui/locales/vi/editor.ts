@@ -22,6 +22,7 @@ export const editorVi = {
   'qc_too-fast': 'Đọc quá nhanh',
   cueSyncDeviated: 'Thời gian lệch so với câu gốc',
   cueSyncDetached: 'Câu gốc đã bị xóa',
+  cueSyncUnlinked: 'Không có liên kết nguồn',
   sources: 'Nguồn & Thư viện',
   editor: 'Editor',
   channels: 'Kênh & Affiliate',

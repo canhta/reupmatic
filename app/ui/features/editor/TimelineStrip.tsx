@@ -18,7 +18,7 @@ import {
   type TextLayerName,
   textLayerNames,
 } from '../../../core/subtitles/layers/document';
-import { translatedSourceLayer } from '../../../core/subtitles/layers/sync';
+import { translatedCueSync, translatedSourceLayer } from '../../../core/subtitles/layers/sync';
 import { useConfirmation } from '../../design-system/ConfirmationProvider';
 import { useEditor } from './EditorContext';
 import { MEDIA_DRAG_TYPE } from './media-drag';
@@ -79,6 +79,10 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
     const cues = getTextLayer(textSnapshot, name).cues;
     return cues.length ? cues : null;
   }, [textSnapshot]);
+  const translatedSync = useMemo(
+    () => new Map(translatedCueSync(textSnapshot).map((entry) => [entry.id, entry.state])),
+    [textSnapshot],
+  );
   const bandRef = useRef<HTMLDivElement>(null);
   const [bandWidth, setBandWidth] = useState(0);
   const [drop, setDrop] = useState<{ index: number; x: number } | null>(null);
@@ -553,9 +557,22 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
                 action.effectId === 'source'
                   ? translatedSource?.find((cue) => `source:${cue.id}` === action.id)?.text
                   : undefined;
+              const syncState =
+                action.effectId === 'subtitle' && row.id === 'subtitles:translated'
+                  ? translatedSync.get(action.id)
+                  : undefined;
+              const syncLabel =
+                syncState === 'unlinked'
+                  ? t('cueSyncUnlinked')
+                  : syncState === 'deviated'
+                    ? t('cueSyncDeviated')
+                    : syncState === 'detached'
+                      ? t('cueSyncDetached')
+                      : '';
               return (
                 <span
-                  className={`timeline-action-label${action.effectId === 'source' ? ' timeline-action-source' : ''}`}
+                  className={`timeline-action-label${action.effectId === 'source' ? ' timeline-action-source' : ''}${syncLabel ? ` timeline-action-sync-${syncState}` : ''}`}
+                  title={syncLabel || undefined}
                 >
                   {action.effectId === 'subtitle'
                     ? subtitleText

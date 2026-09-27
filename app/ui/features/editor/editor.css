@@ -367,6 +367,11 @@
   color: var(--color-text-secondary);
   cursor: default;
 }
+.timeline-action-sync-unlinked,
+.timeline-action-sync-deviated,
+.timeline-action-sync-detached {
+  border-inline-start: var(--border-width) dashed var(--color-text-secondary);
+}
 
 .export-steps-summary {
   margin: 0;

@@ -251,7 +251,9 @@ export function CuePanel() {
                       ? t('cueSyncDeviated')
                       : syncState === 'detached'
                         ? t('cueSyncDetached')
-                        : '';
+                        : syncState === 'unlinked'
+                          ? t('cueSyncUnlinked')
+                          : '';
                   return (
                     <TableRow key={cue.id}>
                       {}

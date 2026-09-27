@@ -20,6 +20,7 @@ export const editorEn = {
   'qc_too-fast': 'Reads too fast',
   cueSyncDeviated: 'Timing differs from the source line',
   cueSyncDetached: 'Source line was removed',
+  cueSyncUnlinked: 'No source link',
   sources: 'Sources & Library',
   editor: 'Editor',
   channels: 'Channels & Affiliate',
