@@ -244,6 +244,28 @@ test('composition snapshot clamps dependent ranges atomically without discarding
   assert.equal(snapshot.processing.editing.trim.end_ms, 4000);
 });
 
+test('an edit window set before the composition exists is kept and still cuts the export, so the panel shows it', async () => {
+  const { compositionSnapshot } = await import('../../dist-core/editing/composition/snapshot.js');
+  const { resolveEditWindow } = await import('../../dist-core/editing/edit-recipe.js');
+  const snapshot = {
+    cues: [],
+    processing: { editing: { trim: { start_ms: 0, end_ms: 1000 }, speed: 1.5 } },
+  };
+  const next = compositionSnapshot(snapshot, composition(), []);
+  assert.deepEqual(
+    next.processing.editing.trim,
+    { start_ms: 0, end_ms: 1000 },
+    'the window survives composition creation instead of being cleared',
+  );
+  const window = resolveEditWindow(next.processing.editing, compositionDuration(next.composition));
+  assert.equal(window.speed, 1.5);
+  assert.equal(window.duration_ms, 667);
+  assert.ok(
+    window.duration_ms < compositionDuration(next.composition),
+    'the stale window would cut the composition export unless the user clears it',
+  );
+});
+
 test('saved compositions protect every member source and recovery retains all dependencies', async (t) => {
   const { mkdtemp, readFile, writeFile, rm } = await import('node:fs/promises');
   const { default: os } = await import('node:os');

@@ -19,7 +19,9 @@ export function ClipsPanel() {
   const disabled = editor.opening || editor.busy;
   return (
     <VStack gap={5}>
-      {editor.composition ? <CompositionPanel /> : <WholeVideoClip />}
+      {editor.composition && <CompositionPanel />}
+      {/* The output edit window stays visible in composition mode; clearing it is the user's call. */}
+      <WholeVideoClip />
       <GlobalEditSections disabled={disabled} />
     </VStack>
   );
