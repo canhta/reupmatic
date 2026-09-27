@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { parseTextRegions, type TextRegion } from '../subtitles/cover-fit.js';
 import { assertCues, type Cue } from '../subtitles/cues.js';
 import type { OperationName } from '../worker/operations.js';
 import { RemoteError } from '../worker/remote-error.js';
@@ -42,6 +43,8 @@ export interface OcrResult extends Record<string, unknown> {
   sample_ms: number;
   cues: Cue[];
   observations: Observation[];
+  /** Detected subtitle positions over the whole scan, computed by the worker. */
+  regions: TextRegion[];
   analysis_id: string;
   width: number;
   height: number;
@@ -141,6 +144,7 @@ export function validateVisionResult(value: unknown, input: VisionInput): Vision
   }
   try {
     assertCues(value.cues);
+    parseTextRegions(value.regions);
   } catch {
     throw new RemoteError('INVALID_WORKER_RESPONSE');
   }

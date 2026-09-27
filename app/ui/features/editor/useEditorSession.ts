@@ -53,7 +53,6 @@ import {
   applyTranslation as applyTranslatedDraft,
   type TranslationPreview,
 } from '../../../core/speech/translation/review';
-import { textRegions } from '../../../core/subtitles/cover-fit';
 import { assertCues, type Cue } from '../../../core/subtitles/cues';
 import {
   acceptStaleVoiceTrack as acceptVoiceTrackStale,
@@ -606,7 +605,7 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
       openingRef.current
     )
       return false;
-    const regions = textRegions(result.observations, result.width, result.height);
+    const regions = result.regions;
     return changeLayerCues(result.cues, 'displayed', {
       language: result.language,
       origin: {

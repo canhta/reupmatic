@@ -87,7 +87,7 @@ function unrotatePoint(point: NormalizedPoint, rotate: 0 | 90 | 180 | 270): Norm
   return point;
 }
 
-function sourceCrop(rotate: 0 | 90 | 180 | 270, crop: CropRegion): CropRegion {
+export function sourceCrop(rotate: 0 | 90 | 180 | 270, crop: CropRegion): CropRegion {
   const { x, y, width, height } = crop;
   if (rotate === 90) return { x: y, y: 1 - x - width, width: height, height: width };
   if (rotate === 180) return { x: 1 - x - width, y: 1 - y - height, width, height };

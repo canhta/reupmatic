@@ -4,7 +4,7 @@ import json
 
 from runtime.errors import WorkerError
 from subtitles.validation import validate_cues
-from vision.merge import CueGrouper
+from vision.merge import CueGrouper, RegionCollector
 from vision.refine import refine_groups
 from vision.service import MAX_RESULT, VisionService
 
@@ -21,6 +21,7 @@ def scan_cues(
     observations, chunks = [], []
     evidence_bytes = observation_count = 0
     geometry = None
+    regions = None
     for first, last in intervals(start, end, ocr_window(options["sample_ms"])):
         host.cancelled(req)
         result = service.run(
@@ -42,8 +43,11 @@ def scan_cues(
         if geometry is not None and current != geometry:
             raise WorkerError("VISION_FRAME_INVALID")
         geometry = current
+        if regions is None:
+            regions = RegionCollector(geometry[0], geometry[1])
         for observation in result["observations"]:
             grouper.add(observation)
+            regions.add(observation)
         observation_count += len(result["observations"])
         observations.extend(result["observations"][: max(0, 20 - len(observations))])
         evidence = staging / f"{result['analysis_id']}.json"
@@ -81,6 +85,7 @@ def scan_cues(
     return {
         "cues": cues,
         "observations": observations,
+        "regions": regions.finish() if regions is not None else [],
         "observation_count": observation_count,
         "chunks": chunks,
         "width": geometry[0],

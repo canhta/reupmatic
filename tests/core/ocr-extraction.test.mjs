@@ -28,6 +28,7 @@ const result = {
   sample_ms: 2000,
   cues: [],
   observations: [],
+  regions: [],
   scope: 'full-source',
   evidence: { chunks: 2, preview_count: 0, observation_count: 61 },
 };

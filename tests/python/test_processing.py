@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
 from processing.chunks import intervals, ocr_window, progress_for
-from processing.ocr_scan import scan_subtitles
+from processing.ocr_scan import scan_cues, scan_subtitles
 from processing.recipe import parse_fingerprints, parse_recipe, required_models
 from runtime.errors import WorkerError
 from vision.service import DISK_RESERVE, MAX_OCR_EDGE, MAX_SEGMENT_BYTES
@@ -160,6 +160,79 @@ class ChunkCompositionTests(unittest.TestCase):
             self.assertEqual(serialized[1]["start_ms"], 750 + 2 * window)
             self.assertEqual(track.name, "track.srt")
             self.assertEqual(list(staging.glob("*.json")), [])
+
+
+class RegionScanTests(unittest.TestCase):
+    def test_regions_cover_subtitles_after_the_preview_window(self):
+        options = {"language": "en", "sample_ms": 500, "min_confidence": 0.5}
+        pins = {"ocr_en": "a" * 64}
+        calls = []
+        host = SimpleNamespace(
+            cancelled=lambda req: None,
+            emit=lambda *args: None,
+            assets=SimpleNamespace(get=lambda *args: {"path": "/controlled/source.mp4"}),
+        )
+        req = {
+            "id": "test",
+            "method": "media.ocr.extract",
+            "params": {"asset_id": "registered-source"},
+        }
+
+        class VisionDouble:
+            def __init__(self, host):
+                pass
+
+            def run(self, request, *, staging, emit_progress):
+                p = request["params"]
+                first, last = p["start_ms"], p["end_ms"]
+                calls.append((first, last))
+                analysis_id = str(len(calls))
+                (staging / f"{analysis_id}.json").write_text("{}")
+                observations = []
+                for start in range(first, last, 500):
+                    later = start >= 15000
+                    observations.append(
+                        {
+                            "start_ms": start,
+                            "end_ms": min(start + 500, last),
+                            "detections": [
+                                {
+                                    "text": "Later" if later else "Early",
+                                    "confidence": 0.9,
+                                    "box": [200, 300, 500, 350] if later else [200, 100, 500, 150],
+                                }
+                            ],
+                        }
+                    )
+                return {
+                    "width": 640,
+                    "height": 360,
+                    "observations": observations,
+                    "analysis_id": analysis_id,
+                    "cues": [],
+                    "model_fingerprints": {"ocr": pins["ocr_en"]},
+                }
+
+        with tempfile.TemporaryDirectory() as directory:
+            staging = Path(directory)
+            with (
+                patch("processing.ocr_scan.VisionService", VisionDouble),
+                patch("processing.ocr_scan.refine_groups", lambda *args, **kwargs: None),
+            ):
+                result = scan_cues(host, req, options, 0, 20000, staging, pins)
+        # The preview keeps the first 20 samples (10 s); the regions still see the whole scan.
+        self.assertEqual(len(result["observations"]), 20)
+        self.assertNotIn(
+            "Later",
+            [
+                d["text"]
+                for observation in result["observations"]
+                for d in observation["detections"]
+            ],
+        )
+        later = [region for region in result["regions"] if region["y_pct"] > 80]
+        self.assertEqual(len(later), 1)
+        self.assertEqual(later[0]["count"], 10)
 
 
 class ProcessingSchemaTests(unittest.TestCase):

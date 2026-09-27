@@ -3,15 +3,12 @@ import {
   geometryPreview,
   mapSourceToOutput,
   type SourceSize,
+  sourceCrop,
 } from '../editing/geometry-preview.js';
-import type { Observation } from '../vision/vision.js';
 import type { CoverBand } from './style.js';
 
 /** Padding around the detected text, as a percentage of the output frame. */
 export const COVER_FIT_PADDING_PCT = 2;
-/** Two text boxes belong to one position while their centers stay this close, per axis. */
-const POSITION_TOLERANCE_X_PCT = 15;
-const POSITION_TOLERANCE_Y_PCT = 6;
 const MAX_REGIONS = 32;
 /** The cover band's own floor, matching the Style fields' minimum. */
 const MIN_BAND_PCT = 2;
@@ -59,70 +56,6 @@ export function parseTextRegions(value: unknown): TextRegion[] {
   });
 }
 
-type Box = [number, number, number, number];
-
-function boxUnion(detections: Observation['detections']): Box | null {
-  const boxes = detections.filter((detection) => detection.text.trim());
-  if (!boxes.length) return null;
-  return [
-    Math.min(...boxes.map((detection) => detection.box[0])),
-    Math.min(...boxes.map((detection) => detection.box[1])),
-    Math.max(...boxes.map((detection) => detection.box[2])),
-    Math.max(...boxes.map((detection) => detection.box[3])),
-  ];
-}
-
-function mergeBox(target: Box, box: Box): Box {
-  return [
-    Math.min(target[0], box[0]),
-    Math.min(target[1], box[1]),
-    Math.max(target[2], box[2]),
-    Math.max(target[3], box[3]),
-  ];
-}
-
-/**
- * Cluster each observation's text-box union into distinct on-screen positions, in source-frame
- * percentages, most frequent first. Boxes that jump between two positions stay two clusters
- * instead of one band that covers everything between them.
- */
-export function textRegions(
-  observations: Observation[],
-  width: number,
-  height: number,
-): TextRegion[] {
-  if (width <= 0 || height <= 0) return [];
-  const clusters: { anchor: [number, number]; box: Box; count: number }[] = [];
-  const xTolerance = (width * POSITION_TOLERANCE_X_PCT) / 100;
-  const yTolerance = (height * POSITION_TOLERANCE_Y_PCT) / 100;
-  for (const observation of observations) {
-    const box = boxUnion(observation.detections);
-    if (!box) continue;
-    const centerX = (box[0] + box[2]) / 2;
-    const centerY = (box[1] + box[3]) / 2;
-    const found = clusters.find(
-      (cluster) =>
-        Math.abs(centerX - cluster.anchor[0]) <= xTolerance &&
-        Math.abs(centerY - cluster.anchor[1]) <= yTolerance,
-    );
-    if (found) {
-      found.box = mergeBox(found.box, box);
-      found.count += 1;
-    } else {
-      clusters.push({ anchor: [centerX, centerY], box, count: 1 });
-    }
-  }
-  return clusters
-    .map((cluster) => ({
-      x_pct: (cluster.box[0] / width) * 100,
-      y_pct: (cluster.box[1] / height) * 100,
-      width_pct: ((cluster.box[2] - cluster.box[0]) / width) * 100,
-      height_pct: ((cluster.box[3] - cluster.box[1]) / height) * 100,
-      count: cluster.count,
-    }))
-    .sort((left, right) => right.count - left.count || left.y_pct - right.y_pct);
-}
-
 export interface CoverFit {
   band: CoverBand;
   dominant: TextRegion;
@@ -143,8 +76,19 @@ export function fitCoverBand(
   if (!regions.length) return null;
   const dominant = regions[0];
   const preview = geometryPreview(geometry ?? {}, source);
-  const map = (x: number, y: number) =>
-    mapSourceToOutput(preview, { x: x / 100, y: y / 100 }) ?? { x: x / 100, y: y / 100 };
+  // Clamp to the visible crop before mapping: a corner outside the crop would otherwise fall back
+  // to source-frame coordinates, which are a different frame.
+  const view = sourceCrop(preview.rotate, preview.crop);
+  const clampToCrop = (value: number, low: number, high: number) =>
+    Math.max(low, Math.min(high, value));
+  const map = (x: number, y: number) => {
+    const point = mapSourceToOutput(preview, {
+      x: clampToCrop(x / 100, view.x, view.x + view.width),
+      y: clampToCrop(y / 100, view.y, view.y + view.height),
+    });
+    if (!point) throw new Error('INVALID_GEOMETRY');
+    return point;
+  };
   const topLeft = map(dominant.x_pct, dominant.y_pct);
   const bottomRight = map(
     dominant.x_pct + dominant.width_pct,

@@ -31,6 +31,7 @@ const output = () => ({
   scope: 'full-source',
   evidence: { chunks: 1, preview_count: 0, observation_count: 0 },
   observations: [],
+  regions: [],
   cues: [{ id: 'cue-1', start_ms: 1000, end_ms: 1500, text: 'Tiếng Việt' }],
 });
 class WorkerDouble extends EventEmitter {

@@ -4,47 +4,18 @@ import {
   COVER_FIT_PADDING_PCT,
   fitCoverBand,
   parseTextRegions,
-  textRegions,
 } from '../../dist-core/subtitles/cover-fit.js';
 import { createTextLayers, parseTextLayers } from '../../dist-core/subtitles/layers/document.js';
 import { defaultCoverBand } from '../../dist-core/subtitles/style.js';
 
-const detection = (box) => ({ text: 'x', confidence: 0.9, box });
-const observation = (start, boxes) => ({
-  start_ms: start,
-  end_ms: start + 500,
-  detections: boxes.map(detection),
+const region = (x_pct, y_pct, width_pct, height_pct, count = 1) => ({
+  x_pct,
+  y_pct,
+  width_pct,
+  height_pct,
+  count,
 });
 const base = { ...defaultCoverBand({ font_size_pct: 4.5, position: 2, margin_y_pct: 5 }) };
-
-test('text boxes cluster into distinct on-screen positions, most frequent first', () => {
-  const bottom = [100, 800, 400, 850];
-  const top = [100, 100, 400, 150];
-  const regions = textRegions(
-    [observation(0, [bottom]), observation(500, [bottom]), observation(1000, [top])],
-    1000,
-    1000,
-  );
-  assert.equal(regions.length, 2);
-  assert.deepEqual(regions[0], { x_pct: 10, y_pct: 80, width_pct: 30, height_pct: 5, count: 2 });
-  assert.deepEqual(regions[1], { x_pct: 10, y_pct: 10, width_pct: 30, height_pct: 5, count: 1 });
-});
-
-test('a union of several boxes is one position and blank samples are ignored', () => {
-  const regions = textRegions(
-    [
-      observation(0, [
-        [0, 0, 100, 50],
-        [200, 10, 300, 60],
-      ]),
-      observation(500, []),
-    ],
-    400,
-    200,
-  );
-  assert.equal(regions.length, 1);
-  assert.deepEqual(regions[0], { x_pct: 0, y_pct: 0, width_pct: 75, height_pct: 30, count: 1 });
-});
 
 test('region parsing is strict', () => {
   const valid = [{ x_pct: 10, y_pct: 80, width_pct: 30, height_pct: 5, count: 2 }];
@@ -62,15 +33,7 @@ test('region parsing is strict', () => {
 });
 
 test('the band fits the dominant position, padded, and reports the others', () => {
-  const regions = textRegions(
-    [
-      observation(0, [[100, 800, 400, 850]]),
-      observation(500, [[100, 800, 400, 850]]),
-      observation(1000, [[100, 100, 400, 150]]),
-    ],
-    1000,
-    1000,
-  );
+  const regions = [region(10, 80, 30, 5, 2), region(10, 10, 30, 5, 1)];
   const fit = fitCoverBand(regions, {}, { width: 1000, height: 1000 }, base);
   assert.ok(fit);
   assert.deepEqual(fit.band, {
@@ -86,8 +49,7 @@ test('the band fits the dominant position, padded, and reports the others', () =
 });
 
 test('the band is clamped to the output frame and never empty', () => {
-  const regions = textRegions([observation(0, [[0, 0, 1000, 1000]])], 1000, 1000);
-  const fit = fitCoverBand(regions, {}, { width: 1000, height: 1000 }, base);
+  const fit = fitCoverBand([region(0, 0, 100, 100)], {}, { width: 1000, height: 1000 }, base);
   assert.ok(fit);
   assert.deepEqual(fit.band, {
     x_pct: 0,
@@ -100,13 +62,44 @@ test('the band is clamped to the output frame and never empty', () => {
 });
 
 test('a rotation maps the fitted band through the same geometry as the burn', () => {
-  const regions = textRegions([observation(0, [[100, 800, 400, 850]])], 1000, 1000);
+  const regions = [region(10, 80, 30, 5)];
   const upright = fitCoverBand(regions, {}, { width: 1000, height: 1000 }, base);
   const rotated = fitCoverBand(regions, { rotate: 90 }, { width: 1000, height: 1000 }, base);
   assert.ok(upright && rotated);
   assert.notDeepEqual(rotated.band, upright.band);
   assert.ok(rotated.band.x_pct + rotated.band.width_pct <= 100 + 1e-9);
   assert.ok(rotated.band.y_pct + rotated.band.height_pct <= 100 + 1e-9);
+});
+
+test('a crop that cuts the subtitle clamps the band to the visible region', () => {
+  // The subtitle sits at 80–90% of the source; the crop keeps only the top half.
+  const fit = fitCoverBand(
+    [region(10, 80, 80, 10)],
+    { crop: { x: 0, y: 0, width: 1, height: 0.5 } },
+    { width: 1000, height: 1000 },
+    base,
+  );
+  assert.ok(fit);
+  // The band may not fall back to source coordinates; it clamps to the crop's bottom edge.
+  assert.ok(fit.band.y_pct >= 97 - 1e-9, `band top ${fit.band.y_pct} must reach the crop edge`);
+  assert.ok(fit.band.y_pct + fit.band.height_pct <= 100 + 1e-9);
+  assert.ok(Math.abs(fit.band.x_pct - (10 - COVER_FIT_PADDING_PCT)) < 1e-6);
+});
+
+test('a crop through the subtitle keeps the visible part of the band', () => {
+  // The subtitle runs 85–95% of the source; a top-90% crop keeps 85–90%.
+  const fit = fitCoverBand(
+    [region(10, 85, 80, 10)],
+    { crop: { x: 0, y: 0, width: 1, height: 0.9 } },
+    { width: 1000, height: 1000 },
+    base,
+  );
+  assert.ok(fit);
+  assert.ok(Math.abs(fit.band.y_pct - (85 / 0.9 - COVER_FIT_PADDING_PCT)) < 1e-6);
+  assert.ok(
+    Math.abs(fit.band.y_pct + fit.band.height_pct - 100) < 1e-6,
+    'the band must reach the crop edge, not stop at the source coordinate',
+  );
 });
 
 test('an OCR origin carries detected regions through the text-layer contract', () => {

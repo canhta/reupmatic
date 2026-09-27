@@ -165,6 +165,28 @@ class BoundaryRefinementTests(unittest.TestCase):
         self.assertEqual(refine_boundaries(self.group(), flat, 160, 90), (1000, 2000))
 
 
+class RegionCollectorTests(unittest.TestCase):
+    def test_regions_are_capped_at_32_most_frequent_first(self):
+        from vision.merge import MAX_REGIONS, RegionCollector
+
+        collector = RegionCollector(1000, 1000)
+        for index in range(40):
+            collector.add(
+                {
+                    "start_ms": index * 500,
+                    "end_ms": index * 500 + 500,
+                    "detections": [
+                        {
+                            "text": "x",
+                            "confidence": 0.9,
+                            "box": [10, index * 100, 50, index * 100 + 20],
+                        }
+                    ],
+                }
+            )
+        self.assertEqual(len(collector.finish()), MAX_REGIONS)
+
+
 class RuntimeAvailabilityTests(unittest.TestCase):
     def test_a_pack_installed_after_start_is_detected_on_the_next_probe(self):
         from vision.models import runtime_available

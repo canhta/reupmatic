@@ -88,6 +88,66 @@ def summarize(observation: dict) -> tuple[str, str, tuple[int, int, int, int] | 
     return display, normalize(display), box, weight
 
 
+def merge_box(left: tuple[int, int, int, int], right: tuple[int, int, int, int]) -> tuple:
+    return (
+        min(left[0], right[0]),
+        min(left[1], right[1]),
+        max(left[2], right[2]),
+        max(left[3], right[3]),
+    )
+
+
+# Two text boxes belong to one position while their centers stay this close, per axis.
+POSITION_TOLERANCE_X_PCT = 15
+POSITION_TOLERANCE_Y_PCT = 6
+MAX_REGIONS = 32
+
+
+class RegionCollector:
+    """Cluster each observation's text-box union into distinct on-screen positions.
+
+    Streaming, so a whole-source scan clusters every observation rather than a 20-sample preview.
+    Positions are most frequent first, in source-frame percentages, capped at MAX_REGIONS.
+    """
+
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.clusters: list[dict] = []
+
+    def add(self, observation: dict) -> None:
+        box = summarize(observation)[2]
+        if box is None:
+            return
+        center = ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+        x_tolerance = self.width * POSITION_TOLERANCE_X_PCT / 100
+        y_tolerance = self.height * POSITION_TOLERANCE_Y_PCT / 100
+        for cluster in self.clusters:
+            anchor = cluster["anchor"]
+            if (
+                abs(center[0] - anchor[0]) <= x_tolerance
+                and abs(center[1] - anchor[1]) <= y_tolerance
+            ):
+                cluster["box"] = merge_box(cluster["box"], box)
+                cluster["count"] += 1
+                return
+        self.clusters.append({"anchor": center, "box": box, "count": 1})
+
+    def finish(self) -> list[dict]:
+        regions = [
+            {
+                "x_pct": cluster["box"][0] / self.width * 100,
+                "y_pct": cluster["box"][1] / self.height * 100,
+                "width_pct": (cluster["box"][2] - cluster["box"][0]) / self.width * 100,
+                "height_pct": (cluster["box"][3] - cluster["box"][1]) / self.height * 100,
+                "count": cluster["count"],
+            }
+            for cluster in self.clusters
+        ]
+        regions.sort(key=lambda region: (-region["count"], region["y_pct"]))
+        return regions[:MAX_REGIONS]
+
+
 class _Group:
     def __init__(self, observation: dict):
         self.start_ms = observation["start_ms"]
