@@ -12,6 +12,15 @@
   min-width: 0;
 }
 
+/* One content line: LayoutContent pads the body to the same step as the header and footer.
+   Reset the container-padding vars so a full-bleed Section nested in a panel cannot cancel
+   that padding with its negative-margin escape. */
+.side-panel-body {
+  min-width: 0;
+  --container-padding-inline-start: 0px;
+  --container-padding-inline-end: 0px;
+}
+
 .side-panel-footer {
   min-width: 0;
 }

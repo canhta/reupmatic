@@ -581,7 +581,7 @@ for (const locale of ['en', 'vi']) {
         await page.getByRole('button', { name: copy.discardResult, exact: true }).click();
         await page.getByRole('tab', { name: copy.transcribeTab, exact: true }).click();
 
-        await page.getByRole('tab', { name: TOOLS[6][locale], exact: true }).click();
+        await page.getByRole('tab', { name: TOOLS[5][locale], exact: true }).click();
         await page.locator('#panel-edit').waitFor({ state: 'visible' });
         await page.getByRole('button', { name: copy.logo, exact: true }).click();
         await page.getByRole('checkbox', { name: copy.logoEnable, exact: true }).check();
@@ -590,7 +590,7 @@ for (const locale of ['en', 'vi']) {
         await page.getByRole('combobox', { name: copy.logoAnchor, exact: true }).click();
         await page.getByRole('option', { name: copy.logoAnchorTopLeft, exact: true }).click();
         await page.locator('img[data-monitor-logo="true"]').waitFor();
-        await page.getByRole('tab', { name: TOOLS[6][locale], exact: true }).click();
+        await page.getByRole('tab', { name: TOOLS[5][locale], exact: true }).click();
 
         await openSourcePanel(page, 'media');
         const secondRow = media.locator('li').filter({ hasText: 'b-roll-cutaway.mp4' });
@@ -605,7 +605,7 @@ for (const locale of ['en', 'vi']) {
         await page.getByRole('menuitem', { name: copy.clipDisable }).click();
         await page.locator('.timeline-action-disabled').first().waitFor();
 
-        await page.getByRole('tab', { name: TOOLS[6][locale], exact: true }).click();
+        await page.getByRole('tab', { name: TOOLS[5][locale], exact: true }).click();
         const editPanel = page.locator('#panel-edit');
         await editPanel.waitFor({ state: 'visible' });
         for (const title of [copy.framing, copy.fades, copy.logo]) {
@@ -616,7 +616,7 @@ for (const locale of ['en', 'vi']) {
           await editPanel.getByRole('button', { name: title, exact: true }).click();
         }
         await shot(page, locale, 'panel-edit-composition');
-        await page.getByRole('tab', { name: TOOLS[6][locale], exact: true }).click();
+        await page.getByRole('tab', { name: TOOLS[5][locale], exact: true }).click();
 
         await openSourcePanel(page, 'media');
         await shot(page, locale, 'media');

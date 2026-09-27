@@ -98,7 +98,7 @@ export function SidePanel({
             {...(id ? { id } : {})}
             {...(tabId ? { role: 'tabpanel', 'aria-labelledby': tabId, tabIndex: -1 } : {})}
           >
-            {children}
+            <div className="side-panel-body">{children}</div>
           </LayoutContent>
         }
         {...(footer

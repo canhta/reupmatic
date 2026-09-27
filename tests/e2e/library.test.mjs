@@ -148,7 +148,7 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       await page.getByRole('cell', { name: 'vacation-clip.mp4', exact: true }).click();
       const drawerA = page.getByRole('complementary', { name: 'vacation-clip.mp4' });
       await drawerA.waitFor();
-      const drawerScroll = page.locator('.side-panel-content');
+      const drawerScroll = drawerA.locator('.side-panel-content');
       await drawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });
@@ -201,7 +201,7 @@ test('Electron Sources & Library list/detail composition, selection, batch and r
       assert.equal(await vietnameseSurface.getByText('0–0 trên 0 mục', { exact: true }).count(), 0);
 
       await page.setViewportSize({ width: 1050, height: 700 });
-      const vietnameseDrawerScroll = page.locator('.side-panel-content');
+      const vietnameseDrawerScroll = vietnameseSurface.locator('.side-panel-content');
       await vietnameseDrawerScroll.evaluate((element) => {
         element.scrollTop = element.scrollHeight;
       });

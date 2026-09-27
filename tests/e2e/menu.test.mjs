@@ -125,7 +125,7 @@ test('native menu opens shared jobs and navigates to Settings, idempotently on a
       await clickMenuItem(application, 'Editor', 'Open Jobs & Queue');
       const tray = page.getByRole('complementary', { name: 'Batch & jobs' });
       await tray.waitFor();
-      await tray.getByRole('button', { name: 'Close jobs', exact: true }).click();
+      await tray.getByRole('button', { name: 'Close Batch & jobs', exact: true }).click();
 
       assert.equal(application.windows().length, 1);
       await clickMenuItem(

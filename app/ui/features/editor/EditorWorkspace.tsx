@@ -128,7 +128,9 @@ function EditorStudio() {
     autoSaveId: 'editor.regions.toolPanelWidth',
     defaultSize: REGION_DEFAULTS.toolPanel,
     minSize: 340,
-    maxSize: percent(28, { min: pixel(360) }),
+    // Capped just above the 360 default so the viewer stays the largest region at the narrow
+    // wide-layout width (see editor-frame "viewer stays the largest region").
+    maxSize: percent(28, { min: pixel(372) }),
     collapsible: true,
     collapsedSize: 44,
     isCollapsed: activeTool == null,

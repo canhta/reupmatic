@@ -154,8 +154,8 @@ function createVideoWithAudio(filePath) {
 }
 
 /** scrollWidth > clientWidth catches a fixed-column table or nowrap child overflowing the column. */
-async function assertReviewFits(cuePanel, expectedFirstResult) {
-  const review = cuePanel.locator('.generator-review');
+async function assertReviewFits(cuePanel, expectedFirstResult, reviewLabel) {
+  const review = cuePanel.getByRole('list', { name: reviewLabel, exact: true });
   await review.waitFor({ state: 'visible' });
   const overflows = await review.evaluate((root) =>
     [root, ...root.querySelectorAll('*')]
@@ -167,7 +167,7 @@ async function assertReviewFits(cuePanel, expectedFirstResult) {
       ),
   );
   assert.deepEqual(overflows, [], 'no element in the review may overflow its column');
-  const firstRow = review.locator('.review-rows li').first();
+  const firstRow = review.getByRole('listitem').first();
   await firstRow.waitFor();
   const result = firstRow.locator('.rule-comparison-text').last();
   assert.equal(
@@ -312,7 +312,7 @@ for (const locale of ['en', 'vi']) {
         const cuePanel = page.locator('.cue-panel');
         for (const [width, height] of SIZES) {
           await page.setViewportSize({ width, height });
-          await assertReviewFits(cuePanel, copy.speechResult);
+          await assertReviewFits(cuePanel, copy.speechResult, copy.review);
           await page.screenshot({
             path: path.join(screenshots, `speech-review-${locale}-${width}x${height}.png`),
           });
