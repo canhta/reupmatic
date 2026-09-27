@@ -16,6 +16,7 @@ import {
   liveMixClockMs,
   liveMixClockRate,
   soundtrackWindow,
+  voiceClockOffsetMs,
   voiceLineSchedule,
   voiceWindow,
 } from '../../dist-core/editing/live-mix.js';
@@ -127,6 +128,21 @@ test('voice line placement matches the worker frame spans and rate', () => {
 
 test('the soundtrack window keeps the worker trim and output offset', () => {
   assert.deepEqual(soundtrackWindow(soundtrack), { start_ms: 0, end_ms: 4000, offset_ms: 1000 });
+});
+
+test('a trim and speed move the voice to the output clock the render uses', () => {
+  assert.equal(voiceClockOffsetMs(6000, { trimStartMs: 5000, speed: 2 }), 500);
+  // A line before the trim start is clamped to the top of the output, never negative.
+  assert.equal(voiceClockOffsetMs(1000, { trimStartMs: 5000, speed: 2 }), 0);
+  const lines = voiceLineSchedule(voiceTrack, { trimStartMs: 500, speed: 2 });
+  assert.deepEqual(
+    lines.map((line) => line.output_start_ms),
+    [0, 500],
+  );
+  assert.deepEqual(voiceWindow(voiceTrack, { trimStartMs: 500, speed: 2 }), {
+    start_ms: 0,
+    end_ms: 900,
+  });
 });
 
 test('fade envelopes ramp linearly on the same clock the worker fades', () => {

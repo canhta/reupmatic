@@ -57,25 +57,51 @@ export interface LiveVoiceLine extends VoiceLine {
   output_end_ms: number;
 }
 
+/** The trim/speed mapping the render and the live mix share. */
+export interface VoiceClock {
+  readonly trimStartMs: number;
+  readonly speed: number;
+}
+
+export const VOICE_CLOCK_UNITY: VoiceClock = { trimStartMs: 0, speed: 1 };
+
+/**
+ * Source-time milliseconds to output-clock milliseconds: trim first, then clip speed. Mirrors the
+ * `(offset − trim.start)/speed` placement `worker/media/audio/mixing.py` applies to each line.
+ */
+export function voiceClockOffsetMs(
+  offsetMs: number,
+  clock: VoiceClock = VOICE_CLOCK_UNITY,
+): number {
+  return Math.max(0, Math.round((offsetMs - clock.trimStartMs) / clock.speed));
+}
+
 /** Mirrors worker/media/audio/mixing.py `voice_filters` line placement. */
-export function voiceLineSchedule(track: VoiceTrack): LiveVoiceLine[] {
+export function voiceLineSchedule(
+  track: VoiceTrack,
+  clock: VoiceClock = VOICE_CLOCK_UNITY,
+): LiveVoiceLine[] {
   const mix = voiceMix(track);
   const sampleRate = mix.sample_rate;
   return mix.lines.map((line) => {
     const source_offset_s = line.start_frame / sampleRate;
     const source_duration_s = (line.end_frame - line.start_frame) / sampleRate;
+    const output_start_ms = voiceClockOffsetMs(line.offset_ms, clock);
     return {
       ...line,
       source_offset_s,
       source_duration_s,
-      output_start_ms: line.offset_ms,
-      output_end_ms: line.offset_ms + (source_duration_s * 1000) / line.rate,
+      output_start_ms,
+      output_end_ms: output_start_ms + (source_duration_s * 1000) / line.rate,
     };
   });
 }
 
-export function voiceWindow(track: VoiceTrack): { start_ms: number; end_ms: number } {
-  const lines = voiceLineSchedule(track);
+export function voiceWindow(
+  track: VoiceTrack,
+  clock: VoiceClock = VOICE_CLOCK_UNITY,
+): { start_ms: number; end_ms: number } {
+  const lines = voiceLineSchedule(track, clock);
   if (!lines.length) return { start_ms: 0, end_ms: 0 };
   return {
     start_ms: Math.min(...lines.map((line) => line.output_start_ms)),

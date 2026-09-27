@@ -241,6 +241,14 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
     if (param) param.value = value;
   }
 
+  // The render's voice clock: cue offsets are source time, placed on the trimmed and sped output.
+  function voiceClock() {
+    return {
+      trimStartMs: input.editing?.trim?.start_ms ?? 0,
+      speed: input.editing?.speed ?? 1,
+    };
+  }
+
   async function musicUrl(track: Soundtrack): Promise<string> {
     return (await unwrap<{ url: string }>(window.reupmatic.audioPreview(track))).url;
   }
@@ -341,8 +349,8 @@ export function useLiveMix(input: LiveMixInput): { active: boolean; error: strin
 
     const voice = input.voiceTrack;
     if (graph.voiceBuffer && voice && !voice.muted) {
-      const window = voiceWindow(voice);
-      for (const line of voiceLineSchedule(voice)) {
+      const window = voiceWindow(voice, voiceClock());
+      for (const line of voiceLineSchedule(voice, voiceClock())) {
         if (mediaTimeMs >= line.output_end_ms) continue;
         const elapsedOutput = Math.max(0, mediaTimeMs - line.output_start_ms);
         const elapsedSource = (elapsedOutput * line.rate) / 1000;

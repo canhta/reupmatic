@@ -8,14 +8,14 @@ from media.audio.voice import resolve_voice  # noqa: E402
 from runtime.errors import WorkerError  # noqa: E402
 
 
-def mix(*, track=None, voice=None, voice_index=None, has_source=True, edit=None):
+def mix(*, track=None, voice=None, voice_index=None, has_source=True, edit=None, start=0):
     args = audio_arguments(
         0,
         1,
         track,
         has_source,
         edit or {},
-        0,
+        start,
         4000,
         4000,
         voice=voice,
@@ -24,8 +24,15 @@ def mix(*, track=None, voice=None, voice_index=None, has_source=True, edit=None)
     return args
 
 
-def graph(*, track=None, voice=None, voice_index=None, has_source=True, edit=None):
-    args = mix(track=track, voice=voice, voice_index=voice_index, has_source=has_source, edit=edit)
+def graph(*, track=None, voice=None, voice_index=None, has_source=True, edit=None, start=0):
+    args = mix(
+        track=track,
+        voice=voice,
+        voice_index=voice_index,
+        has_source=has_source,
+        edit=edit,
+        start=start,
+    )
     if args == ["-an"]:
         return None
     return args[args.index("-filter_complex") + 1]
@@ -236,6 +243,30 @@ class VoiceResolution(unittest.TestCase):
 
     def test_muted_voice_is_absent_without_verifying_its_asset(self):
         self.assertIsNone(resolve_voice(_Host(), {}, voice_value([], muted=True)))
+
+    def test_a_trim_and_speed_place_the_line_on_the_output_clock(self):
+        voice = {
+            "mode": "mix",
+            "sample_rate": 24000,
+            "gain_db": 0,
+            "fade_in_ms": 0,
+            "fade_out_ms": 0,
+            "lines": [{"offset_ms": 6000, "rate": 1, "start_frame": 0, "end_frame": 24000}],
+        }
+        value = graph(voice=voice, voice_index=1, has_source=False, start=5000, edit={"speed": 2})
+        self.assertIn("adelay=500:all=1", value)
+
+    def test_a_line_before_the_trim_start_is_clamped_to_zero(self):
+        voice = {
+            "mode": "mix",
+            "sample_rate": 24000,
+            "gain_db": 0,
+            "fade_in_ms": 0,
+            "fade_out_ms": 0,
+            "lines": [{"offset_ms": 1000, "rate": 1, "start_frame": 0, "end_frame": 24000}],
+        }
+        value = graph(voice=voice, voice_index=1, has_source=False, start=5000, edit={"speed": 2})
+        self.assertIn("adelay=0:all=1", value)
 
 
 if __name__ == "__main__":

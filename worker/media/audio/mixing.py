@@ -1,3 +1,5 @@
+import math
+
 from media.editing.filters import audio_fade_filters, audio_filters
 
 MIX_RATE = 48000
@@ -52,7 +54,12 @@ def soundtrack_filters(track, output_start_ms, duration_ms):
     return filters
 
 
-def voice_filters(voice_index, voice, output_start_ms, duration_ms):
+def _voice_offset_ms(offset_ms, window_start_ms, speed):
+    """Source-time cue offset to the trimmed, sped output clock. Mirrors the live mix."""
+    return max(0, math.floor((offset_ms - window_start_ms) / speed + 0.5))
+
+
+def voice_filters(voice_index, voice, output_start_ms, duration_ms, window_start_ms=0, speed=1):
     """Each planned line lifted out of the recording and paced onto the output clock."""
     sample_rate = voice["sample_rate"]
     lines = voice["lines"]
@@ -73,19 +80,20 @@ def voice_filters(voice_index, voice, output_start_ms, duration_ms):
     for index, line in enumerate(lines):
         start_s = line["start_frame"] / sample_rate
         end_s = line["end_frame"] / sample_rate
+        offset_ms = _voice_offset_ms(line["offset_ms"], window_start_ms, speed)
         filters = [
             f"atrim=start={start_s:.9f}:end={end_s:.9f}",
             "asetpts=PTS-STARTPTS",
         ]
         if line["rate"] != 1:
             filters.append(f"atempo={line['rate']:.9f}")
-        filters.append(f"adelay={line['offset_ms']}:all=1")
+        filters.append(f"adelay={offset_ms}:all=1")
         slices.append(f"[l{index}]")
         graph.append(f"[v{index}]" + ",".join(filters) + f"[l{index}]")
-        first_ms = line["offset_ms"] if first_ms is None else min(first_ms, line["offset_ms"])
+        first_ms = offset_ms if first_ms is None else min(first_ms, offset_ms)
         last_end_ms = max(
             last_end_ms,
-            line["offset_ms"]
+            offset_ms
             + ((line["end_frame"] - line["start_frame"]) * 1000 / sample_rate) / line["rate"],
         )
     if len(lines) > 1:
@@ -173,7 +181,7 @@ def audio_filter_graph(
         )
         branches.append("music")
     if voice:
-        graph += voice_filters(voice_index, voice, output_start_ms, duration)
+        graph += voice_filters(voice_index, voice, output_start_ms, duration, start, speed)
         branches.append("voice")
     if ducking:
         graph.append(f"[{key}]asplit=2[{key}_duck_mix][{key}_duck_key]")
