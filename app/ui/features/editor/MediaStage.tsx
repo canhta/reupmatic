@@ -355,11 +355,12 @@ export function MediaStage() {
             // The export renders a disabled span as black; the monitor matches it.
             <div
               className="source-frame source-empty-frame"
+              role="img"
+              aria-label={t('sourceEmpty')}
               style={{
                 width: `min(100cqw, 100cqh * ${media.width / media.height})`,
                 height: `min(100cqh, 100cqw / ${media.width / media.height})`,
               }}
-              aria-hidden="true"
             />
           ) : (
             <EmptyState isCompact className="video-placeholder" title={t('sourceLoading')} />

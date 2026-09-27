@@ -7,7 +7,7 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CompositionCommand } from '../../../../core/editing/composition/commands';
 import {
@@ -24,30 +24,38 @@ export function CompositionPanel() {
   const confirm = useConfirmation();
   const [draft, setDraft] = useState<CompositionClip | null>(null);
   const [baseline, setBaseline] = useState('');
-  const [captured, setCaptured] = useState(editor.revision);
   const [error, setError] = useState('');
   const composition = editor.composition;
+  // Only a composition change invalidates a draft; unrelated edits keep the panel usable.
+  const compositionKey = JSON.stringify(composition ?? null);
+  const compositionRef = useRef(compositionKey);
+  compositionRef.current = compositionKey;
+  const [captured, setCaptured] = useState(compositionKey);
+  // The clip to keep selected after a command applies, so the list does not jump to the first.
+  const keepId = useRef<string | null>(null);
   const spans = composition ? compositionSpans(composition) : [];
   const current = composition?.clips.find((clip) => clip.id === draft?.id);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
-  const stale = captured !== editor.revision;
+  const stale = captured !== compositionKey;
   const disabled = editor.opening || editor.busy;
 
-  const select = useCallback(
-    (clip: CompositionClip | undefined) => {
-      setDraft(clip ? structuredClone(clip) : null);
-      setBaseline(JSON.stringify(clip ?? null));
-      setCaptured(editor.getRevision());
-      setError('');
-    },
-    [editor.getRevision],
-  );
+  const select = useCallback((clip: CompositionClip | undefined) => {
+    setDraft(clip ? structuredClone(clip) : null);
+    setBaseline(JSON.stringify(clip ?? null));
+    setCaptured(compositionRef.current);
+    setError('');
+  }, []);
   useEffect(() => {
-    if (!dirty) select(current ?? composition?.clips[0]);
+    if (dirty) return;
+    const preferred = keepId.current
+      ? composition?.clips.find((clip) => clip.id === keepId.current)
+      : undefined;
+    keepId.current = null;
+    select(preferred ?? current ?? composition?.clips[0]);
   }, [composition, dirty, select, current]);
 
   async function choose(clip: CompositionClip) {
-    const revision = editor.getRevision();
+    const key = compositionRef.current;
     if (
       dirty &&
       !(await confirm(t('compositionDiscard'), {
@@ -57,7 +65,7 @@ export function CompositionPanel() {
       }))
     )
       return;
-    if (revision !== editor.getRevision()) {
+    if (key !== compositionRef.current) {
       setError('STALE_OPERATION');
       return;
     }
@@ -66,9 +74,10 @@ export function CompositionPanel() {
     if (span) editor.seek(span.start_ms);
   }
 
-  function apply(command: CompositionCommand, revision = editor.getRevision()) {
+  function apply(command: CompositionCommand) {
     try {
-      editor.applyComposition([command], revision);
+      keepId.current = draft?.id ?? null;
+      editor.applyComposition([command], editor.getRevision());
       setDraft(null);
       setBaseline('null');
       setError('');
@@ -78,16 +87,21 @@ export function CompositionPanel() {
   }
   async function remove() {
     if (!draft) return;
-    const revision = editor.getRevision(),
+    const key = compositionRef.current,
       id = draft.id;
     if (
-      await confirm(t('compositionRemoveConfirm'), {
+      !(await confirm(t('compositionRemoveConfirm'), {
         title: t('confirmRemoveTitle'),
         confirmLabel: t('confirmRemoveAction'),
         destructive: true,
-      })
+      }))
     )
-      apply({ kind: 'remove', id }, revision);
+      return;
+    if (key !== compositionRef.current) {
+      setError('STALE_OPERATION');
+      return;
+    }
+    apply({ kind: 'remove', id });
   }
   const index = composition?.clips.findIndex((clip) => clip.id === draft?.id) ?? -1;
   const next = composition?.clips[index + 1];
@@ -193,16 +207,13 @@ export function CompositionPanel() {
                     variant="primary"
                     isDisabled={disabled || !dirty || stale}
                     onClick={() =>
-                      apply(
-                        {
-                          kind: 'update',
-                          id: draft.id,
-                          start_ms: draft.start_ms,
-                          end_ms: draft.end_ms,
-                          speed: draft.speed,
-                        },
-                        captured,
-                      )
+                      apply({
+                        kind: 'update',
+                        id: draft.id,
+                        start_ms: draft.start_ms,
+                        end_ms: draft.end_ms,
+                        speed: draft.speed,
+                      })
                     }
                   />
                   <Button
@@ -260,7 +271,7 @@ export function CompositionPanel() {
           <Banner
             status="error"
             title={t(
-              error === 'compositionCueLimit' ? 'compositionCueLimit' : 'compositionInvalid',
+              error === 'COMPOSITION_CUE_LIMIT' ? 'compositionCueLimit' : 'compositionInvalid',
             )}
             description={<code>{error}</code>}
           />

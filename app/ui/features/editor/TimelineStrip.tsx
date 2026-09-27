@@ -83,6 +83,24 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
     () => new Map(translatedCueSync(textSnapshot).map((entry) => [entry.id, entry.state])),
     [textSnapshot],
   );
+  // The original lane carries the primary source's peaks, so it only spans the primary's clips
+  // rather than stretching them across every clip in the composition.
+  const waveformSpans = useMemo(() => {
+    if (!composition) return [{ id: 'original', start_ms: 0, end_ms: duration }];
+    if (!primaryClip) return [];
+    return spans
+      .filter(
+        (span) =>
+          span.clip.enabled &&
+          span.clip.source.path === primaryClip.source.path &&
+          span.clip.source.sha256 === primaryClip.source.sha256,
+      )
+      .map((span) => ({
+        id: `original:${span.clip.id}`,
+        start_ms: span.start_ms,
+        end_ms: span.end_ms,
+      }));
+  }, [composition, duration, primaryClip, spans]);
   const bandRef = useRef<HTMLDivElement>(null);
   const [bandWidth, setBandWidth] = useState(0);
   const [drop, setDrop] = useState<{ index: number; x: number } | null>(null);
@@ -331,16 +349,14 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
                 movable: false,
               }))
             : lane.id === 'original'
-              ? [
-                  {
-                    id: 'original',
-                    start: 0,
-                    end: duration / 1000,
-                    effectId: 'original',
-                    flexible: false,
-                    movable: false,
-                  },
-                ]
+              ? waveformSpans.map((span) => ({
+                  id: span.id,
+                  start: span.start_ms / 1000,
+                  end: span.end_ms / 1000,
+                  effectId: 'original',
+                  flexible: false,
+                  movable: false,
+                }))
               : lane.id === 'voice'
                 ? (voiceTrack?.plan.lines ?? []).map((line, index) => ({
                     id: `voice:${line.cue_id}:${index}`,
@@ -392,7 +408,16 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
           ...(lane.id === 'sync-source' ? { rowHeight: SOURCE_LANE_HEIGHT } : {}),
         };
       }),
-    [laneLayout, spans, duration, voiceTrack, soundtrack, textSnapshot, translatedSource],
+    [
+      laneLayout,
+      spans,
+      duration,
+      voiceTrack,
+      soundtrack,
+      textSnapshot,
+      translatedSource,
+      waveformSpans,
+    ],
   );
   const scaleCount = Math.max(4, Math.ceil(duration / 5000));
   const fitScaleWidth = bandWidth > 0 ? bandWidth / scaleCount : BASE_SCALE_WIDTH;
@@ -545,7 +570,13 @@ export function TimelineStrip({ wave }: { wave: (node: HTMLDivElement | null) =>
                 );
               }
               if (action.effectId === 'original')
-                return <div ref={wave} className="timeline-waveform" aria-hidden="true" />;
+                return (
+                  <div
+                    ref={action.id === waveformSpans[0]?.id ? wave : undefined}
+                    className="timeline-waveform"
+                    aria-hidden="true"
+                  />
+                );
               const subtitleText =
                 action.effectId === 'subtitle' && row.id.startsWith('subtitles:')
                   ? getTextLayer(
