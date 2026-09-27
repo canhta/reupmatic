@@ -176,7 +176,6 @@ const douyin = installDouyinSources({
   getWindow: () => win,
   getLanguage,
 });
-const recovery = installRecovery({ wire, workspace, media, getWindow: () => win, getLanguage });
 // Outside the workspace: encrypted credentials must never reach the worker.
 const providers = new SpeechProviderStore(
   path.join(app.getPath('userData'), 'speech-providers'),
@@ -187,6 +186,15 @@ const speechVoices = new ClonedVoiceStore(path.join(app.getPath('userData'), 'sp
 const synthesis = installSynthesis({ wire, getWindow: () => win, getLanguage, worker: client, media, workspace, savePath: settings.savePath, voices: speechVoices, providers });
 // Gate the render path's voice audio through the same verification the save dialog uses.
 const renderer = new RenderCoordinator(client, (track) => synthesis.verifyVoice(track));
+// Opening a project or draft re-verifies its saved voice track through the same gate.
+const recovery = installRecovery({
+  wire,
+  workspace,
+  media,
+  getWindow: () => win,
+  getLanguage,
+  verifyVoice: (track) => synthesis.verifyVoice(track),
+});
 const translation = installTranslation({ wire, getWindow: () => win, getLanguage, worker: client });
 // Outside the workspace: page tokens are encrypted and never cross IPC.
 const channelCredentials = new ChannelCredentialStore(
@@ -240,6 +248,7 @@ installProtocols(
 );
 const editorApi = installEditor({ wire, getWindow: () => win, getLanguage,
   worker: client, renderer, media, library, workspace, savePath: settings.savePath,
+  verifyVoice: (track) => synthesis.verifyVoice(track),
   onRecentChanged: () => void rebuildMenu() });
 const vision = installVision({ wire, getWindow: () => win, worker: client,
   owns: id => media.ownsVideo(id) });
@@ -327,6 +336,8 @@ lifecycle = createWorkspaceLifecycle({
   wire,
   recoveryFlush: () => recovery.flush(),
   confirm: confirmDialog,
+  saveWorkspace: () => editorApi.requestSessionAction('save'),
+  discardWorkspace: () => editorApi.requestSessionAction('discard').then(() => undefined),
   // Rebuild on every locale change: the native menu has no live binding to i18next.
   onLanguageChange: () => void rebuildMenu(),
   steps: [

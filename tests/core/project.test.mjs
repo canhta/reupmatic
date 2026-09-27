@@ -6,9 +6,12 @@ import path from 'node:path';
 import test from 'node:test';
 import { protectSources } from '../../dist-core/media/files.js';
 import {
+  authorizedProjectPath,
   createProject,
   loadProject,
+  normalizeProjectFilename,
   parseProject,
+  projectSnapshot,
   saveProject,
 } from '../../dist-core/projects/project.js';
 import {
@@ -17,6 +20,7 @@ import {
 } from '../../dist-core/speech/synthesis/voice-track.js';
 import { assertCues } from '../../dist-core/subtitles/cues.js';
 import { editTextLayer } from '../../dist-core/subtitles/layers/commands.js';
+import { defaultSubtitleStyle } from '../../dist-core/subtitles/style.js';
 
 const source = { path: '/videos/tự quay.mp4', sha256: 'a'.repeat(64) };
 const state = () => ({
@@ -214,6 +218,74 @@ test('a saved project carries its own voice track and reopens it unchanged', asy
     assert.deepEqual(restored.voice_track, voiceTrack());
   } finally {
     await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('reopening a saved project restores the voice track and custom line length', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'reupmatic-reopen-'));
+  try {
+    const file = path.join(dir, 'reopen.reupmatic.json');
+    const snapshot = {
+      ...state(),
+      line_length: { mode: 'custom', cps: 15, max_lines: 1, max_chars: 24 },
+      voice_track: voiceTrack(),
+    };
+    const project = createProject(source, snapshot);
+    await saveProject(file, project);
+    const restored = projectSnapshot(await loadProject(file));
+    assert.deepEqual(restored, projectSnapshot(project));
+    assert.deepEqual(restored.voice_track, voiceTrack());
+    assert.deepEqual(restored.line_length, snapshot.line_length);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('a project naming an unbundled font fails with its own code, not INVALID_PROJECT', () => {
+  assert.throws(
+    () =>
+      createProject(source, {
+        ...state(),
+        processing: { subtitle_style: { ...defaultSubtitleStyle, font_family: 'Arial' } },
+      }),
+    /PROJECT_FONT_UNSUPPORTED/,
+  );
+});
+
+test('parseProject returns normalised values, not the raw JSON', () => {
+  const project = createProject(source, state());
+  const raw = JSON.parse(JSON.stringify(project));
+  raw.cues[0].style = { ...defaultSubtitleStyle, text_color: '#abcDEF', outline_color: '#fefefe' };
+  const parsed = parseProject(raw);
+  assert.equal(parsed.cues[0].style.text_color, '#ABCDEF');
+  assert.equal(parsed.cues[0].style.outline_color, '#FEFEFE');
+});
+
+test('a chosen project name is normalised to the one supported extension', () => {
+  assert.equal(normalizeProjectFilename('/tmp/Bản dựng'), '/tmp/Bản dựng.reupmatic.json');
+  assert.equal(normalizeProjectFilename('/tmp/Bản dựng.json'), '/tmp/Bản dựng.reupmatic.json');
+  assert.equal(
+    normalizeProjectFilename('/tmp/Bản dựng.reupmatic.json'),
+    '/tmp/Bản dựng.reupmatic.json',
+  );
+  assert.equal(
+    normalizeProjectFilename('/tmp/Bản dựng.REUPMATIC.JSON'),
+    '/tmp/Bản dựng.REUPMATIC.JSON',
+  );
+});
+
+test('the renderer may only save to a project path the host has authorised', () => {
+  const known = new Set(['/tmp/known.reupmatic.json']);
+  assert.equal(
+    authorizedProjectPath('/tmp/known.reupmatic.json', known),
+    '/tmp/known.reupmatic.json',
+  );
+  assert.throws(
+    () => authorizedProjectPath('/tmp/other.reupmatic.json', known),
+    /PROJECT_PATH_UNAUTHORIZED/,
+  );
+  for (const invalid of ['', '/tmp/\0bad', 42, null, 'x'.repeat(5000)]) {
+    assert.throws(() => authorizedProjectPath(invalid, known), /INVALID_REQUEST/);
   }
 });
 

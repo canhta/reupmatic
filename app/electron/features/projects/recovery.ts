@@ -3,6 +3,7 @@ import path from 'node:path';
 import { type BrowserWindow, dialog } from 'electron';
 import { createProject } from '../../../core/projects/project.js';
 import { ProjectRecovery } from '../../../core/projects/recovery/project-recovery.js';
+import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track.js';
 import type { IpcWire } from '../../runtime/ipc.js';
 import { type MediaRegistry, videoFilters } from '../media/registry.js';
 import { authorizeSnapshot, restoreProjectSnapshot } from './dependencies.js';
@@ -13,6 +14,7 @@ interface Host {
   getWindow(): BrowserWindow;
   media: MediaRegistry;
   getLanguage?(): string;
+  verifyVoice?(track: VoiceTrack): Promise<unknown>;
 }
 
 export function installRecovery(host: Host) {
@@ -32,11 +34,15 @@ export function installRecovery(host: Host) {
     const source = host.media.getVideo(input.asset_id);
     const project = createProject({ path: source.path, sha256: source.sha256 }, input.snapshot);
     authorizeSnapshot(host.media, source, project);
-    return ready().save(input.id, input.expected_revision, project);
+    return ready().save(input.id, input.expected_revision, project, {
+      ...(input.project_path === undefined ? {} : { project_path: input.project_path }),
+      ...(input.source_id === undefined ? {} : { source_id: input.source_id }),
+    });
   });
   host.wire('recovery-open', async (input) => {
     const { id, expected_revision: revision } = input;
     const project = ready().load(id, revision);
+    const project_path = ready().projectPath(id, revision);
     const chosen = await dialog.showOpenDialog(host.getWindow(), {
       title:
         host.getLanguage?.() === 'vi'
@@ -57,9 +63,10 @@ export function installRecovery(host: Host) {
       project,
       source,
       host.getLanguage?.(),
+      host.verifyVoice,
     );
     ready().load(id, revision);
-    return snapshot ? { media: host.media.publicVideo(source), snapshot } : null;
+    return snapshot ? { media: host.media.publicVideo(source), snapshot, project_path } : null;
   });
   host.wire('recovery-discard', (input) => {
     ready().discard(input.id, input.expected_revision);

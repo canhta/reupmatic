@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
-import { open, rename, unlink } from 'node:fs/promises';
+import { open, readdir, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { type Composition, parseComposition } from '../editing/composition/document.js';
 import { type ProjectMedia, parseProjectMedia } from '../editing/project-media.js';
@@ -9,8 +9,10 @@ import { protectSources } from '../media/files.js';
 import { type ProcessingRecipe, parseProcessingRecipe } from '../processing/recipe.js';
 import { parseVoiceTrack, type VoiceTrack } from '../speech/synthesis/voice-track.js';
 import { assertCues, type Cue } from '../subtitles/cues.js';
+import { isBundledFontFamily } from '../subtitles/fonts.js';
 import { parseTextLayers, type TextLayers } from '../subtitles/layers/document.js';
 import { type LineLengthSettings, parseLineLengthSettings } from '../subtitles/split.js';
+import { parseSubtitleStyle } from '../subtitles/style.js';
 import { validateProjectTimeline } from './editor-timeline.js';
 
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -53,6 +55,13 @@ function projectName(value: unknown): string {
   return value;
 }
 
+function unsupportedProjectFont(processing: unknown): boolean {
+  if (!object(processing) || !('subtitle_style' in processing)) return false;
+  const style = processing.subtitle_style;
+  if (!object(style) || !('font_family' in style)) return false;
+  return typeof style.font_family !== 'string' || !isBundledFontFamily(style.font_family);
+}
+
 export function assertEditorSnapshot(value: unknown): asserts value is EditorSnapshot {
   if (
     !object(value) ||
@@ -81,6 +90,8 @@ export function assertEditorSnapshot(value: unknown): asserts value is EditorSna
     try {
       parseProcessingRecipe(value.processing, value.cues.length > 0);
     } catch {
+      // Name the actual cause instead of collapsing every recipe failure into INVALID_PROJECT.
+      if (unsupportedProjectFont(value.processing)) throw new Error('PROJECT_FONT_UNSUPPORTED');
       throw new Error('INVALID_PROJECT');
     }
   }
@@ -132,8 +143,28 @@ export function parseProject(value: unknown): ProjectFile {
     ...('voice_track' in value ? { voice_track: value.voice_track } : {}),
     ...('media' in value ? { media: value.media } : {}),
   });
-  // Strictly data: no script, executable, remote URL, account, or model request.
-  return structuredClone(value) as unknown as ProjectFile;
+  // Rebuild from the parsers so accepted values are normalised (trimmed, upper-cased, clamped),
+  // not the raw JSON. Strictly data: no script, executable, URL, account or model request.
+  const cues = (value.cues as Cue[]).map((cue) => {
+    const copy = structuredClone(cue);
+    if (copy.style) copy.style = parseSubtitleStyle(copy.style);
+    return copy;
+  });
+  return {
+    format: 'reupmatic.project',
+    name,
+    source: { path: source.path, sha256: source.sha256 },
+    cues,
+    ...('processing' in value
+      ? { processing: parseProcessingRecipe(value.processing, cues.length > 0) }
+      : {}),
+    ...('soundtrack' in value ? { soundtrack: parseSoundtrack(value.soundtrack) } : {}),
+    ...('composition' in value ? { composition: parseComposition(value.composition) } : {}),
+    ...('text_layers' in value ? { text_layers: parseTextLayers(value.text_layers) } : {}),
+    ...('line_length' in value ? { line_length: parseLineLengthSettings(value.line_length) } : {}),
+    ...('voice_track' in value ? { voice_track: parseVoiceTrack(value.voice_track) } : {}),
+    ...('media' in value ? { media: parseProjectMedia(value.media) } : {}),
+  };
 }
 
 export function createProject(source: ProjectFile['source'], value: unknown): ProjectFile {
@@ -144,6 +175,14 @@ export function createProject(source: ProjectFile['source'], value: unknown): Pr
     : value;
   assertEditorSnapshot(snapshot);
   return parseProject({ format: 'reupmatic.project', source, ...snapshot });
+}
+
+/** The editor's view of a project: every field except the file envelope. */
+export function projectSnapshot(project: ProjectFile): EditorSnapshot {
+  const snapshot: EditorSnapshot = structuredClone(project);
+  delete (snapshot as Partial<ProjectFile>).format;
+  delete (snapshot as Partial<ProjectFile>).source;
+  return snapshot;
 }
 
 export async function loadProject(filename: string): Promise<ProjectFile> {
@@ -173,6 +212,25 @@ export async function loadProject(filename: string): Promise<ProjectFile> {
   }
 }
 
+const PROJECT_SUFFIX = '.reupmatic.json';
+
+/** A chosen save name always lands on the one supported project extension. */
+export function normalizeProjectFilename(filename: string): string {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(PROJECT_SUFFIX)) return filename;
+  if (lower.endsWith('.json')) return `${filename.slice(0, -'.json'.length)}${PROJECT_SUFFIX}`;
+  return `${filename}${PROJECT_SUFFIX}`;
+}
+
+/** Only paths the host resolved itself may be written; the renderer never names a destination. */
+export function authorizedProjectPath(value: unknown, known: ReadonlySet<string>): string {
+  if (typeof value !== 'string' || !value || value.length > 4096 || value.includes('\0'))
+    throw new Error('INVALID_REQUEST');
+  const resolved = path.resolve(value);
+  if (!known.has(resolved)) throw new Error('PROJECT_PATH_UNAUTHORIZED');
+  return resolved;
+}
+
 export async function saveProject(
   filename: string,
   project: ProjectFile,
@@ -190,13 +248,17 @@ export async function saveProject(
     ...(valid.media?.map((item) => item.path) ?? []),
   ];
   await protectSources(filename, sources);
-  const temporary = path.join(
-    path.dirname(filename),
-    `.${path.basename(filename)}.${randomUUID()}.tmp`,
-  );
+  const directory = path.dirname(filename);
+  const temporary = path.join(directory, `.${path.basename(filename)}.${randomUUID()}.tmp`);
+  // A crash can orphan a previous write's temp file; a fresh save clears them.
+  const stalePrefix = `.${path.basename(filename)}.`;
+  for (const name of await readdir(directory).catch(() => [])) {
+    if (name.startsWith(stalePrefix) && name.endsWith('.tmp'))
+      await unlink(path.join(directory, name)).catch(() => undefined);
+  }
   let published = false;
   try {
-    const file = await open(temporary, 'wx', 0o600);
+    const file = await open(temporary, 'wx', 0o644);
     try {
       await file.writeFile(data);
       await file.sync();

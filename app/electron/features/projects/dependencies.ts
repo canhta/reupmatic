@@ -3,7 +3,12 @@ import type { ClipSource, Composition } from '../../../core/editing/composition/
 import { parseComposition } from '../../../core/editing/composition/document.js';
 import type { RegisteredVideo } from '../../../core/media/media-contracts.js';
 import { validateProjectTimeline } from '../../../core/projects/editor-timeline.js';
-import type { EditorSnapshot, ProjectFile } from '../../../core/projects/project.js';
+import {
+  type EditorSnapshot,
+  type ProjectFile,
+  projectSnapshot,
+} from '../../../core/projects/project.js';
+import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track.js';
 import { restoreProjectAudio } from '../editor/audio/ipc.js';
 import { type MediaRegistry, videoFilters } from '../media/registry.js';
 
@@ -71,23 +76,23 @@ export async function restoreProjectSnapshot(
   project: ProjectFile,
   source: RegisteredVideo,
   language = 'en',
+  verifyVoice?: (track: VoiceTrack) => Promise<unknown>,
 ): Promise<EditorSnapshot | null> {
   if (source.sha256 !== project.source.sha256) throw new Error('SOURCE_CHANGED');
   const composition = project.composition
     ? await restoreClips(media, window, project.composition, source, project.source, language)
     : undefined;
   if (composition === null) return null;
-  const soundtrack = await restoreProjectAudio(media, window, project.soundtrack);
+  const soundtrack = await restoreProjectAudio(media, window, project.soundtrack, language);
   if (soundtrack === null) return null;
-  const snapshot: EditorSnapshot = {
-    name: project.name,
-    cues: project.cues,
-    ...(project.text_layers ? { text_layers: structuredClone(project.text_layers) } : {}),
-    ...(composition ? { composition } : {}),
-    ...(soundtrack ? { soundtrack } : {}),
-    ...(project.processing ? { processing: project.processing } : {}),
-    ...(project.media?.length ? { media: structuredClone(project.media) } : {}),
-  };
+  const snapshot = projectSnapshot(project);
+  if (composition) snapshot.composition = composition;
+  else delete snapshot.composition;
+  if (soundtrack) snapshot.soundtrack = soundtrack;
+  else delete snapshot.soundtrack;
   authorizeSnapshot(media, source, snapshot);
+  // The saved voice reference is rediscovered and re-verified; a stale, missing or
+  // altered track aborts the open by name rather than dropping the field.
+  if (snapshot.voice_track && verifyVoice) await verifyVoice(snapshot.voice_track);
   return snapshot;
 }
