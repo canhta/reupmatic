@@ -1,3 +1,5 @@
+import { Divider } from '@astryxdesign/core/Divider';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import { SidePanel } from '../../design-system/SidePanel';
 import { SpeechSetup } from '../speech/SpeechGenerator';
@@ -48,10 +50,11 @@ function ToolPanelContent({ activeTool }: { activeTool: ToolId }) {
 
 function TranscribePanel() {
   return (
-    <>
+    <VStack gap={5}>
       <SpeechSetup />
+      <Divider />
       <OcrSetup />
-    </>
+    </VStack>
   );
 }
 

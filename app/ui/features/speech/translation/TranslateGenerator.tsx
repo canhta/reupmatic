@@ -94,7 +94,7 @@ export function TranslateSetup() {
         <TranslationRules rules={rules} onChange={setRules} disabled={busy} />
         <GeneratorFooter
           readiness={{
-            reason:
+            modelReason:
               job.checking || !job.models?.available
                 ? job.checking
                   ? t('visionChecking')

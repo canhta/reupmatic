@@ -58,25 +58,31 @@ export function SynthesisPanel() {
         : value.label;
   const selectionValid =
     editor.activeTextLayer === 'spoken' && source.cues.some((cue) => cue.id === editor.selected);
-  // One readiness Banner carries the first reason the primary is blocked; the billing line and the
-  // limits copy stay as plain body text.
-  const blockingReason = job.checking
+  const overLimit = runCues.length > 100 || runCues.some((cue) => cue.text.length > 300);
+  // Only a missing or broken model earns the readiness Banner and its Set up / Check again
+  // buttons. Every other reason the primary is blocked goes on the button's own tooltip.
+  const modelReason = job.checking
     ? t('visionChecking')
     : !job.models?.available && !hasVoices
       ? t(synthesisErrorKey(job.models?.code || 'MODEL_MISSING'))
-      : languageUnsupported
-        ? t('synthesisLanguageMismatch')
-        : source.stale
-          ? t('textLayerStale')
-          : !source.cues.length
-            ? t('textLayerEmpty')
-            : scope === 'selected' && !selectionValid
-              ? t('synthesisSelectionHelp')
+      : undefined;
+  const blockedTooltip = modelReason
+    ? undefined
+    : languageUnsupported
+      ? t('synthesisLanguageMismatch')
+      : source.stale
+        ? t('textLayerStale')
+        : !source.cues.length
+          ? t('textLayerEmpty')
+          : scope === 'selected' && !selectionValid
+            ? t('synthesisSelectionHelp')
+            : overLimit
+              ? t('synthesisLimit')
               : !available && hasVoices
                 ? t('synthesisVoiceMissing')
                 : undefined;
   return (
-    <InspectorPanelSection title={t('synthesisTitle')}>
+    <InspectorPanelSection title={t('synthesisStart')}>
       <VStack gap={3}>
         <FormLayout direction="vertical">
           <LayerLanguageField
@@ -108,9 +114,6 @@ export function SynthesisPanel() {
             }}
           />
         </FormLayout>
-        <Text as="p" display="block" type="body">
-          {t('synthesisLimits')}
-        </Text>
         {selectedVoice?.source === 'cloud' && (
           <Text as="p" display="block" type="body" role="status">
             {t('synthesisCloudCharacters', { count: characters })}
@@ -118,7 +121,7 @@ export function SynthesisPanel() {
         )}
         <GeneratorFooter
           readiness={{
-            reason: blockingReason,
+            modelReason,
             checking: job.checking,
             canSetUp: Boolean(job.models && !job.models.available),
             onSetUp: () => void editor.openSettings('processing'),
@@ -133,11 +136,13 @@ export function SynthesisPanel() {
             label={t('synthesisStart')}
             variant="primary"
             width="100%"
+            tooltip={blockedTooltip}
             isDisabled={
               busy ||
               editor.opening ||
               !available ||
               cloudShort ||
+              overLimit ||
               languageUnsupported ||
               source.stale ||
               !source.cues.length ||

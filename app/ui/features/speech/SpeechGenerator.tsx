@@ -12,7 +12,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { speechDraftFresh } from '../../../core/speech/draft-freshness';
-import { offeredSpeechEngines } from '../../../core/speech/engine-capability';
+import {
+  offeredSpeechEngines,
+  presentableSpeechEngines,
+} from '../../../core/speech/engine-capability';
 import { getTextLayer } from '../../../core/subtitles/layers/document';
 import { CHINESE_CPS, LATIN_CPS, type LineLengthSettings } from '../../../core/subtitles/split';
 import { InspectorPanelSection } from '../../design-system/InspectorPanelSection';
@@ -43,6 +46,11 @@ export function SpeechSetup() {
     }
   }, [engines, engineId]);
   const available = engines.length > 0;
+  // No usable engine anywhere is a model problem regardless of language. Once a model is
+  // configured, missing engines for the chosen language become a model problem too — but choosing
+  // no language yet is not: that belongs on the primary button's tooltip, not the Set up banner.
+  const anyEngineAvailable = Boolean(job.models && presentableSpeechEngines(job.models).length);
+  const modelBlocked = !anyEngineAvailable || (language !== null && !available);
 
   return (
     <InspectorPanelSection title={t('speechTitle')}>
@@ -75,16 +83,13 @@ export function SpeechSetup() {
         </FormLayout>
         <GeneratorFooter
           readiness={{
-            reason:
-              job.checking || !available
-                ? job.checking
-                  ? t('visionChecking')
-                  : !language
-                    ? t('speechChooseLanguage')
-                    : t(speechErrorKey(problemCode(job.models, language)))
+            modelReason: job.checking
+              ? t('visionChecking')
+              : modelBlocked
+                ? t(speechErrorKey(problemCode(job.models, language)))
                 : undefined,
             checking: job.checking,
-            canSetUp: Boolean(job.models),
+            canSetUp: modelBlocked,
             onSetUp: () => void editor.openSettings('processing'),
             onRefresh: () => void job.refresh(),
           }}
@@ -98,6 +103,7 @@ export function SpeechSetup() {
             label={t('speechStart')}
             variant="primary"
             width="100%"
+            tooltip={!language && !modelBlocked ? t('setLayerLanguageTranscript') : undefined}
             isDisabled={
               busy ||
               editor.opening ||
@@ -131,7 +137,14 @@ function LineLengthSection() {
     editor.changeLineLength({ ...settings, ...patch });
   const defaultCps = transcript.language === 'zh' ? CHINESE_CPS : LATIN_CPS;
   return (
-    <Collapsible trigger={t('lineLengthTitle')} defaultIsOpen={false}>
+    <Collapsible
+      trigger={
+        <Text type="body" weight="semibold">
+          {t('lineLengthTitle')}
+        </Text>
+      }
+      defaultIsOpen={false}
+    >
       <VStack gap={2} paddingBlock={2}>
         <Selector
           label={t('lineLengthMode')}

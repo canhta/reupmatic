@@ -4,7 +4,7 @@ export const translationEn = {
   translationTo: 'Target language',
   translationPairMissing: 'This language pair is not supported. Choose another.',
   translationLanguageMismatch: 'Source language mismatch. Choose the correct language.',
-  translationRules: 'Literal replacements',
+  translationRules: 'Replacements',
   translationRulesHelp: 'A blank replacement deletes the matched text.',
   translationRuleFind: 'Find',
   translationRuleReplace: 'Replace',

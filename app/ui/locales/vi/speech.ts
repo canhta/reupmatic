@@ -3,10 +3,8 @@ import type { speechEn } from '../en/speech';
 export const speechVi = {
   speechTitle: 'Nhận dạng giọng nói',
   speechComposition: 'Nhận dạng đoạn gốc trước khi ghép.',
-  speechNoAudio:
-    'Video đã chọn không có luồng âm thanh. Nhập bản chép lời hoặc chọn video có âm thanh.',
+  speechNoAudio: 'Video không có âm thanh.',
   speechEngine: 'Bộ nhận dạng',
-  speechChooseLanguage: 'Chọn ngôn ngữ nói trong nguồn.',
   speechStart: 'Nhận dạng giọng nói',
   lineLengthTitle: 'Độ dài dòng',
   lineLengthMode: 'Cách chia',

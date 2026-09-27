@@ -107,7 +107,7 @@ const COPY = {
     end: (n) => `Kết thúc (s) ${n}`,
     voiceTab: 'Giọng đọc',
     editTab: 'Chỉnh sửa',
-    setSpokenLanguage: 'Ngôn ngữ Nội dung đọc',
+    setSpokenLanguage: 'Ngôn ngữ nội dung đọc',
     vietnamese: 'Tiếng Việt',
     voice: 'Giọng đọc',
     scope: 'Các câu cần tạo giọng',

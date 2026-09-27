@@ -23,7 +23,14 @@ export function TranslationRules({
 }) {
   const { t } = useTranslation();
   return (
-    <Collapsible trigger={t('translationRules')} defaultIsOpen={false}>
+    <Collapsible
+      trigger={
+        <Text type="body" weight="semibold">
+          {t('translationRules')}
+        </Text>
+      }
+      defaultIsOpen={false}
+    >
       <VStack gap={3} paddingBlock={2}>
         <Text as="p" type="body">
           {t('translationRulesHelp')}

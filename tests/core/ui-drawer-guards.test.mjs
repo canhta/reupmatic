@@ -23,7 +23,6 @@ const ALLOWED = {
   // Voice worker (#28-#36) owns these editor tool-panel contents.
   'features/editor/audio-tools/': 'voice worker owns the audio panels (#28-#36)',
   'features/editor/composition/': 'composition worker owns the composition panels (#37-#42)',
-  'features/editor/subtitle-styles/': 'style panel lands in slices 3-11 (#50)',
   'features/editor/text-layers/': 'text-layers panel lands in slices 3-11 (#50)',
   'features/editor/text-rules/': 'text-rules panel lands in slices 3-11 (#50)',
   'features/editor/video-tools/': 'edit panel lands in slices 3-11 (#50)',
@@ -87,11 +86,24 @@ function hasFixedFieldWidth(source) {
   return false;
 }
 
+// A Collapsible trigger left as a plain string renders at the component's default `large` size —
+// bigger than a level-4 group Heading. Astryx's own guidance (astryx component Collapsible; the
+// CollapsibleWithoutCard block) is to wrap the label in `<Text type="body" weight="semibold">` so a
+// standalone trigger reads as a peer, not a heading. This only allows that exact, consistent shape;
+// any other override (a different type, no weight, a bare span) still fails.
+function hasInconsistentTrigger(source) {
+  for (const match of source.matchAll(/trigger=\{\s*<Text\b([^>]*)>/gs)) {
+    const attrs = match[1];
+    if (!/\btype="body"/.test(attrs) || !/\bweight="semibold"/.test(attrs)) return true;
+  }
+  return false;
+}
+
 const CHECKS = {
   'no empty `{}` JSX child': (source) =>
     /^\s*\{\}\s*$/m.test(source) || />\s*\{\}\s*</.test(source),
   'no raw `<code>` in a drawer': (source) => /<\/?code[\s>]/.test(source),
-  'no `<Text>` collapsible trigger': (source) => /trigger=\{\s*<Text\b/s.test(source),
+  'no inconsistent collapsible trigger sizing': hasInconsistentTrigger,
   'no fixed NumberInput or Selector width': hasFixedFieldWidth,
   'no supporting text outside the allow-list': (source) => /type="supporting"/.test(source),
 };

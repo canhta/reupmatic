@@ -6,7 +6,7 @@ export const translationVi = {
   translationTo: 'Ngôn ngữ đích',
   translationPairMissing: 'Cặp ngôn ngữ này chưa được hỗ trợ. Chọn cặp khác.',
   translationLanguageMismatch: 'Ngôn ngữ nguồn không khớp. Chọn đúng ngôn ngữ.',
-  translationRules: 'Thay thế nguyên văn',
+  translationRules: 'Thay thế',
   translationRulesHelp: 'Để trống phần thay thế sẽ xóa chữ khớp.',
   translationRuleFind: 'Tìm',
   translationRuleReplace: 'Thay bằng',

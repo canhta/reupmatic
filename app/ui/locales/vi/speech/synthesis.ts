@@ -1,8 +1,6 @@
 import type { synthesisEn } from '../../en/speech/synthesis';
 
 export const synthesisVi = {
-  synthesisTitle: 'Tạo giọng nói cục bộ',
-  synthesisLimits: 'Tối đa 100 câu, 300 ký tự mỗi câu.',
   synthesisVoice: 'Giọng đọc',
   synthesisChooseVoice: 'Chọn giọng',
   synthesisScope: 'Các câu cần tạo giọng',

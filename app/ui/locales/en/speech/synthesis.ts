@@ -1,6 +1,4 @@
 export const synthesisEn = {
-  synthesisTitle: 'Local voice generation',
-  synthesisLimits: 'Up to 100 cues, 300 characters each.',
   synthesisVoice: 'Voice',
   synthesisChooseVoice: 'Choose a voice',
   synthesisScope: 'Cues to generate',

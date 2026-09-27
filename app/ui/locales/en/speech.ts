@@ -1,10 +1,8 @@
 export const speechEn = {
   speechTitle: 'Recognize speech',
   speechComposition: 'Recognize the original clip before composing.',
-  speechNoAudio:
-    'The selected video has no audio stream. Import a transcript or choose a video with audio.',
+  speechNoAudio: 'This video has no audio.',
   speechEngine: 'Recognition engine',
-  speechChooseLanguage: 'Choose the language spoken in the source.',
   speechStart: 'Recognize speech',
   lineLengthTitle: 'Line length',
   lineLengthMode: 'Sizing',

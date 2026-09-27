@@ -12,7 +12,7 @@ export function InspectorPanelSection({ title, children }: Props) {
   return (
     <Section variant="transparent" padding={0} aria-label={title}>
       <VStack gap={3}>
-        <Heading level={5}>{title}</Heading>
+        <Heading level={4}>{title}</Heading>
         {children}
       </VStack>
     </Section>

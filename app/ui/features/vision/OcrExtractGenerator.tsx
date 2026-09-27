@@ -41,13 +41,16 @@ export function OcrSetup() {
   const languageMissing = Boolean(
     language && job.models?.ocr.available && !job.models.ocr.languages.includes(language),
   );
+  // No configured OCR model at all is a model problem regardless of language. Once a model is
+  // configured, a language it doesn't cover is a model problem too — but no language chosen yet
+  // is not: that belongs on the primary button's tooltip, not the Set up banner.
+  const noModel = !job.models?.ocr.available;
+  const modelBlocked = noModel || languageMissing;
   const status = job.checking
     ? t('visionChecking')
-    : job.models && !job.models.ocr.available
-      ? t(visionErrorKey(job.models.ocr.code || 'MODEL_MISSING'))
-      : languageMissing
-        ? t('visionLanguageMissing')
-        : '';
+    : modelBlocked
+      ? t(visionErrorKey(job.models?.ocr.code || 'MODEL_MISSING'))
+      : '';
 
   return (
     <InspectorPanelSection title={t('visionExtractTitle')}>
@@ -63,7 +66,14 @@ export function OcrSetup() {
             }
           />
         </FormLayout>
-        <Collapsible trigger={t('visionOcrOptions')} defaultIsOpen={false}>
+        <Collapsible
+          trigger={
+            <Text type="body" weight="semibold">
+              {t('visionOcrOptions')}
+            </Text>
+          }
+          defaultIsOpen={false}
+        >
           <Grid columns={2} gap={3}>
             <NumberInput
               label={t('visionSample')}
@@ -93,9 +103,9 @@ export function OcrSetup() {
         </Collapsible>
         <GeneratorFooter
           readiness={{
-            reason: status || undefined,
+            modelReason: status || undefined,
             checking: job.checking,
-            canSetUp: Boolean(job.models && (!job.models.ocr.available || languageMissing)),
+            canSetUp: modelBlocked,
             onSetUp: () => void editor.openSettings('processing'),
             onRefresh: () => void job.refresh(),
           }}
@@ -108,6 +118,7 @@ export function OcrSetup() {
             label={t('visionExtractFull')}
             variant="primary"
             width="100%"
+            tooltip={!language && !modelBlocked ? t('setLayerLanguageDisplayed') : undefined}
             isDisabled={busy || !hasOcr || !language || Boolean(editor.composition)}
             onClick={() => {
               if (!language) return;

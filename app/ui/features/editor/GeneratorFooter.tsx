@@ -7,8 +7,9 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface GeneratorReadiness {
-  /** The first blocking reason, translated. Absent when nothing blocks the primary. */
-  reason?: string;
+  /** A missing or misconfigured model, translated. The only reason that earns a Banner with
+   * Set up / Check again — every other blocking reason belongs on the primary button's tooltip. */
+  modelReason?: string;
   checking?: boolean;
   canSetUp?: boolean;
   onSetUp?: () => void;
@@ -52,10 +53,10 @@ export function GeneratorFooter({
         </HStack>
       ) : (
         <>
-          {readiness.reason && (
+          {readiness.modelReason && (
             <Banner
               status="warning"
-              title={readiness.reason}
+              title={readiness.modelReason}
               endContent={
                 <HStack gap={2}>
                   {readiness.canSetUp && (
