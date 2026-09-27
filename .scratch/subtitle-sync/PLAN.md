@@ -96,3 +96,22 @@ Once OCR has run (S1/S2 already compute each original cue's text boxes), offer *
 subtitles**: set the band to the union of the detected boxes across the video, padded by a named
 margin, in output-frame coordinates. If boxes jump between two distinct positions, report the
 positions and cover the dominant one rather than one huge band. The user can still adjust by hand.
+
+## Found after S1/S2/S5/S6 (merged 7a4e207, 2026-09-27)
+
+- **F1 (H) The shipped FFmpeg renders Chinese as tofu.** The staged static FFmpeg (`ffmpeg/ffmpeg`,
+  the one packaging ships) burns "Xin chào 你好" with the Chinese as empty boxes. libass falls back
+  to macOS PingFang (a private framework font it cannot open) and fails. Vietnamese with Arial is
+  fine. Every render test so far used Homebrew `ffmpeg-full` via `.env.local`, so this was never seen.
+- **F2 (M) Live and export fonts differ.** JASSUB draws with its own bundled default font, while the
+  export's libass resolves system fonts. The monitor can show a different typeface, width and wrap
+  from the video, which also breaks line-length sizing.
+- **Direction (owner decision: bundle size):** ship one app-owned font set (OFL), for example Noto
+  Sans / Be Vietnam Pro for Latin + Vietnamese and Noto Sans SC for Chinese, subset to the needed
+  weights. Pass the same files to libass (`fontsdir`) and to JASSUB, so live and export are
+  identical on every machine, Windows included. Font choices in Style are limited to that set. Size:
+  a CJK face is ~8–16 MB per weight before subsetting.
+- Test hygiene: the native sync fixture needs an FFmpeg with drawtext and a working fontconfig. It
+  passes with `ffmpeg-full` (`.env.local`) and not with the static build. Document it in
+  CONTRIBUTING.md, and add a render test that uses the **staged** FFmpeg.
+- The real-model OCR e2e skips: no OCR model is installed on this machine.
