@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { outputFrame } from '../../dist-core/editing/geometry-preview.js';
 import { createProject, parseProject } from '../../dist-core/projects/project.js';
 import {
   CHINESE_CPS,
@@ -135,6 +136,39 @@ test('splitCue keeps a fitting cue untouched and splits one that does not fit', 
     latinFrame,
   );
   assert.deepEqual(noWords, [{ text: 'x', start_ms: 10, end_ms: 20, words: [] }]);
+});
+
+test('the output frame is the subtitle canvas after rotate, crop and output scale', () => {
+  const source = { width: 1080, height: 1920 };
+  assert.deepEqual(outputFrame({}, source), { width: 1080, height: 1920 });
+  assert.deepEqual(outputFrame({ rotate: 90 }, source), { width: 1920, height: 1080 });
+  assert.deepEqual(outputFrame({ output: { aspect: '1:1', fit: 'cover', height: 1080 } }, source), {
+    width: 1080,
+    height: 1080,
+  });
+  assert.deepEqual(
+    outputFrame({ crop: { x: 0.25, y: 0, width: 0.5, height: 1 } }, { width: 1920, height: 1080 }),
+    { width: 960, height: 1080 },
+  );
+});
+
+test('a cue sized for the full 9:16 frame splits where the 1:1 output does not', () => {
+  const source = { width: 1080, height: 1920 };
+  const words = Array.from({ length: 10 }, (_, index) => ({
+    text: index === 9 ? 'aaaaa' : 'aaaaa ',
+    start_ms: index * 100,
+    end_ms: index * 100 + 100,
+  }));
+  const full = splitCues(words, defaultLineLengthSettings, defaultSubtitleStyle, source);
+  const square = splitCues(
+    words,
+    defaultLineLengthSettings,
+    defaultSubtitleStyle,
+    outputFrame({ output: { aspect: '1:1', fit: 'cover', height: 1080 } }, source),
+  );
+  assert.equal(full.length, 2);
+  assert.equal(square.length, 1);
+  assert.equal(full.map((piece) => piece.text).join(''), square[0].text);
 });
 
 test('line-length settings are strict and survive a project round trip', () => {

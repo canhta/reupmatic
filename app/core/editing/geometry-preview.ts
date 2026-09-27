@@ -30,6 +30,43 @@ export interface GeometryPreview {
 
 const FULL_CROP: CropRegion = { x: 0, y: 0, width: 1, height: 1 };
 
+function even(value: number): number {
+  return Math.max(2, Math.floor(value / 2) * 2);
+}
+
+/**
+ * The pixel frame subtitles are burned on: the worker's `geometry_filters` output size after
+ * rotate, crop, flip and the output scale/pad. `font_size_pct` and the margins are fractions of
+ * this frame, so sizing must use it rather than the source size.
+ */
+export function outputFrame(geometry: EditGeometry | undefined, source: SourceSize): SourceSize {
+  let width = even(source.width);
+  let height = even(source.height);
+  const rotate = geometry?.rotate ?? 0;
+  if (rotate === 90 || rotate === 270) [width, height] = [height, width];
+  const crop = geometry?.crop;
+  if (crop) {
+    const left = Math.min(width - 2, Math.floor((crop.x * width) / 2) * 2);
+    const top = Math.min(height - 2, Math.floor((crop.y * height) / 2) * 2);
+    width = Math.min(width - left, even(width * crop.width));
+    height = Math.min(height - top, even(height * crop.height));
+  }
+  const output = geometry?.output;
+  if (output) {
+    let outputAspect = width / height;
+    if (output.aspect !== 'source') {
+      const [numerator, denominator] = output.aspect.split(':').map(Number);
+      outputAspect = numerator / denominator;
+    }
+    const targetHeight = output.height || height;
+    const targetWidth = even(targetHeight * outputAspect);
+    if (Math.max(targetWidth, targetHeight) > 8192) throw new Error('EDIT_OUTPUT_SIZE');
+    width = targetWidth;
+    height = targetHeight;
+  }
+  return { width, height };
+}
+
 function ratio(value: NonNullable<EditingRecipe['output']>['aspect'], fallback: number): number {
   if (value === 'source') return fallback;
   const [numerator, denominator] = value.split(':').map(Number);

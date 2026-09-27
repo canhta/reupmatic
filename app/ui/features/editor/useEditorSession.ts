@@ -32,6 +32,7 @@ import {
   resolveEditWindow,
   retimeCues,
 } from '../../../core/editing/edit-recipe';
+import { outputFrame } from '../../../core/editing/geometry-preview';
 import type { ProjectMedia } from '../../../core/editing/project-media';
 import {
   type AudioSource,
@@ -242,7 +243,14 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
   const voiceTrack = voice_track;
   const activeLayer = getTextLayer(snapshot, activeTextLayer);
   const lineLength = snapshot.line_length ?? defaultLineLengthSettings;
-  const frameSize = () => ({ width: media?.width ?? 1920, height: media?.height ?? 1080 });
+  // Subtitles burn on the output frame, so size against the same canvas the render uses.
+  const frameSize = () =>
+    composition
+      ? outputFrame(processing?.editing, composition.canvas)
+      : outputFrame(processing?.editing, {
+          width: media?.width ?? 1920,
+          height: media?.height ?? 1080,
+        });
   function splitTranscriptCues(cues: Cue[]): Cue[] {
     const style = processing?.subtitle_style ?? defaultSubtitleStyle;
     const frame = frameSize();
@@ -263,18 +271,31 @@ export function useEditorSession(onOpenSettings: (tab?: SettingsCategory) => voi
     () => (visibleLayer ? getTextLayer(snapshot, visibleLayer).cues : []),
     [snapshot, visibleLayer],
   );
-  const transcriptNeedsResplit = useMemo(() => {
-    const style = processing?.subtitle_style ?? defaultSubtitleStyle;
-    const frame = { width: media?.width ?? 1920, height: media?.height ?? 1080 };
-    return getTextLayer(snapshot, 'transcript').cues.some(
-      (cue) => Boolean(cue.words?.length) && splitCue(cue, lineLength, style, frame).length > 1,
-    );
-  }, [snapshot, processing?.subtitle_style, media?.width, media?.height, lineLength]);
   const compositionKey = JSON.stringify(snapshot.composition);
   const composition = useMemo(
     () => (compositionKey ? parseComposition(JSON.parse(compositionKey)) : undefined),
     [compositionKey],
   );
+  const transcriptNeedsResplit = useMemo(() => {
+    const style = processing?.subtitle_style ?? defaultSubtitleStyle;
+    const frame = composition
+      ? outputFrame(processing?.editing, composition.canvas)
+      : outputFrame(processing?.editing, {
+          width: media?.width ?? 1920,
+          height: media?.height ?? 1080,
+        });
+    return getTextLayer(snapshot, 'transcript').cues.some(
+      (cue) => Boolean(cue.words?.length) && splitCue(cue, lineLength, style, frame).length > 1,
+    );
+  }, [
+    snapshot,
+    processing?.subtitle_style,
+    processing?.editing,
+    composition,
+    media?.width,
+    media?.height,
+    lineLength,
+  ]);
   const renderCues = useMemo(
     () => (composition ? clipCuesToEnabled(composition, burnCues) : burnCues),
     [composition, burnCues],
