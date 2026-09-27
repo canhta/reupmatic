@@ -9,7 +9,6 @@ import { parseProjectMedia } from '../../../core/editing/project-media.js';
 import type { Soundtrack } from '../../../core/editing/soundtrack.js';
 import { saveChosenExport } from '../../../core/media/files.js';
 import {
-  authorizedProjectPath,
   createProject,
   loadProject,
   normalizeProjectFilename,
@@ -23,6 +22,7 @@ import { parseLineLengthSettings } from '../../../core/subtitles/split.js';
 import { parseSubtitleStyle } from '../../../core/subtitles/style.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { type IpcWire, requestRecord, requestRevision } from '../../runtime/ipc.js';
+import type { ProjectPathAuthorizer } from '../../runtime/project-authorizer.js';
 import type { installLibrary } from '../library/ipc.js';
 import {
   audioFilters,
@@ -47,6 +47,7 @@ interface Host {
   library: Awaited<ReturnType<typeof installLibrary>>;
   workspace: string;
   savePath(name: string): string;
+  projectPaths: ProjectPathAuthorizer;
   verifyVoice?(track: VoiceTrack): Promise<unknown>;
   onRecentChanged?(): void;
 }
@@ -72,8 +73,6 @@ export function installEditor(host: Host): {
   installAudio(host);
   installComposition(host);
   const recent = new RecentStore(path.join(host.workspace, 'recent.json'));
-  // Resolved project paths the host has authorised through its own pickers or a prior open.
-  const authorizedProjects = new Set<string>();
   function notifyRecentChanged() {
     const window = host.getWindow();
     if (!window.isDestroyed()) window.webContents.send('reupmatic:recent-changed');
@@ -335,9 +334,9 @@ export function installEditor(host: Host): {
       if (chosen.canceled || !chosen.filePath) return null;
       // A name the native dialog returns is normalised and authorised for future saves.
       filePath = normalizeProjectFilename(chosen.filePath);
-      authorizedProjects.add(path.resolve(filePath));
+      host.projectPaths.authorize(filePath);
     } else {
-      filePath = authorizedProjectPath(value.path, authorizedProjects);
+      filePath = host.projectPaths.check(value.path);
     }
     await saveProject(filePath, project, media.originalPaths);
     await recordRecent({
@@ -367,7 +366,7 @@ export function installEditor(host: Host): {
       filters: [{ name: 'Reupmatic project', extensions: ['json'] }],
     });
     if (chosen.canceled) return null;
-    authorizedProjects.add(path.resolve(chosen.filePaths[0]));
+    host.projectPaths.authorize(chosen.filePaths[0]);
     const project = await loadProject(chosen.filePaths[0]);
     const video = await dialog.showOpenDialog(host.getWindow(), {
       title:
@@ -407,8 +406,7 @@ export function installEditor(host: Host): {
     const entry = (await recent.list()).find(
       (item) => item.kind === 'project' && item.path === input.path,
     );
-    if (!entry && !authorizedProjects.has(path.resolve(input.path)))
-      throw new Error('INVALID_REQUEST');
+    if (!entry && !host.projectPaths.isAuthorized(input.path)) throw new Error('INVALID_REQUEST');
     let project: Awaited<ReturnType<typeof loadProject>>;
     try {
       project = await loadProject(input.path);
@@ -421,7 +419,7 @@ export function installEditor(host: Host): {
       }
       throw error;
     }
-    authorizedProjects.add(path.resolve(input.path));
+    host.projectPaths.authorize(input.path);
     let source: Awaited<ReturnType<typeof media.registerVideo>>;
     try {
       source = await media.registerVideo(project.source.path);

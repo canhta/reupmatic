@@ -34,6 +34,7 @@ import { installSettings } from './features/settings/ipc.js';
 import { installEditor } from './features/editor/ipc.js';
 import { MediaRegistry } from './features/media/registry.js';
 import { createIpcWire } from './runtime/ipc.js';
+import { ProjectPathAuthorizer } from './runtime/project-authorizer.js';
 import { installProtocols, registerSchemes } from './runtime/protocols.js';
 import {
   type ConfirmChoice,
@@ -162,6 +163,8 @@ const client = new WorkerClient(
   runtimePackSupport.searchDirectories(),
 );
 const media = new MediaRegistry(client);
+// One authority for project save paths, shared by every route that opens a project.
+const projectPaths = new ProjectPathAuthorizer();
 // The bundled fonts are app-owned read-only files; the renderer reads them through media://.
 for (const font of bundledFontFiles()) {
   media.registerAppFile(font.id, path.join(runtimePaths.fonts, font.file));
@@ -191,6 +194,7 @@ const recovery = installRecovery({
   wire,
   workspace,
   media,
+  projectPaths,
   getWindow: () => win,
   getLanguage,
   verifyVoice: (track) => synthesis.verifyVoice(track),
@@ -212,7 +216,7 @@ const speech = installSpeech({
   runtimePacks: runtimePackSupport,
 });
 library = await installLibrary({
-  wire, getWindow: () => win, getLanguage, workspace, media, worker: client, diagnostics,
+  wire, getWindow: () => win, getLanguage, workspace, media, projectPaths, worker: client, diagnostics,
   assignTags: (contentId, tags) => {
     if (!catalog) throw new Error('LIBRARY_TAGS_UNAVAILABLE');
     return catalog.assignDouyinTags(contentId, tags);
@@ -248,7 +252,7 @@ installProtocols(
 );
 const editorApi = installEditor({ wire, getWindow: () => win, getLanguage,
   worker: client, renderer, media, library, workspace, savePath: settings.savePath,
-  verifyVoice: (track) => synthesis.verifyVoice(track),
+  projectPaths, verifyVoice: (track) => synthesis.verifyVoice(track),
   onRecentChanged: () => void rebuildMenu() });
 const vision = installVision({ wire, getWindow: () => win, worker: client,
   owns: id => media.ownsVideo(id) });

@@ -17,6 +17,7 @@ import type { RegisteredVideo } from '../../../core/media/media-contracts.js';
 import { loadProject } from '../../../core/projects/project.js';
 import type { WorkerClient } from '../../../core/worker/worker-client.js';
 import { errorCode, type IpcWire } from '../../runtime/ipc.js';
+import type { ProjectPathAuthorizer } from '../../runtime/project-authorizer.js';
 import { localImportFilters, type MediaRegistry, videoFilters } from '../media/registry.js';
 import { restoreProjectSnapshot } from '../projects/dependencies.js';
 import { installLibraryAssets } from './assets/ipc.js';
@@ -28,6 +29,7 @@ interface Host {
   getLanguage?(): string;
   workspace: string;
   media: MediaRegistry;
+  projectPaths: ProjectPathAuthorizer;
   worker: WorkerClient;
   pendingJobs(item: ContentEntry): number;
   relatedRecords?(id: string): { posts: number; pending_posts: number; workflows: number };
@@ -226,6 +228,7 @@ export async function installLibrary(host: Host) {
     const linked = item.links.find((link) => link.id === linkId && link.kind === 'project');
     if (!linked) throw new Error('INVALID_REQUEST');
     await required().resolveAsset(id, linked.id);
+    host.projectPaths.authorize(linked.path);
     const project = await loadProject(linked.path);
     let source: RegisteredVideo;
     const anchor =

@@ -5,6 +5,7 @@ import { createProject } from '../../../core/projects/project.js';
 import { ProjectRecovery } from '../../../core/projects/recovery/project-recovery.js';
 import type { VoiceTrack } from '../../../core/speech/synthesis/voice-track.js';
 import type { IpcWire } from '../../runtime/ipc.js';
+import type { ProjectPathAuthorizer } from '../../runtime/project-authorizer.js';
 import { type MediaRegistry, videoFilters } from '../media/registry.js';
 import { authorizeSnapshot, restoreProjectSnapshot } from './dependencies.js';
 
@@ -14,6 +15,7 @@ interface Host {
   getWindow(): BrowserWindow;
   media: MediaRegistry;
   getLanguage?(): string;
+  projectPaths: ProjectPathAuthorizer;
   verifyVoice?(track: VoiceTrack): Promise<unknown>;
 }
 
@@ -43,6 +45,7 @@ export function installRecovery(host: Host) {
     const { id, expected_revision: revision } = input;
     const project = ready().load(id, revision);
     const project_path = ready().projectPath(id, revision);
+    if (project_path) host.projectPaths.authorize(project_path);
     const chosen = await dialog.showOpenDialog(host.getWindow(), {
       title:
         host.getLanguage?.() === 'vi'
