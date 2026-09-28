@@ -112,7 +112,7 @@ export function ProjectMediaSection() {
         label: t('mediaAddToTimeline'),
         onClick: () => void editor.placeMedia(stored, 'end'),
       });
-    if (stored.kind === 'subtitle' && !row.missing && row.used)
+    if (stored.kind === 'subtitle' && !row.missing)
       actions.push({
         label: t('mediaImportInto'),
         onClick: () => void editor.importSubtitleFile(stored),
@@ -193,13 +193,6 @@ export function ProjectMediaSection() {
                           size="sm"
                           icon={<Icon icon={Plus} size="sm" />}
                           onClick={() => stored && void editor.placeMedia(stored, 'end')}
-                        />
-                      )}
-                      {stored?.kind === 'subtitle' && !row.used && !row.missing && (
-                        <Button
-                          label={t('mediaImportInto')}
-                          size="sm"
-                          onClick={() => void editor.importSubtitleFile(stored)}
                         />
                       )}
                       {row.used && (

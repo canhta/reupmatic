@@ -206,59 +206,61 @@ export function CompositionPanel() {
                     onChange={(speed) => setDraft({ ...draft, speed })}
                   />
                 </Grid>
-                <Toolbar
-                  label={t('compositionActions')}
-                  size="sm"
-                  startContent={
-                    <>
-                      <ButtonGroup label={t('compositionOrder')} size="sm">
+                <div className="drawer-toolbar">
+                  <Toolbar
+                    label={t('compositionActions')}
+                    size="sm"
+                    startContent={
+                      <>
+                        <ButtonGroup label={t('compositionOrder')} size="sm">
+                          <Button
+                            label={t('compositionEarlier')}
+                            isDisabled={commandDisabled || index <= 0}
+                            onClick={() => apply({ kind: 'move', id: draft.id, direction: -1 })}
+                          />
+                          <Button
+                            label={t('compositionLater')}
+                            isDisabled={commandDisabled || index >= spans.length - 1}
+                            onClick={() => apply({ kind: 'move', id: draft.id, direction: 1 })}
+                          />
+                        </ButtonGroup>
                         <Button
-                          label={t('compositionEarlier')}
-                          isDisabled={commandDisabled || index <= 0}
-                          onClick={() => apply({ kind: 'move', id: draft.id, direction: -1 })}
+                          label={t('compositionSplit')}
+                          isDisabled={commandDisabled}
+                          onClick={() =>
+                            apply({
+                              kind: 'split',
+                              id: draft.id,
+                              at_ms: editor.clock,
+                              new_id: crypto.randomUUID(),
+                            })
+                          }
                         />
                         <Button
-                          label={t('compositionLater')}
-                          isDisabled={commandDisabled || index >= spans.length - 1}
-                          onClick={() => apply({ kind: 'move', id: draft.id, direction: 1 })}
+                          label={t('compositionJoin')}
+                          isDisabled={commandDisabled || !canJoin}
+                          onClick={() => apply({ kind: 'join', id: draft.id })}
                         />
-                      </ButtonGroup>
-                      <Button
-                        label={t('compositionSplit')}
-                        isDisabled={commandDisabled}
-                        onClick={() =>
-                          apply({
-                            kind: 'split',
-                            id: draft.id,
-                            at_ms: editor.clock,
-                            new_id: crypto.randomUUID(),
-                          })
+                      </>
+                    }
+                    endContent={
+                      <MoreMenu
+                        label={t('compositionMore')}
+                        size="sm"
+                        isDisabled={commandDisabled || spans.length <= 1}
+                        items={
+                          [
+                            {
+                              label: t('compositionRemove'),
+                              variant: 'destructive',
+                              onClick: () => void remove(),
+                            },
+                          ] satisfies DropdownMenuOption[]
                         }
                       />
-                      <Button
-                        label={t('compositionJoin')}
-                        isDisabled={commandDisabled || !canJoin}
-                        onClick={() => apply({ kind: 'join', id: draft.id })}
-                      />
-                    </>
-                  }
-                  endContent={
-                    <MoreMenu
-                      label={t('compositionMore')}
-                      size="sm"
-                      isDisabled={commandDisabled || spans.length <= 1}
-                      items={
-                        [
-                          {
-                            label: t('compositionRemove'),
-                            variant: 'destructive',
-                            onClick: () => void remove(),
-                          },
-                        ] satisfies DropdownMenuOption[]
-                      }
-                    />
-                  }
-                />
+                    }
+                  />
+                </div>
                 <Text as="p" type="body">
                   {t('compositionJoinHelp')}
                 </Text>

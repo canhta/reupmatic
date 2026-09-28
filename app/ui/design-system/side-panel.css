@@ -25,6 +25,14 @@
   min-width: 0;
 }
 
+/* A Toolbar's edge compensation assumes its container supplies inline padding. The panel body
+   resets that to zero, which pulls the start slot out by the toolbar's own block padding; setting
+   one compensation step on the wrapper lines the toolbar content up with the fields above it. */
+.drawer-toolbar {
+  --container-padding-inline-start: var(--spacing-2);
+  --container-padding-inline-end: var(--spacing-2);
+}
+
 /* Below 1200px a detail drawer overlays its list instead of splitting the grid. */
 @media (max-width: 1199.98px) {
   .business-grid .side-panel {

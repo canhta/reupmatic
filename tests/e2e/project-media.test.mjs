@@ -195,7 +195,9 @@ for (const locale of ['en', 'vi']) {
           .getByRole('button', { name: copy.cancel, exact: true })
           .click();
         const secondRow = region.locator('li').filter({ hasText: 'extra-vi.srt' });
-        await secondRow.getByRole('button', { name: copy.importInto, exact: true }).waitFor();
+        await secondRow.getByRole('button', { name: copy.rowActions('extra-vi.srt') }).click();
+        await page.getByRole('menuitem', { name: copy.importInto, exact: true }).waitFor();
+        await page.keyboard.press('Escape');
         assert.equal(await secondRow.getByRole('img').count(), 0);
 
         await screenshot('populated', 1420, 900);

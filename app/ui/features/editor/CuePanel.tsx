@@ -135,7 +135,6 @@ export function CuePanel() {
 
   return (
     <VStack as="section" gap={3} height="100%" className="cue-panel" aria-label={t('subtitle')}>
-      {}
       <VStack gap={2}>
         <Selector
           label={t('textEditingLayer')}
@@ -171,9 +170,7 @@ export function CuePanel() {
           description={t('textLayerStaleHelp')}
         />
       )}
-      {}
       <HStack gap={2} vAlign="end">
-        {}
         <StackItem size="fill">
           <TextInput
             label={t('cueSearch')}
@@ -200,32 +197,33 @@ export function CuePanel() {
       {replaceOpen && (
         <FindReplaceBar find={query} hasSelection={Boolean(selected)} state={findReplace} />
       )}
-      <Toolbar
-        label={t('cueActions')}
-        size="sm"
-        startContent={
-          <HStack gap={2} vAlign="center" wrap="wrap">
-            <Button label={t('add')} size="sm" isDisabled={!media} onClick={add} />
-            {}
-            <MoreMenu
-              label={t('moreCueActions')}
-              size="sm"
-              items={[
-                {
-                  label: t('textCopyTitle'),
-                  isDisabled: !media || busy,
-                  onClick: () => setDialog('copy'),
-                },
-                {
-                  label: t('timingBulk'),
-                  isDisabled: !media || busy || !cues.length,
-                  onClick: () => setDialog('shift'),
-                },
-              ]}
-            />
-          </HStack>
-        }
-      />
+      <div className="drawer-toolbar">
+        <Toolbar
+          label={t('cueActions')}
+          size="sm"
+          startContent={
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Button label={t('add')} size="sm" isDisabled={!media} onClick={add} />
+              <MoreMenu
+                label={t('moreCueActions')}
+                size="sm"
+                items={[
+                  {
+                    label: t('textCopyTitle'),
+                    isDisabled: !media || busy,
+                    onClick: () => setDialog('copy'),
+                  },
+                  {
+                    label: t('timingBulk'),
+                    isDisabled: !media || busy || !cues.length,
+                    onClick: () => setDialog('shift'),
+                  },
+                ]}
+              />
+            </HStack>
+          }
+        />
+      </div>
       {!findReplace.preview && (
         <StackItem size="fill" isScrollable className="cue-list">
           {!media ? (
@@ -256,7 +254,6 @@ export function CuePanel() {
                           : '';
                   return (
                     <TableRow key={cue.id}>
-                      {}
                       <TableCell>
                         <HStack gap={2} vAlign="start" width="100%">
                           <HStack gap={1} vAlign="center">
