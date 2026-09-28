@@ -370,10 +370,7 @@ test('populated Editor keeps preview, cues, timeline and tools in desktop region
 
       const styleTab = page.getByRole('tab', { name: 'Style', exact: true });
       await styleTab.click();
-      const lastControl = page.getByRole('checkbox', {
-        name: 'Cover original subtitles',
-        exact: true,
-      });
+      const lastControl = page.getByRole('button', { name: 'Reset', exact: true });
       await lastControl.scrollIntoViewIfNeeded();
       const lastControlBox = await lastControl.boundingBox();
       const panelBox = await page.locator('.editor-tool-panel').boundingBox();

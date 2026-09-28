@@ -1037,8 +1037,8 @@ function makeBurnedInVideo(temp, name = 'burned-in.mp4') {
 }
 
 const COVER_LABEL = {
-  en: { tab: 'Style', cover: 'Cover original subtitles' },
-  vi: { tab: 'Kiểu chữ', cover: 'Che phụ đề gốc' },
+  en: { tab: 'Style', cover: 'Cover original subtitles', band: 'Cover band' },
+  vi: { tab: 'Kiểu chữ', cover: 'Che phụ đề gốc', band: 'Dải che phụ đề' },
 };
 
 // One locale per launch: chooseLocale finds the Settings nav by its English name.
@@ -1057,7 +1057,8 @@ async function captureCoverScreenshots(locale) {
     await page.getByRole('tab', { name: COVER_LABEL[locale].tab, exact: true }).click();
     const style = page.locator('#panel-style');
     await style.waitFor({ state: 'visible' });
-    await style.getByRole('checkbox', { name: COVER_LABEL[locale].cover, exact: true }).check();
+    await style.getByRole('button', { name: COVER_LABEL[locale].band, exact: true }).click();
+    await style.getByRole('switch', { name: COVER_LABEL[locale].cover, exact: true }).check();
     await settleAnimations(page);
     await page.screenshot({ path: path.join(SHOTS_DIR, `cover-${locale}.png`) });
     await page

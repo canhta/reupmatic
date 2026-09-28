@@ -1,5 +1,6 @@
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Section } from '@astryxdesign/core/Section';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
@@ -15,14 +16,16 @@ import { useEditor } from '../EditorContext';
 import { SubtitleStyleForm } from './SubtitleStyleForm';
 import { SubtitleTemplates } from './SubtitleTemplates';
 
+type Scope = 'global' | 'cue';
+
 export function SubtitleStylesPanel() {
   const { t } = useTranslation();
   const editor = useEditor();
-  const [customize, setCustomize] = useState(false);
+  const [scope, setScope] = useState<Scope>('global');
   const selected = editor.cues.find((cue) => cue.id === editor.selected);
   const disabled = editor.busy || editor.opening;
   const globalStyle = editor.processing?.subtitle_style;
-  const scope = customize && selected ? 'cue' : 'global';
+  const effectiveScope: Scope = scope === 'cue' && selected ? 'cue' : 'global';
   const origin = getTextLayer(editor.textSnapshot, 'displayed').origin;
   const regions = origin.kind === 'ocr' && origin.regions ? origin.regions : [];
   const media = editor.media;
@@ -41,7 +44,7 @@ export function SubtitleStylesPanel() {
     };
   }
   function apply(style: SubtitleStyle | undefined) {
-    if (scope === 'cue' && selected) {
+    if (effectiveScope === 'cue' && selected) {
       editor.change(applyCueStyle(editor.cues, [selected.id], style));
       return;
     }
@@ -53,27 +56,32 @@ export function SubtitleStylesPanel() {
   return (
     <Section variant="transparent" padding={0} aria-label={t('styleTitle')}>
       <VStack gap={3}>
-        <CheckboxInput
-          label={t('styleCustomizeCue')}
-          value={customize}
-          isDisabled={disabled || !selected}
-          onChange={setCustomize}
+        <Selector
+          label={t('styleApplyTo')}
+          value={effectiveScope}
+          isDisabled={disabled}
+          options={[
+            { value: 'global', label: t('styleApplyGlobal') },
+            { value: 'cue', label: t('styleApplyCue'), disabled: !selected },
+          ]}
+          onChange={(next) => setScope(next === 'cue' ? 'cue' : 'global')}
         />
-        {customize && !selected && (
+        {!selected && (
           <Text as="p" type="body" role="status">
             {t('styleChooseCue')}
           </Text>
         )}
         <SubtitleTemplates
-          value={scope === 'cue' ? selected?.style : globalStyle}
+          value={effectiveScope === 'cue' ? selected?.style : globalStyle}
           disabled={disabled}
           onChange={apply}
         />
         <SubtitleStyleForm
-          key={scope === 'cue' ? selected?.id : 'global'}
-          value={scope === 'cue' ? selected?.style : globalStyle}
-          inherited={scope === 'cue' ? globalStyle : undefined}
+          key={effectiveScope === 'cue' ? selected?.id : 'global'}
+          value={effectiveScope === 'cue' ? selected?.style : globalStyle}
+          inherited={effectiveScope === 'cue' ? globalStyle : undefined}
           disabled={disabled}
+          coverToggle={Switch}
           onChange={apply}
           onFitCover={regions.length ? fitCover : undefined}
         />

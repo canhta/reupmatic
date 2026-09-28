@@ -108,6 +108,11 @@ export function EditorExportDialog() {
                 <RadioListItem value="srt" label="SRT" />
                 <RadioListItem value="ass" label="ASS" />
               </RadioList>
+              {format === 'srt' && (
+                <Text as="p" type="body">
+                  {t('styleExportSrtNote')}
+                </Text>
+              )}
               <Selector
                 label={t('styleExportTiming')}
                 value={timing}

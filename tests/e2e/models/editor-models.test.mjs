@@ -314,7 +314,8 @@ test('Editor with real models: recognise, apply, translate and export with a cov
       await page.getByRole('tab', { name: 'Style', exact: true }).click();
       const style = page.locator('#panel-style');
       await style.waitFor({ state: 'visible' });
-      await style.getByRole('checkbox', { name: 'Cover original subtitles', exact: true }).check();
+      await style.getByRole('button', { name: 'Cover band', exact: true }).click();
+      await style.getByRole('switch', { name: 'Cover original subtitles', exact: true }).check();
       // Burn a word-emphasis template: all caps with the active word in the accent colour.
       await style.getByText('Bold highlight', { exact: true }).click();
 
@@ -424,7 +425,8 @@ test('Editor with real models: OCR a burned-in line, translate and export it', {
       await page.getByRole('tab', { name: 'Style', exact: true }).click();
       const style = page.locator('#panel-style');
       await style.waitFor({ state: 'visible' });
-      await style.getByRole('checkbox', { name: 'Cover original subtitles', exact: true }).check();
+      await style.getByRole('button', { name: 'Cover band', exact: true }).click();
+      await style.getByRole('switch', { name: 'Cover original subtitles', exact: true }).check();
       await style.getByRole('button', { name: 'Fit to original subtitles', exact: true }).click();
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
       const dialog = page.getByRole('dialog');

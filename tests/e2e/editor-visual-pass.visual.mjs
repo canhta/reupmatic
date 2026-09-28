@@ -863,10 +863,10 @@ test('Vietnamese IME commits diacritics in a tool panel and the project name', {
       await page.getByRole('tab', { name: 'Kiểu chữ', exact: true }).click();
       const style = page.locator('#panel-style');
       await style.waitFor({ state: 'visible' });
-      const fontField = style.getByRole('textbox', { name: 'Tên font đã cài', exact: true });
-      await fontField.fill('');
-      await composeText(page, fontField, 'Phông chữ Việt — Đà Nẵng');
-      assert.equal(await fontField.inputValue(), 'Phông chữ Việt — Đà Nẵng');
+      const styleTextField = style.getByRole('textbox', { name: 'Màu chữ', exact: true });
+      await styleTextField.fill('');
+      await composeText(page, styleTextField, 'Phông chữ Việt — Đà Nẵng');
+      assert.equal(await styleTextField.inputValue(), 'Phông chữ Việt — Đà Nẵng');
 
       await page.locator('.editor-project-header button').first().click();
       const nameField = page.getByRole('textbox', { name: vi.nameLabel, exact: true });

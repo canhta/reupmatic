@@ -85,6 +85,7 @@ export function ProcessingOptions({
             <SubtitleStyleForm
               value={value?.subtitle_style}
               disabled={disabled}
+              coverToggle={CheckboxInput}
               onChange={(subtitle_style) => update({ ...(value ?? {}), subtitle_style })}
             />
           </Collapsible>

@@ -1,14 +1,16 @@
 import { Button } from '@astryxdesign/core/Button';
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useState } from 'react';
+import { type ComponentType, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fontFamilies } from '../../../../core/subtitles/fonts';
 import {
@@ -20,9 +22,19 @@ import {
   subtitleStyleFieldInvalid,
 } from '../../../../core/subtitles/style';
 
+/** The on/off control is supplied by the surface: a live Editor preview uses Switch. */
+export type CoverToggle = ComponentType<{
+  label: string;
+  value: boolean;
+  isDisabled: boolean;
+  description?: string;
+  onChange(value: boolean): void;
+}>;
+
 interface Props {
   value: SubtitleStyle;
   disabled: boolean;
+  coverToggle: CoverToggle;
   onChange(value: SubtitleStyle): void;
   onFitCover?: (current: SubtitleStyle) => { style: SubtitleStyle; others: number[] } | null;
 }
@@ -46,17 +58,19 @@ function ColorField({
   const { t } = useTranslation();
   return (
     <HStack gap={2} vAlign="end">
-      <TextInput
-        label={label}
-        value={value}
-        isDisabled={disabled}
-        status={
-          subtitleStyleFieldInvalid(fieldKey, value)
-            ? { type: 'error', message: t('styleColorInvalid') }
-            : undefined
-        }
-        onChange={onChange}
-      />
+      <StackItem size="fill">
+        <TextInput
+          label={label}
+          value={value}
+          isDisabled={disabled}
+          status={
+            subtitleStyleFieldInvalid(fieldKey, value)
+              ? { type: 'error', message: t('styleColorInvalid') }
+              : undefined
+          }
+          onChange={onChange}
+        />
+      </StackItem>
       <input
         type="color"
         id={`style-color-swatch-${fieldKey}`}
@@ -71,6 +85,17 @@ function ColorField({
 }
 
 const colorFields = ['text_color', 'outline_color', 'box_color', 'accent_color'] as const;
+const emphasisFields = ['bold', 'italic', 'uppercase'] as const;
+const coverFields: {
+  key: 'x_pct' | 'y_pct' | 'width_pct' | 'height_pct';
+  min: number;
+  max: number;
+}[] = [
+  { key: 'x_pct', min: 0, max: 100 },
+  { key: 'y_pct', min: 0, max: 100 },
+  { key: 'width_pct', min: 2, max: 100 },
+  { key: 'height_pct', min: 2, max: 100 },
+];
 const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; step: number }[] = [
   { key: 'outline_pct', min: 0, max: 2, step: 0.05 },
   { key: 'shadow_pct', min: 0, max: 2, step: 0.05 },
@@ -80,9 +105,11 @@ const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; ste
   { key: 'spacing_pct', min: -0.2, max: 2, step: 0.05 },
 ];
 
-export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: Props) {
+export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, onFitCover }: Props) {
   const { t } = useTranslation();
   const [otherPositions, setOtherPositions] = useState<number[] | null>(null);
+  const Cover = coverToggle;
+  const emphasis = emphasisFields.filter((key) => value[key]);
   return (
     <VStack gap={3}>
       <FormLayout direction="vertical">
@@ -119,7 +146,25 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
           onChange={(position) => onChange({ ...value, position: Number(position) })}
         />
       </FormLayout>
-      <FormLayout direction="vertical">
+      <ToggleButtonGroup
+        label={t('styleFormat')}
+        type="multiple"
+        value={emphasis}
+        isDisabled={disabled}
+        onChange={(next) =>
+          onChange({
+            ...value,
+            bold: next.includes('bold'),
+            italic: next.includes('italic'),
+            uppercase: next.includes('uppercase'),
+          })
+        }
+      >
+        <ToggleButton value="bold" label={t('styleBold')} />
+        <ToggleButton value="italic" label={t('styleItalic')} />
+        <ToggleButton value="uppercase" label={t('styleUppercase')} />
+      </ToggleButtonGroup>
+      <Grid columns={2} gap={3}>
         {colorFields.map((key) => (
           <ColorField
             key={key}
@@ -130,101 +175,109 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
             onChange={(next) => onChange({ ...value, [key]: next })}
           />
         ))}
-      </FormLayout>
-      <CheckboxInput
-        label={t('styleCover')}
-        value={value.cover !== null}
-        isDisabled={disabled}
-        onChange={(on) => onChange({ ...value, cover: on ? defaultCoverBand(value) : null })}
-      />
-      {value.cover && (
-        <FormLayout direction="vertical">
-          <Text as="p" type="supporting">
-            {t('styleCoverNote')}
-          </Text>
-          {onFitCover && (
-            <Button
-              label={t('styleCoverFit')}
-              size="sm"
-              isDisabled={disabled}
-              onClick={() => {
-                const fit = onFitCover(value);
-                if (!fit) return;
-                onChange(fit.style);
-                setOtherPositions(fit.others);
-              }}
-            />
-          )}
-          {otherPositions && otherPositions.length > 0 && (
-            <Text as="p" type="supporting">
-              {t('styleCoverFitOthers', { positions: otherPositions.join(', ') })}
-            </Text>
-          )}
-          {(
-            [
-              ['x_pct', 0, 100],
-              ['y_pct', 0, 100],
-              ['width_pct', 2, 100],
-              ['height_pct', 2, 100],
-            ] as const
-          ).map(([key, min, max]) => (
-            <NumberInput
-              key={key}
-              label={t(`style_cover_${key}`)}
-              value={value.cover?.[key] ?? min}
-              min={min}
-              max={max}
-              step={1}
-              isWheelEnabled={false}
-              isDisabled={disabled}
-              onChange={(next) =>
-                value.cover && onChange({ ...value, cover: { ...value.cover, [key]: next } })
-              }
-            />
-          ))}
-          <HStack gap={2} vAlign="end">
-            <TextInput
-              label={t('style_cover_color')}
-              value={value.cover.color}
-              isDisabled={disabled}
-              status={
-                subtitleStyleFieldInvalid('cover', value.cover)
-                  ? { type: 'error', message: t('styleColorInvalid') }
-                  : undefined
-              }
-              onChange={(color) =>
-                value.cover && onChange({ ...value, cover: { ...value.cover, color } })
-              }
-            />
-            <input
-              type="color"
-              className="style-color-swatch"
-              aria-label={`${t('style_cover_color')} – ${t('stylePickColor')}`}
-              disabled={disabled}
-              value={HEX_COLOR.test(value.cover.color) ? value.cover.color : '#000000'}
-              onChange={(event) =>
-                value.cover &&
-                onChange({ ...value, cover: { ...value.cover, color: event.target.value } })
-              }
-            />
-          </HStack>
-          <NumberInput
-            label={t('style_cover_opacity')}
-            value={value.cover.opacity}
-            min={0}
-            max={1}
-            step={0.05}
-            isWheelEnabled={false}
-            isDisabled={disabled}
-            onChange={(opacity) =>
-              value.cover && onChange({ ...value, cover: { ...value.cover, opacity } })
-            }
-          />
-        </FormLayout>
-      )}
+      </Grid>
       <Collapsible
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
+            {t('styleCoverBand')}
+          </Text>
+        }
+        defaultIsOpen={false}
+      >
+        <VStack gap={3}>
+          <Cover
+            label={t('styleCover')}
+            description={t('styleCoverNote')}
+            value={value.cover !== null}
+            isDisabled={disabled}
+            onChange={(on) => onChange({ ...value, cover: on ? defaultCoverBand(value) : null })}
+          />
+          {value.cover && (
+            <>
+              {onFitCover && (
+                <Button
+                  label={t('styleCoverFit')}
+                  size="sm"
+                  isDisabled={disabled}
+                  onClick={() => {
+                    const fit = onFitCover(value);
+                    if (!fit) return;
+                    onChange(fit.style);
+                    setOtherPositions(fit.others);
+                  }}
+                />
+              )}
+              {otherPositions && otherPositions.length > 0 && (
+                <Text as="p" type="body">
+                  {t('styleCoverFitOthers', { positions: otherPositions.join(', ') })}
+                </Text>
+              )}
+              <Grid columns={2} gap={3}>
+                {coverFields.map(({ key, min, max }) => (
+                  <NumberInput
+                    key={key}
+                    label={t(`style_cover_${key.replace('_pct', '')}`)}
+                    units="%"
+                    width="100%"
+                    value={value.cover?.[key] ?? min}
+                    min={min}
+                    max={max}
+                    step={1}
+                    isWheelEnabled={false}
+                    isDisabled={disabled}
+                    onChange={(next) =>
+                      value.cover && onChange({ ...value, cover: { ...value.cover, [key]: next } })
+                    }
+                  />
+                ))}
+              </Grid>
+              <HStack gap={2} vAlign="end">
+                <StackItem size="fill">
+                  <TextInput
+                    label={t('style_cover_color')}
+                    value={value.cover.color}
+                    isDisabled={disabled}
+                    status={
+                      subtitleStyleFieldInvalid('cover', value.cover)
+                        ? { type: 'error', message: t('styleColorInvalid') }
+                        : undefined
+                    }
+                    onChange={(color) =>
+                      value.cover && onChange({ ...value, cover: { ...value.cover, color } })
+                    }
+                  />
+                </StackItem>
+                <input
+                  type="color"
+                  className="style-color-swatch"
+                  aria-label={`${t('style_cover_color')} – ${t('stylePickColor')}`}
+                  disabled={disabled}
+                  value={HEX_COLOR.test(value.cover.color) ? value.cover.color : '#000000'}
+                  onChange={(event) =>
+                    value.cover &&
+                    onChange({ ...value, cover: { ...value.cover, color: event.target.value } })
+                  }
+                />
+              </HStack>
+              <NumberInput
+                label={t('style_cover_opacity')}
+                value={value.cover.opacity}
+                min={0}
+                max={1}
+                step={0.05}
+                isWheelEnabled={false}
+                isDisabled={disabled}
+                onChange={(opacity) =>
+                  value.cover && onChange({ ...value, cover: { ...value.cover, opacity } })
+                }
+              />
+            </>
+          )}
+        </VStack>
+      </Collapsible>
+      <Collapsible
+        trigger={
+          <Text type="body" weight="semibold">
             {t('styleAnimation')}
           </Text>
         }
@@ -326,7 +379,7 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
       </Collapsible>
       <Collapsible
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
             {t('styleShadowBackground')}
           </Text>
         }
@@ -351,24 +404,6 @@ export function SubtitleStyleFields({ value, disabled, onChange, onFitCover }: P
               onChange={(next) => onChange({ ...value, [key]: next })}
             />
           ))}
-          <CheckboxInput
-            label={t('styleBold')}
-            value={value.bold}
-            isDisabled={disabled}
-            onChange={(bold) => onChange({ ...value, bold })}
-          />
-          <CheckboxInput
-            label={t('styleItalic')}
-            value={value.italic}
-            isDisabled={disabled}
-            onChange={(italic) => onChange({ ...value, italic })}
-          />
-          <CheckboxInput
-            label={t('styleUppercase')}
-            value={value.uppercase}
-            isDisabled={disabled}
-            onChange={(uppercase) => onChange({ ...value, uppercase })}
-          />
         </FormLayout>
       </Collapsible>
     </VStack>

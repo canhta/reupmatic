@@ -1,6 +1,4 @@
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,17 +8,25 @@ import {
   parseSubtitleStyle,
   type SubtitleStyle,
 } from '../../../../core/subtitles/style';
-import { SubtitleStyleFields } from './SubtitleStyleFields';
+import { type CoverToggle, SubtitleStyleFields } from './SubtitleStyleFields';
 
 interface Props {
   value?: SubtitleStyle;
   inherited?: SubtitleStyle;
   disabled: boolean;
+  coverToggle: CoverToggle;
   onChange(value: SubtitleStyle | undefined): void;
   onFitCover?: (current: SubtitleStyle) => { style: SubtitleStyle; others: number[] } | null;
 }
 
-export function SubtitleStyleForm({ value, inherited, disabled, onChange, onFitCover }: Props) {
+export function SubtitleStyleForm({
+  value,
+  inherited,
+  disabled,
+  coverToggle,
+  onChange,
+  onFitCover,
+}: Props) {
   const { t } = useTranslation();
   const effective = value ?? inherited ?? defaultSubtitleStyle;
   const applied = JSON.stringify(value ?? null);
@@ -45,22 +51,18 @@ export function SubtitleStyleForm({ value, inherited, disabled, onChange, onFitC
       <SubtitleStyleFields
         value={draft}
         disabled={disabled}
+        coverToggle={coverToggle}
         onChange={change}
         onFitCover={onFitCover}
       />
-      <HStack gap={2} vAlign="center" wrap="wrap">
-        <Button
-          label={t('styleInherit')}
-          isDisabled={disabled || !value}
-          onClick={() => {
-            appliedRef.current = JSON.stringify(null);
-            onChange(undefined);
-          }}
-        />
-      </HStack>
-      <Text as="p" type="supporting">
-        {t('styleSrtHelp')}
-      </Text>
+      <Button
+        label={t('styleReset')}
+        isDisabled={disabled || !value}
+        onClick={() => {
+          appliedRef.current = JSON.stringify(null);
+          onChange(undefined);
+        }}
+      />
     </VStack>
   );
 }

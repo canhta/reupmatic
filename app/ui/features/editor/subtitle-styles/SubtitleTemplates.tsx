@@ -1,3 +1,5 @@
+import { Grid } from '@astryxdesign/core/Grid';
+import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import JASSUB from 'jassub';
@@ -21,9 +23,9 @@ const SAMPLE_DURATION_MS = 1400;
 const STATIC_TIME_MS = 800;
 /** A canvas-only renderer needs a few frames before the static frame is composited. */
 const STATIC_FRAMES = 12;
-/** A small landscape strip, so the sample line reads legibly in the panel. */
-const SAMPLE_CANVAS = { width: 360, height: 160 };
-/** A sample-only font bump; the strip is too short for the style's own size to read. */
+/** A narrow strip, so the sample line reads legibly in a two-column tile. */
+const SAMPLE_CANVAS = { width: 180, height: 160 };
+/** A sample-only font bump; the tile is small, but the style range caps this at 15. */
 const SAMPLE_FONT_PCT = 15;
 const SAMPLE_CUE = {
   id: 'template-sample',
@@ -204,17 +206,16 @@ function TemplateThumbnail({
 
   if (failed) return null;
   return (
-    <button
-      type="button"
-      className="template-thumbnail-wrap"
-      aria-label={name}
-      aria-pressed={selected}
-      disabled={disabled}
+    <SelectableCard
+      label={name}
+      isSelected={selected}
+      isDisabled={disabled}
+      padding={2}
+      onChange={onSelect}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
-      onClick={onSelect}
     >
       <canvas
         ref={canvas}
@@ -224,7 +225,7 @@ function TemplateThumbnail({
       <Text as="span" display="block" type="body" weight="medium">
         {name}
       </Text>
-    </button>
+    </SelectableCard>
   );
 }
 
@@ -245,15 +246,17 @@ export function SubtitleTemplates({
       <Text as="p" type="label" weight="semibold">
         {t('styleTemplate')}
       </Text>
-      {subtitleTemplates.map((template) => (
-        <TemplateThumbnail
-          key={template.id}
-          template={template}
-          disabled={disabled}
-          selected={current === template.id}
-          onSelect={() => onChange(applySubtitleTemplate(effective, template))}
-        />
-      ))}
+      <Grid columns={2} gap={3}>
+        {subtitleTemplates.map((template) => (
+          <TemplateThumbnail
+            key={template.id}
+            template={template}
+            disabled={disabled}
+            selected={current === template.id}
+            onSelect={() => onChange(applySubtitleTemplate(effective, template))}
+          />
+        ))}
+      </Grid>
     </VStack>
   );
 }
