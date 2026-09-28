@@ -24,7 +24,7 @@ const TEXT = {
     fades: 'Fades',
     rotate: 'Rotate',
     rotate90: '90° right',
-    crop: 'Crop source frame',
+    crop: 'Crop',
     cropWidth: 'Width',
     cropHeight: 'Height',
     fade: 'Add fades',

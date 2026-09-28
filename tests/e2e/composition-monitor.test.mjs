@@ -80,7 +80,7 @@ test('#38 composition mode keeps the output edit window visible', { timeout: 180
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.locator('#panel-edit').waitFor();
-      const trim = page.getByRole('switch', { name: 'Trim source', exact: true });
+      const trim = page.getByRole('switch', { name: 'Trim', exact: true });
       await trim.waitFor();
       assert.equal(await trim.isVisible(), true, 'the output edit window stays reachable');
     },
@@ -102,9 +102,7 @@ test('#41 composition mode blocks OCR with a banner', { timeout: 180000 }, async
 
       await page.getByRole('tab', { name: 'Transcribe', exact: true }).click();
       await page.locator('#panel-transcribe').waitFor();
-      await page
-        .getByText('Extract text from the original clip before composing.', { exact: true })
-        .waitFor();
+      await page.getByText('Extract before composing.', { exact: true }).waitFor();
       const extract = page.getByRole('button', { name: 'Extract', exact: true });
       assert.equal(await extract.isDisabled(), true, 'Extract is blocked on a composition');
     },

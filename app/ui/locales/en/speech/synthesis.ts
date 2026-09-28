@@ -4,13 +4,13 @@ export const synthesisEn = {
   synthesisScope: 'Cues to generate',
   synthesisAll: 'All spoken cues',
   synthesisSelected: 'Selected cue',
-  synthesisSelectionHelp: 'Select a cue in the editor first.',
+  synthesisSelectionHelp: 'Select a cue first.',
   synthesisStart: 'Generate voice',
   synthesisRunning: 'Generating speech',
   synthesisDraft: 'Generated voice — not applied',
   synthesisCaptured:
     '{{language}} · voice {{voice}} · {{count}} cue(s) · {{duration}} s · {{runtime}}',
-  synthesisSession: "Save the WAV before closing — it's not auto-saved.",
+  synthesisSession: 'Not saved automatically.',
   synthesisComparison: 'Captured speech timing',
   synthesisWords: 'Captured spoken text',
   synthesisTiming: 'Timing (s)',
@@ -27,7 +27,7 @@ export const synthesisEn = {
     '{{line}}: slot {{slot}} s, speech {{speech}} s, overrun {{overrun}} s',
   synthesisListen: 'Listen',
   synthesisPlayer: 'Generated speech draft audio',
-  synthesisReviewed: 'I checked the text and listened for problems.',
+  synthesisReviewed: 'I listened to it',
   synthesisApply: 'Apply voice',
   synthesisApplied: 'Voice track added to the project.',
   synthesisSaveWav: 'Save WAV',
@@ -36,8 +36,7 @@ export const synthesisEn = {
   synthesisVerifyingArtifact: 'Checking the captured audio',
   synthesisSaving: 'Saving the captured audio draft',
   synthesisSaved: 'Saved {{name}}',
-  synthesisStale:
-    'Spoken text, timing or language changed. Review the spoken layer and generate again.',
+  synthesisStale: 'Spoken layer changed — generate again.',
   synthesisMissing: 'No local voice model is configured.',
   synthesisRuntime: 'Voice generation is not installed, or is the wrong version.',
   synthesisVoiceMissing: 'Choose one of the available voices.',
@@ -67,7 +66,6 @@ export const synthesisEn = {
     'Voice cloning is not installed yet. Install it from Settings, then retry.',
   synthesisCloneEngine: 'This engine cannot clone voices. Switch to the Turbo model.',
   synthesisCloneAudio: 'Choose a clip that is 3–8 seconds long.',
-  synthesisCloudCharacters:
-    'VieNeu Cloud bills per character: this run sends {{count}}. Each request has a 50-character minimum.',
+  synthesisCloudCharacters: 'Billed: {{count}} characters (min 50).',
   synthesisFailed: 'Voice generation failed. Check the voice setup, then retry.',
 } as const;

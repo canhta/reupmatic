@@ -8,7 +8,6 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Music, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -144,14 +143,7 @@ export function SoundtrackPanel() {
             isDisabled={disabled}
             onChange={(gain_db) => update({ gain_db })}
           />
-          <Collapsible
-            trigger={
-              <Text type="body" weight="semibold">
-                {t('soundtrackDuckTitle')}
-              </Text>
-            }
-            defaultIsOpen={false}
-          >
+          <Collapsible trigger={t('soundtrackDuckTitle')} defaultIsOpen={false}>
             <VStack gap={3} paddingBlock={2}>
               <Switch
                 label={t('soundtrackDuck')}

@@ -2,7 +2,7 @@ import type { speechEn } from '../en/speech';
 
 export const speechVi = {
   speechTitle: 'Nhận dạng giọng nói',
-  speechComposition: 'Nhận dạng đoạn gốc trước khi ghép.',
+  speechComposition: 'Nhận dạng trước khi ghép.',
   speechNoAudio: 'Video không có âm thanh.',
   speechEngine: 'Bộ nhận dạng',
   speechStart: 'Nhận dạng giọng nói',
@@ -20,7 +20,7 @@ export const speechVi = {
   speechRecognizing: 'Đang nhận dạng giọng nói',
   speechDraft: 'Kết quả chép lời — chưa áp dụng',
   speechEmpty: 'Không tìm thấy lời nói — chưa thay gì.',
-  speechStaleHelp: 'Tài liệu đã đổi — xem lại trước khi thay bản chép lời.',
+  speechStaleHelp: 'Xem lại trước khi thay.',
   speechReview: 'Duyệt',
   speechApply: 'Thay bản chép lời',
   speechDiscard: 'Bỏ kết quả',

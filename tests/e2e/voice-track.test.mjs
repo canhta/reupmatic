@@ -76,14 +76,14 @@ const COPY = {
     gridHeaders: ['Captured spoken text', 'Timing (s)'],
     engineNatural: 'This engine speaks at its natural rate; the plan placed each line.',
     listen: 'Listen',
-    reviewed: 'I checked the text and listened for problems.',
+    reviewed: 'I listened to it',
     apply: 'Apply voice',
     applied: 'Voice track added to the project.',
     missing: 'No local voice model is configured.',
     setUp: 'Set up…',
     voicePanel: 'Generated voice',
-    voiceNone: 'No generated narration is applied to this project.',
-    voiceMix: 'Mix with source',
+    voiceNone: 'No narration applied to this project.',
+    voiceSource: 'Source audio',
     voiceGain: 'Narration level',
     voiceFadeIn: 'Fade in',
     voiceFadeOut: 'Fade out',
@@ -119,14 +119,14 @@ const COPY = {
     gridHeaders: ['Nội dung đọc đã chụp', 'Thời gian (s)'],
     engineNatural: 'Bộ máy này đọc ở tốc độ tự nhiên; kế hoạch đặt vị trí từng câu.',
     listen: 'Nghe',
-    reviewed: 'Tôi đã đối chiếu nội dung và nghe kiểm tra.',
+    reviewed: 'Tôi đã nghe lại',
     apply: 'Áp dụng giọng',
     applied: 'Đã thêm bản giọng đọc vào dự án.',
     missing: 'Chưa cấu hình mô hình giọng nói cục bộ.',
     setUp: 'Thiết lập…',
     voicePanel: 'Giọng đã tạo',
-    voiceNone: 'Chưa áp dụng giọng đọc nào cho project này.',
-    voiceMix: 'Trộn với nguồn',
+    voiceNone: 'Chưa áp dụng giọng đọc nào cho dự án này.',
+    voiceSource: 'Âm thanh gốc',
     voiceGain: 'Âm lượng giọng đọc',
     voiceFadeIn: 'Mờ vào',
     voiceFadeOut: 'Mờ ra',
@@ -405,7 +405,7 @@ for (const locale of ['en', 'vi']) {
           .fill('Cảm ơn bạn đã theo dõi — bản đã sửa.');
         await page.getByText(copy.staleVoice).first().waitFor();
         assert.equal(
-          await page.getByRole('button', { name: copy.voiceMix, exact: true }).isDisabled(),
+          await page.getByRole('combobox', { name: copy.voiceSource, exact: true }).isDisabled(),
           true,
           'a stale track locks its settings',
         );
@@ -427,7 +427,7 @@ for (const locale of ['en', 'vi']) {
         await keep.click();
         await page.getByText(copy.staleVoice).first().waitFor({ state: 'hidden' });
         assert.equal(
-          await page.getByRole('button', { name: copy.voiceMix, exact: true }).isDisabled(),
+          await page.getByRole('combobox', { name: copy.voiceSource, exact: true }).isDisabled(),
           false,
           'keeping the existing audio unlocks the settings',
         );

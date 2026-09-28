@@ -1,6 +1,6 @@
 export const speechEn = {
   speechTitle: 'Recognize speech',
-  speechComposition: 'Recognize the original clip before composing.',
+  speechComposition: 'Recognize before composing.',
   speechNoAudio: 'This video has no audio.',
   speechEngine: 'Recognition engine',
   speechStart: 'Recognize speech',
@@ -18,7 +18,7 @@ export const speechEn = {
   speechRecognizing: 'Recognizing speech',
   speechDraft: 'Transcript result — not applied',
   speechEmpty: 'No speech found — nothing was replaced.',
-  speechStaleHelp: 'Document changed — review before replacing the transcript.',
+  speechStaleHelp: 'Review before replacing.',
   speechReview: 'Review',
   speechApply: 'Replace transcript',
   speechDiscard: 'Discard result',

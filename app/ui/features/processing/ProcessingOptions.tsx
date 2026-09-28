@@ -73,14 +73,7 @@ export function ProcessingOptions({
           onChange={(editing) => update({ ...(value ?? {}), editing })}
         />
         {showSubtitleStyle && (
-          <Collapsible
-            trigger={
-              <Text type="body" weight="semibold">
-                {t('styleTitle')}
-              </Text>
-            }
-            defaultIsOpen={false}
-          >
+          <Collapsible trigger={t('styleTitle')} defaultIsOpen={false}>
             <SubtitleStyleForm
               value={value?.subtitle_style}
               disabled={disabled}
@@ -129,14 +122,7 @@ export function ProcessingOptions({
                   changeLanguage(language);
               }}
             />
-            <Collapsible
-              trigger={
-                <Text type="body" weight="semibold">
-                  {t('visionOcrOptions')}
-                </Text>
-              }
-              defaultIsOpen={false}
-            >
+            <Collapsible trigger={t('visionOcrOptions')} defaultIsOpen={false}>
               <Grid columns={2} gap={3}>
                 <NumberInput
                   label={t('visionSample')}

@@ -38,14 +38,7 @@ export function FindReplaceBar({
           }))}
         />
       </FormLayout>
-      <Collapsible
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('rulesAdvanced')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible trigger={t('rulesAdvanced')} defaultIsOpen={false}>
         <FormLayout direction="vertical">
           <Selector
             label={t('rulesMode')}

@@ -149,14 +149,7 @@ function LineLengthSection() {
     editor.changeLineLength({ ...settings, ...patch });
   const defaultCps = transcript.language === 'zh' ? CHINESE_CPS : LATIN_CPS;
   return (
-    <Collapsible
-      trigger={
-        <Text type="body" weight="semibold">
-          {t('lineLengthTitle')}
-        </Text>
-      }
-      defaultIsOpen={false}
-    >
+    <Collapsible trigger={t('lineLengthTitle')} defaultIsOpen={false}>
       <VStack gap={2} paddingBlock={2}>
         <Selector
           label={t('lineLengthMode')}

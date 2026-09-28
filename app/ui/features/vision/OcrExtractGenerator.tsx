@@ -74,14 +74,7 @@ export function OcrSetup() {
             }
           />
         </FormLayout>
-        <Collapsible
-          trigger={
-            <Text type="body" weight="semibold">
-              {t('visionOcrOptions')}
-            </Text>
-          }
-          defaultIsOpen={false}
-        >
+        <Collapsible trigger={t('visionOcrOptions')} defaultIsOpen={false}>
           <Grid columns={2} gap={3}>
             <NumberInput
               label={t('visionSample')}
@@ -207,11 +200,6 @@ export function OcrReview() {
           {t('visionSrtSaved')}
         </Text>
       )}
-      {draft.data.scope === 'full-source' && (
-        <Text as="p" type="body">
-          {t('visionExtractEvidence', { count: draft.data.evidence?.observation_count })}
-        </Text>
-      )}
       {!draftCurrent && <Banner status="warning" title={t('visionDraftStale')} />}
       {!draft.data.cues.length ? (
         <EmptyState isCompact title={t('visionNoText')} />
@@ -227,7 +215,7 @@ export function OcrReview() {
       )}
       <Collapsible trigger={t('visionEvidence')} defaultIsOpen={false}>
         <Text as="p" type="body">
-          {t('visionEvidenceLimit')}
+          {t('visionExtractEvidence', { count: draft.data.evidence?.observation_count })}
         </Text>
         <div className="vision-evidence">
           {draft.data.observations.slice(0, 20).map((item) => (

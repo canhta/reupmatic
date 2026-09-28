@@ -1,7 +1,6 @@
 import { Section } from '@astryxdesign/core/Section';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -66,11 +65,6 @@ export function SubtitleStylesPanel() {
           ]}
           onChange={(next) => setScope(next === 'cue' ? 'cue' : 'global')}
         />
-        {!selected && (
-          <Text as="p" type="body" role="status">
-            {t('styleChooseCue')}
-          </Text>
-        )}
         <SubtitleTemplates
           value={effectiveScope === 'cue' ? selected?.style : globalStyle}
           disabled={disabled}

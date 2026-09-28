@@ -101,11 +101,6 @@ export function TranslateSetup() {
             }}
           />
         </FormLayout>
-        {!source.cues.length && (
-          <Text as="p" display="block" type="body" role="status">
-            {t('textLayerEmpty')}
-          </Text>
-        )}
         {source.stale && <Banner status="warning" title={t('textLayerStale')} />}
         <TranslationRules rules={rules} onChange={setRules} disabled={busy} />
         <GeneratorFooter
@@ -231,11 +226,7 @@ function TranslationDraftReview({
         width="100%"
         isDisabled={disabled}
         options={[
-          {
-            value: 'keep-existing',
-            label: t('translationKeep'),
-            description: t('translationKeepHelp'),
-          },
+          { value: 'keep-existing', label: t('translationKeep') },
           {
             value: 'replace-all',
             label: t('translationReplace'),
@@ -260,13 +251,7 @@ function TranslationDraftReview({
               removed: preview.removed,
             })}
           </Text>
-          {!fresh && (
-            <Banner
-              status="warning"
-              title={t('rulesStale')}
-              description={t('translationStaleHelp')}
-            />
-          )}
+          {!fresh && <Banner status="warning" title={t('translationSourceChanged')} />}
           <ReviewRows
             ariaLabel={t('translationComparison')}
             entries={ids.map((id) => {

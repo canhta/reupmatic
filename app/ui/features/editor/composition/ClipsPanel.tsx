@@ -47,15 +47,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
   const update = useEditingUpdate();
   return (
     <CollapsibleGroup type="multiple" hasDividers density="compact">
-      <Collapsible
-        value="video"
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('editVideoTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible value="video" trigger={t('editVideoTitle')} defaultIsOpen={false}>
         <VideoTools
           value={editor.processing?.editing ?? {}}
           disabled={disabled}
@@ -63,15 +55,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
           toggle={Switch}
         />
       </Collapsible>
-      <Collapsible
-        value="fade"
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('editFadeTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible value="fade" trigger={t('editFadeTitle')} defaultIsOpen={false}>
         <FadeTools
           value={editor.processing?.editing ?? {}}
           disabled={disabled}
@@ -79,15 +63,7 @@ function GlobalEditSections({ disabled }: { disabled: boolean }) {
           toggle={Switch}
         />
       </Collapsible>
-      <Collapsible
-        value="logo"
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('editLogoTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible value="logo" trigger={t('editLogoTitle')} defaultIsOpen={false}>
         <LogoTools
           value={editor.processing?.editing ?? {}}
           disabled={disabled}
@@ -144,6 +120,11 @@ function WholeVideoClip() {
             step={0.1}
             isWheelEnabled={false}
             isDisabled={disabled}
+            status={
+              outputDuration === undefined
+                ? { type: 'error', message: t('editRangeInvalid') }
+                : undefined
+            }
             onChange={(value) =>
               update({ trim: { ...trim, end_ms: Math.round(value * 1000) } as TimeRange })
             }
@@ -162,11 +143,11 @@ function WholeVideoClip() {
         isDisabled={disabled}
         onChange={(speed) => update({ speed })}
       />
-      <Text type="body" role="status">
-        {outputDuration === undefined
-          ? t('editRangeInvalid')
-          : t('editDuration', { seconds: (outputDuration / 1000).toFixed(3) })}
-      </Text>
+      {outputDuration !== undefined && (
+        <Text type="body" role="status">
+          {t('editDuration', { seconds: (outputDuration / 1000).toFixed(3) })}
+        </Text>
+      )}
     </VStack>
   );
 }

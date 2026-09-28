@@ -6,13 +6,13 @@ export const synthesisVi = {
   synthesisScope: 'Các câu cần tạo giọng',
   synthesisAll: 'Toàn bộ lớp nội dung đọc',
   synthesisSelected: 'Câu đang chọn',
-  synthesisSelectionHelp: 'Chọn một câu trong bảng biên tập trước.',
+  synthesisSelectionHelp: 'Chọn một câu trước.',
   synthesisStart: 'Tạo giọng',
   synthesisRunning: 'Đang tạo giọng nói',
   synthesisDraft: 'Giọng đã tạo — chưa áp dụng',
   synthesisCaptured:
     '{{language}} · giọng {{voice}} · {{count}} câu · {{duration}} giây · {{runtime}}',
-  synthesisSession: 'Lưu file WAV trước khi đóng — không tự lưu.',
+  synthesisSession: 'Không tự lưu.',
   synthesisComparison: 'Thời gian giọng đã chụp',
   synthesisWords: 'Nội dung đọc đã chụp',
   synthesisTiming: 'Thời gian (s)',
@@ -29,7 +29,7 @@ export const synthesisVi = {
     '{{line}}: khoảng {{slot}} giây, lời nói {{speech}} giây, vượt {{overrun}} giây',
   synthesisListen: 'Nghe',
   synthesisPlayer: 'Âm thanh bản nháp giọng đọc',
-  synthesisReviewed: 'Tôi đã đối chiếu nội dung và nghe kiểm tra.',
+  synthesisReviewed: 'Tôi đã nghe lại',
   synthesisApply: 'Áp dụng giọng',
   synthesisApplied: 'Đã thêm bản giọng đọc vào dự án.',
   synthesisSaveWav: 'Lưu WAV',
@@ -38,8 +38,7 @@ export const synthesisVi = {
   synthesisVerifyingArtifact: 'Đang kiểm tra âm thanh đã chụp',
   synthesisSaving: 'Đang lưu bản giọng đọc đã chụp',
   synthesisSaved: 'Đã lưu {{name}}',
-  synthesisStale:
-    'Nội dung đọc, thời gian hoặc ngôn ngữ đã đổi. Duyệt lại lớp nội dung đọc và tạo lại.',
+  synthesisStale: 'Lớp nội dung đọc đã đổi — tạo lại.',
   synthesisMissing: 'Chưa cấu hình mô hình giọng nói cục bộ.',
   synthesisRuntime: 'Phần tạo giọng nói chưa cài hoặc sai phiên bản.',
   synthesisVoiceMissing: 'Chọn một trong các giọng có sẵn.',
@@ -66,7 +65,6 @@ export const synthesisVi = {
   synthesisCloneUnavailable: 'Chưa cài nhân bản giọng. Cài trong Cài đặt rồi thử lại.',
   synthesisCloneEngine: 'Bộ máy này không nhân bản được giọng. Chuyển sang mô hình Turbo.',
   synthesisCloneAudio: 'Chọn đoạn âm thanh dài 3–8 giây.',
-  synthesisCloudCharacters:
-    'VieNeu Cloud tính tiền theo ký tự: lần này gửi {{count}}. Mỗi yêu cầu tối thiểu 50 ký tự.',
+  synthesisCloudCharacters: 'Tính phí: {{count}} ký tự (tối thiểu 50).',
   synthesisFailed: 'Tạo giọng nói thất bại. Kiểm tra phần giọng nói rồi thử lại.',
 } satisfies Record<keyof typeof synthesisEn, string>;

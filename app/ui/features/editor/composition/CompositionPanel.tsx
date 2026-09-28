@@ -172,6 +172,7 @@ export function CompositionPanel() {
                   <NumberInput
                     label={t('compositionIn')}
                     units="s"
+                    labelTooltip={t('compositionClock')}
                     width="100%"
                     value={draft.start_ms / 1000}
                     min={0}
@@ -184,6 +185,7 @@ export function CompositionPanel() {
                   <NumberInput
                     label={t('compositionOut')}
                     units="s"
+                    labelTooltip={t('compositionClock')}
                     width="100%"
                     value={draft.end_ms / 1000}
                     min={0}
@@ -238,6 +240,7 @@ export function CompositionPanel() {
                         />
                         <Button
                           label={t('compositionJoin')}
+                          tooltip={t('compositionJoinHelp')}
                           isDisabled={commandDisabled || !canJoin}
                           onClick={() => apply({ kind: 'join', id: draft.id })}
                         />
@@ -261,9 +264,6 @@ export function CompositionPanel() {
                     }
                   />
                 </div>
-                <Text as="p" type="body">
-                  {t('compositionJoinHelp')}
-                </Text>
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   <Button
                     label={t('compositionApply')}

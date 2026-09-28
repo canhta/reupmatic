@@ -1,7 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../core/editing/edit-recipe';
@@ -29,15 +28,7 @@ export function EditingOptions({
   return (
     <VStack gap={3}>
       <CollapsibleGroup type="multiple" hasDividers density="compact">
-        <Collapsible
-          value="video"
-          trigger={
-            <Text type="body" weight="semibold">
-              {t('editVideoTitle')}
-            </Text>
-          }
-          defaultIsOpen={false}
-        >
+        <Collapsible value="video" trigger={t('editVideoTitle')} defaultIsOpen={false}>
           <VideoTools
             value={value ?? {}}
             disabled={disabled}
@@ -45,15 +36,7 @@ export function EditingOptions({
             toggle={CheckboxInput}
           />
         </Collapsible>
-        <Collapsible
-          value="fade"
-          trigger={
-            <Text type="body" weight="semibold">
-              {t('editFadeTitle')}
-            </Text>
-          }
-          defaultIsOpen={false}
-        >
+        <Collapsible value="fade" trigger={t('editFadeTitle')} defaultIsOpen={false}>
           <FadeTools
             value={value ?? {}}
             disabled={disabled}
@@ -61,15 +44,7 @@ export function EditingOptions({
             toggle={CheckboxInput}
           />
         </Collapsible>
-        <Collapsible
-          value="audio"
-          trigger={
-            <Text type="body" weight="semibold">
-              {t('editAudioTitle')}
-            </Text>
-          }
-          defaultIsOpen={false}
-        >
+        <Collapsible value="audio" trigger={t('editAudioTitle')} defaultIsOpen={false}>
           <AudioTools
             value={value ?? {}}
             disabled={disabled}

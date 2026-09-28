@@ -22,7 +22,7 @@ export const textLayersEn = {
   textCopyPreview: 'Preview replacement',
   textCopyApply: 'Replace layer',
   textCopyCount: '{{count}} cue(s) replace the whole {{target}} layer, including extra cues.',
-  textLayerEmpty: 'The source layer is empty. Add text or choose another source.',
+  textLayerEmpty: 'Source layer is empty.',
   textLayerInvalid: 'The text layer is invalid. Existing content has not been replaced.',
   textLayerTooLarge: 'Text layer too large (1 MB limit). Shorten it.',
 } as const;

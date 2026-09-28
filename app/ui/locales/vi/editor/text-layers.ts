@@ -23,7 +23,7 @@ export const textLayersVi = {
   textCopyPreview: 'Xem trước thay thế',
   textCopyApply: 'Thay lớp',
   textCopyCount: '{{count}} câu thay toàn bộ lớp {{target}}, kể cả câu bổ sung.',
-  textLayerEmpty: 'Lớp nguồn trống. Thêm văn bản hoặc chọn nguồn khác.',
+  textLayerEmpty: 'Lớp nguồn trống.',
   textLayerInvalid: 'Lớp văn bản không hợp lệ. Chưa thay nội dung hiện tại.',
   textLayerTooLarge: 'Lớp văn bản quá lớn (giới hạn 1 MB). Rút ngắn lại.',
 } satisfies Record<keyof typeof textLayersEn, string>;

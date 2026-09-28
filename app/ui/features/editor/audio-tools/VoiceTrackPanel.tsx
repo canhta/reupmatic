@@ -3,8 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { StatusDot } from '@astryxdesign/core/StatusDot';
-import { proportional, Table } from '@astryxdesign/core/Table';
+import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +12,6 @@ import { InspectorPanelSection } from '../../../design-system/InspectorPanelSect
 import { useEditor } from '../EditorContext';
 
 type VoiceTrackEdit = Partial<Pick<VoiceTrack, 'mode' | 'gain_db' | 'fade_in_ms' | 'fade_out_ms'>>;
-type VoiceModeRow = { key: 'replace' | 'mix'; label: string; help: string };
 
 export function VoiceTrackPanel() {
   const { t } = useTranslation();
@@ -32,10 +30,6 @@ export function VoiceTrackPanel() {
   const disabled = busy || track.stale;
   const duration = track.artifact.duration_ms / 1000;
   const change = (patch: VoiceTrackEdit) => editor.changeVoiceTrack({ ...track, ...patch });
-  const modes: VoiceModeRow[] = [
-    { key: 'replace', label: t('voiceTrackReplace'), help: t('voiceTrackReplaceHelp') },
-    { key: 'mix', label: t('voiceTrackMix'), help: t('voiceTrackMixHelp') },
-  ];
   return (
     <InspectorPanelSection title={t('voiceTrackTitle')}>
       <VStack gap={3}>
@@ -47,43 +41,17 @@ export function VoiceTrackPanel() {
           })}
         </Text>
         {track.stale && <Banner status="warning" title={t('synthesisVoiceStale')} />}
-        <Table
-          density="compact"
-          aria-label={t('voiceTrackMode')}
-          data={modes}
-          idKey="key"
-          emptyState={false}
-          columns={[
-            {
-              key: 'mode',
-              header: t('voiceTrackModeColumn'),
-              width: proportional(1, { minWidth: 0 }),
-              renderCell: (mode) => (
-                <HStack gap={2} vAlign="center">
-                  {mode.key === track.mode && (
-                    <StatusDot
-                      variant="accent"
-                      label={t('voiceTrackActive')}
-                      tooltip={t('voiceTrackActive')}
-                    />
-                  )}
-                  <Button
-                    label={mode.label}
-                    variant="ghost"
-                    size="sm"
-                    isDisabled={disabled}
-                    onClick={() => change({ mode: mode.key })}
-                  />
-                </HStack>
-              ),
-            },
-            {
-              key: 'behavior',
-              header: t('voiceTrackBehaviorColumn'),
-              width: proportional(1, { minWidth: 0 }),
-              renderCell: (mode) => <Text type="body">{mode.help}</Text>,
-            },
+        <Selector
+          label={t('voiceTrackSourceAudio')}
+          value={track.mode}
+          isDisabled={disabled}
+          options={[
+            { value: 'replace', label: t('voiceTrackReplace') },
+            { value: 'mix', label: t('voiceTrackMix') },
           ]}
+          onChange={(mode) => {
+            if (mode === 'replace' || mode === 'mix') change({ mode });
+          }}
         />
         <Grid columns={2} gap={3}>
           <NumberInput

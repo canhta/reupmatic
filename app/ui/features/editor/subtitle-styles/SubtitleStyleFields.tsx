@@ -96,13 +96,19 @@ const coverFields: {
   { key: 'width_pct', min: 2, max: 100 },
   { key: 'height_pct', min: 2, max: 100 },
 ];
-const advancedNumeric: { key: keyof SubtitleStyle; min: number; max: number; step: number }[] = [
-  { key: 'outline_pct', min: 0, max: 2, step: 0.05 },
-  { key: 'shadow_pct', min: 0, max: 2, step: 0.05 },
+const advancedNumeric: {
+  key: keyof SubtitleStyle;
+  min: number;
+  max: number;
+  step: number;
+  units?: string;
+}[] = [
+  { key: 'outline_pct', min: 0, max: 2, step: 0.05, units: '×' },
+  { key: 'shadow_pct', min: 0, max: 2, step: 0.05, units: '×' },
   { key: 'box_opacity', min: 0, max: 1, step: 0.05 },
-  { key: 'margin_x_pct', min: 0, max: 40, step: 1 },
-  { key: 'margin_y_pct', min: 0, max: 40, step: 1 },
-  { key: 'spacing_pct', min: -0.2, max: 2, step: 0.05 },
+  { key: 'margin_x_pct', min: 0, max: 40, step: 1, units: '%' },
+  { key: 'margin_y_pct', min: 0, max: 40, step: 1, units: '%' },
+  { key: 'spacing_pct', min: -0.2, max: 2, step: 0.05, units: '×' },
 ];
 
 export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, onFitCover }: Props) {
@@ -122,6 +128,7 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
         />
         <NumberInput
           label={t('style_font_size_pct')}
+          units="%"
           value={Number(value.font_size_pct)}
           min={1}
           max={15}
@@ -176,18 +183,10 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
           />
         ))}
       </Grid>
-      <Collapsible
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('styleCoverBand')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible trigger={t('styleCoverBand')} defaultIsOpen={false}>
         <VStack gap={3}>
           <Cover
             label={t('styleCover')}
-            description={t('styleCoverNote')}
             value={value.cover !== null}
             isDisabled={disabled}
             onChange={(on) => onChange({ ...value, cover: on ? defaultCoverBand(value) : null })}
@@ -275,14 +274,7 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
           )}
         </VStack>
       </Collapsible>
-      <Collapsible
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('styleAnimation')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible trigger={t('styleAnimation')} defaultIsOpen={false}>
         <FormLayout direction="vertical">
           <Selector
             label={t('styleInPreset')}
@@ -304,6 +296,7 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
           />
           <NumberInput
             label={t('styleInDuration')}
+            units="ms"
             value={value.animation.in.duration_ms}
             min={0}
             max={3000}
@@ -341,6 +334,7 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
           />
           <NumberInput
             label={t('styleOutDuration')}
+            units="ms"
             value={value.animation.out.duration_ms}
             min={0}
             max={3000}
@@ -377,19 +371,13 @@ export function SubtitleStyleFields({ value, disabled, coverToggle, onChange, on
           />
         </FormLayout>
       </Collapsible>
-      <Collapsible
-        trigger={
-          <Text type="body" weight="semibold">
-            {t('styleShadowBackground')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
+      <Collapsible trigger={t('styleShadowBackground')} defaultIsOpen={false}>
         <FormLayout direction="vertical">
-          {advancedNumeric.map(({ key, min, max, step }) => (
+          {advancedNumeric.map(({ key, min, max, step, units }) => (
             <NumberInput
               key={key}
               label={t(`style_${key}`)}
+              {...(units ? { units } : {})}
               value={Number(value[key])}
               min={min}
               max={max}

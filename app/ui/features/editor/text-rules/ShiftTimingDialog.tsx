@@ -42,6 +42,7 @@ export function ShiftTimingDialog({ isOpen, onClose }: { isOpen: boolean; onClos
         <FormLayout direction="vertical">
           <NumberInput
             label={t('timingDelta')}
+            units="ms"
             value={delta}
             min={-86400000}
             max={86400000}
