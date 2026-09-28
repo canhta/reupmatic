@@ -339,7 +339,7 @@ export function CuePanel() {
                                 label={
                                   <Text
                                     as="span"
-                                    type="supporting"
+                                    type="body"
                                     size="xsm"
                                     hasTabularNumbers
                                     aria-hidden="true"

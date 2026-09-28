@@ -142,7 +142,6 @@ export function ProjectMediaSection() {
 
   return (
     <VStack gap={2} className="project-media" onContextMenuCapture={capture}>
-      {}
       <Button
         label={t('mediaAdd')}
         size="sm"

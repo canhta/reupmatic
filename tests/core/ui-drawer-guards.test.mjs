@@ -15,22 +15,14 @@ function tsxFiles(directory) {
   });
 }
 
-// Files the drawer refactor does not own yet, or surfaces another worker is editing. Each entry
+// Files the drawer refactor does not own, or surfaces another worker is editing. Each entry
 // records why the file is exempt; an entry is deleted once its slice lands. A trailing `/` matches
 // a directory prefix. The drawer refactor owns `design-system/`, the distribution detail drawers,
 // the profiles and taxonomy managers, `LibraryDetails`/`SourcesWorkspace`, `batch/` and `JobsTray`.
 const ALLOWED = {
-  // Voice worker (#28-#36) owns these editor tool-panel contents.
-  'features/editor/audio-tools/': 'voice worker owns the audio panels (#28-#36)',
-  'features/editor/composition/': 'composition worker owns the composition panels (#37-#42)',
-  'features/editor/text-layers/': 'text-layers panel lands in slices 3-11 (#50)',
-  'features/editor/text-rules/': 'text-rules panel lands in slices 3-11 (#50)',
-  'features/editor/video-tools/': 'edit panel lands in slices 3-11 (#50)',
-  'features/editor/EditorExportDialog.tsx': 'export dialog lands in slice 10 (#50)',
-  'features/processing/': 'shared options land in slices 3-11 (#50)',
-  // Subtitles and Media drawers land in slice 11 (#50).
-  'features/editor/CuePanel.tsx': 'subtitles drawer lands in slice 11 (#50)',
-  'features/editor/ProjectMediaSection.tsx': 'media drawer lands in slice 11 (#50)',
+  // Pickers rendered on non-drawer surfaces (automation, library, folders).
+  'features/profiles/ProfilePicker.tsx': 'picker on a non-drawer surface',
+  'features/taxonomy/LabelPicker.tsx': 'picker on a non-drawer surface',
   // Not drawer surfaces.
   'features/automation/': 'not a drawer surface',
   'features/catalog/': 'not a drawer surface',
@@ -50,9 +42,6 @@ const ALLOWED = {
   'shell/LocaleSelect.tsx': 'not a drawer surface',
   'shell/NotificationsButton.tsx': 'not a drawer surface',
   'shell/WorkspaceStatusBar.tsx': 'not a drawer surface',
-  // Picker contents other slices own.
-  'features/profiles/ProfilePicker.tsx': 'profile picker lands in slices 3-11 (#50)',
-  'features/taxonomy/LabelPicker.tsx': 'label picker lands in slices 3-11 (#50)',
 };
 
 function isAllowed(relative) {

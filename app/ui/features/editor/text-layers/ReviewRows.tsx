@@ -23,7 +23,7 @@ export function ReviewRows({ entries, ariaLabel }: { entries: ReviewEntry[]; ari
         <ListItem
           key={entry.key}
           label={
-            <Text as="span" display="block" type="supporting" size="xsm" hasTabularNumbers>
+            <Text as="span" display="block" type="body" size="xsm" hasTabularNumbers>
               {entry.time}
             </Text>
           }
@@ -32,7 +32,7 @@ export function ReviewRows({ entries, ariaLabel }: { entries: ReviewEntry[]; ari
               {entry.blocks.map((block) => (
                 <Stack direction="vertical" gap={0.5} key={block.key}>
                   {block.label && (
-                    <Text as="span" display="block" type="supporting" size="xsm">
+                    <Text as="span" display="block" type="body" size="xsm">
                       {block.label}
                     </Text>
                   )}

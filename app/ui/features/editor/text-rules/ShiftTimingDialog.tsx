@@ -60,7 +60,7 @@ export function ShiftTimingDialog({ isOpen, onClose }: { isOpen: boolean; onClos
             }))}
           />
         </FormLayout>
-        <Text as="p" type="supporting">
+        <Text as="p" type="body">
           {t('timingHelp')}
         </Text>
         {error && <Banner status="error" title={t('timingRange')} />}

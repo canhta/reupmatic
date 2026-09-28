@@ -151,11 +151,11 @@ export function CompositionPanel() {
                     }
                     description={
                       <Stack direction="vertical" gap={0}>
-                        <Text as="span" type="supporting">
+                        <Text as="span" type="body">
                           {t('compositionSourceRange')}: {(span.clip.start_ms / 1000).toFixed(3)}–
                           {(span.clip.end_ms / 1000).toFixed(3)} s · {span.clip.speed}×
                         </Text>
-                        <Text as="span" type="supporting">
+                        <Text as="span" type="body">
                           {t('compositionTimelineRange')}: {(span.start_ms / 1000).toFixed(3)}–
                           {(span.end_ms / 1000).toFixed(3)} s
                         </Text>

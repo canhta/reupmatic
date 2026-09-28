@@ -40,7 +40,7 @@ export function FindReplaceBar({
       </FormLayout>
       <Collapsible
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
             {t('rulesAdvanced')}
           </Text>
         }
@@ -65,7 +65,7 @@ export function FindReplaceBar({
           />
         </FormLayout>
         {state.mode === 'regex' && (
-          <Text as="p" type="supporting">
+          <Text as="p" type="body">
             {t('rulesRegexHelp')}
           </Text>
         )}
@@ -82,7 +82,6 @@ export function FindReplaceBar({
         <Banner
           status="error"
           title={t(state.error === 'TEXT_RULE_TIMEOUT' ? 'rulesTimeout' : 'rulesInvalid')}
-          description={<code>{state.error}</code>}
         />
       )}
       {state.preview && (

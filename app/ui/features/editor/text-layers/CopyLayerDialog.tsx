@@ -93,7 +93,6 @@ export function CopyLayerDialog({ isOpen, onClose }: { isOpen: boolean; onClose:
                     ? 'translationLanguageMismatch'
                     : 'textLayerInvalid',
             )}
-            description={<code>{error}</code>}
           />
         )}
         {preview && (
