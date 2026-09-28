@@ -46,11 +46,19 @@ export function OcrSetup() {
   // is not: that belongs on the primary button's tooltip, not the Set up banner.
   const noModel = !job.models?.ocr.available;
   const modelBlocked = noModel || languageMissing;
-  const status = job.checking
+  const modelReason = job.checking
     ? t('visionChecking')
     : modelBlocked
       ? t(visionErrorKey(job.models?.ocr.code || 'MODEL_MISSING'))
-      : '';
+      : undefined;
+  // Only the model earns the Set up Banner; the other blocking reasons ride on the button tooltip.
+  const blockedTooltip = modelReason
+    ? undefined
+    : !language
+      ? t('setLayerLanguageDisplayed')
+      : editor.composition
+        ? t('visionComposition')
+        : undefined;
 
   return (
     <InspectorPanelSection title={t('visionExtractTitle')}>
@@ -103,7 +111,7 @@ export function OcrSetup() {
         </Collapsible>
         <GeneratorFooter
           readiness={{
-            modelReason: status || undefined,
+            modelReason,
             checking: job.checking,
             canSetUp: modelBlocked,
             onSetUp: () => void editor.openSettings('processing'),
@@ -118,7 +126,7 @@ export function OcrSetup() {
             label={t('visionExtractFull')}
             variant="primary"
             width="100%"
-            tooltip={!language && !modelBlocked ? t('setLayerLanguageDisplayed') : undefined}
+            tooltip={blockedTooltip}
             isDisabled={busy || !hasOcr || !language || Boolean(editor.composition)}
             onClick={() => {
               if (!language) return;

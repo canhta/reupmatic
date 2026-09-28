@@ -50,6 +50,22 @@ export function TranslateSetup() {
     value,
     label: t(`visionLanguage_${value}`),
   }));
+  const modelReason =
+    job.checking || !job.models?.available
+      ? job.checking
+        ? t('visionChecking')
+        : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))
+      : undefined;
+  // Only the model earns the Set up Banner; the other blocking reasons ride on the button tooltip.
+  const blockedTooltip = modelReason
+    ? undefined
+    : source.stale
+      ? t('textLayerStale')
+      : !source.cues.length
+        ? t('textLayerEmpty')
+        : !pairAvailable
+          ? t('translationPairMissing')
+          : undefined;
 
   return (
     <Section variant="transparent" padding={0} aria-label={t('translationTitle')}>
@@ -94,12 +110,7 @@ export function TranslateSetup() {
         <TranslationRules rules={rules} onChange={setRules} disabled={busy} />
         <GeneratorFooter
           readiness={{
-            modelReason:
-              job.checking || !job.models?.available
-                ? job.checking
-                  ? t('visionChecking')
-                  : t(translationErrorKey(job.models?.code || 'MODEL_MISSING'))
-                : undefined,
+            modelReason,
             checking: job.checking,
             canSetUp: Boolean(job.models && !job.models.available),
             onSetUp: () => void editor.openSettings('processing'),
@@ -114,6 +125,7 @@ export function TranslateSetup() {
             label={t('translationStart')}
             variant="primary"
             width="100%"
+            tooltip={blockedTooltip}
             isDisabled={
               busy || editor.opening || !pairAvailable || source.stale || !source.cues.length
             }

@@ -51,6 +51,22 @@ export function SpeechSetup() {
   // no language yet is not: that belongs on the primary button's tooltip, not the Set up banner.
   const anyEngineAvailable = Boolean(job.models && presentableSpeechEngines(job.models).length);
   const modelBlocked = !anyEngineAvailable || (language !== null && !available);
+  const modelReason = job.checking
+    ? t('visionChecking')
+    : modelBlocked
+      ? t(speechErrorKey(problemCode(job.models, language)))
+      : undefined;
+  // Only a missing or broken model earns the Set up Banner; every other blocking reason rides on
+  // the primary button's tooltip.
+  const blockedTooltip = modelReason
+    ? undefined
+    : !language
+      ? t('setLayerLanguageTranscript')
+      : editor.composition
+        ? t('speechComposition')
+        : !media?.has_audio
+          ? t('speechNoAudio')
+          : undefined;
 
   return (
     <InspectorPanelSection title={t('speechTitle')}>
@@ -83,11 +99,7 @@ export function SpeechSetup() {
         </FormLayout>
         <GeneratorFooter
           readiness={{
-            modelReason: job.checking
-              ? t('visionChecking')
-              : modelBlocked
-                ? t(speechErrorKey(problemCode(job.models, language)))
-                : undefined,
+            modelReason,
             checking: job.checking,
             canSetUp: modelBlocked,
             onSetUp: () => void editor.openSettings('processing'),
@@ -103,7 +115,7 @@ export function SpeechSetup() {
             label={t('speechStart')}
             variant="primary"
             width="100%"
-            tooltip={!language && !modelBlocked ? t('setLayerLanguageTranscript') : undefined}
+            tooltip={blockedTooltip}
             isDisabled={
               busy ||
               editor.opening ||
