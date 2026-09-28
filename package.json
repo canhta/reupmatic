@@ -64,7 +64,7 @@
     "lucide-react": "1.47.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-i18next": "17.0.14",
+    "react-i18next": "17.0.15",
     "wavesurfer.js": "7.12.12"
   },
   "devDependencies": {
