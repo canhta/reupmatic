@@ -35,6 +35,10 @@ updates:
       python-tools:
         patterns: [ruff, jsonschema]
         update-types: [minor, patch]
+    ignore:
+      # omegaconf 2.3 (RapidOCR vision pack) requires the 4.9 ANTLR runtime.
+      - dependency-name: antlr4-python3-runtime
+        versions: [">=4.10"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
