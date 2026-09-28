@@ -1,0 +1,58 @@
+/* Sits inside an InputGroup addon, so it takes the row's height less the addon inset. */
+.panel-color-swatch {
+  inline-size: calc(var(--size-element-sm) - var(--spacing-2));
+  block-size: calc(var(--size-element-sm) - var(--spacing-2));
+  padding: 0;
+  border: var(--border-width) solid var(--edge-subtle);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+.panel-color-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Drawn between rendered sections only; a section component that renders nothing adds no rule. */
+.panel-sections > :empty {
+  display: none;
+}
+.panel-sections > :not(:empty) ~ :not(:empty) {
+  padding-block-start: var(--spacing-4);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+/* Grid cells default to min-width: auto; without this a long path or link widens the panel. */
+.panel-rows > * > :last-child {
+  min-width: 0;
+}
+
+/* Grid's 1fr tracks keep an input's intrinsic width as their floor, pushing the second value out. */
+.panel-pair > * {
+  min-width: 0;
+}
+
+/* The facet list measures its own width, so it and the bar's start slot must take the bar's room
+   rather than their content's; otherwise nothing ever moves into "N more". */
+:has(> .filter-bar-facets),
+.filter-bar-facets {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Matches the label's inset, which lines it up with a control's text rather than a bare value. */
+.panel-value {
+  padding-block-start: calc(var(--border-width) + var(--spacing-1));
+  min-width: 0;
+}
+
+.panel-page {
+  inline-size: 100%;
+  max-inline-size: var(--panel-page-max-w);
+  margin-inline: auto;
+}
+
+/* Each PanelRows is its own grid sized to its longest label; on a page every section shares one. */
+.panel-page .panel-rows {
+  grid-template-columns: var(--panel-page-label-w) minmax(0, 1fr);
+}

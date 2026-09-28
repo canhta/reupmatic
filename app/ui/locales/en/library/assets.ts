@@ -1,0 +1,17 @@
+export const libraryAssetsEn = {
+  assetSearch: 'Find an asset or its content',
+  assetAttach: 'Attach',
+  assetEmptyHelp: 'No assets',
+  assetNoMatches: 'No matching assets',
+  assetDetails: 'Selected asset',
+  assetBytes: 'Size in bytes',
+  assetPreview: 'Preview file',
+  assetCheck: 'Check file',
+  assetRelated: 'Related assets',
+  assetSubtitleReadOnly: "Read-only — doesn't change your Editor captions.",
+  assetStatus_unchecked: 'Not checked during this selection',
+  assetStatus_available: 'Contents verified at last access',
+  assetStatus_missing: 'File unavailable',
+  assetStatus_changed: 'Contents differ from this record',
+  libraryLink_audio: 'Audio',
+} as const;

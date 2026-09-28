@@ -1,0 +1,238 @@
+name: Release
+
+# Manual only (owner decision): a release is a deliberate act, never a side effect of a
+# push. Provide the version and which platforms to build; signing secrets come from the repository's
+# `release` environment. Nothing here runs on push or pull_request.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.1.0). Written into package.json for the build."
+        required: true
+        type: string
+      prerelease:
+        description: "Publish as a pre-release (not offered to stable auto-update)."
+        required: false
+        type: boolean
+        default: false
+      platforms:
+        description: "Which platforms to build."
+        required: true
+        type: choice
+        options:
+          - both
+          - mac
+          - win
+        default: both
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reupmatic-release
+  cancel-in-progress: false
+
+jobs:
+  mac:
+    name: macOS
+    if: ${{ inputs.platforms != 'win' }}
+    runs-on: macos-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Set the release version
+        run: node scripts/set-version.mjs "${{ inputs.version }}"
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      # Packaging needs both staged: the bundled runtime and the media tools.
+      - run: pnpm run stage:python
+      - run: pnpm run stage:ffmpeg
+      - name: Import the Developer ID certificate before signing runtime packs
+        env:
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -z "$MAC_CSC_LINK" ]; then
+            echo "No macOS certificate configured; runtime packs will be unsigned." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/reupmatic-pack.keychain"
+          security create-keychain -p actions "$keychain"
+          printf '%s' "$MAC_CSC_LINK" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MAC_CSC_KEY_PASSWORD" \
+            -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k actions "$keychain" >/dev/null
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p actions "$keychain"
+          # codesign only looks in the search list; a new keychain is not on it.
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          # Pack signing runs before electron-builder imports the cert for the app.
+          identity=$(security find-identity -v -p codesigning "$keychain" \
+            | grep 'Developer ID Application' | head -1 | awk '{print $2}')
+          if [ -z "$identity" ]; then
+            echo "No Developer ID Application identity in the imported certificate." >&2
+            exit 1
+          fi
+          echo "REUPMATIC_MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+      - name: Ensure the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ inputs.version }}"
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              ${{ inputs.prerelease && '--prerelease' || '' }} \
+              --title "Reupmatic ${{ inputs.version }}" \
+              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
+      - name: Build and sign runtime packs
+        env:
+          REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
+          REUPMATIC_PACK_VERSION: ${{ inputs.version }}
+        run: pnpm run stage:packs
+      - name: Upload runtime packs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ inputs.version }}" release/runtime-packs/*.tar.gz \
+            --clobber -R "$GITHUB_REPOSITORY"
+      - run: pnpm run build
+        env:
+          REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}
+          REUPMATIC_META_BROKER_URL: ${{ vars.META_BROKER_URL }}
+      - name: Export signing credentials when configured
+        env:
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$MAC_CSC_LINK" ]; then
+            {
+              echo "CSC_LINK=$MAC_CSC_LINK"
+              echo "CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD"
+              echo "APPLE_ID=$APPLE_ID"
+              echo "APPLE_APP_SPECIFIC_PASSWORD=$APPLE_APP_SPECIFIC_PASSWORD"
+              echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No macOS certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Package, sign, notarize and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: pnpm exec electron-builder --mac --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
+
+  win:
+    name: Windows
+    if: ${{ inputs.platforms != 'mac' }}
+    runs-on: windows-latest
+    environment: release
+    # PowerShell silently no-ops `pnpm run`/`pnpm exec` on the Windows runner; bash does not.
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Set the release version
+        run: node scripts/set-version.mjs "${{ inputs.version }}"
+      - run: pnpm install --frozen-lockfile
+        env:
+          LEFTHOOK: "0"
+      - run: pnpm run stage:python
+      - run: pnpm run stage:ffmpeg
+      - name: Ensure the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ inputs.version }}"
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              ${{ inputs.prerelease && '--prerelease' || '' }} \
+              --title "Reupmatic ${{ inputs.version }}" \
+              --notes "Build artifacts for Reupmatic ${{ inputs.version }}."
+      - name: Build runtime packs
+        env:
+          REUPMATIC_RELEASE_TAG: v${{ inputs.version }}
+          REUPMATIC_PACK_VERSION: ${{ inputs.version }}
+        run: pnpm run stage:packs
+      - name: Upload runtime packs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ inputs.version }}" release/runtime-packs/*.tar.gz \
+            --clobber -R "$GITHUB_REPOSITORY"
+      - run: pnpm run build
+        env:
+          REUPMATIC_META_APP_ID: ${{ vars.META_APP_ID }}
+          REUPMATIC_META_BROKER_URL: ${{ vars.META_BROKER_URL }}
+      - name: Export signing credentials when configured
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -n "$WIN_CSC_LINK" ]; then
+            {
+              echo "CSC_LINK=$WIN_CSC_LINK"
+              echo "CSC_KEY_PASSWORD=$WIN_CSC_KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No Windows certificate configured; building unsigned." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Package, sign and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec electron-builder --win --publish always -c.publish.releaseType=${{ inputs.prerelease && 'prerelease' || 'release' }}
+
+  source:
+    name: Corresponding source
+    runs-on: ubuntu-latest
+    # The GPL offer ships with every release, whichever platforms it builds.
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+      # Pinned downloads and git commits only; no dependencies to install.
+      - name: Collect the corresponding source
+        run: node scripts/stage-gpl-source.mjs
+      - name: Ensure the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # A platform job may create the release at the same moment; a lost race is not a failure.
+        run: |
+          tag="v${{ inputs.version }}"
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              ${{ inputs.prerelease && '--prerelease' || '' }} \
+              --title "Reupmatic ${{ inputs.version }}" \
+              --notes "Build artifacts for Reupmatic ${{ inputs.version }}." || \
+            gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null
+      - name: Attach the corresponding source to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ inputs.version }}" release/corresponding-source/* \
+            --clobber -R "$GITHUB_REPOSITORY"
+
+# The pre-release flag controls whether electron-updater offers this build as a stable update;
+# electron-builder publishes to the GitHub release for `v<version>`. Signing secrets are optional —
+# with none configured the run still publishes unsigned.

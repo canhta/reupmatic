@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Reupmatic">
+  <!-- Favicon: the brand mark on the hero navy, so it holds up in both light
+       and dark browser chrome instead of vanishing as a bare glyph. -->
+  <rect width="32" height="32" rx="7" fill="#172033"/>
+  <svg x="5" y="5" width="22" height="22" viewBox="176 171 912 912" aria-hidden="true">
+    <path fill="#f1f3f8" fill-rule="evenodd" d="M425 304H859C953 304 1005 369 984 465L969 536C954 615 897 666 813 666H730L827 834H1023C1032 834 1037 837 1035 847L1017 936C1015 946 1011 950 1000 950H712C697 950 689 945 681 932L542 686C535 673 526 666 509 666H467L399 932C396 945 391 950 378 950H235C226 950 222 946 225 936L399 325C403 311 412 304 425 304ZM535 438C512 438 498 450 491 474L477 528C470 554 478 566 503 566H771C799 566 813 552 819 528L828 486C834 455 821 438 797 438H535Z"/>
+  </svg>
+</svg>

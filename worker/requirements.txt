@@ -1,0 +1,4 @@
+# Integration target, not an installed/tested lockfile in this environment.
+# Core probe/render/cancel runs with Python stdlib + FFmpeg/ffprobe.
+# Subtitle parsing and edited-cue serialization require this library.
+pysubs2==1.9.0

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:soundtrack:1",
+  "title": "Per-project local soundtrack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "mode",
+    "start_ms",
+    "end_ms",
+    "offset_ms",
+    "fade_in_ms",
+    "fade_out_ms",
+    "gain_db",
+    "muted",
+    "duck"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "name", "sha256", "duration_ms"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        }
+      }
+    },
+    "mode": {
+      "enum": ["replace", "mix"]
+    },
+    "start_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400000
+    },
+    "end_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400000
+    },
+    "offset_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400000
+    },
+    "fade_in_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400000
+    },
+    "fade_out_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400000
+    },
+    "gain_db": {
+      "type": "number",
+      "minimum": -60,
+      "maximum": 24
+    },
+    "duck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "amount_db", "release_ms"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "amount_db": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "release_ms": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 5000
+        }
+      }
+    },
+    "muted": {
+      "type": "boolean",
+      "description": "The music lane is muted: the clip stays on the timeline but is silent in preview and export."
+    }
+  },
+  "$comment": "Runtime enforces native-authorized absolute source paths, hash checks, 0 <= start < end <= audio duration and combined fades <= clip length. Offset is on edited output time. Music is not accelerated and plays once; trailing/leading gaps are silence. Ducking lowers the music under the voice track, or under original audio when there is no voice track; amount_db is the reduction at the documented -18 dBFS reference and release_ms is the recovery time."
+}

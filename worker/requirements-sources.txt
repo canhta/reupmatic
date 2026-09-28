@@ -1,0 +1,5 @@
+# Engine SDKs whose published metadata declares dependencies no worker code path imports.
+# Install with `--no-deps`; their real runtime dependencies are declared explicitly in
+# requirements-synthesis.txt and requirements-vision.txt.
+-r requirements-sources-synthesis.txt
+-r requirements-sources-vision.txt

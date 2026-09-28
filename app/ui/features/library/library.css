@@ -1,0 +1,47 @@
+.library-panel-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+}
+.library-panel-body > .business-workspace {
+  grid-row: 2;
+}
+.library-row {
+  cursor: pointer;
+}
+.library-table-scroll {
+  overflow-x: auto;
+}
+.library-file-name {
+  overflow-wrap: anywhere;
+}
+.library-cover {
+  display: block;
+  width: fit-content;
+  border: 1px solid var(--edge-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.library-import-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.library-asset-preview video {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+}
+.library-asset-preview audio {
+  width: 100%;
+}
+.library-asset-cues {
+  max-height: 26rem;
+  overflow: auto;
+}
+.library-cue-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

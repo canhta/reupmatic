@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:video-workbench:worker-event:1",
+  "title": "Worker event v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "event": {
+          "const": "progress"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "$comment": "Every queued operation passes through the two seam-generic phases (worker/runtime/operations.py's generated PROGRESS_QUEUED='queued', PROGRESS_RUNNING='running') before an optional handler-specific phase (e.g. 'rendering', 'processingOcr') takes over; handler phase names are domain-owned and not enumerated here."
+            },
+            "fraction": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": ["phase", "fraction"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["v", "id", "revision", "event", "data"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "event": {
+          "const": "error"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "pattern": "^[A-Z_]+$"
+            }
+          },
+          "required": ["code"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["v", "id", "revision", "event", "data"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "event": {
+          "const": "result"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "required": ["v", "id", "revision", "event", "data"],
+      "additionalProperties": false
+    }
+  ]
+}

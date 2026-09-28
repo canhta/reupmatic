@@ -1,0 +1,5 @@
+# Build tools for SOURCE_BUILDS (scripts/runtime-pack-source-builds.mjs), installed only into the
+# throwaway pack-builder CPython; nothing here ships.
+setuptools==84.0.0
+wheel==0.48.0
+cmake==4.4.3

@@ -1,0 +1,19 @@
+packages:
+  - web
+allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
+  electron-winstaller: false
+  lefthook: true
+  lfa-ponyfill: true
+minimumReleaseAgeExclude:
+  - lucide-react@1.47.0
+# @electron/osx-sign pins isbinaryfile ^4, whose 4.0.10 crashes (RangeError: Invalid array length)
+# while signing the bundled Python tree; 5.x is still CommonJS and app-builder-lib already uses it.
+overrides:
+  isbinaryfile: ^5.0.2
+onlyBuiltDependencies:
+  - "@astryxdesign/cli"
+  - "@astryxdesign/core"
+  - lefthook
+  - lfa-ponyfill

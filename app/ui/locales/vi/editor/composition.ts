@@ -1,0 +1,28 @@
+import type { compositionEn } from '../../en/editor/composition';
+
+export const compositionVi = {
+  compositionCueLimit: 'Quá nhiều đoạn phụ đề',
+  compositionClipLimit: 'Tối đa {{count}} clip',
+  compositionDiskLow: 'Hết dung lượng',
+  compositionEncoding: 'Đang ghép các đoạn đã chọn…',
+  compositionTitle: 'Đoạn',
+  compositionSummary_one: '{{count}} đoạn · {{seconds}} giây · {{width}} × {{height}} · 30 fps',
+  compositionSummary_other: '{{count}} đoạn · {{seconds}} giây · {{width}} × {{height}} · 30 fps',
+  compositionIn: 'Vào',
+  compositionOut: 'Ra',
+  compositionSpeed: 'Tốc độ',
+  compositionMore: 'Thao tác đoạn khác',
+  compositionApply: 'Áp dụng',
+  compositionReload: 'Khôi phục',
+  compositionEarlier: 'Lên trên',
+  compositionLater: 'Xuống dưới',
+  compositionSplit: 'Tách',
+  compositionJoin: 'Nối',
+  compositionRemove: 'Bỏ',
+  compositionDraft: 'Chưa áp dụng',
+  compositionStale: 'Đã cũ',
+  compositionInvalid: 'Khoảng không hợp lệ',
+  compositionDiscard: 'Bỏ khoảng đoạn chưa áp dụng để chọn đoạn khác?',
+  compositionRemoveConfirm: 'Bỏ đoạn này? File nguồn không bị ảnh hưởng.',
+  compositionAiUnavailable: 'Không dùng được khi bật OCR',
+} satisfies Record<keyof typeof compositionEn, string>;

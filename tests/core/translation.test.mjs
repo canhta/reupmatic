@@ -1,0 +1,678 @@
+import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
+import test from 'node:test';
+import { createProject, parseProject } from '../../dist-core/projects/project.js';
+import {
+  parseTranslationInput,
+  parseTranslationStatus,
+  validateTranslationResult,
+} from '../../dist-core/speech/translation/contracts.js';
+import { TranslationCoordinator } from '../../dist-core/speech/translation/coordinator.js';
+import {
+  applyTranslation,
+  prepareTranslation,
+  previewTranslation,
+} from '../../dist-core/speech/translation/review.js';
+import {
+  applyLayerCopy,
+  editTextLayer,
+  previewLayerCopy,
+  reviewLayerSource,
+  staleLayerSource,
+} from '../../dist-core/subtitles/layers/commands.js';
+import { getTextLayer, parseTextLayers } from '../../dist-core/subtitles/layers/document.js';
+import { translatedCueSync } from '../../dist-core/subtitles/layers/sync.js';
+import { defaultSubtitleStyle } from '../../dist-core/subtitles/style.js';
+
+const model = 'a'.repeat(64);
+const cue = (id, text, start = 0) => ({ id, text, start_ms: start, end_ms: start + 1000 });
+function document() {
+  let doc = {
+    cues: [cue('display-1', 'Displayed unchanged')],
+  };
+  doc = editTextLayer(doc, 'transcript', [cue('one', 'Hello'), cue('two', 'World', 1000)], {
+    language: 'en',
+  });
+  return editTextLayer(doc, 'spoken', [cue('voice', 'Voice unchanged')], { language: 'vi' });
+}
+function input(doc = document()) {
+  return prepareTranslation(doc, {
+    request_id: 'translate-12345678',
+    revision: 2,
+    source_layer: 'transcript',
+    source_language: 'en',
+    target_language: 'vi',
+    model_id: model,
+    rules: [{ find: 'Xin', replace: 'Kính' }],
+  });
+}
+function result(request) {
+  return {
+    kind: 'translation',
+    ...request.params,
+    runtime: 'controlled-test',
+    // A translated cue keeps its source identity and window; only the text changes.
+    cues: request.params.cues.map((c, index) => ({
+      ...c,
+      text: index ? 'Thế giới' : 'Kính chào',
+      source_cue_id: c.id,
+    })),
+  };
+}
+
+test('translation requests snapshot explicit languages, source token, cues and literal rules', () => {
+  const doc = document(),
+    request = input(doc);
+  assert.deepEqual(parseTranslationInput(request), request);
+  for (const patch of [
+    { source_language: ['en'] },
+    { target_language: 'en' },
+    { model_id: 'remote' },
+    { source_layer: 'translated' },
+    { rules: [{ find: '', replace: 'x' }] },
+    { path: '/private' },
+    { cues: [] },
+    { cues: [cue('empty', '  ')] },
+    { cues: [cue('long', 'a'.repeat(4001))] },
+  ]) {
+    assert.throws(() =>
+      parseTranslationInput({ ...request, params: { ...request.params, ...patch } }),
+    );
+  }
+  assert.throws(
+    () =>
+      prepareTranslation(doc, {
+        ...request.params,
+        request_id: request.request_id,
+        revision: 2,
+        source_language: 'zh',
+      }),
+    /TRANSLATION_LANGUAGE_MISMATCH/,
+  );
+  request.params.cues[0].text = 'Mutated request';
+  assert.equal(getTextLayer(doc, 'transcript').cues[0].text, 'Hello');
+});
+
+test('translation responses cannot change source correlation, IDs, timing, count or rules', () => {
+  const request = input(),
+    good = result(request);
+  assert.deepEqual(validateTranslationResult(good, request), good);
+  for (const patch of [
+    { source_token: 'other-token' },
+    { target_language: 'en' },
+    { model_id: 'b'.repeat(64) },
+    { rules: [] },
+    { cues: [] },
+    { cues: [...good.cues].reverse() },
+    { cues: good.cues.map((c) => ({ ...c, end_ms: c.end_ms + 1 })) },
+    { cues: good.cues.map((c) => ({ ...c, source_cue_id: 'foreign' })) },
+    {
+      cues: good.cues.map(({ source_cue_id: _source_cue_id, ...rest }) => rest),
+    },
+    { cues: good.cues.map((c) => ({ ...c, style: {} })) },
+    { command: 'download' },
+  ]) {
+    assert.throws(
+      () => validateTranslationResult({ ...good, ...patch }, request),
+      /INVALID_WORKER_RESPONSE/,
+    );
+  }
+});
+
+test('every translated cue records its source cue and keeps the exact source window', () => {
+  const doc = document(),
+    request = input(doc);
+  const next = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const source = new Map(request.params.cues.map((c) => [c.id, c]));
+  const translated = getTextLayer(next, 'translated').cues;
+  assert.equal(translated.length, source.size);
+  for (const cue of translated) {
+    const origin = source.get(cue.source_cue_id);
+    assert.ok(origin, `cue ${cue.id} records a real source cue`);
+    assert.equal(cue.start_ms, origin.start_ms);
+    assert.equal(cue.end_ms, origin.end_ms);
+  }
+});
+
+test('preview is pure; default apply retains every existing translation and other text layers', () => {
+  let doc = document();
+  doc = editTextLayer(
+    doc,
+    'translated',
+    [cue('one', 'Sửa tay'), cue('extra', 'Giữ đoạn riêng', 2000)],
+    { language: 'vi' },
+  );
+  const request = input(doc),
+    before = structuredClone(doc);
+  const preview = previewTranslation(doc, request, result(request), 'keep-existing');
+  assert.deepEqual(doc, before);
+  assert.equal(preview.kept, 2);
+  assert.equal(preview.added, 1);
+  const next = applyTranslation(doc, preview);
+  assert.deepEqual(getTextLayer(next, 'translated').cues, [
+    cue('one', 'Sửa tay'),
+    { ...cue('two', 'Thế giới', 1000), source_cue_id: 'two' },
+    cue('extra', 'Giữ đoạn riêng', 2000),
+  ]);
+  for (const name of ['displayed', 'spoken', 'transcript'])
+    assert.deepEqual(getTextLayer(next, name), getTextLayer(doc, name));
+  assert.equal(next.text_layers.translated.edited, true);
+  assert.equal(next.text_layers.translated.origin.kind, 'translation');
+  assert.deepEqual(next.text_layers.translated.origin.rules, request.params.rules);
+});
+
+test('whole replacement is explicit and target edits after preview invalidate it', () => {
+  const doc = editTextLayer(document(), 'translated', [cue('old', 'Manual')], { language: 'vi' });
+  const request = input(doc),
+    preview = previewTranslation(doc, request, result(request), 'replace-all');
+  const next = applyTranslation(doc, preview);
+  assert.deepEqual(getTextLayer(next, 'translated').cues, result(request).cues);
+  assert.deepEqual(getTextLayer(doc, 'translated').cues, [cue('old', 'Manual')]);
+  const edited = editTextLayer(doc, 'translated', [cue('old', 'New manual words')]);
+  assert.throws(() => applyTranslation(edited, preview), /STALE_OPERATION/);
+  assert.throws(() => applyTranslation(doc, { ...preview, cues: [] }), /STALE_OPERATION/);
+});
+
+test('changed source cannot be rebased into a generated draft; target-only edits may be reviewed separately', () => {
+  const doc = document(),
+    request = input(doc),
+    translated = result(request);
+  const changedSource = editTextLayer(doc, 'transcript', [cue('one', 'Different source')]);
+  assert.throws(
+    () => previewTranslation(changedSource, request, translated, 'keep-existing'),
+    /STALE_OPERATION/,
+  );
+  const changedTarget = editTextLayer(doc, 'translated', [cue('one', 'Manual')], {
+    language: 'vi',
+  });
+  assert.equal(previewTranslation(changedTarget, request, translated, 'keep-existing').kept, 1);
+});
+
+test('upstream edits stale translation and copies without replacing words; explicit source review retains provenance', () => {
+  const doc = document(),
+    request = input(doc);
+  let next = applyTranslation(
+    doc,
+    previewTranslation(doc, request, result(request), 'replace-all'),
+  );
+  next = applyLayerCopy(next, previewLayerCopy(next, 'translated', 'spoken'));
+  const before = structuredClone(next.text_layers.translated.cues);
+  next = editTextLayer(next, 'transcript', [cue('one', 'Changed source')], { language: 'en' });
+  assert.equal(next.text_layers.translated.stale, true);
+  assert.equal(next.text_layers.spoken.stale, true);
+  const reviewed = reviewLayerSource(next, previewLayerCopy(next, 'transcript', 'translated'));
+  assert.deepEqual(reviewed.text_layers.translated.cues, before);
+  assert.equal(reviewed.text_layers.translated.stale, false);
+  assert.equal(reviewed.text_layers.translated.origin.kind, 'translation');
+  assert.equal(reviewed.text_layers.spoken.stale, true);
+});
+
+test('a relabelled source names the language its stale translation expects until it is restored', () => {
+  let doc = { cues: [cue('display-1', 'Displayed')] };
+  doc = editTextLayer(doc, 'transcript', [cue('one', '你好')], { language: 'zh' });
+  const request = prepareTranslation(doc, {
+    request_id: 'translate-12345678',
+    revision: 2,
+    source_layer: 'transcript',
+    source_language: 'zh',
+    target_language: 'vi',
+    model_id: model,
+    rules: [],
+  });
+  doc = applyTranslation(doc, previewTranslation(doc, request, result(request), 'replace-all'));
+  assert.equal(staleLayerSource(doc, 'translated'), null);
+  assert.equal(staleLayerSource(doc, 'transcript'), null);
+  // Relabelling alone changes the transcript: it counts as an edit and stales the translation.
+  let next = editTextLayer(doc, 'transcript', getTextLayer(doc, 'transcript').cues, {
+    language: 'vi',
+  });
+  assert.equal(next.text_layers.transcript.edited, true);
+  assert.equal(next.text_layers.translated.stale, true);
+  assert.deepEqual(staleLayerSource(next, 'translated'), {
+    from: 'transcript',
+    language: { current: 'vi', expected: 'zh' },
+  });
+  assert.throws(
+    () => reviewLayerSource(next, previewLayerCopy(next, 'transcript', 'translated')),
+    /TRANSLATION_LANGUAGE_MISMATCH/,
+  );
+  next = editTextLayer(next, 'transcript', getTextLayer(next, 'transcript').cues, {
+    language: 'zh',
+  });
+  assert.deepEqual(staleLayerSource(next, 'translated'), { from: 'transcript' });
+  const reviewed = reviewLayerSource(next, previewLayerCopy(next, 'transcript', 'translated'));
+  assert.equal(reviewed.text_layers.translated.stale, false);
+  assert.equal(staleLayerSource(reviewed, 'translated'), null);
+});
+
+test('a stale copy names its source layer without a language expectation', () => {
+  let doc = document();
+  doc = applyLayerCopy(doc, previewLayerCopy(doc, 'transcript', 'spoken'));
+  doc = editTextLayer(doc, 'transcript', [cue('one', 'Changed')], { language: 'vi' });
+  assert.deepEqual(staleLayerSource(doc, 'spoken'), { from: 'transcript' });
+});
+
+test('translation rejects a source derived from translated text and prevents mixed-language preservation', () => {
+  let doc = document();
+  doc = editTextLayer(doc, 'translated', [cue('one', 'Bonjour')], { language: 'zh' });
+  const request = input(doc);
+  assert.throws(
+    () => previewTranslation(doc, request, result(request), 'keep-existing'),
+    /TRANSLATION_TARGET_LANGUAGE_MISMATCH/,
+  );
+  assert.equal(previewTranslation(doc, request, result(request), 'replace-all').cues.length, 2);
+  doc = applyLayerCopy(doc, previewLayerCopy(doc, 'translated', 'displayed'));
+  assert.throws(
+    () =>
+      prepareTranslation(doc, {
+        request_id: 'cycle-12345678',
+        revision: 2,
+        source_layer: 'displayed',
+        source_language: 'zh',
+        target_language: 'vi',
+        model_id: model,
+        rules: [],
+      }),
+    /TEXT_LAYER_CYCLE/,
+  );
+});
+
+test('translated cues report drift against their source and hand-retiming is a deliberate deviation', () => {
+  const doc = document(),
+    request = input(doc);
+  let next = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  assert.deepEqual(
+    translatedCueSync(next).map((cue) => [cue.id, cue.state]),
+    [
+      ['one', 'linked'],
+      ['two', 'linked'],
+    ],
+  );
+  // Hand-retiming a translated cue is allowed and shows as a deliberate deviation.
+  next = editTextLayer(
+    next,
+    'translated',
+    next.text_layers.translated.cues.map((cue) =>
+      cue.id === 'two' ? { ...cue, start_ms: cue.start_ms + 250 } : cue,
+    ),
+  );
+  assert.equal(translatedCueSync(next).find((cue) => cue.id === 'two')?.state, 'deviated');
+  // Deleting the source cue detaches its translation instead of retiming it silently.
+  const withoutSource = editTextLayer(next, 'transcript', [cue('one', 'Hello')]);
+  assert.equal(translatedCueSync(withoutSource).find((cue) => cue.id === 'two')?.state, 'detached');
+});
+
+test('a copied translated cue records explicit provenance and never matches by id', () => {
+  const doc = editTextLayer(document(), 'displayed', [cue('display-1', 'Hello')], {
+    language: 'en',
+  });
+  const next = applyLayerCopy(doc, previewLayerCopy(doc, 'displayed', 'translated'));
+  assert.deepEqual(
+    getTextLayer(next, 'translated').cues.map((cue) => cue.source_cue_id),
+    ['display-1'],
+  );
+  assert.deepEqual(
+    translatedCueSync(next).map((cue) => [cue.id, cue.state]),
+    [['display-1', 'linked']],
+  );
+  // A cue whose id matches a source cue but carries no link is not guessed as linked.
+  const manual = editTextLayer(next, 'translated', [
+    { id: 'display-1', start_ms: 0, end_ms: 1000, text: 'Manual line' },
+  ]);
+  assert.equal(translatedCueSync(manual)[0].state, 'unlinked');
+});
+
+test('a composition split keeps both translated pieces linked to their source', async () => {
+  const { editCompositionSnapshot } = await import(
+    '../../dist-core/editing/composition/snapshot.js'
+  );
+  let doc = document();
+  doc.composition = {
+    canvas: { width: 320, height: 180, fps: 30 },
+    clips: [
+      {
+        id: 'clip-a',
+        source: { path: '/source.mp4', name: 'source.mp4', sha256: model, duration_ms: 4000 },
+        start_ms: 0,
+        end_ms: 4000,
+        speed: 1,
+        enabled: true,
+      },
+    ],
+  };
+  doc = editTextLayer(
+    doc,
+    'transcript',
+    [{ id: 'one', start_ms: 0, end_ms: 4000, text: 'Hello' }],
+    {
+      language: 'en',
+    },
+  );
+  const request = input(doc);
+  const translated = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const split = editCompositionSnapshot(translated, [
+    { kind: 'split', id: 'clip-a', at_ms: 2000, new_id: 'clip-b' },
+  ]);
+  const cues = getTextLayer(split, 'translated').cues;
+  assert.equal(cues.length, 2);
+  assert.equal(cues[0].id, 'one');
+  assert.equal(cues[0].source_cue_id, 'one');
+  assert.equal(cues[1].id, 'one~2');
+  assert.equal(cues[1].source_cue_id, 'one');
+  assert.equal(cues[1].split_from_cue_id, 'one');
+  assert.deepEqual(
+    translatedCueSync(split).map((cue) => [cue.id, cue.state]),
+    [
+      ['one', 'linked'],
+      ['one~2', 'linked'],
+    ],
+  );
+  const retimed = editTextLayer(
+    split,
+    'translated',
+    cues.map((cue) => (cue.id === 'one~2' ? { ...cue, end_ms: cue.end_ms - 100 } : cue)),
+  );
+  assert.equal(translatedCueSync(retimed).find((cue) => cue.id === 'one~2')?.state, 'deviated');
+});
+
+test('a source retime or delete marks the translation stale without retiming its cues', () => {
+  const doc = document(),
+    request = input(doc);
+  const applied = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const translated = structuredClone(applied.text_layers.translated.cues);
+  const retimed = editTextLayer(
+    applied,
+    'transcript',
+    [{ ...cue('one', 'Hello'), end_ms: 1500 }, cue('two', 'World', 1000)],
+    { language: 'en' },
+  );
+  assert.equal(retimed.text_layers.translated.stale, true);
+  assert.deepEqual(retimed.text_layers.translated.cues, translated);
+  const deleted = editTextLayer(applied, 'transcript', [cue('two', 'World', 1000)], {
+    language: 'en',
+  });
+  assert.equal(deleted.text_layers.translated.stale, true);
+  assert.deepEqual(deleted.text_layers.translated.cues, translated);
+});
+
+test('translation provenance roundtrips current projects; unsupported text/project formats fail', () => {
+  const doc = document(),
+    request = input(doc);
+  const next = applyTranslation(
+    doc,
+    previewTranslation(doc, request, result(request), 'replace-all'),
+  );
+  const project = createProject({ path: '/source.mp4', sha256: model }, next);
+  assert.deepEqual(parseProject(JSON.parse(JSON.stringify(project))), project);
+  const malformed = structuredClone(next.text_layers);
+  delete malformed.transcript;
+  assert.throws(() => parseTextLayers(malformed), /INVALID_TEXT_LAYERS/);
+});
+
+class Port extends EventEmitter {
+  request(method, params, _revision) {
+    this.method = method;
+    this.params = params;
+    this.result = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+    return {
+      id: 'worker-1',
+      result: this.result,
+      cancel: async () => {
+        this.cancelled = true;
+      },
+    };
+  }
+}
+
+test('translation uses the same worker queue, correlates progress and rejects duplicate requests', async () => {
+  const port = new Port(),
+    coordinator = new TranslationCoordinator(port),
+    events = [],
+    request = input();
+  coordinator.on('job', (message) => events.push(message));
+  const ticket = coordinator.start(request);
+  assert.equal(port.method, 'speech.translate');
+  port.emit('message', {
+    v: 1,
+    id: 'worker-1',
+    revision: 2,
+    event: 'progress',
+    data: { phase: 'translationRunning', fraction: 0.5 },
+  });
+  port.resolve(result(request));
+  assert.deepEqual(await ticket.result, result(request));
+  assert.equal(events.at(-1).id, request.request_id);
+  assert.equal(events.at(-1).event, 'result');
+  assert.equal(coordinator.activeCount, 0);
+  assert.throws(() => coordinator.start(request), /DUPLICATE_REQUEST/);
+  await coordinator.close();
+});
+
+test('cancellation discards a late translation without publishing it', async () => {
+  const port = new Port(),
+    coordinator = new TranslationCoordinator(port),
+    request = input(),
+    events = [];
+  coordinator.on('job', (message) => events.push(message));
+  const ticket = coordinator.start(request);
+  await ticket.cancel();
+  assert.equal(port.cancelled, true);
+  port.resolve(result(request));
+  await assert.rejects(ticket.result, /CANCELLED/);
+  assert.equal(
+    events.some((e) => e.event === 'result'),
+    false,
+  );
+  await coordinator.close();
+});
+
+test('translation capability discovery never claims hash verification', () => {
+  const value = {
+    available: true,
+    code: null,
+    model_id: model,
+    source_language: 'en',
+    target_language: 'vi',
+    verified: false,
+  };
+  assert.deepEqual(parseTranslationStatus(value), value);
+  for (const patch of [
+    { source_language: 'auto' },
+    { verified: true },
+    { target_language: 'en' },
+    { model_id: null },
+  ]) {
+    assert.throws(() => parseTranslationStatus({ ...value, ...patch }), /INVALID_WORKER_RESPONSE/);
+  }
+});
+
+test('one translation application has complete document undo and redo', async () => {
+  const { openEditorHistory, changeEditor, undoEditor, redoEditor } = await import(
+    '../../dist-core/projects/editor-history.js'
+  );
+  const doc = document(),
+    request = input(doc);
+  const applied = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const history = changeEditor(openEditorHistory(doc), applied);
+  assert.equal(history.past.length, 1);
+  const undone = undoEditor(history);
+  assert.deepEqual(undone.present, doc);
+  assert.deepEqual(redoEditor(undone).present, applied);
+  assert.deepEqual(applied.cues, doc.cues);
+  assert.deepEqual(applied.text_layers.spoken, doc.text_layers.spoken);
+});
+
+test('cut/speed changes rebase translation provenance and keep independently translated words', async () => {
+  const { editCompositionSnapshot } = await import(
+    '../../dist-core/editing/composition/snapshot.js'
+  );
+  let doc = document();
+  doc.composition = {
+    canvas: { width: 320, height: 180, fps: 30 },
+    clips: [
+      {
+        id: 'clip-a',
+        source: { path: '/source.mp4', name: 'source.mp4', sha256: model, duration_ms: 4000 },
+        start_ms: 0,
+        end_ms: 4000,
+        speed: 1,
+        enabled: true,
+      },
+    ],
+  };
+  const request = input(doc);
+  doc = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const edited = editCompositionSnapshot(doc, [
+    { kind: 'update', id: 'clip-a', start_ms: 0, end_ms: 2000, speed: 2 },
+  ]);
+  assert.deepEqual(
+    edited.text_layers.translated.cues.map((c) => [c.text, c.start_ms, c.end_ms]),
+    doc.text_layers.translated.cues.map((c) => [c.text, c.start_ms / 2, c.end_ms / 2]),
+  );
+  assert.equal(edited.text_layers.translated.stale, false);
+  assert.equal(edited.text_layers.translated.origin.token, edited.text_layers.transcript.token);
+  for (const key of [
+    'model_id',
+    'rules',
+    'source_language',
+    'target_language',
+    'runtime',
+    'request_id',
+  ]) {
+    assert.deepEqual(
+      edited.text_layers.translated.origin[key],
+      doc.text_layers.translated.origin[key],
+    );
+  }
+  assert.throws(() => previewTranslation(edited, request, result(request)), /STALE_OPERATION/);
+});
+
+test('saved projects and reopened SQLite recovery retain translated manual edits and provenance', async (t) => {
+  const { mkdtemp, rm, readFile, writeFile } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const { saveProject, loadProject } = await import('../../dist-core/projects/project.js');
+  const { ProjectRecovery } = await import('../../dist-core/projects/recovery/project-recovery.js');
+  const root = await mkdtemp(path.join(tmpdir(), 'translated-project-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const source = path.join(root, 'source.mp4');
+  await writeFile(source, 'UNCHANGED ORIGINAL');
+  let doc = editTextLayer(document(), 'translated', [cue('one', 'Bản sửa riêng', 300)], {
+    language: 'vi',
+  });
+  const request = input(doc);
+  doc = applyTranslation(doc, previewTranslation(doc, request, result(request)));
+  const project = createProject({ path: source, sha256: model }, doc),
+    filename = path.join(root, 'project.reupmatic.json');
+  await saveProject(filename, project);
+  assert.deepEqual(await loadProject(filename), project);
+  let store = new ProjectRecovery(path.join(root, 'recovery.sqlite'));
+  try {
+    store.save('translation-doc', 0, project);
+    store.close();
+    store = new ProjectRecovery(path.join(root, 'recovery.sqlite'));
+    assert.deepEqual(store.load('translation-doc', 1), project);
+    assert.equal(
+      store.load('translation-doc', 1).text_layers.translated.cues[0].text,
+      'Bản sửa riêng',
+    );
+  } finally {
+    store.close();
+  }
+  const old = { ...project, format: 'reupmatic.project.legacy' };
+  await writeFile(filename, JSON.stringify(old));
+  const before = await readFile(filename);
+  await assert.rejects(loadProject(filename), /INVALID_PROJECT/);
+  assert.deepEqual(await readFile(filename), before);
+  assert.equal(await readFile(source, 'utf8'), 'UNCHANGED ORIGINAL');
+});
+
+test('translation progress cannot inject captured input, unknown phases or invalid fractions', async () => {
+  const port = new Port(),
+    coordinator = new TranslationCoordinator(port),
+    request = input(),
+    events = [];
+  coordinator.on('job', (message) => events.push(message));
+  const ticket = coordinator.start(request);
+  const event = (data) => ({
+    v: 1,
+    id: 'worker-1',
+    revision: request.revision,
+    event: 'progress',
+    data,
+  });
+  for (const data of [
+    { phase: 'translationRunning', fraction: 2 },
+    { phase: 'foreign', fraction: 0.5 },
+    { phase: 'running', fraction: 0.5, input: 'injected' },
+    { phase: 'running', fraction: NaN },
+  ])
+    port.emit('message', event(data));
+  port.emit('message', {
+    ...event({ phase: 'running', fraction: null }),
+    revision: request.revision + 1,
+  });
+  assert.equal(events.length, 0);
+  port.emit('message', event({ phase: 'translationRunning', fraction: 0.5 }));
+  assert.equal(events.length, 1);
+  assert.equal(events[0].id, request.request_id);
+  port.resolve(result(request));
+  await ticket.result;
+  await coordinator.close();
+  assert.equal(port.listenerCount('message'), 0);
+  assert.throws(() => coordinator.start({ ...request, request_id: 'another-id' }), /WORKER_EXITED/);
+});
+
+test('browser-facing translation modules have no Node value imports', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const seen = new Set();
+  async function visit(url) {
+    if (seen.has(url.href)) return;
+    seen.add(url.href);
+    const source = await readFile(url, 'utf8');
+    for (const [, dependency] of source.matchAll(/(?:from|import)\s*['"]([^'"]+)['"]/g)) {
+      assert.ok(!dependency.startsWith('node:'), `${url.pathname}: ${dependency}`);
+      if (dependency.startsWith('.')) await visit(new URL(dependency, url));
+    }
+  }
+  await visit(new URL('../../dist-core/speech/translation/review.js', import.meta.url));
+  assert.ok(seen.size > 5);
+});
+
+test('displayed source strips presentation and style-only edits do not invalidate a captured translation', () => {
+  let doc = document();
+  doc = editTextLayer(
+    doc,
+    'displayed',
+    [{ ...cue('display', 'Hello'), style: { ...defaultSubtitleStyle, font_size_pct: 3 } }],
+    { language: 'en' },
+  );
+  const request = prepareTranslation(doc, {
+    request_id: 'displayed-request',
+    revision: 7,
+    source_layer: 'displayed',
+    source_language: 'en',
+    target_language: 'vi',
+    model_id: model,
+    rules: [],
+  });
+  assert.equal('style' in request.params.cues[0], false);
+  const token = doc.text_layers.displayed.token;
+  doc = editTextLayer(doc, 'displayed', [
+    { ...doc.cues[0], style: { ...defaultSubtitleStyle, font_size_pct: 4.4 } },
+  ]);
+  assert.equal(doc.text_layers.displayed.token, token);
+  const output = {
+    ...request.params,
+    kind: 'translation',
+    runtime: 'controlled@1',
+    cues: request.params.cues.map((c) => ({ ...c, text: 'Xin chào', source_cue_id: c.id })),
+  };
+  const translated = applyTranslation(doc, previewTranslation(doc, request, output));
+  assert.equal(translated.cues[0].style.font_size_pct, 4.4);
+  assert.equal(translated.text_layers.translated.cues[0].text, 'Xin chào');
+  assert.equal(translated.text_layers.translated.origin.layer, 'displayed');
+});

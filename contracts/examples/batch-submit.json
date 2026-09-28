@@ -1,0 +1,8 @@
+{
+  "request_id": "batch-submission-0001",
+  "output_id": "native-folder-choice-0001",
+  "items": [
+    { "asset_id": "registered-video-0001", "subtitle_id": "registered-subtitle-0001" },
+    { "asset_id": "registered-video-0002" }
+  ]
+}

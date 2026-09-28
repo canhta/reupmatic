@@ -1,0 +1,249 @@
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "worker"))
+from media.editing.filters import (  # noqa: E402
+    audio_fade_filters,
+    audio_filters,
+    filter_path,
+    geometry_filters,
+    logo_overlay,
+    subtitle_filter,
+    video_fade_filters,
+)
+from media.editing.recipe import parse_editing, resolve_window  # noqa: E402
+from runtime.errors import WorkerError  # noqa: E402
+
+INFO = {"width": 1920, "height": 1080, "has_audio": True, "frame_rate": "30"}
+
+
+class GeometryFilterTests(unittest.TestCase):
+    def test_output_frame_matches_the_core_preview_canvas(self):
+        # Pinned to outputFrame in tests/core/subtitle-split.test.mjs; both sides must agree so the
+        # live subtitle preview and the burn use the same canvas.
+        portrait = {"width": 1080, "height": 1920}
+        self.assertEqual(geometry_filters({}, portrait)[1], (1080, 1920))
+        self.assertEqual(geometry_filters({"rotate": 90}, portrait)[1], (1920, 1080))
+        self.assertEqual(
+            geometry_filters(
+                {"output": {"aspect": "1:1", "fit": "cover", "height": 1080}}, portrait
+            )[1],
+            (1080, 1080),
+        )
+        self.assertEqual(
+            geometry_filters(
+                {"crop": {"x": 0.25, "y": 0, "width": 0.5, "height": 1}},
+                {"width": 1920, "height": 1080},
+            )[1],
+            (960, 1080),
+        )
+
+    def test_cover_band_is_a_static_drawbox_under_the_burn(self):
+        from media.editing.filters import cover_drawbox
+
+        self.assertEqual(cover_drawbox(None, (1920, 1080)), [])
+        band = cover_drawbox(
+            {
+                "x_pct": 0,
+                "y_pct": 80,
+                "width_pct": 100,
+                "height_pct": 15,
+                "color": "#000000",
+                "opacity": 1,
+            },
+            (1920, 1080),
+        )
+        self.assertEqual(
+            band,
+            ["drawbox=x=0:y=864:w=1920:h=162:color=0x000000@1.000000000:t=fill"],
+        )
+        # A static band: no time enable, so animated subtitles draw over it.
+        self.assertNotIn("enable", band[0])
+
+    def test_rotate_precedes_crop_and_flip(self):
+        edit = parse_editing(
+            {
+                "rotate": 90,
+                "crop": {"x": 0.25, "y": 0, "width": 0.5, "height": 1},
+                "flip": "both",
+            }
+        )
+        filters, (width, height) = geometry_filters(edit, INFO)
+        self.assertIn("transpose=1", filters)
+        self.assertLess(
+            filters.index("transpose=1"),
+            next(index for index, value in enumerate(filters) if value.startswith("crop=")),
+        )
+        self.assertLess(
+            next(index for index, value in enumerate(filters) if value.startswith("crop=")),
+            filters.index("hflip"),
+        )
+        self.assertIn("hflip", filters)
+        self.assertIn("vflip", filters)
+        self.assertEqual((width, height), (540, 1920))
+
+    def test_rotate_uses_the_expected_transpose_per_quarter(self):
+        for rotate, expected in [(90, "transpose=1"), (180, "hflip,vflip"), (270, "transpose=2")]:
+            filters, _ = geometry_filters({"rotate": rotate}, INFO)
+            self.assertIn(expected, filters)
+        self.assertEqual(geometry_filters({}, INFO)[0][0], "scale=2*trunc(iw*sar/2):2*trunc(ih/2)")
+
+    def test_rotate_zero_emits_no_transpose(self):
+        filters, (width, height) = geometry_filters({"rotate": 0}, INFO)
+        self.assertFalse(any("transpose" in value for value in filters))
+        self.assertEqual((width, height), (1920, 1080))
+
+    def test_invalid_rotate_is_rejected(self):
+        with self.assertRaisesRegex(WorkerError, "INVALID_EDITING"):
+            parse_editing({"rotate": 45})
+
+
+class FadeFilterTests(unittest.TestCase):
+    def test_head_and_tail_video_fades_sit_on_the_output_clock(self):
+        edit = parse_editing({"fade": {"in_ms": 500, "out_ms": 250, "audio": False}})
+        self.assertEqual(
+            video_fade_filters(edit, 4000),
+            ["fade=t=in:st=0:d=0.500", "fade=t=out:st=3.750:d=0.250"],
+        )
+
+    def test_audio_fade_only_when_requested(self):
+        silent = parse_editing({"fade": {"in_ms": 500, "out_ms": 0, "audio": False}})
+        self.assertEqual(audio_fade_filters(silent, 4000), [])
+        audible = parse_editing({"fade": {"in_ms": 500, "out_ms": 250, "audio": True}})
+        self.assertEqual(
+            audio_fade_filters(audible, 4000),
+            ["afade=t=in:st=0:d=0.500", "afade=t=out:st=3.750:d=0.250"],
+        )
+
+    def test_audio_fades_ride_the_output_clock_after_gain_and_speed(self):
+        edit = parse_editing(
+            {
+                "speed": 2,
+                "audio": {"muted": False, "gain_db": -3},
+                "fade": {"in_ms": 200, "out_ms": 0, "audio": True},
+            }
+        )
+        filters = audio_filters(0, 4000, 2, edit["audio"], 2000)
+        self.assertIn("atempo=2.000000000", filters)
+        self.assertIn("volume=-3dB", filters)
+        self.assertEqual(filters[-1], "atrim=duration=2.000")
+        self.assertFalse(any("afade" in value for value in filters))
+        self.assertEqual(
+            audio_fade_filters(edit, 2000),
+            ["afade=t=in:st=0:d=0.200"],
+        )
+
+    def test_fade_geometry_rides_the_full_output_clock(self):
+        edit = parse_editing({"fade": {"in_ms": 1000, "out_ms": 1000, "audio": True}})
+        self.assertEqual(
+            audio_fade_filters(edit, 4000),
+            ["afade=t=in:st=0:d=1.000", "afade=t=out:st=3.000:d=1.000"],
+        )
+
+    def test_resolve_window_uses_trim_and_speed(self):
+        window = resolve_window({"trim": {"start_ms": 200, "end_ms": 3800}, "speed": 2}, 4000)
+        self.assertEqual((window["start_ms"], window["end_ms"]), (200, 3800))
+        self.assertEqual(window["speed"], 2)
+        self.assertEqual(window["duration_ms"], 1800)
+        with self.assertRaisesRegex(WorkerError, "EDIT_SOURCE_RANGE"):
+            resolve_window({"trim": {"start_ms": 0, "end_ms": 4001}}, 4000)
+
+    def test_no_fade_emits_nothing(self):
+        edit = parse_editing({"speed": 1})
+        self.assertEqual(video_fade_filters(edit, 1000), [])
+        self.assertEqual(audio_fade_filters(edit, 1000), [])
+
+    def test_fade_longer_than_the_window_is_clamped_to_the_end(self):
+        edit = parse_editing({"fade": {"in_ms": 0, "out_ms": 900, "audio": False}})
+        self.assertEqual(video_fade_filters(edit, 500), ["fade=t=out:st=0.000:d=0.900"])
+
+
+class SubtitleFilterTests(unittest.TestCase):
+    def test_filter_paths_use_forward_slashes_and_escape_the_option_separator(self):
+        self.assertEqual(filter_path("/Users/x/fonts"), "'/Users/x/fonts'")
+        # A Windows drive colon must survive as part of the value, not split the option.
+        self.assertEqual(filter_path("C:\\Users\\x\\fonts"), "'C\\:/Users/x/fonts'")
+        self.assertEqual(filter_path("/tmp/fo:nts"), "'/tmp/fo\\:nts'")
+        self.assertEqual(filter_path("it's"), "'it\\'s'")
+
+    def test_the_subtitles_filter_passes_the_bundled_font_directory(self):
+        self.assertEqual(
+            subtitle_filter("track.ass", "/app/fonts"),
+            "subtitles='track.ass':fontsdir='/app/fonts'",
+        )
+        self.assertEqual(subtitle_filter("track.ass"), "subtitles='track.ass'")
+        self.assertEqual(
+            subtitle_filter("track.ass", "C:\\app\\fonts"),
+            "subtitles='track.ass':fontsdir='C\\:/app/fonts'",
+        )
+
+
+class LogoOverlayTests(unittest.TestCase):
+    def logo(self, **overrides):
+        return {
+            "anchor": "bottom-right",
+            "margin": 0.05,
+            "scale": 0.2,
+            "opacity": 1,
+            **overrides,
+        }
+
+    def test_the_logo_scales_from_the_output_width_and_sits_at_its_anchor(self):
+        filters, x, y = logo_overlay(self.logo(), (1000, 1000))
+        self.assertEqual(filters, ["scale=200:-2", "format=rgba"])
+        self.assertEqual(x, "main_w-overlay_w-50")
+        self.assertEqual(y, "main_h-overlay_h-50")
+        filters, x, y = logo_overlay(self.logo(anchor="center"), (1000, 1000))
+        self.assertEqual(x, "(main_w-overlay_w)/2")
+        self.assertEqual(y, "(main_h-overlay_h)/2")
+        filters, x, y = logo_overlay(self.logo(anchor="top-left"), (1000, 1000))
+        self.assertEqual(x, "50")
+        self.assertEqual(y, "50")
+
+    def test_opacity_below_one_multiplies_the_logo_alpha(self):
+        filters, _, _ = logo_overlay(self.logo(opacity=0.4), (1000, 1000))
+        self.assertEqual(
+            filters, ["scale=200:-2", "format=rgba", "colorchannelmixer=aa=0.400000000"]
+        )
+
+    def test_a_clear_logo_needs_no_alpha_filter(self):
+        filters, _, _ = logo_overlay(self.logo(opacity=1), (1000, 1000))
+        self.assertFalse(any("colorchannelmixer" in value for value in filters))
+
+    def test_the_placement_and_reference_parse_into_one_shape(self):
+        edit = parse_editing(
+            {
+                "logo": {
+                    "media_id": "media_00000001",
+                    "anchor": "top-center",
+                    "margin": 0.02,
+                    "scale": 0.3,
+                    "opacity": 0.5,
+                }
+            }
+        )
+        self.assertEqual(
+            edit["logo"],
+            {
+                "anchor": "top-center",
+                "margin": 0.02,
+                "scale": 0.3,
+                "opacity": 0.5,
+                "media_id": "media_00000001",
+            },
+        )
+
+    def test_an_invalid_placement_fails_before_the_filter(self):
+        for logo in (
+            {"anchor": "middle", "margin": 0, "scale": 0.2, "opacity": 1},
+            {"anchor": "center", "margin": 0.6, "scale": 0.2, "opacity": 1},
+            {"anchor": "center", "margin": 0, "scale": 2, "opacity": 1},
+            {"anchor": "center", "margin": 0, "scale": 0.2, "opacity": 2},
+        ):
+            with self.assertRaisesRegex(WorkerError, "INVALID_EDITING"):
+                parse_editing({"logo": logo})
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

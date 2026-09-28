@@ -1,0 +1,5 @@
+# Explicit optional local adapter target; not a complete platform dependency lock.
+# No weights or tokenizer files are installed by these requirements.
+# 4.8.2 ships cp314 wheels for macOS arm64 and Windows x64.
+ctranslate2==4.8.2
+sentencepiece==0.2.2

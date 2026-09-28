@@ -1,0 +1,21 @@
+.automation-workspace {
+  max-width: 1240px;
+  margin: var(--space-6) auto;
+  min-height: 0;
+  overflow: auto;
+}
+/* Label-left rows read as one form at a panel's width, not stretched across the workspace. */
+.folder-rule-form {
+  max-width: calc(var(--spacing-12) * 12);
+}
+.folder-path {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.folder-rules {
+  margin-top: var(--space-8);
+}
+.folder-scroll {
+  overflow: auto;
+}

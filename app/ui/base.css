@@ -1,0 +1,47 @@
+@layer reset, app-base, astryx-base, astryx-theme, app;
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
+@import "./design-tokens.css" layer(app-base);
+
+@layer app-base {
+  * {
+    box-sizing: border-box;
+  }
+  [hidden] {
+    display: none;
+  }
+  body {
+    margin: 0;
+    background: var(--bg-app);
+    color: var(--text-strong);
+    font: var(--text-sm) / 1.5 var(--font-ui);
+  }
+  :where(a, video, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  h2,
+  h3,
+  p {
+    overflow-wrap: anywhere;
+  }
+  h2,
+  h3 {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    margin: 0 0 var(--space-3);
+  }
+  p {
+    margin: 0 0 var(--space-3);
+  }
+  small {
+    display: block;
+    font-size: var(--text-xs);
+    margin-block: var(--space-2);
+  }
+  code {
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+}

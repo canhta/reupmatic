@@ -1,0 +1,61 @@
+import type { Platform, PublishProblemCode } from '../../../core/distribution/publishing/contracts';
+
+const PROBLEM_KEYS: Record<PublishProblemCode, string> = {
+  PUBLISH_MEDIA_TOO_SHORT: 'publishProblem_PUBLISH_MEDIA_TOO_SHORT',
+  PUBLISH_MEDIA_TOO_LONG: 'publishProblem_PUBLISH_MEDIA_TOO_LONG',
+  PUBLISH_MEDIA_RESOLUTION: 'publishProblem_PUBLISH_MEDIA_RESOLUTION',
+  PUBLISH_MEDIA_ASPECT: 'publishProblem_PUBLISH_MEDIA_ASPECT',
+  PUBLISH_MEDIA_TOO_LARGE: 'publishProblem_PUBLISH_MEDIA_TOO_LARGE',
+  PUBLISH_MEDIA_FRAMERATE: 'publishProblem_PUBLISH_MEDIA_FRAMERATE',
+  PUBLISH_SCHEDULE_TOO_SOON: 'publishProblem_PUBLISH_SCHEDULE_TOO_SOON',
+  PUBLISH_SCHEDULE_TOO_FAR: 'publishProblem_PUBLISH_SCHEDULE_TOO_FAR',
+  PUBLISH_SCHEDULE_UNSUPPORTED: 'publishProblem_PUBLISH_SCHEDULE_UNSUPPORTED',
+  PUBLISH_DISCLOSURE_REQUIRED: 'publishProblem_PUBLISH_DISCLOSURE_REQUIRED',
+  PUBLISH_PRIVACY_BRANDED_SELF_ONLY: 'publishProblem_PUBLISH_PRIVACY_BRANDED_SELF_ONLY',
+  PUBLISH_CAPTION_CLIPPED: 'publishProblem_PUBLISH_CAPTION_CLIPPED',
+};
+
+// YouTube's bounds differ from Reels; only the codes whose copy differs get an override.
+const YOUTUBE_PROBLEM_KEYS: Partial<Record<PublishProblemCode, string>> = {
+  PUBLISH_MEDIA_TOO_SHORT: 'publishProblemYoutube_MEDIA_TOO_SHORT',
+  PUBLISH_SCHEDULE_TOO_SOON: 'publishProblemYoutube_SCHEDULE_TOO_SOON',
+  PUBLISH_SCHEDULE_TOO_FAR: 'publishProblemYoutube_SCHEDULE_TOO_FAR',
+};
+
+export function problemKey(code: PublishProblemCode, platform: Platform): string {
+  if (platform === 'youtube' && YOUTUBE_PROBLEM_KEYS[code]) return YOUTUBE_PROBLEM_KEYS[code];
+  return PROBLEM_KEYS[code];
+}
+
+const ERROR_KEYS: Record<string, string> = {
+  CHANNEL_NOT_CONNECTED: 'publishError_CHANNEL_NOT_CONNECTED',
+  CHANNEL_REAUTHORIZE: 'publishError_CHANNEL_REAUTHORIZE',
+  PUBLISH_IN_PROGRESS: 'publishError_PUBLISH_IN_PROGRESS',
+  PUBLISH_UPLOAD_INTERRUPTED: 'publishError_PUBLISH_UPLOAD_INTERRUPTED',
+  PUBLISH_RATE_LIMITED: 'publishError_PUBLISH_RATE_LIMITED',
+  PUBLISH_PERMISSION_DENIED: 'publishError_PUBLISH_PERMISSION_DENIED',
+  PUBLISH_INVALID_REQUEST: 'publishError_PUBLISH_INVALID_REQUEST',
+  PUBLISH_CONFIG_MISSING: 'publishError_PUBLISH_CONFIG_MISSING',
+  PUBLISHING_NOT_CONFIGURED: 'publishError_PUBLISHING_NOT_CONFIGURED',
+  PUBLISH_PLATFORM_UNSUPPORTED: 'publishError_PUBLISH_PLATFORM_UNSUPPORTED',
+  PUBLISH_PREFLIGHT_FAILED: 'publishError_PUBLISH_PREFLIGHT_FAILED',
+  PUBLISH_OPTIONS_REQUIRED: 'publishError_PUBLISH_OPTIONS_REQUIRED',
+  PUBLISH_OPTIONS_INVALID: 'publishError_PUBLISH_OPTIONS_INVALID',
+  PUBLISH_NO_REMOTE: 'publishError_PUBLISH_NO_REMOTE',
+};
+
+export function publishErrorKey(code: string): string {
+  return ERROR_KEYS[code] ?? 'publishErrorDefault';
+}
+
+// TikTok reports `privacy_level` as an API code; the picker must name it, never echo it.
+const TIKTOK_PRIVACY_KEYS: Record<string, string> = {
+  PUBLIC_TO_EVERYONE: 'tiktokPrivacyPublic',
+  MUTUAL_FOLLOW_FRIENDS: 'tiktokPrivacyFriends',
+  FOLLOWER_OF_CREATOR: 'tiktokPrivacyFollowers',
+  SELF_ONLY: 'tiktokPrivacySelfOnly',
+};
+
+export function tiktokPrivacyKey(code: string): string {
+  return TIKTOK_PRIVACY_KEYS[code] ?? 'tiktokPrivacyOther';
+}

@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reupmatic:subtitle-style:1",
+  "title": "Complete global or cue appearance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "font_family",
+    "font_size_pct",
+    "outline_pct",
+    "shadow_pct",
+    "box_opacity",
+    "box_padding_pct",
+    "margin_x_pct",
+    "margin_y_pct",
+    "spacing_pct",
+    "text_color",
+    "outline_color",
+    "box_color",
+    "position",
+    "bold",
+    "italic",
+    "uppercase",
+    "accent_color",
+    "animation",
+    "cover"
+  ],
+  "properties": {
+    "font_family": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[^,\\r\\n{}\\\\\\u0000]+$"
+    },
+    "font_size_pct": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 15
+    },
+    "outline_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "shadow_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "box_opacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "box_padding_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 4
+    },
+    "margin_x_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 40
+    },
+    "margin_y_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 40
+    },
+    "spacing_pct": {
+      "type": "number",
+      "minimum": -0.2,
+      "maximum": 2
+    },
+    "text_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "outline_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "box_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9
+    },
+    "bold": {
+      "type": "boolean"
+    },
+    "italic": {
+      "type": "boolean"
+    },
+    "uppercase": {
+      "type": "boolean"
+    },
+    "accent_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "out", "emphasis"],
+      "properties": {
+        "in": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset", "duration_ms"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "fade", "pop", "slide-up", "slide-left", "typewriter", "blur"]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3000
+            }
+          }
+        },
+        "out": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset", "duration_ms"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "fade", "pop-out", "slide-down"]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3000
+            }
+          }
+        },
+        "emphasis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preset"],
+          "properties": {
+            "preset": {
+              "enum": ["none", "karaoke", "color", "pop", "appear", "one-at-a-time"]
+            }
+          }
+        }
+      }
+    },
+    "cover": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x_pct", "y_pct", "width_pct", "height_pct", "color", "opacity"],
+          "properties": {
+            "x_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "y_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "width_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "height_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$comment": "Runtime requires an installed-font name made of letters, numbers, space, underscore, period or hyphen. Dimensions use output-frame percentages; box opacity > 0 selects the libass BorderStyle 4 box: one BackColour rectangle padded by box_padding_pct around the text, while outline_pct keeps outlining the text; shadow_pct is not drawn under a box. The cover band is drawn under the subtitles for the whole video, in the same output-frame percentages."
+}

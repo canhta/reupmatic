@@ -1,0 +1,7 @@
+.business-workspace {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}

@@ -1,0 +1,46 @@
+name: Feature request
+description: A new capability or a change to existing behavior.
+title: "[Feature]: "
+labels: ["needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: The user need or pain this addresses. Describe the value, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What the app should do. Keep it to observable behavior.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Editor
+        - Sources & Library
+        - Automation
+        - Channels & Affiliate
+        - Settings & Account
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or other approaches you weighed.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, links or examples that clarify the request. Redact secrets and personal data.
+    validations:
+      required: false

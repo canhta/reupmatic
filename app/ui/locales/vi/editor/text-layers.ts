@@ -1,0 +1,28 @@
+import type { textLayersEn } from '../../en/editor/text-layers';
+
+export const textLayersVi = {
+  textConfirmImport: 'Thay lớp {{layer}} bằng SRT này?',
+  textKeepReviewed: 'Giữ bản sửa',
+  textKeepReviewedHelp: 'Các bản sao phụ thuộc vẫn cần được duyệt riêng.',
+  textLayer_transcript: 'Bản chép lời',
+  textLayer_translated: 'Bản dịch',
+  textLayer_spoken: 'Nội dung đọc',
+  textLayer_displayed: 'Phụ đề hiển thị',
+  textEditingLayer: 'Lớp',
+  textLayerLanguage: 'Ngôn ngữ',
+  textLanguageUnknown: 'Chưa khai báo',
+  textLayerStale: 'Lớp nguồn đã đổi',
+  textLayerSourceChanged: '{{source}} đã đổi',
+  textLayerReview: 'Xem lại',
+  textLayerLanguageDrift: '{{source}} đang là {{current}}; bản dịch này dịch từ {{expected}}',
+  textLayerUseLanguage: 'Dùng {{language}}',
+  textCopyTitle: 'Sao chép lớp…',
+  textCopyHelp: 'Thay thế văn bản và thời gian của lớp {{target}}.',
+  textCopyFrom: 'Sao chép từ',
+  textCopyPreview: 'Xem trước',
+  textCopyApply: 'Thay',
+  textCopyCount: '{{count}} câu thay toàn bộ lớp {{target}}, kể cả câu bổ sung.',
+  textLayerEmpty: 'Lớp trống',
+  textLayerInvalid: 'Lớp không hợp lệ',
+  textLayerTooLarge: 'Lớp quá 1 MB',
+} satisfies Record<keyof typeof textLayersEn, string>;

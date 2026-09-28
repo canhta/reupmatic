@@ -1,0 +1,33 @@
+import type { speechVoicesEn } from '../../en/speech/voices';
+
+export const speechVoicesVi = {
+  settingsVoicesTitle: 'Giọng nói',
+  settingsVoicesLoading: 'Đang tải giọng nói',
+  settingsVoicesClone: 'Nhân bản giọng',
+  settingsVoicesCloneTitle: 'Nhân bản giọng nói',
+  settingsVoicesName: 'Tên giọng',
+  settingsVoicesEngine: 'Bộ máy',
+  settingsVoicesLanguage: 'Ngôn ngữ',
+  settingsVoicesReferenceHelp: '3–8 giây, một người nói, không có nhạc.',
+  settingsVoicesAttest: 'Đây là giọng của tôi, hoặc tôi có quyền sử dụng nó.',
+  settingsVoicesCloneInstallTitle: 'Nhân bản giọng cần tải một lần',
+  settingsVoicesCloneInstallHelp:
+    'Tải gói nhân bản giọng một lần, sau đó nhân bản từ đoạn âm thanh ngắn.',
+  settingsVoicesCloneInstall: 'Cài nhân bản giọng',
+  settingsVoicesCloneInstalling: 'Đang cài nhân bản giọng',
+  settingsVoicesChooseFile: 'Chọn đoạn âm thanh và nhân bản',
+  settingsVoicesCloning: 'Đang nhân bản giọng',
+  settingsVoicesPreview: 'Nghe thử',
+  settingsVoicesRename: 'Đổi tên',
+  settingsVoicesRenameTitle: 'Đổi tên giọng',
+  settingsVoicesRemove: 'Xoá',
+  settingsVoicesRemoveConfirm: 'Xoá “{{name}}”? Không thể hoàn tác.',
+  settingsVoicesSourceCloned: 'Nhân bản trên máy này',
+  settingsVoicesSourceCloud: 'Đám mây',
+  settingsVoicesCloudTitle: 'VieNeu Cloud',
+  settingsVoicesCloudMissingKey: 'Thêm khoá VieNeu ở Nhà cung cấp riêng',
+  settingsVoicesCloudEmpty: 'Chưa có giọng đám mây.',
+  settingsVoicesOpenStudio: 'Mở VieNeu Studio',
+  settingsVoicesEmpty: 'Chưa có giọng',
+  settingsVoicesFailed: 'Không cập nhật được giọng',
+} satisfies Record<keyof typeof speechVoicesEn, string>;
