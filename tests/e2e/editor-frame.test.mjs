@@ -555,15 +555,14 @@ test('the Export dialog offers kind/size/steps and there is exactly one profile 
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
       const dialog = page.getByRole('dialog');
       await dialog.getByText('Output', { exact: true }).waitFor();
-      await dialog
-        .getByRole('radio', { name: 'Video with burned-in subtitles', exact: true })
-        .waitFor();
-      await dialog.getByRole('radio', { name: 'Subtitle file', exact: true }).waitFor();
-      await dialog.getByRole('radio', { name: 'Video and subtitle file', exact: true }).waitFor();
-      await dialog.getByRole('combobox', { name: 'Aspect', exact: true }).waitFor();
+      const kind = dialog.getByRole('combobox', { name: 'Output', exact: true });
+      await kind.waitFor();
       await dialog.getByRole('combobox', { name: 'Height', exact: true }).waitFor();
-      await dialog.getByRole('radio', { name: 'Subtitle file', exact: true }).click();
-      assert.equal(await dialog.getByRole('combobox', { name: 'Aspect', exact: true }).count(), 0);
+      await dialog.getByText(/Aspect:/).waitFor();
+      await kind.click();
+      await page.getByRole('option', { name: 'Subtitle file', exact: true }).click();
+      assert.equal(await dialog.getByRole('combobox', { name: 'Height', exact: true }).count(), 0);
+      await dialog.getByRole('combobox', { name: 'File format', exact: true }).waitFor();
     },
   );
 });

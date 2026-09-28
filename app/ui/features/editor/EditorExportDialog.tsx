@@ -1,8 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { HStack, Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -11,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../core/editing/edit-recipe';
 import { registerMenuCommand } from '../../shell/menuCommands';
 import { useEditor } from './EditorContext';
+import { useEditorTools } from './EditorToolContext';
 
 type ExportKind = 'video' | 'subtitle' | 'both';
 type Output = NonNullable<EditingRecipe['output']>;
@@ -20,6 +20,7 @@ const DEFAULT_OUTPUT: Output = { aspect: 'source', fit: 'contain', height: 0 };
 export function EditorExportDialog() {
   const { t } = useTranslation();
   const editor = useEditor();
+  const { activeTool, selectTool } = useEditorTools();
   const [isOpen, setIsOpen] = useState(false);
   const [kind, setKind] = useState<ExportKind>('video');
   const [format, setFormat] = useState<'srt' | 'ass'>('srt');
@@ -70,6 +71,9 @@ export function EditorExportDialog() {
     }
   }
 
+  const aspectLabel = output.aspect === 'source' ? t('exportAspectSource') : output.aspect;
+  const fitLabel = output.fit === 'contain' ? t('exportFitContain') : t('exportFitCover');
+
   return (
     <>
       <Button
@@ -83,122 +87,126 @@ export function EditorExportDialog() {
         }}
       />
       <Dialog isOpen={isOpen} onOpenChange={setIsOpen} width={480} purpose="form">
-        <DialogHeader title={t('exportDialogTitle')} onOpenChange={setIsOpen} />
-        <VStack gap={3}>
-          <RadioList
-            label={t('exportKindLabel')}
-            value={kind}
-            isDisabled={disabled}
-            onChange={(value) => setKind(value as ExportKind)}
-          >
-            <RadioListItem value="video" label={t('exportKindVideo')} />
-            <RadioListItem value="subtitle" label={t('exportKindSubtitle')} />
-            <RadioListItem value="both" label={t('exportKindBoth')} />
-          </RadioList>
-          {kind !== 'video' && (
-            <VStack gap={3}>
-              <RadioList
-                label={t('styleExportFormat')}
-                value={format}
-                isDisabled={disabled}
-                onChange={(value) => {
-                  if (value === 'srt' || value === 'ass') setFormat(value);
-                }}
-              >
-                <RadioListItem value="srt" label="SRT" />
-                <RadioListItem value="ass" label="ASS" />
-              </RadioList>
-              {format === 'srt' && (
-                <Text as="p" type="body">
-                  {t('styleExportSrtNote')}
-                </Text>
-              )}
-              <Selector
-                label={t('styleExportTiming')}
-                value={timing}
-                isDisabled={disabled}
-                options={[
-                  { value: 'source', label: t('styleExportSource') },
-                  { value: 'output', label: t('styleExportOutput') },
-                ]}
-                onChange={(value) => {
-                  if (value === 'source' || value === 'output') setTiming(value);
-                }}
-              />
-            </VStack>
-          )}
-          {kind !== 'subtitle' && (
-            <FormLayout direction="vertical">
-              <Selector
-                label={t('exportSizeAspect')}
-                value={output.aspect}
-                isDisabled={disabled}
-                options={[
-                  { value: 'source', label: t('exportAspectSource') },
-                  { value: '9:16', label: '9:16' },
-                  { value: '16:9', label: '16:9' },
-                  { value: '1:1', label: '1:1' },
-                  { value: '4:5', label: '4:5' },
-                ]}
-                onChange={(value) => changeOutput({ aspect: value as Output['aspect'] })}
-              />
-              <Selector
-                label={t('exportSizeHeight')}
-                value={String(output.height)}
-                isDisabled={disabled}
-                options={[
-                  { value: '0', label: t('exportHeightSource') },
-                  { value: '480', label: '480p' },
-                  { value: '720', label: '720p' },
-                  { value: '1080', label: '1080p' },
-                  { value: '1920', label: '1920p' },
-                ]}
-                onChange={(value) => changeOutput({ height: Number(value) as Output['height'] })}
-              />
-            </FormLayout>
-          )}
-          {kind !== 'subtitle' && (
-            <Collapsible trigger={t('exportAdvanced')} defaultIsOpen={false}>
-              <Selector
-                label={t('exportSizeFit')}
-                value={output.fit}
-                isDisabled={disabled}
-                options={[
-                  { value: 'contain', label: t('exportFitContain') },
-                  { value: 'cover', label: t('exportFitCover') },
-                ]}
-                onChange={(value) => changeOutput({ fit: value as Output['fit'] })}
-              />
-            </Collapsible>
-          )}
-          {steps.length > 0 && (
-            <VStack>
-              <Text as="p" type="supporting">
-                {t('exportStepsSummary')}
-              </Text>
-              <ul className="export-steps-summary">
-                {steps.map((step) => (
-                  <li key={step}>
-                    <Text as="span" type="supporting">
-                      {step}
+        <Layout
+          header={<DialogHeader title={t('exportDialogTitle')} onOpenChange={setIsOpen} />}
+          content={
+            <LayoutContent>
+              <VStack gap={3}>
+                <Selector
+                  label={t('exportKindLabel')}
+                  value={kind}
+                  isDisabled={disabled}
+                  options={[
+                    { value: 'video', label: t('exportKindVideo') },
+                    { value: 'subtitle', label: t('exportKindSubtitle') },
+                    { value: 'both', label: t('exportKindBoth') },
+                  ]}
+                  onChange={(value) => setKind(value as ExportKind)}
+                />
+                {kind !== 'video' && (
+                  <>
+                    <Selector
+                      label={t('styleExportFormat')}
+                      value={format}
+                      isDisabled={disabled}
+                      options={[
+                        { value: 'srt', label: 'SRT' },
+                        { value: 'ass', label: 'ASS' },
+                      ]}
+                      onChange={(value) => {
+                        if (value === 'srt' || value === 'ass') setFormat(value);
+                      }}
+                    />
+                    {format === 'srt' && (
+                      <Text as="p" type="body">
+                        {t('styleExportSrtNote')}
+                      </Text>
+                    )}
+                    <Selector
+                      label={t('styleExportTiming')}
+                      value={timing}
+                      isDisabled={disabled}
+                      options={[
+                        { value: 'source', label: t('styleExportSource') },
+                        { value: 'output', label: t('styleExportOutput') },
+                      ]}
+                      onChange={(value) => {
+                        if (value === 'source' || value === 'output') setTiming(value);
+                      }}
+                    />
+                  </>
+                )}
+                {kind !== 'subtitle' && (
+                  <>
+                    <Selector
+                      label={t('exportSizeHeight')}
+                      value={String(output.height)}
+                      isDisabled={disabled}
+                      options={[
+                        { value: '0', label: t('exportHeightSource') },
+                        { value: '480', label: '480p' },
+                        { value: '720', label: '720p' },
+                        { value: '1080', label: '1080p' },
+                        { value: '1920', label: '1920p' },
+                      ]}
+                      onChange={(value) =>
+                        changeOutput({ height: Number(value) as Output['height'] })
+                      }
+                    />
+                    <VStack gap={1}>
+                      <Text as="p" type="body">
+                        {t('exportSizeAspect')}: {aspectLabel}
+                      </Text>
+                      <Text as="p" type="body">
+                        {t('exportSizeFit')}: {fitLabel}
+                      </Text>
+                      <Button
+                        label={t('exportEditFraming')}
+                        variant="ghost"
+                        size="sm"
+                        isDisabled={disabled}
+                        onClick={() => {
+                          if (activeTool !== 'edit') selectTool('edit');
+                          setIsOpen(false);
+                        }}
+                      />
+                    </VStack>
+                  </>
+                )}
+                {steps.length > 0 && (
+                  <VStack gap={1}>
+                    <Text as="p" type="body">
+                      {t('exportStepsSummary')}
                     </Text>
-                  </li>
-                ))}
-              </ul>
-            </VStack>
-          )}
-          {(running || editor.job) && (
-            <Text as="p" type="body" role="status">
-              {editor.job ? t(editor.job.phase) : t('exportRendering')}
-            </Text>
-          )}
-          <Button
-            label={t('exportRun')}
-            variant="primary"
-            isDisabled={disabled}
-            onClick={() => void run()}
-          />
-        </VStack>
+                    <List density="compact" aria-label={t('exportStepsSummary')}>
+                      {steps.map((step) => (
+                        <ListItem key={step} label={step} />
+                      ))}
+                    </List>
+                  </VStack>
+                )}
+                {(running || editor.job) && (
+                  <Text as="p" type="body" role="status">
+                    {editor.job ? t(editor.job.phase) : t('exportRendering')}
+                  </Text>
+                )}
+              </VStack>
+            </LayoutContent>
+          }
+          footer={
+            <LayoutFooter>
+              <HStack gap={2} hAlign="end">
+                <Button label={t('cancel')} onClick={() => setIsOpen(false)} />
+                <Button
+                  label={t('exportRun')}
+                  variant="primary"
+                  isDisabled={disabled}
+                  onClick={() => void run()}
+                />
+              </HStack>
+            </LayoutFooter>
+          }
+        />
       </Dialog>
     </>
   );

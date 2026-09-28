@@ -181,7 +181,7 @@ for (const locale of ['en', 'vi']) {
         // monitor never drifts from the burn.
         await page.getByRole('button', { name: copy.exportButton, exact: true }).click();
         const exportDialog = page.getByRole('dialog');
-        const steps = await exportDialog.locator('.export-steps-summary').innerText();
+        const steps = await exportDialog.innerText();
         assert.match(steps, new RegExp(copy.stepSubtitles, 'i'), steps);
         await exportDialog.getByRole('button', { name: copy.exportRun, exact: true }).click();
         const resultVideo = page.locator('video[data-monitor-video="result"]');
