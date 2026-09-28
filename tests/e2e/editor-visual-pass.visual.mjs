@@ -307,7 +307,7 @@ const COPY = {
     logo: 'Logo',
     framing: 'Framing & color',
     fades: 'Fades',
-    logoEnable: 'Overlay logo',
+    logoEnable: 'Show logo',
     logoAdd: 'Add image…',
     logoAnchor: 'Position',
     logoAnchorTopLeft: 'Top left',
@@ -370,7 +370,7 @@ const COPY = {
     logo: 'Logo',
     framing: 'Khung & màu',
     fades: 'Hiệu ứng mờ',
-    logoEnable: 'Phủ logo',
+    logoEnable: 'Hiện logo',
     logoAdd: 'Thêm ảnh…',
     logoAnchor: 'Vị trí',
     logoAnchorTopLeft: 'Trên trái',
@@ -584,7 +584,7 @@ for (const locale of ['en', 'vi']) {
         await page.getByRole('tab', { name: TOOLS[5][locale], exact: true }).click();
         await page.locator('#panel-edit').waitFor({ state: 'visible' });
         await page.getByRole('button', { name: copy.logo, exact: true }).click();
-        await page.getByRole('checkbox', { name: copy.logoEnable, exact: true }).check();
+        await page.getByRole('switch', { name: copy.logoEnable, exact: true }).check();
         await stubOpenDialog(application, [logo]);
         await page.getByRole('button', { name: copy.logoAdd, exact: true }).click();
         await page.getByRole('combobox', { name: copy.logoAnchor, exact: true }).click();

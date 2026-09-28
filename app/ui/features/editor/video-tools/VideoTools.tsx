@@ -1,20 +1,21 @@
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe } from '../../../../core/editing/edit-recipe';
+import type { ToggleControl } from '../ToggleControl';
 
 export function VideoTools({
   value,
   disabled,
   onChange,
+  toggle: Toggle,
 }: {
   value: EditingRecipe;
   disabled: boolean;
   onChange(patch: Partial<EditingRecipe>): void;
+  toggle: ToggleControl;
 }) {
   const { t } = useTranslation();
   const output: NonNullable<EditingRecipe['output']> = value.output ?? {
@@ -25,7 +26,7 @@ export function VideoTools({
   const color = value.color ?? { brightness: 0, contrast: 1, saturation: 1 };
   return (
     <VStack gap={3}>
-      <FormLayout direction="vertical">
+      <Grid columns={2} gap={3}>
         <Selector
           label={t('editAspect')}
           value={output.aspect}
@@ -42,20 +43,11 @@ export function VideoTools({
           label={t('editFit')}
           value={output.fit}
           isDisabled={disabled || output.aspect === 'source'}
-          options={['contain', 'cover'].map((fit) => ({ value: fit, label: t(`editFit_${fit}`) }))}
+          options={[
+            { value: 'contain', label: t('editFit_contain') },
+            { value: 'cover', label: t('editFit_cover'), description: t('editGeometryHint') },
+          ]}
           onChange={(fit) => onChange({ output: { ...output, fit: fit as typeof output.fit } })}
-        />
-        <Selector
-          label={t('editResolution')}
-          value={String(output.height)}
-          isDisabled={disabled}
-          options={[0, 480, 720, 1080, 1920].map((height) => ({
-            value: String(height),
-            label: height === 0 ? t('editSourceHeight') : `${height}px`,
-          }))}
-          onChange={(height) =>
-            onChange({ output: { ...output, height: Number(height) as typeof output.height } })
-          }
         />
         <Selector
           label={t('editFlip')}
@@ -83,8 +75,8 @@ export function VideoTools({
             })
           }
         />
-      </FormLayout>
-      <CheckboxInput
+      </Grid>
+      <Toggle
         label={t('editCrop')}
         value={Boolean(value.crop)}
         isDisabled={disabled}
@@ -93,7 +85,7 @@ export function VideoTools({
         }
       />
       {value.crop && (
-        <FormLayout direction="vertical">
+        <Grid columns={2} gap={3}>
           {(['x', 'y', 'width', 'height'] as const).map((key) => {
             const crop = value.crop;
             if (!crop) return null;
@@ -101,20 +93,21 @@ export function VideoTools({
               <NumberInput
                 key={key}
                 label={t(`editCrop_${key}`)}
+                units="%"
+                width="100%"
                 value={Math.round(crop[key] * 10000) / 100}
                 min={key === 'width' || key === 'height' ? 1 : 0}
                 max={100}
                 step={1}
-                width={160}
                 isWheelEnabled={false}
                 isDisabled={disabled}
                 onChange={(number) => onChange({ crop: { ...crop, [key]: number / 100 } })}
               />
             );
           })}
-        </FormLayout>
+        </Grid>
       )}
-      <FormLayout direction="vertical">
+      <Grid columns={2} gap={3}>
         {(
           [
             ['brightness', -1, 1],
@@ -125,20 +118,17 @@ export function VideoTools({
           <NumberInput
             key={key}
             label={t(`editColor_${key}`)}
+            width="100%"
             value={color[key]}
             min={min}
             max={max}
             step={0.05}
-            width={180}
             isWheelEnabled={false}
             isDisabled={disabled}
             onChange={(number) => onChange({ color: { ...color, [key]: number } })}
           />
         ))}
-      </FormLayout>
-      <Text as="p" type="supporting">
-        {t('editGeometryHint')}
-      </Text>
+      </Grid>
     </VStack>
   );
 }

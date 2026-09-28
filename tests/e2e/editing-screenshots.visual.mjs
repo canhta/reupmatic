@@ -25,13 +25,13 @@ const TEXT = {
     rotate: 'Rotate',
     rotate90: '90° right',
     crop: 'Crop source frame',
-    cropWidth: 'Width (%)',
-    cropHeight: 'Height (%)',
-    fade: 'Fade in/out',
-    fadeIn: 'Fade in (s)',
+    cropWidth: 'Width',
+    cropHeight: 'Height',
+    fade: 'Add fades',
+    fadeIn: 'Fade in',
     play: 'Play',
     logo: 'Logo',
-    logoEnable: 'Overlay logo',
+    logoEnable: 'Show logo',
     logoAdd: 'Add image…',
     logoUsed: 'Used as logo',
     logoAnchor: 'Position',
@@ -50,14 +50,14 @@ const TEXT = {
     fades: 'Hiệu ứng mờ',
     rotate: 'Xoay',
     rotate90: '90° sang phải',
-    crop: 'Crop khung hình gốc',
-    cropWidth: 'Rộng (%)',
-    cropHeight: 'Cao (%)',
-    fade: 'Mờ vào/ra',
-    fadeIn: 'Mờ vào (s)',
+    crop: 'Cắt khung hình gốc',
+    cropWidth: 'Rộng',
+    cropHeight: 'Cao',
+    fade: 'Thêm hiệu ứng mờ',
+    fadeIn: 'Mờ vào',
     play: 'Phát',
     logo: 'Logo',
-    logoEnable: 'Phủ logo',
+    logoEnable: 'Hiện logo',
     logoAdd: 'Thêm ảnh…',
     logoUsed: 'Dùng làm logo',
     logoAnchor: 'Vị trí',
@@ -145,7 +145,7 @@ for (const locale of ['en', 'vi']) {
       await page.getByRole('tab', { name: text.editTab, exact: true }).click();
       await page.getByRole('button', { name: text.framing, exact: true }).click();
       await choose(page, text.rotate, text.rotate90);
-      await page.getByRole('checkbox', { name: text.crop, exact: true }).check();
+      await page.getByRole('switch', { name: text.crop, exact: true }).check();
       await commitNumber(page, text.cropWidth, '50');
       await commitNumber(page, text.cropHeight, '50');
 
@@ -165,7 +165,7 @@ for (const locale of ['en', 'vi']) {
       }
 
       await page.getByRole('button', { name: text.fades, exact: true }).click();
-      await page.getByRole('checkbox', { name: text.fade, exact: true }).check();
+      await page.getByRole('switch', { name: text.fade, exact: true }).check();
       await commitNumber(page, text.fadeIn, '1');
       for (const [width, height] of SIZES) {
         await page.setViewportSize({ width, height });
@@ -181,7 +181,7 @@ for (const locale of ['en', 'vi']) {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filename] });
       }, logo);
       await page.getByRole('button', { name: text.logo, exact: true }).click();
-      await page.getByRole('checkbox', { name: text.logoEnable, exact: true }).check();
+      await page.getByRole('switch', { name: text.logoEnable, exact: true }).check();
       await page.getByRole('button', { name: text.logoAdd, exact: true }).click();
       await page.getByRole('combobox', { name: text.logoAnchor, exact: true }).click();
       await page.getByRole('option', { name: text.logoAnchorTopLeft, exact: true }).click();
@@ -233,7 +233,7 @@ for (const locale of ['en', 'vi']) {
       await page.getByRole('button', { name: text.framing, exact: true }).click();
       await choose(page, text.rotate, text.rotate90);
       await page.getByRole('button', { name: text.fades, exact: true }).click();
-      await page.getByRole('checkbox', { name: text.fade, exact: true }).check();
+      await page.getByRole('switch', { name: text.fade, exact: true }).check();
       await commitNumber(page, text.fadeIn, '1');
       assert.equal(
         await page.getByRole('combobox', { name: text.rotate, exact: true }).count(),

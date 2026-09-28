@@ -101,7 +101,7 @@ test('Editor tool panels apply live, validate in place and hide empty actions', 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.locator('#panel-edit').waitFor({ state: 'visible' });
       await page.getByRole('button', { name: 'Logo', exact: true }).click();
-      await page.getByRole('checkbox', { name: 'Overlay logo', exact: true }).click();
+      await page.getByRole('switch', { name: 'Show logo', exact: true }).click();
       await page.getByRole('button', { name: 'Export…', exact: true }).click();
       const dialog = page.getByRole('dialog');
       await dialog.getByText('Logo', { exact: true }).waitFor();

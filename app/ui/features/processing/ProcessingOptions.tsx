@@ -1,8 +1,8 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Section } from '@astryxdesign/core/Section';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -66,7 +66,6 @@ export function ProcessingOptions({
       className="processing-options"
       aria-label={t('processingTitle')}
     >
-      {}
       <Stack direction="vertical" gap={3}>
         <EditingOptions
           value={value?.editing}
@@ -76,7 +75,7 @@ export function ProcessingOptions({
         {showSubtitleStyle && (
           <Collapsible
             trigger={
-              <Text type="label" weight="semibold">
+              <Text type="body" weight="semibold">
                 {t('styleTitle')}
               </Text>
             }
@@ -90,8 +89,8 @@ export function ProcessingOptions({
             />
           </Collapsible>
         )}
-        <Heading level={5}>{t('processingTitle')}</Heading>
-        <Text as="p" type="supporting">
+        <Heading level={4}>{t('processingTitle')}</Heading>
+        <Text as="p" type="body">
           {t('processingExplicit')}
         </Text>
         <CheckboxInput
@@ -108,7 +107,7 @@ export function ProcessingOptions({
           }
         />
         {hasSubtitles && (
-          <Text as="p" type="supporting">
+          <Text as="p" type="body">
             {t('processingSubtitleConflict')}
           </Text>
         )}
@@ -121,7 +120,6 @@ export function ProcessingOptions({
               label={t('visionLanguage')}
               value={selectedLanguage}
               isDisabled={disabled}
-              width={240}
               options={(['en', 'vi', 'zh'] as const).map((language) => ({
                 value: language,
                 label: t(`visionLanguage_${language}`),
@@ -133,19 +131,20 @@ export function ProcessingOptions({
             />
             <Collapsible
               trigger={
-                <Text type="label" weight="semibold">
+                <Text type="body" weight="semibold">
                   {t('visionOcrOptions')}
                 </Text>
               }
               defaultIsOpen={false}
             >
-              <HStack gap={3} vAlign="end" wrap="wrap">
+              <Grid columns={2} gap={3}>
                 <NumberInput
                   label={t('visionSample')}
+                  units="ms"
                   min={100}
                   max={2000}
                   step={100}
-                  width={220}
+                  width="100%"
                   value={ocr.sample_ms}
                   isIntegerOnly
                   isWheelEnabled={false}
@@ -157,7 +156,7 @@ export function ProcessingOptions({
                   min={0}
                   max={1}
                   step={0.05}
-                  width={220}
+                  width="100%"
                   value={ocr.min_confidence}
                   isWheelEnabled={false}
                   isDisabled={disabled}
@@ -165,7 +164,7 @@ export function ProcessingOptions({
                     update({ ...value, ocr: { ...ocr, min_confidence } })
                   }
                 />
-              </HStack>
+              </Grid>
             </Collapsible>
           </>
         )}

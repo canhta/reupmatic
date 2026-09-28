@@ -14,12 +14,12 @@ import {
 const COPY = {
   editTab: 'Edit',
   logoSection: 'Logo',
-  enable: 'Overlay logo',
+  enable: 'Show logo',
   image: 'Logo image',
   addImage: 'Add image…',
   anchor: 'Position',
   anchorTopLeft: 'Top left',
-  opacity: 'Opacity (%)',
+  opacity: 'Opacity',
   projectMedia: 'Media',
   usedLogo: 'Used as logo',
   missing: 'File missing',
@@ -96,7 +96,7 @@ test('the Logo section places, previews, undoes and relinks a project image', {
 
       await page.getByRole('tab', { name: COPY.editTab, exact: true }).click();
       await page.getByRole('button', { name: COPY.logoSection, exact: true }).click();
-      await page.getByRole('checkbox', { name: COPY.enable, exact: true }).check();
+      await page.getByRole('switch', { name: COPY.enable, exact: true }).check();
       await page.getByRole('button', { name: COPY.addImage, exact: true }).click();
 
       const pickerFilters = await application.evaluate(() => globalThis.__dialogFilters.at(-1));

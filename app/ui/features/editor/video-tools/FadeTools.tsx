@@ -1,10 +1,9 @@
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { EditingRecipe, FadeOptions } from '../../../../core/editing/edit-recipe';
+import type { ToggleControl } from '../ToggleControl';
 
 const DEFAULT_FADE: FadeOptions = { in_ms: 500, out_ms: 500, audio: false };
 
@@ -12,10 +11,12 @@ export function FadeTools({
   value,
   disabled,
   onChange,
+  toggle: Toggle,
 }: {
   value: EditingRecipe;
   disabled: boolean;
   onChange(patch: Partial<EditingRecipe>): void;
+  toggle: ToggleControl;
 }) {
   const { t } = useTranslation();
   const fade = value.fade;
@@ -24,47 +25,48 @@ export function FadeTools({
   }
   return (
     <VStack gap={3}>
-      <CheckboxInput
+      <Toggle
         label={t('editFade')}
         value={Boolean(fade)}
         isDisabled={disabled}
         onChange={(enabled) => onChange({ fade: enabled ? { ...DEFAULT_FADE } : undefined })}
       />
       {fade && (
-        <FormLayout direction="vertical">
-          <NumberInput
-            label={t('editFadeIn')}
-            value={fade.in_ms / 1000}
-            min={0}
-            max={86400}
-            step={0.1}
-            width={180}
-            isWheelEnabled={false}
-            isDisabled={disabled}
-            onChange={(seconds) => patchFade({ in_ms: Math.round(seconds * 1000) })}
-          />
-          <NumberInput
-            label={t('editFadeOut')}
-            value={fade.out_ms / 1000}
-            min={0}
-            max={86400}
-            step={0.1}
-            width={180}
-            isWheelEnabled={false}
-            isDisabled={disabled}
-            onChange={(seconds) => patchFade({ out_ms: Math.round(seconds * 1000) })}
-          />
-          <CheckboxInput
+        <>
+          <Grid columns={2} gap={3}>
+            <NumberInput
+              label={t('editFadeIn')}
+              units="s"
+              width="100%"
+              value={fade.in_ms / 1000}
+              min={0}
+              max={86400}
+              step={0.1}
+              isWheelEnabled={false}
+              isDisabled={disabled}
+              onChange={(seconds) => patchFade({ in_ms: Math.round(seconds * 1000) })}
+            />
+            <NumberInput
+              label={t('editFadeOut')}
+              units="s"
+              width="100%"
+              value={fade.out_ms / 1000}
+              min={0}
+              max={86400}
+              step={0.1}
+              isWheelEnabled={false}
+              isDisabled={disabled}
+              onChange={(seconds) => patchFade({ out_ms: Math.round(seconds * 1000) })}
+            />
+          </Grid>
+          <Toggle
             label={t('editFadeAudio')}
             value={fade.audio}
             isDisabled={disabled}
             onChange={(audio) => patchFade({ audio })}
           />
-        </FormLayout>
+        </>
       )}
-      <Text as="p" type="supporting">
-        {t('editFadeHint')}
-      </Text>
     </VStack>
   );
 }

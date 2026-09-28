@@ -1,11 +1,15 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
+import type { DropdownMenuOption } from '@astryxdesign/core/DropdownMenu';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -118,9 +122,6 @@ export function CompositionPanel() {
   return (
     <InspectorPanelSection title={t('compositionTitle')}>
       <VStack gap={3}>
-        <Text as="p" type="supporting">
-          {t('compositionHelp')}
-        </Text>
         <HStack gap={2} vAlign="center" wrap="wrap">
           {composition && (
             <Text type="body">
@@ -167,12 +168,11 @@ export function CompositionPanel() {
             </StackItem>
             {draft && (
               <>
-                <Text as="p" type="supporting">
-                  {t('compositionClock')}
-                </Text>
-                <FormLayout direction="vertical">
+                <Grid columns={2} gap={3}>
                   <NumberInput
                     label={t('compositionIn')}
+                    units="s"
+                    width="100%"
                     value={draft.start_ms / 1000}
                     min={0}
                     max={draft.source.duration_ms / 1000}
@@ -183,6 +183,8 @@ export function CompositionPanel() {
                   />
                   <NumberInput
                     label={t('compositionOut')}
+                    units="s"
+                    width="100%"
                     value={draft.end_ms / 1000}
                     min={0}
                     max={draft.source.duration_ms / 1000}
@@ -193,6 +195,8 @@ export function CompositionPanel() {
                   />
                   <NumberInput
                     label={t('compositionSpeed')}
+                    units="×"
+                    width="100%"
                     value={draft.speed}
                     min={0.25}
                     max={4}
@@ -201,7 +205,63 @@ export function CompositionPanel() {
                     isDisabled={disabled}
                     onChange={(speed) => setDraft({ ...draft, speed })}
                   />
-                </FormLayout>
+                </Grid>
+                <Toolbar
+                  label={t('compositionActions')}
+                  size="sm"
+                  startContent={
+                    <>
+                      <ButtonGroup label={t('compositionOrder')} size="sm">
+                        <Button
+                          label={t('compositionEarlier')}
+                          isDisabled={commandDisabled || index <= 0}
+                          onClick={() => apply({ kind: 'move', id: draft.id, direction: -1 })}
+                        />
+                        <Button
+                          label={t('compositionLater')}
+                          isDisabled={commandDisabled || index >= spans.length - 1}
+                          onClick={() => apply({ kind: 'move', id: draft.id, direction: 1 })}
+                        />
+                      </ButtonGroup>
+                      <Button
+                        label={t('compositionSplit')}
+                        isDisabled={commandDisabled}
+                        onClick={() =>
+                          apply({
+                            kind: 'split',
+                            id: draft.id,
+                            at_ms: editor.clock,
+                            new_id: crypto.randomUUID(),
+                          })
+                        }
+                      />
+                      <Button
+                        label={t('compositionJoin')}
+                        isDisabled={commandDisabled || !canJoin}
+                        onClick={() => apply({ kind: 'join', id: draft.id })}
+                      />
+                    </>
+                  }
+                  endContent={
+                    <MoreMenu
+                      label={t('compositionMore')}
+                      size="sm"
+                      isDisabled={commandDisabled || spans.length <= 1}
+                      items={
+                        [
+                          {
+                            label: t('compositionRemove'),
+                            variant: 'destructive',
+                            onClick: () => void remove(),
+                          },
+                        ] satisfies DropdownMenuOption[]
+                      }
+                    />
+                  }
+                />
+                <Text as="p" type="body">
+                  {t('compositionJoinHelp')}
+                </Text>
                 <HStack gap={2} vAlign="center" wrap="wrap">
                   <Button
                     label={t('compositionApply')}
@@ -222,42 +282,7 @@ export function CompositionPanel() {
                     isDisabled={disabled || (!dirty && !stale)}
                     onClick={() => select(current ?? composition.clips[0])}
                   />
-                  <Button
-                    label={t('compositionEarlier')}
-                    isDisabled={commandDisabled || index <= 0}
-                    onClick={() => apply({ kind: 'move', id: draft.id, direction: -1 })}
-                  />
-                  <Button
-                    label={t('compositionLater')}
-                    isDisabled={commandDisabled || index >= spans.length - 1}
-                    onClick={() => apply({ kind: 'move', id: draft.id, direction: 1 })}
-                  />
-                  <Button
-                    label={t('compositionSplit')}
-                    isDisabled={commandDisabled}
-                    onClick={() =>
-                      apply({
-                        kind: 'split',
-                        id: draft.id,
-                        at_ms: editor.clock,
-                        new_id: crypto.randomUUID(),
-                      })
-                    }
-                  />
-                  <Button
-                    label={t('compositionJoin')}
-                    isDisabled={commandDisabled || !canJoin}
-                    onClick={() => apply({ kind: 'join', id: draft.id })}
-                  />
-                  <Button
-                    label={t('compositionRemove')}
-                    isDisabled={commandDisabled || spans.length <= 1}
-                    onClick={() => void remove()}
-                  />
                 </HStack>
-                <Text as="p" type="supporting">
-                  {t('compositionJoinHelp')}
-                </Text>
               </>
             )}
             {dirty && (
@@ -274,7 +299,6 @@ export function CompositionPanel() {
             title={t(
               error === 'COMPOSITION_CUE_LIMIT' ? 'compositionCueLimit' : 'compositionInvalid',
             )}
-            description={<code>{error}</code>}
           />
         )}
       </VStack>

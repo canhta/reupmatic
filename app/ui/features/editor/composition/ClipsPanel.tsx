@@ -1,7 +1,7 @@
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
+import { Grid } from '@astryxdesign/core/Grid';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,20 @@ import { FadeTools } from '../video-tools/FadeTools';
 import { LogoTools } from '../video-tools/LogoTools';
 import { VideoTools } from '../video-tools/VideoTools';
 import { CompositionPanel } from './CompositionPanel';
+
+function useEditingUpdate() {
+  const editor = useEditor();
+  return (patch: Partial<EditingRecipe>) => {
+    const editing = editor.processing?.editing;
+    const next = clampEditing({ ...editing, ...patch }, editor.duration);
+    for (const key of Object.keys(next) as (keyof EditingRecipe)[]) {
+      if (next[key] === undefined) delete next[key];
+    }
+    const recipe: ProcessingRecipe = { ...editor.processing, editing: next };
+    if (!Object.keys(next).length) delete recipe.editing;
+    editor.changeProcessing(Object.keys(recipe).length > 0 ? recipe : undefined);
+  };
+}
 
 export function ClipsPanel() {
   const editor = useEditor();
@@ -30,57 +44,65 @@ export function ClipsPanel() {
 function GlobalEditSections({ disabled }: { disabled: boolean }) {
   const { t } = useTranslation();
   const editor = useEditor();
-  const editing = editor.processing?.editing;
-
-  function update(patch: Partial<EditingRecipe>) {
-    const next = clampEditing({ ...editing, ...patch }, editor.duration);
-    for (const key of Object.keys(next) as (keyof EditingRecipe)[]) {
-      if (next[key] === undefined) delete next[key];
-    }
-    const recipe: ProcessingRecipe = { ...editor.processing, editing: next };
-    if (!Object.keys(next).length) delete recipe.editing;
-    editor.changeProcessing(Object.keys(recipe).length > 0 ? recipe : undefined);
-  }
-
+  const update = useEditingUpdate();
   return (
-    <VStack gap={2}>
+    <CollapsibleGroup type="multiple" hasDividers density="compact">
       <Collapsible
+        value="video"
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
             {t('editVideoTitle')}
           </Text>
         }
         defaultIsOpen={false}
       >
-        <VideoTools value={editing ?? {}} disabled={disabled} onChange={update} />
+        <VideoTools
+          value={editor.processing?.editing ?? {}}
+          disabled={disabled}
+          onChange={update}
+          toggle={Switch}
+        />
       </Collapsible>
       <Collapsible
+        value="fade"
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
             {t('editFadeTitle')}
           </Text>
         }
         defaultIsOpen={false}
       >
-        <FadeTools value={editing ?? {}} disabled={disabled} onChange={update} />
+        <FadeTools
+          value={editor.processing?.editing ?? {}}
+          disabled={disabled}
+          onChange={update}
+          toggle={Switch}
+        />
       </Collapsible>
       <Collapsible
+        value="logo"
         trigger={
-          <Text type="label" weight="semibold">
+          <Text type="body" weight="semibold">
             {t('editLogoTitle')}
           </Text>
         }
         defaultIsOpen={false}
       >
-        <LogoTools value={editing ?? {}} disabled={disabled} onChange={update} />
+        <LogoTools
+          value={editor.processing?.editing ?? {}}
+          disabled={disabled}
+          onChange={update}
+          toggle={Switch}
+        />
       </Collapsible>
-    </VStack>
+    </CollapsibleGroup>
   );
 }
 
 function WholeVideoClip() {
   const { t } = useTranslation();
   const editor = useEditor();
+  const update = useEditingUpdate();
   const editing = editor.processing?.editing;
   const trim = editing?.trim ?? { start_ms: 0, end_ms: editor.duration };
   const disabled = editor.opening || editor.busy;
@@ -88,32 +110,24 @@ function WholeVideoClip() {
   try {
     outputDuration = resolveEditWindow(editing, editor.duration).duration_ms;
   } catch {}
-  function update(patch: Partial<EditingRecipe>) {
-    const next = clampEditing({ ...editing, ...patch }, editor.duration);
-    for (const key of Object.keys(next) as (keyof EditingRecipe)[]) {
-      if (next[key] === undefined) delete next[key];
-    }
-    const recipe: ProcessingRecipe = { ...editor.processing, editing: next };
-    if (!Object.keys(next).length) delete recipe.editing;
-    editor.changeProcessing(Object.keys(recipe).length > 0 ? recipe : undefined);
-  }
   return (
     <VStack gap={3}>
-      <CheckboxInput
+      <Switch
         label={t('editTrim')}
         value={Boolean(editing?.trim)}
         isDisabled={disabled}
         onChange={(enabled) => update({ trim: enabled ? trim : undefined })}
       />
       {editing?.trim && (
-        <FormLayout direction="vertical">
+        <Grid columns={2} gap={3}>
           <NumberInput
             label={t('editTrimStart')}
+            units="s"
+            width="100%"
             value={trim.start_ms / 1000}
             min={0}
             max={editor.duration / 1000}
             step={0.1}
-            width={160}
             isWheelEnabled={false}
             isDisabled={disabled}
             onChange={(value) =>
@@ -122,26 +136,28 @@ function WholeVideoClip() {
           />
           <NumberInput
             label={t('editTrimEnd')}
+            units="s"
+            width="100%"
             value={trim.end_ms / 1000}
             min={0}
             max={editor.duration / 1000}
             step={0.1}
-            width={160}
             isWheelEnabled={false}
             isDisabled={disabled}
             onChange={(value) =>
               update({ trim: { ...trim, end_ms: Math.round(value * 1000) } as TimeRange })
             }
           />
-        </FormLayout>
+        </Grid>
       )}
       <NumberInput
-        label={t('compositionSpeed')}
+        label={t('editSpeed')}
+        units="×"
+        width="100%"
         value={editing?.speed ?? 1}
         min={0.25}
         max={4}
         step={0.05}
-        width={160}
         isWheelEnabled={false}
         isDisabled={disabled}
         onChange={(speed) => update({ speed })}

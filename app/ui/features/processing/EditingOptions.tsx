@@ -1,5 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
@@ -27,36 +28,56 @@ export function EditingOptions({
   }
   return (
     <VStack gap={3}>
-      <Collapsible
-        trigger={
-          <Text type="label" weight="semibold">
-            {t('editVideoTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
-        <VideoTools value={value ?? {}} disabled={disabled} onChange={update} />
-      </Collapsible>
-      <Collapsible
-        trigger={
-          <Text type="label" weight="semibold">
-            {t('editFadeTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
-        <FadeTools value={value ?? {}} disabled={disabled} onChange={update} />
-      </Collapsible>
-      <Collapsible
-        trigger={
-          <Text type="label" weight="semibold">
-            {t('editAudioTitle')}
-          </Text>
-        }
-        defaultIsOpen={false}
-      >
-        <AudioTools value={value ?? {}} disabled={disabled} onChange={update} />
-      </Collapsible>
+      <CollapsibleGroup type="multiple" hasDividers density="compact">
+        <Collapsible
+          value="video"
+          trigger={
+            <Text type="body" weight="semibold">
+              {t('editVideoTitle')}
+            </Text>
+          }
+          defaultIsOpen={false}
+        >
+          <VideoTools
+            value={value ?? {}}
+            disabled={disabled}
+            onChange={update}
+            toggle={CheckboxInput}
+          />
+        </Collapsible>
+        <Collapsible
+          value="fade"
+          trigger={
+            <Text type="body" weight="semibold">
+              {t('editFadeTitle')}
+            </Text>
+          }
+          defaultIsOpen={false}
+        >
+          <FadeTools
+            value={value ?? {}}
+            disabled={disabled}
+            onChange={update}
+            toggle={CheckboxInput}
+          />
+        </Collapsible>
+        <Collapsible
+          value="audio"
+          trigger={
+            <Text type="body" weight="semibold">
+              {t('editAudioTitle')}
+            </Text>
+          }
+          defaultIsOpen={false}
+        >
+          <AudioTools
+            value={value ?? {}}
+            disabled={disabled}
+            onChange={update}
+            toggle={CheckboxInput}
+          />
+        </Collapsible>
+      </CollapsibleGroup>
       {value && (
         <Button label={t('editReset')} isDisabled={disabled} onClick={() => onChange(undefined)} />
       )}

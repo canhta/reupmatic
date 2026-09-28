@@ -72,7 +72,7 @@ test('Source monitor previews rotate, flip and crop with the export geometry', {
         return rotator != null && getComputedStyle(rotator).transform !== previous;
       }, rotateTransform);
 
-      await page.getByRole('checkbox', { name: 'Crop source frame', exact: true }).check();
+      await page.getByRole('switch', { name: 'Crop source frame', exact: true }).check();
       for (const [label, value] of [
         ['Width (%)', '50'],
         ['Height (%)', '50'],
@@ -149,7 +149,7 @@ test('Live subtitle overlay is the output frame for a crop that changes aspect',
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.getByRole('button', { name: 'Framing & color', exact: true }).click();
-      await page.getByRole('checkbox', { name: 'Crop source frame', exact: true }).check();
+      await page.getByRole('switch', { name: 'Crop source frame', exact: true }).check();
       const width = page.getByRole('spinbutton', { name: 'Width (%)', exact: true });
       await width.fill('50');
       await width.press('Enter');
@@ -216,7 +216,7 @@ test('Source monitor ramps a head fade on the output clock', { timeout: 180000 }
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.getByRole('button', { name: 'Fades', exact: true }).click();
-      await page.getByRole('checkbox', { name: 'Fade in/out', exact: true }).check();
+      await page.getByRole('switch', { name: 'Add fades', exact: true }).check();
 
       const opacity = async () =>
         Number.parseFloat(

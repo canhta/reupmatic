@@ -80,7 +80,7 @@ test('#38 composition mode keeps the output edit window visible', { timeout: 180
 
       await page.getByRole('tab', { name: 'Edit', exact: true }).click();
       await page.locator('#panel-edit').waitFor();
-      const trim = page.getByRole('checkbox', { name: 'Trim source', exact: true });
+      const trim = page.getByRole('switch', { name: 'Trim source', exact: true });
       await trim.waitFor();
       assert.equal(await trim.isVisible(), true, 'the output edit window stays reachable');
     },
