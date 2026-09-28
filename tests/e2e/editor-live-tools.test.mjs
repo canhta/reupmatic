@@ -80,20 +80,17 @@ test('Editor tool panels apply live, validate in place and hide empty actions', 
       // Audio: Remove is hidden until a track exists, and there is no Apply/Revert pair.
       await page.getByRole('tab', { name: 'Audio', exact: true }).click();
       await page.locator('#panel-audio').waitFor({ state: 'visible' });
+      assert.equal(await page.getByText('No music yet', { exact: true }).count(), 1);
       assert.equal(
-        await page.getByText('No additional audio track is selected.', { exact: true }).count(),
-        1,
-      );
-      assert.equal(
-        await page.getByRole('button', { name: 'Remove', exact: true }).count(),
+        await page.getByRole('button', { name: 'Music actions', exact: true }).count(),
         0,
-        'Remove must stay hidden while no music track is selected',
+        'the track actions must stay hidden while no music track is selected',
       );
       await application.evaluate(({ dialog }, filePath) => {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
       }, music);
       await addMediaToProject(page);
-      await page.getByRole('button', { name: 'Remove', exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Music actions', exact: true }).waitFor();
       assert.equal(
         await page.getByRole('button', { name: 'Apply', exact: true }).count(),
         0,

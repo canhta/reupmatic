@@ -1,11 +1,16 @@
 import { Button } from '@astryxdesign/core/Button';
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { HStack } from '@astryxdesign/core/HStack';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Music, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -61,111 +66,147 @@ export function SoundtrackPanel() {
 
   return (
     <InspectorPanelSection title={t('soundtrackTitle')}>
-      <VStack gap={3}>
-        {track ? (
-          <>
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              <Button
-                label={t('soundtrackRemove')}
-                isDisabled={disabled}
-                onClick={() => editor.changeSoundtrack(undefined)}
-              />
-            </HStack>
-            <Text as="p" type="body">
-              {track.source.name} · {(track.source.duration_ms / 1000).toFixed(2)} s
-            </Text>
-            {url && (
-              <audio
-                className="soundtrack-preview"
-                src={url}
-                controls
-                preload="metadata"
-                aria-label={t('soundtrackListen')}
-              />
-            )}
-            <RadioList
-              label={t('soundtrackMode')}
-              value={track.mode}
-              isDisabled={disabled}
-              onChange={(mode) => {
-                if (mode === 'replace' || mode === 'mix') update({ mode });
-              }}
-            >
-              <RadioListItem
-                value="replace"
-                label={t('soundtrackReplace')}
-                description={t('soundtrackReplaceHelp')}
-              />
-              <RadioListItem
-                value="mix"
-                label={t('soundtrackMix')}
-                description={t('soundtrackMixHelp')}
-              />
-            </RadioList>
-            <FormLayout direction="vertical">
-              {milliseconds.map((key) => (
-                <NumberInput
-                  key={key}
-                  label={t(`soundtrack_${key}`)}
-                  value={track[key] / 1000}
-                  min={0}
-                  max={key === 'offset_ms' ? 86400 : track.source.duration_ms / 1000}
-                  step={0.1}
-                  isDisabled={disabled}
-                  isWheelEnabled={false}
-                  onChange={(value) => update({ [key]: Math.round(value * 1000) })}
+      {track ? (
+        <VStack gap={3}>
+          <List density="compact" hasDividers aria-label={t('soundtrackTitle')}>
+            <ListItem
+              label={track.source.name}
+              description={`${(track.source.duration_ms / 1000).toFixed(2)} s`}
+              startContent={<Icon icon={Music} size="sm" color="secondary" />}
+              endContent={
+                <MoreMenu
+                  label={t('soundtrackTrackActions')}
+                  size="sm"
+                  items={[
+                    {
+                      label: t('soundtrackReplaceTrack'),
+                      isDisabled: disabled,
+                      onClick: () => void editor.importMedia(),
+                    },
+                    {
+                      label: t('soundtrackRemove'),
+                      variant: 'destructive',
+                      isDisabled: disabled,
+                      onClick: () => editor.changeSoundtrack(undefined),
+                    },
+                  ]}
                 />
-              ))}
-              <NumberInput
-                label={t('soundtrackGain')}
-                value={track.gain_db}
-                min={-60}
-                max={24}
-                step={1}
-                isWheelEnabled={false}
-                isDisabled={disabled}
-                onChange={(gain_db) => update({ gain_db })}
-              />
-            </FormLayout>
-            <CheckboxInput
-              label={t('soundtrackDuck')}
-              value={track.duck.enabled}
-              isDisabled={disabled}
-              onChange={(enabled) => update({ duck: { ...track.duck, enabled } })}
+              }
             />
-            {track.duck.enabled && (
-              <FormLayout direction="vertical">
-                <NumberInput
-                  label={t('soundtrackDuckAmount')}
-                  value={track.duck.amount_db}
-                  min={1}
-                  max={24}
-                  step={1}
-                  isWheelEnabled={false}
-                  isDisabled={disabled}
-                  onChange={(amount_db) => update({ duck: { ...track.duck, amount_db } })}
-                />
-                <NumberInput
-                  label={t('soundtrackDuckRelease')}
-                  value={track.duck.release_ms / 1000}
-                  min={0.01}
-                  max={5}
-                  step={0.01}
-                  isWheelEnabled={false}
-                  isDisabled={disabled}
-                  onChange={(seconds) =>
-                    update({ duck: { ...track.duck, release_ms: Math.round(seconds * 1000) } })
-                  }
-                />
-              </FormLayout>
-            )}
-          </>
-        ) : (
-          <Text as="p" type="body">
-            {t('soundtrackNone')}
-          </Text>
-        )}
-      </VStack>
+          </List>
+          {url && (
+            <audio
+              className="soundtrack-preview"
+              src={url}
+              controls
+              preload="metadata"
+              aria-label={t('soundtrackListen')}
+            />
+          )}
+          <Selector
+            label={t('soundtrackMode')}
+            value={track.mode}
+            isDisabled={disabled}
+            options={[
+              { value: 'replace', label: t('soundtrackReplace') },
+              { value: 'mix', label: t('soundtrackMix') },
+            ]}
+            onChange={(mode) => {
+              if (mode === 'replace' || mode === 'mix') update({ mode });
+            }}
+          />
+          <Grid columns={2} gap={3}>
+            {milliseconds.map((key) => (
+              <NumberInput
+                key={key}
+                label={t(`soundtrack_${key}`)}
+                units="s"
+                width="100%"
+                value={track[key] / 1000}
+                min={0}
+                max={key === 'offset_ms' ? 86400 : track.source.duration_ms / 1000}
+                step={0.1}
+                isDisabled={disabled}
+                isWheelEnabled={false}
+                onChange={(value) => update({ [key]: Math.round(value * 1000) })}
+              />
+            ))}
+          </Grid>
+          <NumberInput
+            label={t('soundtrackGain')}
+            units="dB"
+            width="100%"
+            value={track.gain_db}
+            min={-60}
+            max={24}
+            step={1}
+            isWheelEnabled={false}
+            isDisabled={disabled}
+            onChange={(gain_db) => update({ gain_db })}
+          />
+          <Collapsible
+            trigger={
+              <Text type="body" weight="semibold">
+                {t('soundtrackDuckTitle')}
+              </Text>
+            }
+            defaultIsOpen={false}
+          >
+            <VStack gap={3} paddingBlock={2}>
+              <Switch
+                label={t('soundtrackDuck')}
+                value={track.duck.enabled}
+                isDisabled={disabled}
+                onChange={(enabled) => update({ duck: { ...track.duck, enabled } })}
+              />
+              {track.duck.enabled && (
+                <Grid columns={2} gap={3}>
+                  <NumberInput
+                    label={t('soundtrackDuckAmount')}
+                    units="dB"
+                    width="100%"
+                    value={track.duck.amount_db}
+                    min={1}
+                    max={24}
+                    step={1}
+                    isWheelEnabled={false}
+                    isDisabled={disabled}
+                    onChange={(amount_db) => update({ duck: { ...track.duck, amount_db } })}
+                  />
+                  <NumberInput
+                    label={t('soundtrackDuckRelease')}
+                    units="s"
+                    width="100%"
+                    value={track.duck.release_ms / 1000}
+                    min={0.01}
+                    max={5}
+                    step={0.01}
+                    isWheelEnabled={false}
+                    isDisabled={disabled}
+                    onChange={(seconds) =>
+                      update({ duck: { ...track.duck, release_ms: Math.round(seconds * 1000) } })
+                    }
+                  />
+                </Grid>
+              )}
+            </VStack>
+          </Collapsible>
+        </VStack>
+      ) : (
+        <EmptyState
+          isCompact
+          title={t('soundtrackNone')}
+          actions={
+            <Button
+              label={t('soundtrackAdd')}
+              size="sm"
+              icon={<Icon icon={Plus} size="sm" />}
+              isDisabled={disabled}
+              onClick={() => void editor.importMedia()}
+            />
+          }
+        />
+      )}
     </InspectorPanelSection>
   );
 }

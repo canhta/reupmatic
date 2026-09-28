@@ -1002,7 +1002,7 @@ test('Audio source mute persists to the document and across tool switches', {
       await page.setViewportSize({ width: 1420, height: 900 });
 
       await page.getByRole('tab', { name: 'Audio', exact: true }).click();
-      const mute = page.getByRole('checkbox', { name: 'Remove source audio', exact: true });
+      const mute = page.getByRole('switch', { name: 'Mute original audio', exact: true });
       await mute.waitFor();
       await mute.check();
       assert.equal(await mute.isChecked(), true, 'checking mute must persist to the document');

@@ -1,6 +1,7 @@
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Divider } from '@astryxdesign/core/Divider';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Switch } from '@astryxdesign/core/Switch';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useTranslation } from 'react-i18next';
 import type { ProcessingRecipe } from '../../../../core/processing/recipe';
 import { InspectorPanelSection } from '../../../design-system/InspectorPanelSection';
@@ -9,10 +10,11 @@ import { SoundtrackPanel } from './SoundtrackPanel';
 
 export function AudioPanel() {
   return (
-    <>
+    <VStack gap={5}>
       <SourceAudioSection />
+      <Divider />
       <SoundtrackPanel />
-    </>
+    </VStack>
   );
 }
 
@@ -29,25 +31,26 @@ function SourceAudioSection() {
   }
   return (
     <InspectorPanelSection title={t('audioSourceTitle')}>
-      <FormLayout direction="vertical">
+      <VStack gap={3}>
         <NumberInput
           label={t('editGain')}
+          units="dB"
+          width="100%"
           value={audio.gain_db}
           min={-60}
           max={24}
           step={1}
-          width={180}
           isWheelEnabled={false}
           isDisabled={disabled || audio.muted}
           onChange={(gain_db) => update({ audio: { ...audio, gain_db } })}
         />
-        <CheckboxInput
+        <Switch
           label={t('editMute')}
           value={audio.muted}
           isDisabled={disabled}
           onChange={(muted) => update({ audio: { ...audio, muted } })}
         />
-      </FormLayout>
+      </VStack>
     </InspectorPanelSection>
   );
 }

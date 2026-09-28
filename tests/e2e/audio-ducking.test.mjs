@@ -11,8 +11,8 @@ const COPY = {
     audioTab: 'Audio',
     addMedia: 'Add…',
     duck: 'Duck under voice',
-    amount: 'Amount (dB)',
-    release: 'Release (s)',
+    amount: 'Amount',
+    release: 'Release',
     export: 'Export…',
     exportRun: 'Export',
     monitorPlay: 'Play',
@@ -23,8 +23,8 @@ const COPY = {
     audioTab: 'Âm thanh',
     addMedia: 'Thêm…',
     duck: 'Giảm dưới giọng',
-    amount: 'Mức giảm (dB)',
-    release: 'Hồi phục (s)',
+    amount: 'Mức giảm',
+    release: 'Hồi phục',
     export: 'Xuất…',
     exportRun: 'Xuất',
     monitorPlay: 'Phát',
@@ -154,7 +154,7 @@ for (const locale of ['en', 'vi']) {
           dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
         }, music);
         await addMediaToProject(page);
-        const duck = page.getByRole('checkbox', { name: copy.duck, exact: true });
+        const duck = page.getByRole('switch', { name: copy.duck, exact: true });
         await duck.waitFor();
         assert.equal(await duck.isChecked(), false);
 
