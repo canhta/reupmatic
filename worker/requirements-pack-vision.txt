@@ -12,4 +12,4 @@ six==1.17.0
 # rapidocr downloads/decode helpers that import requests; huggingface_hub no longer pulls it.
 requests==2.34.2
 urllib3==2.8.0
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
