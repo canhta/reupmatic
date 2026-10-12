@@ -191,8 +191,8 @@ importers:
         specifier: 26.4.2
         version: 26.4.2(typescript@7.0.2)
       jassub:
-        specifier: 2.5.16
-        version: 2.5.16
+        specifier: 2.5.18
+        version: 2.5.18
       lucide-react:
         specifier: 1.48.0
         version: 1.48.0(react@19.3.0)
@@ -1876,8 +1876,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  jassub@2.5.16:
-    resolution: {integrity: sha512-n4vjXfraf3o8k3/5TK6DhCYVcbQ/VqhVOgwqLd3l0xfMtsN4fpE/hPq2hPaGagBTOtJS9yHwRoRp3mmchQ9XVg==}
+  jassub@2.5.18:
+    resolution: {integrity: sha512-NeUXZb2MqYEP//tr2CBj4fmrpJj+6NfDV1gRTxv7PTKJRgckXo1t7J8Kehd6hds62MFUzpGrN+/BaftMcc+4Sg==}
 
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
@@ -4247,7 +4247,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.5
       serialize-error: 7.0.1
     optional: true
 
@@ -4385,7 +4385,7 @@ snapshots:
       filelist: 1.0.6
       picocolors: 1.1.1
 
-  jassub@2.5.16:
+  jassub@2.5.18:
     dependencies:
       abslink: 1.3.0
       lfa-ponyfill: 1.1.1
@@ -4713,11 +4713,11 @@ snapshots:
 
   node-abi@4.35.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-diff3@3.2.1: {}
 
@@ -4728,7 +4728,7 @@ snapshots:
       graceful-fs: 4.2.11
       nopt: 9.0.0
       proc-log: 6.1.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.22
       tinyglobby: 0.2.17
       undici: 6.29.0
