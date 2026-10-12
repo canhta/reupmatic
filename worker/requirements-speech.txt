@@ -4,4 +4,4 @@
 faster-whisper==1.2.1
 # faster-whisper's audio decoder; pinned so the bundled wheel matches THIRD-PARTY-NOTICES.md and the
 # release's corresponding source.
-av==18.1.0
+av==19.0.1
