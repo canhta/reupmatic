@@ -60,12 +60,12 @@
     "@xzdarcy/react-timeline-editor": "1.0.0",
     "chokidar": "5.0.0",
     "electron-updater": "6.8.10",
-    "i18next": "26.4.2",
+    "i18next": "26.4.6",
     "jassub": "2.5.16",
     "lucide-react": "1.48.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-i18next": "17.0.15",
+    "react-i18next": "17.0.18",
     "wavesurfer.js": "8.0.1"
   },
   "devDependencies": {
