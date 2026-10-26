@@ -191,8 +191,8 @@ importers:
         specifier: 26.4.2
         version: 26.4.2(typescript@7.0.2)
       jassub:
-        specifier: 2.5.16
-        version: 2.5.16
+        specifier: 2.5.23
+        version: 2.5.23
       lucide-react:
         specifier: 1.48.0
         version: 1.48.0(react@19.3.0)
@@ -1250,8 +1250,8 @@ packages:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  abslink@1.3.0:
-    resolution: {integrity: sha512-P7hWPeaCJknGcyL022ardcsK8P9Wrwzwhhffs78jjXyc0D+shbnWIKKnpBl+uj1YZhaEODpp+8CRqyAO6LWHSg==}
+  abslink@1.3.1:
+    resolution: {integrity: sha512-ukFoU6q/RBMjoC7fu0Zx2+eVH2QFMfV+aJ2cI3Ypl0Shm0ikGjZ0T2VN0xvLl0a8imhWqvfVrqu2n2Ml3eSMyQ==}
 
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
@@ -1876,8 +1876,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  jassub@2.5.16:
-    resolution: {integrity: sha512-n4vjXfraf3o8k3/5TK6DhCYVcbQ/VqhVOgwqLd3l0xfMtsN4fpE/hPq2hPaGagBTOtJS9yHwRoRp3mmchQ9XVg==}
+  jassub@2.5.23:
+    resolution: {integrity: sha512-KvWvkZOQvLUZKDoJTfAZzbmxCN2Avs37d1VnZlscKvmfPIjcS+l2guou0WdGW6z/+Uxb8F7ha8Nrq5h5+k9cLw==}
 
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
@@ -3666,7 +3666,7 @@ snapshots:
 
   abbrev@4.0.0: {}
 
-  abslink@1.3.0: {}
+  abslink@1.3.1: {}
 
   agent-base@7.1.4: {}
 
@@ -4247,7 +4247,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.5
       serialize-error: 7.0.1
     optional: true
 
@@ -4385,9 +4385,9 @@ snapshots:
       filelist: 1.0.6
       picocolors: 1.1.1
 
-  jassub@2.5.16:
+  jassub@2.5.23:
     dependencies:
-      abslink: 1.3.0
+      abslink: 1.3.1
       lfa-ponyfill: 1.1.1
       rvfc-polyfill: 1.0.8
       throughput: 1.0.2
@@ -4713,11 +4713,11 @@ snapshots:
 
   node-abi@4.35.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-diff3@3.2.1: {}
 
@@ -4728,7 +4728,7 @@ snapshots:
       graceful-fs: 4.2.11
       nopt: 9.0.0
       proc-log: 6.1.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.22
       tinyglobby: 0.2.17
       undici: 6.29.0

@@ -61,7 +61,7 @@
     "chokidar": "5.0.0",
     "electron-updater": "6.8.10",
     "i18next": "26.4.2",
-    "jassub": "2.5.16",
+    "jassub": "2.5.23",
     "lucide-react": "1.48.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
