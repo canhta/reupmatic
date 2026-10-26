@@ -59,7 +59,7 @@
     "@stylexjs/stylex": "0.19.1",
     "@xzdarcy/react-timeline-editor": "1.0.0",
     "chokidar": "5.0.0",
-    "electron-updater": "6.8.10",
+    "electron-updater": "6.8.11",
     "i18next": "26.4.2",
     "jassub": "2.5.16",
     "lucide-react": "1.48.0",
