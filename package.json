@@ -58,7 +58,7 @@
     "@astryxdesign/theme-neutral": "0.6.3",
     "@stylexjs/stylex": "0.19.1",
     "@xzdarcy/react-timeline-editor": "1.0.0",
-    "chokidar": "5.0.0",
+    "chokidar": "6.0.0",
     "electron-updater": "6.8.10",
     "i18next": "26.4.2",
     "jassub": "2.5.16",
